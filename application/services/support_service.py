@@ -2,11 +2,11 @@ from datetime import datetime
 import uuid
 from typing import List  # <--- FALTABA ESTA LÍNEA
 from domain.entities.ticket import Ticket
-from infrastructure.persistence.supabase.ticket_repository import TicketRepository
+from infrastructure.persistence.postgresql.ticket_repository import PostgresTicketRepository
 from utils.datetime_utils import now_utc
 
 class SupportService:
-    def __init__(self, ticket_repo: TicketRepository):
+    def __init__(self, ticket_repo: PostgresTicketRepository):
         self.ticket_repo = ticket_repo
 
     async def open_ticket(self, user_id: int, user_name: str) -> Ticket:

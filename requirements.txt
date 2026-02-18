@@ -19,7 +19,6 @@ distro==1.9.0
 fastapi==0.115.5
 frozenlist==1.8.0
 fsspec==2025.12.0
-gotrue==2.12.4
 greenlet==3.1.1
 groq==1.0.0
 h11==0.16.0
@@ -41,7 +40,6 @@ multidict==6.7.0
 packaging==25.0
 pillow==12.1.1
 pluggy==1.6.0
-postgrest==1.0.2
 propcache==0.4.1
 psycopg2-binary==2.9.10
 punq==0.7.0
@@ -63,7 +61,6 @@ python-telegram-bot==21.10
 pytz==2025.2
 PyYAML==6.0.3
 qrcode==8.1
-realtime==2.4.3
 requests==2.32.5
 rich==14.2.0
 six==1.17.0
@@ -71,13 +68,8 @@ sniffio==1.3.1
 sortedcontainers==2.4.0
 SQLAlchemy==2.0.36
 starlette==0.49.1
-storage3==0.11.3
 StrEnum==0.4.15
 strictyaml==1.7.3
-supabase==2.15.0
-supabase-auth==2.27.0
-supabase-functions==2.27.0
-supafunc==0.9.4
 tenacity==9.1.2
 typing-inspection==0.4.2
 typing_extensions==4.15.0
