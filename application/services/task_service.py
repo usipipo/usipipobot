@@ -11,14 +11,14 @@ import uuid
 from utils.logger import logger
 
 from domain.entities.task import Task, UserTask
-from infrastructure.persistence.supabase.task_repository import TaskRepository
+from infrastructure.persistence.postgresql.task_repository import PostgresTaskRepository
 from application.services.payment_service import PaymentService
 
 
 class TaskService:
     """Servicio para gestionar tareas y recompensas."""
     
-    def __init__(self, task_repo: TaskRepository, payment_service: PaymentService):
+    def __init__(self, task_repo: PostgresTaskRepository, payment_service: PaymentService):
         self.task_repo = task_repo
         self.payment_service = payment_service
     

@@ -23,15 +23,15 @@ from infrastructure.persistence.database import get_session_factory
 from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
 from infrastructure.api_clients.groq_client import GroqClient
-from infrastructure.persistence.supabase.user_repository import SupabaseUserRepository
-from infrastructure.persistence.supabase.key_repository import SupabaseKeyRepository
-from infrastructure.persistence.supabase.transaction_repository import SupabaseTransactionRepository
-from infrastructure.persistence.supabase.achievement_repository import (
-    AchievementRepository, UserStatsRepository
+from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
+from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
+from infrastructure.persistence.postgresql.transaction_repository import PostgresTransactionRepository
+from infrastructure.persistence.postgresql.achievement_repository import (
+    PostgresAchievementRepository, PostgresUserStatsRepository
 )
-from infrastructure.persistence.supabase.ticket_repository import TicketRepository
-from infrastructure.persistence.supabase.task_repository import TaskRepository
-from infrastructure.persistence.supabase.conversation_repository import ConversationRepository
+from infrastructure.persistence.postgresql.ticket_repository import PostgresTicketRepository
+from infrastructure.persistence.postgresql.task_repository import PostgresTaskRepository
+from infrastructure.persistence.postgresql.conversation_repository import PostgresConversationRepository
 
 # Domain Interfaces
 from domain.interfaces.iuser_repository import IUserRepository
@@ -189,83 +189,83 @@ def _configure_repositories(container: punq.Container) -> None:
     """Configura los repositorios en el contenedor."""
     session_factory = get_session_factory()
 
-    def create_user_repo() -> SupabaseUserRepository:
+    def create_user_repo() -> PostgresUserRepository:
         session = session_factory()
-        return SupabaseUserRepository(session)
+        return PostgresUserRepository(session)
 
-    def create_key_repo() -> SupabaseKeyRepository:
+    def create_key_repo() -> PostgresKeyRepository:
         session = session_factory()
-        return SupabaseKeyRepository(session)
+        return PostgresKeyRepository(session)
 
-    def create_transaction_repo() -> SupabaseTransactionRepository:
+    def create_transaction_repo() -> PostgresTransactionRepository:
         session = session_factory()
-        return SupabaseTransactionRepository(session)
+        return PostgresTransactionRepository(session)
 
-    def create_achievement_repo() -> AchievementRepository:
+    def create_achievement_repo() -> PostgresAchievementRepository:
         session = session_factory()
-        return AchievementRepository(session)
+        return PostgresAchievementRepository(session)
 
-    def create_user_stats_repo() -> UserStatsRepository:
+    def create_user_stats_repo() -> PostgresUserStatsRepository:
         session = session_factory()
-        return UserStatsRepository(session)
+        return PostgresUserStatsRepository(session)
 
-    def create_ticket_repo() -> TicketRepository:
+    def create_ticket_repo() -> PostgresTicketRepository:
         session = session_factory()
-        return TicketRepository(session)
+        return PostgresTicketRepository(session)
 
-    def create_task_repo() -> TaskRepository:
+    def create_task_repo() -> PostgresTaskRepository:
         session = session_factory()
-        return TaskRepository(session)
+        return PostgresTaskRepository(session)
 
-    def create_conversation_repo() -> ConversationRepository:
+    def create_conversation_repo() -> PostgresConversationRepository:
         session = session_factory()
-        return ConversationRepository(session)
+        return PostgresConversationRepository(session)
 
     container.register(IUserRepository, factory=create_user_repo)
     container.register(IKeyRepository, factory=create_key_repo)
     container.register(ITransactionRepository, factory=create_transaction_repo)
-    container.register(IAchievementRepository, factory=create_achievement_repo)
-    container.register(IUserStatsRepository, factory=create_user_stats_repo)
-    container.register(TicketRepository, factory=create_ticket_repo)
-    container.register(TaskRepository, factory=create_task_repo)
-    container.register(ConversationRepository, factory=create_conversation_repo)
+    container.register(IPostgresAchievementRepository, factory=create_achievement_repo)
+    container.register(IPostgresUserStatsRepository, factory=create_user_stats_repo)
+    container.register(PostgresTicketRepository, factory=create_ticket_repo)
+    container.register(PostgresTaskRepository, factory=create_task_repo)
+    container.register(PostgresConversationRepository, factory=create_conversation_repo)
 
 
 def _configure_application_services(container: punq.Container) -> None:
     """Configura los servicios de aplicación en el contenedor."""
     session_factory = get_session_factory()
 
-    def create_user_repo() -> SupabaseUserRepository:
+    def create_user_repo() -> PostgresUserRepository:
         session = session_factory()
-        return SupabaseUserRepository(session)
+        return PostgresUserRepository(session)
 
-    def create_key_repo() -> SupabaseKeyRepository:
+    def create_key_repo() -> PostgresKeyRepository:
         session = session_factory()
-        return SupabaseKeyRepository(session)
+        return PostgresKeyRepository(session)
 
-    def create_transaction_repo() -> SupabaseTransactionRepository:
+    def create_transaction_repo() -> PostgresTransactionRepository:
         session = session_factory()
-        return SupabaseTransactionRepository(session)
+        return PostgresTransactionRepository(session)
 
-    def create_achievement_repo() -> AchievementRepository:
+    def create_achievement_repo() -> PostgresAchievementRepository:
         session = session_factory()
-        return AchievementRepository(session)
+        return PostgresAchievementRepository(session)
 
-    def create_user_stats_repo() -> UserStatsRepository:
+    def create_user_stats_repo() -> PostgresUserStatsRepository:
         session = session_factory()
-        return UserStatsRepository(session)
+        return PostgresUserStatsRepository(session)
 
-    def create_ticket_repo() -> TicketRepository:
+    def create_ticket_repo() -> PostgresTicketRepository:
         session = session_factory()
-        return TicketRepository(session)
+        return PostgresTicketRepository(session)
 
-    def create_task_repo() -> TaskRepository:
+    def create_task_repo() -> PostgresTaskRepository:
         session = session_factory()
-        return TaskRepository(session)
+        return PostgresTaskRepository(session)
 
-    def create_conversation_repo() -> ConversationRepository:
+    def create_conversation_repo() -> PostgresConversationRepository:
         session = session_factory()
-        return ConversationRepository(session)
+        return PostgresConversationRepository(session)
 
     def create_vpn_service() -> VpnService:
         return VpnService(
@@ -342,37 +342,37 @@ def _configure_handlers(container: punq.Container) -> None:
     """Configura los handlers en el contenedor."""
     session_factory = get_session_factory()
 
-    def create_user_repo() -> SupabaseUserRepository:
+    def create_user_repo() -> PostgresUserRepository:
         session = session_factory()
-        return SupabaseUserRepository(session)
+        return PostgresUserRepository(session)
 
-    def create_key_repo() -> SupabaseKeyRepository:
+    def create_key_repo() -> PostgresKeyRepository:
         session = session_factory()
-        return SupabaseKeyRepository(session)
+        return PostgresKeyRepository(session)
 
-    def create_transaction_repo() -> SupabaseTransactionRepository:
+    def create_transaction_repo() -> PostgresTransactionRepository:
         session = session_factory()
-        return SupabaseTransactionRepository(session)
+        return PostgresTransactionRepository(session)
 
-    def create_achievement_repo() -> AchievementRepository:
+    def create_achievement_repo() -> PostgresAchievementRepository:
         session = session_factory()
-        return AchievementRepository(session)
+        return PostgresAchievementRepository(session)
 
-    def create_user_stats_repo() -> UserStatsRepository:
+    def create_user_stats_repo() -> PostgresUserStatsRepository:
         session = session_factory()
-        return UserStatsRepository(session)
+        return PostgresUserStatsRepository(session)
 
-    def create_ticket_repo() -> TicketRepository:
+    def create_ticket_repo() -> PostgresTicketRepository:
         session = session_factory()
-        return TicketRepository(session)
+        return PostgresTicketRepository(session)
 
-    def create_task_repo() -> TaskRepository:
+    def create_task_repo() -> PostgresTaskRepository:
         session = session_factory()
-        return TaskRepository(session)
+        return PostgresTaskRepository(session)
 
-    def create_conversation_repo() -> ConversationRepository:
+    def create_conversation_repo() -> PostgresConversationRepository:
         session = session_factory()
-        return ConversationRepository(session)
+        return PostgresConversationRepository(session)
 
     def create_vpn_service() -> VpnService:
         return VpnService(

@@ -1,11 +1,11 @@
 """
-Modelos SQLAlchemy unificados para uSipipo.
+Modelos SQLAlchemy unificados para PostgreSQL auto-alojado.
 
 Todos los modelos comparten la misma Base declarativa para
 asegurar integridad referencial y relaciones correctas.
 
 Author: uSipipo Team
-Version: 2.0.0
+Version: 2.1.0
 """
 
 from datetime import datetime, date
@@ -55,11 +55,9 @@ class UserModel(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    # Sistema de estrellas
     balance_stars: Mapped[int] = mapped_column(Integer, server_default="0")
     total_deposited: Mapped[int] = mapped_column(Integer, server_default="0")
     
-    # Sistema de referidos
     referral_code: Mapped[Optional[str]] = mapped_column(
         String(12), unique=True, nullable=True
     )
@@ -68,13 +66,11 @@ class UserModel(Base):
     )
     total_referral_earnings: Mapped[int] = mapped_column(Integer, server_default="0")
     
-    # Sistema VIP
     is_vip: Mapped[bool] = mapped_column(Boolean, server_default="false")
     vip_expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
-    # Relaciones
     keys: Mapped[List["VpnKeyModel"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )
@@ -97,7 +93,6 @@ class UserModel(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     
-    # Auto-referencia para referidos
     referrals: Mapped[List["UserModel"]] = relationship(
         "UserModel",
         backref="referrer",
@@ -133,13 +128,12 @@ class VpnKeyModel(Base):
         DateTime(timezone=True), nullable=True
     )
     data_limit_bytes: Mapped[int] = mapped_column(
-        BigInteger, server_default="10737418240"  # 10 GB
+        BigInteger, server_default="10737418240"
     )
     billing_reset_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
-    # Relación
     owner: Mapped["UserModel"] = relationship(back_populates="keys")
 
 
@@ -166,7 +160,6 @@ class TicketModel(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    # Relación
     user: Mapped["UserModel"] = relationship(back_populates="tickets")
 
 
@@ -194,7 +187,6 @@ class TransactionModel(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    # Relación
     user: Mapped["UserModel"] = relationship(back_populates="transactions")
 
 
@@ -219,7 +211,6 @@ class AchievementModel(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     
-    # Relación
     user_achievements: Mapped[List["UserAchievementModel"]] = relationship(
         back_populates="achievement"
     )
@@ -247,7 +238,6 @@ class UserStatsModel(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     
-    # Relación
     user: Mapped["UserModel"] = relationship(back_populates="stats")
 
 
@@ -277,7 +267,6 @@ class UserAchievementModel(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     
-    # Relaciones
     user: Mapped["UserModel"] = relationship(back_populates="achievements")
     achievement: Mapped["AchievementModel"] = relationship(back_populates="user_achievements")
 
@@ -308,7 +297,6 @@ class TaskModel(Base):
         DateTime(timezone=True), nullable=True
     )
     
-    # Relación
     user_tasks: Mapped[List["UserTaskModel"]] = relationship(
         back_populates="task", cascade="all, delete-orphan"
     )
@@ -336,7 +324,6 @@ class UserTaskModel(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     
-    # Relaciones
     user: Mapped["UserModel"] = relationship(back_populates="tasks")
     task: Mapped["TaskModel"] = relationship(back_populates="user_tasks")
 
@@ -365,5 +352,4 @@ class ConversationModel(Base):
     )
     messages: Mapped[str] = mapped_column(Text, nullable=True)
     
-    # Relación
     user: Mapped["UserModel"] = relationship(back_populates="conversations")

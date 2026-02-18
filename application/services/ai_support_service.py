@@ -10,7 +10,7 @@ from typing import Optional, List
 
 from domain.entities.conversation import Conversation, Message, MessageRole
 from domain.interfaces.iai_support_service import IAiSupportService
-from infrastructure.persistence.supabase.conversation_repository import ConversationRepository
+from infrastructure.persistence.postgresql.conversation_repository import PostgresConversationRepository
 from infrastructure.api_clients.groq_client import GroqClient
 from utils.sip_prompts import get_system_prompt, get_escalation_prompt
 from utils.logger import logger
@@ -21,7 +21,7 @@ class AiSupportService(IAiSupportService):
     
     def __init__(
         self,
-        conversation_repo: ConversationRepository,
+        conversation_repo: PostgresConversationRepository,
         groq_client: GroqClient
     ):
         """
