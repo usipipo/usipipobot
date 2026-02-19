@@ -187,37 +187,15 @@ class Settings(BaseSettings):
     )
     
     # =========================================================================
-    # SUPABASE / POSTGRESQL
+    # POSTGRESQL / BASE DE DATOS
     # =========================================================================
-    SUPABASE_URL: str = Field(
-        ...,  # REQUERIDO
-        description="URL del proyecto de Supabase"
-    )
-    
-    SUPABASE_SERVICE_KEY: str = Field(
-        ...,  # REQUERIDO
-        min_length=30,
-        description="Service Role Key de Supabase (tiene privilegios totales)"
-    )
-    
-    SUPABASE_SECRET_KEY: str = Field(
-        ...,  # REQUERIDO
-        description="Secret Key de Supabase"
-    )
-    
-    SUPABASE_ANON_KEY: str = Field(
-        ...,  # REQUERIDO
-        description="Anon Key de Supabase"
-    )
-    
-    SUPABASE_JWT_SECRET: str = Field(
-        ...,  # REQUERIDO
-        description="JWT Secret de Supabase"
-    )
+    # NOTA: Las variables de Supabase han sido eliminadas en la version 2.1.0
+    # Usamos PostgreSQL auto-alojado con SQLAlchemy Async exclusivamente.
+    # =========================================================================
     
     DATABASE_URL: str = Field(
         ...,  # REQUERIDO
-        description="URL completa de conexión PostgreSQL"
+        description="URL completa de conexion PostgreSQL (formato: postgresql+asyncpg://user:pass@host:5432/db)"
     )
     
     DB_POOL_SIZE: int = Field(
@@ -651,9 +629,6 @@ class Settings(BaseSettings):
             "SECRET_KEY",
             "TELEGRAM_TOKEN",
             "WG_SERVER_PRIVKEY",
-            "SUPABASE_SERVICE_KEY",
-            "SUPABASE_SECRET_KEY",
-            "SUPABASE_JWT_SECRET",
             "DATABASE_URL",
             "OUTLINE_API_URL",
             "SENTRY_DSN"
