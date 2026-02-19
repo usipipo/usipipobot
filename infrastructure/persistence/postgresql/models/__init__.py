@@ -1,34 +1,15 @@
-"""
-Modelos SQLAlchemy para PostgreSQL auto-alojado.
-
-Author: uSipipo Team
-Version: 2.1.0
-"""
+"""Exports de modelos SQLAlchemy."""
 
 from .base import (
     Base,
     UserModel,
     VpnKeyModel,
-    TicketModel,
-    TransactionModel,
-    AchievementModel,
-    UserStatsModel,
-    UserAchievementModel,
-    TaskModel,
-    UserTaskModel,
-    ConversationModel,
+    DataPackageModel,
 )
 
 __all__ = [
     "Base",
     "UserModel",
     "VpnKeyModel",
-    "TicketModel",
-    "TransactionModel",
-    "AchievementModel",
-    "UserStatsModel",
-    "UserAchievementModel",
-    "TaskModel",
-    "UserTaskModel",
-    "ConversationModel",
+    "DataPackageModel",
 ]
