@@ -13,50 +13,30 @@ from typing import Callable
 
 import punq
 
-# Database
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.logger import logger
 from config import settings
 
-# Infrastructure
 from infrastructure.persistence.database import get_session_factory
 from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
 from infrastructure.api_clients.groq_client import GroqClient
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
-from infrastructure.persistence.postgresql.transaction_repository import PostgresTransactionRepository
-from infrastructure.persistence.postgresql.achievement_repository import (
-    PostgresAchievementRepository, PostgresUserStatsRepository
-)
-from infrastructure.persistence.postgresql.ticket_repository import PostgresTicketRepository
-from infrastructure.persistence.postgresql.task_repository import PostgresTaskRepository
-from infrastructure.persistence.postgresql.conversation_repository import PostgresConversationRepository
+from infrastructure.persistence.postgresql.data_package_repository import PostgresDataPackageRepository
 
-# Domain Interfaces
 from domain.interfaces.iuser_repository import IUserRepository
 from domain.interfaces.ikey_repository import IKeyRepository
-from domain.interfaces.itransaction_repository import ITransactionRepository
-from domain.interfaces.iachievement_repository import IAchievementRepository, IUserStatsRepository
+from domain.interfaces.idata_package_repository import IDataPackageRepository
 
-# Application Services
 from application.services.vpn_service import VpnService
-from application.services.support_service import SupportService
 from application.services.referral_service import ReferralService
 from application.services.payment_service import PaymentService
-from application.services.achievement_service import AchievementService
 from application.services.admin_service import AdminService
-from application.services.task_service import TaskService
-from application.services.ai_support_service import AiSupportService
 from application.services.broadcast_service import BroadcastService
 from application.services.announcer_service import AnnouncerService
 from application.services.game_service import GameService
 
-# Handlers - Feature-based architecture
-from telegram_bot.features.task_management import (
-    get_task_management_handlers,
-    get_task_management_callback_handlers
-)
 from telegram_bot.features.announcer import get_announcer_handlers
 from telegram_bot.features.vpn_keys import (
     get_vpn_keys_handler,
@@ -66,11 +46,6 @@ from telegram_bot.features.vpn_keys import (
 from telegram_bot.features.key_management import (
     get_key_management_handlers,
     get_key_management_callback_handlers
-)
-from telegram_bot.features.support import (
-    get_support_handlers,
-    get_support_callback_handlers,
-    get_support_conversation_handler
 )
 from telegram_bot.features.referral import (
     get_referral_handlers,
@@ -100,15 +75,6 @@ from telegram_bot.features.shop import (
 from telegram_bot.features.vip import (
     get_vip_handlers,
     get_vip_callback_handlers
-)
-from telegram_bot.features.ai_support import (
-    get_ai_support_handler,
-    get_ai_callback_handlers
-)
-from telegram_bot.features.ai_support.direct_message_handler import get_direct_message_handler
-from telegram_bot.features.achievements import (
-    get_achievements_handlers,
-    get_achievements_callback_handlers
 )
 
 
@@ -149,19 +115,10 @@ def get_container() -> punq.Container:
 
     logger.debug("🔧 Configurando contenedor de dependencias...")
 
-    # Configurar sesiones de base de datos
     _configure_database_sessions(container)
-
-    # Configurar clientes de infraestructura
     _configure_infrastructure_clients(container)
-
-    # Configurar repositorios
     _configure_repositories(container)
-
-    # Configurar servicios de aplicación
     _configure_application_services(container)
-
-    # Configurar handlers
     _configure_handlers(container)
 
     logger.debug("✅ Contenedor de dependencias configurado")
@@ -197,38 +154,13 @@ def _configure_repositories(container: punq.Container) -> None:
         session = session_factory()
         return PostgresKeyRepository(session)
 
-    def create_transaction_repo() -> PostgresTransactionRepository:
+    def create_data_package_repo() -> PostgresDataPackageRepository:
         session = session_factory()
-        return PostgresTransactionRepository(session)
-
-    def create_achievement_repo() -> PostgresAchievementRepository:
-        session = session_factory()
-        return PostgresAchievementRepository(session)
-
-    def create_user_stats_repo() -> PostgresUserStatsRepository:
-        session = session_factory()
-        return PostgresUserStatsRepository(session)
-
-    def create_ticket_repo() -> PostgresTicketRepository:
-        session = session_factory()
-        return PostgresTicketRepository(session)
-
-    def create_task_repo() -> PostgresTaskRepository:
-        session = session_factory()
-        return PostgresTaskRepository(session)
-
-    def create_conversation_repo() -> PostgresConversationRepository:
-        session = session_factory()
-        return PostgresConversationRepository(session)
+        return PostgresDataPackageRepository(session)
 
     container.register(IUserRepository, factory=create_user_repo)
     container.register(IKeyRepository, factory=create_key_repo)
-    container.register(ITransactionRepository, factory=create_transaction_repo)
-    container.register(IPostgresAchievementRepository, factory=create_achievement_repo)
-    container.register(IPostgresUserStatsRepository, factory=create_user_stats_repo)
-    container.register(PostgresTicketRepository, factory=create_ticket_repo)
-    container.register(PostgresTaskRepository, factory=create_task_repo)
-    container.register(PostgresConversationRepository, factory=create_conversation_repo)
+    container.register(IDataPackageRepository, factory=create_data_package_repo)
 
 
 def _configure_application_services(container: punq.Container) -> None:
@@ -243,41 +175,12 @@ def _configure_application_services(container: punq.Container) -> None:
         session = session_factory()
         return PostgresKeyRepository(session)
 
-    def create_transaction_repo() -> PostgresTransactionRepository:
-        session = session_factory()
-        return PostgresTransactionRepository(session)
-
-    def create_achievement_repo() -> PostgresAchievementRepository:
-        session = session_factory()
-        return PostgresAchievementRepository(session)
-
-    def create_user_stats_repo() -> PostgresUserStatsRepository:
-        session = session_factory()
-        return PostgresUserStatsRepository(session)
-
-    def create_ticket_repo() -> PostgresTicketRepository:
-        session = session_factory()
-        return PostgresTicketRepository(session)
-
-    def create_task_repo() -> PostgresTaskRepository:
-        session = session_factory()
-        return PostgresTaskRepository(session)
-
-    def create_conversation_repo() -> PostgresConversationRepository:
-        session = session_factory()
-        return PostgresConversationRepository(session)
-
     def create_vpn_service() -> VpnService:
         return VpnService(
             user_repo=create_user_repo(),
             key_repo=create_key_repo(),
             outline_client=container.resolve(OutlineClient),
             wireguard_client=container.resolve(WireGuardClient)
-        )
-
-    def create_support_service() -> SupportService:
-        return SupportService(
-            ticket_repo=create_ticket_repo()
         )
 
     def create_referral_service() -> ReferralService:
@@ -288,32 +191,14 @@ def _configure_application_services(container: punq.Container) -> None:
     def create_payment_service() -> PaymentService:
         return PaymentService(
             user_repo=create_user_repo(),
-            transaction_repo=create_transaction_repo()
-        )
-
-    def create_achievement_service() -> AchievementService:
-        return AchievementService(
-            achievement_repository=create_achievement_repo(),
-            user_stats_repository=create_user_stats_repo()
+            key_repo=create_key_repo()
         )
 
     def create_admin_service() -> AdminService:
         return AdminService(
             key_repository=create_key_repo(),
             user_repository=create_user_repo(),
-            payment_repository=create_transaction_repo()
-        )
-
-    def create_task_service() -> TaskService:
-        return TaskService(
-            task_repo=create_task_repo(),
-            payment_service=create_payment_service()
-        )
-
-    def create_ai_support_service() -> AiSupportService:
-        return AiSupportService(
-            conversation_repo=create_conversation_repo(),
-            groq_client=container.resolve(GroqClient)
+            payment_repository=create_key_repo()
         )
 
     def create_broadcast_service() -> BroadcastService:
@@ -326,13 +211,9 @@ def _configure_application_services(container: punq.Container) -> None:
         return GameService()
 
     container.register(VpnService, factory=create_vpn_service)
-    container.register(SupportService, factory=create_support_service)
     container.register(ReferralService, factory=create_referral_service)
     container.register(PaymentService, factory=create_payment_service)
-    container.register(AchievementService, factory=create_achievement_service)
     container.register(AdminService, factory=create_admin_service)
-    container.register(TaskService, factory=create_task_service)
-    container.register(AiSupportService, factory=create_ai_support_service)
     container.register(BroadcastService, factory=create_broadcast_service)
     container.register(AnnouncerService, factory=create_announcer_service)
     container.register(GameService, factory=create_game_service)
@@ -350,41 +231,12 @@ def _configure_handlers(container: punq.Container) -> None:
         session = session_factory()
         return PostgresKeyRepository(session)
 
-    def create_transaction_repo() -> PostgresTransactionRepository:
-        session = session_factory()
-        return PostgresTransactionRepository(session)
-
-    def create_achievement_repo() -> PostgresAchievementRepository:
-        session = session_factory()
-        return PostgresAchievementRepository(session)
-
-    def create_user_stats_repo() -> PostgresUserStatsRepository:
-        session = session_factory()
-        return PostgresUserStatsRepository(session)
-
-    def create_ticket_repo() -> PostgresTicketRepository:
-        session = session_factory()
-        return PostgresTicketRepository(session)
-
-    def create_task_repo() -> PostgresTaskRepository:
-        session = session_factory()
-        return PostgresTaskRepository(session)
-
-    def create_conversation_repo() -> PostgresConversationRepository:
-        session = session_factory()
-        return PostgresConversationRepository(session)
-
     def create_vpn_service() -> VpnService:
         return VpnService(
             user_repo=create_user_repo(),
             key_repo=create_key_repo(),
             outline_client=container.resolve(OutlineClient),
             wireguard_client=container.resolve(WireGuardClient)
-        )
-
-    def create_support_service() -> SupportService:
-        return SupportService(
-            ticket_repo=create_ticket_repo()
         )
 
     def create_referral_service() -> ReferralService:
@@ -395,32 +247,14 @@ def _configure_handlers(container: punq.Container) -> None:
     def create_payment_service() -> PaymentService:
         return PaymentService(
             user_repo=create_user_repo(),
-            transaction_repo=create_transaction_repo()
-        )
-
-    def create_achievement_service() -> AchievementService:
-        return AchievementService(
-            achievement_repository=create_achievement_repo(),
-            user_stats_repository=create_user_stats_repo()
+            key_repo=create_key_repo()
         )
 
     def create_admin_service() -> AdminService:
         return AdminService(
             key_repository=create_key_repo(),
             user_repository=create_user_repo(),
-            payment_repository=create_transaction_repo()
-        )
-
-    def create_task_service() -> TaskService:
-        return TaskService(
-            task_repo=create_task_repo(),
-            payment_service=create_payment_service()
-        )
-
-    def create_ai_support_service() -> AiSupportService:
-        return AiSupportService(
-            conversation_repo=create_conversation_repo(),
-            groq_client=container.resolve(GroqClient)
+            payment_repository=create_key_repo()
         )
 
     def create_broadcast_service() -> BroadcastService:
@@ -432,41 +266,25 @@ def _configure_handlers(container: punq.Container) -> None:
     def create_game_service() -> GameService:
         return GameService()
 
-    def create_user_task_manager_handlers() -> list:
-        """Factory para los handlers de Gestor de Tareas (Premium)."""
-        return get_task_management_handlers(
-            task_service=create_task_service(),
-            vpn_service=create_vpn_service()
-        )
-
     def create_user_announcer_handlers() -> list:
-        """Factory para los handlers de Anunciante (Premium)."""
         return get_announcer_handlers(
             announcer_service=create_announcer_service(),
             vpn_service=create_vpn_service()
         )
 
     def create_creation_handlers() -> object:
-        """Factory para los handlers de creación de llaves."""
         return get_vpn_keys_handler(create_vpn_service())
 
     def create_key_submenu_handlers() -> object:
-        """Factory para los handlers de submenú de llaves."""
         return get_key_management_handlers(create_vpn_service())
 
-    def create_support_handlers() -> object:
-        """Factory para los handlers de soporte."""
-        return get_support_conversation_handler(create_support_service())
-
     def create_referral_handlers_list() -> list:
-        """Factory para los handlers de referidos."""
         return get_referral_handlers(
             referral_service=create_referral_service(),
             vpn_service=create_vpn_service()
         )
 
     def create_payment_handlers_list() -> list:
-        """Factory para los handlers de pagos."""
         return get_payments_handlers(
             payment_service=create_payment_service(),
             vpn_service=create_vpn_service(),
@@ -474,69 +292,37 @@ def _configure_handlers(container: punq.Container) -> None:
         )
 
     def create_monitoring_handlers_list() -> list:
-        """Factory para los handlers de monitorización."""
-        # Monitoring handlers están en operations feature
         return get_operations_handlers(
             vpn_service=create_vpn_service(),
             referral_service=create_referral_service()
         )
 
     def create_broadcast_handlers() -> list:
-        """Factory para los handlers de broadcast."""
         broadcast_service = create_broadcast_service()
         return get_broadcast_handlers(broadcast_service)
 
     def create_game_handlers_list() -> list:
-        """Factory para los handlers de juegos."""
         return get_game_handlers(create_game_service())
 
-    def create_support_menu_handlers_list() -> list:
-        """Factory para los handlers del menú de soporte."""
-        return get_support_handlers(create_support_service())
-
     def create_admin_handlers() -> list:
-        """Factory para los handlers de administración."""
         handlers = get_admin_handlers(create_admin_service())
         return handlers if isinstance(handlers, list) else [handlers]
 
-    def create_task_handlers() -> list:
-        """Factory para los handlers de tareas."""
-        return get_task_management_handlers(
-            task_service=create_task_service(),
-            vpn_service=create_vpn_service()
-        )
-
-    def create_admin_task_handlers() -> list:
-        """Factory para los handlers de administración de tareas."""
-        # Admin task handlers están en task_management feature
-        return get_task_management_handlers(
-            task_service=create_task_service(),
-            vpn_service=create_vpn_service()
-        )
-
     def create_shop_handlers_list() -> list:
-        """Factory para los handlers de tienda."""
         return get_shop_handlers(
             payment_service=create_payment_service(),
             vpn_service=create_vpn_service()
         )
 
     def create_vip_command_handler() -> list:
-        """Factory para el handler dedicado del comando /vip."""
         return get_vip_handlers(
             payment_service=create_payment_service(),
             vpn_service=create_vpn_service()
         )
 
     def create_inline_callback_handlers_list() -> list:
-        """Factory para los handlers de callbacks inline."""
-        # Combinar callbacks de diferentes features
         handlers = []
-        handlers.extend(get_task_management_callback_handlers(
-            create_task_service(), create_vpn_service()
-        ))
         handlers.extend(get_admin_callback_handlers(create_admin_service()))
-        handlers.extend(get_support_callback_handlers(create_support_service()))
         handlers.extend(get_payments_callback_handlers(
             create_payment_service(), create_vpn_service(), create_referral_service()
         ))
@@ -552,42 +338,23 @@ def _configure_handlers(container: punq.Container) -> None:
         handlers.extend(get_vip_callback_handlers(
             create_payment_service(), create_vpn_service()
         ))
-        handlers.extend(get_ai_callback_handlers(create_ai_support_service()))
-        handlers.extend(get_achievements_callback_handlers(
-            create_achievement_service()
-        ))
         handlers.extend(get_operations_callback_handlers(
             create_vpn_service(), create_referral_service()
         ))
         return handlers
 
-    def create_ai_support_handler() -> object:
-        """Factory para el handler de soporte con IA Sip."""
-        return get_ai_support_handler(create_ai_support_service())
-
-    def create_direct_message_handler() -> object:
-        """Factory para el handler de mensajes directos con IA."""
-        return get_direct_message_handler(create_ai_support_service())
-
-    container.register("user_task_manager_handlers", factory=create_user_task_manager_handlers)
     container.register("user_announcer_handlers", factory=create_user_announcer_handlers)
     container.register("creation_handlers", factory=create_creation_handlers)
     container.register("key_submenu_handlers", factory=create_key_submenu_handlers)
-    container.register("support_handlers", factory=create_support_handlers)
     container.register("referral_handlers", factory=create_referral_handlers_list)
     container.register("payment_handlers", factory=create_payment_handlers_list)
     container.register("monitoring_handlers", factory=create_monitoring_handlers_list)
     container.register("broadcast_handlers", factory=create_broadcast_handlers)
     container.register("game_handlers", factory=create_game_handlers_list)
-    container.register("support_menu_handlers", factory=create_support_menu_handlers_list)
     container.register("admin_handlers", factory=create_admin_handlers)
-    container.register("task_handlers", factory=create_task_handlers)
-    container.register("admin_task_handlers", factory=create_admin_task_handlers)
     container.register("shop_handlers", factory=create_shop_handlers_list)
     container.register("vip_command_handler", factory=create_vip_command_handler)
     container.register("inline_callback_handlers", factory=create_inline_callback_handlers_list)
-    container.register("ai_support_handler", factory=create_ai_support_handler)
-    container.register("direct_message_handler", factory=create_direct_message_handler)
 
 
 def get_service(service_class):
