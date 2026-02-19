@@ -56,8 +56,8 @@ async def lifespan(app: FastAPI):
     # container.wire(modules=[...])
     
     # Aquí verificamos conexiones (Fase 3 y 4)
-    if not settings.SUPABASE_URL:
-        logger.warning("⚠️ Supabase URL no configurada.")
+    if not settings.DATABASE_URL:
+        logger.warning("⚠️ DATABASE_URL no configurada.")
     
     logger.success("✅ Sistema listo para recibir peticiones.")
     

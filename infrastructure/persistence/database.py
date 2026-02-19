@@ -1,11 +1,11 @@
 """
 Módulo de conexión a base de datos con SQLAlchemy Async.
 
-Este módulo centraliza la conexión a PostgreSQL (Supabase) usando
+Este módulo centraliza la conexión a PostgreSQL auto-alojado usando
 SQLAlchemy 2.0 con soporte asíncrono completo.
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 2.1.0
 """
 
 import logging
@@ -147,7 +147,7 @@ def get_engine() -> AsyncEngine:
             max_overflow=10,
             pool_timeout=settings.DB_TIMEOUT,
             pool_pre_ping=True,  # Verificar conexiones antes de usar
-            # Para Supabase en producción, considera NullPool si hay problemas
+            # Para PostgreSQL en producción, considera NullPool si hay problemas
             # poolclass=NullPool,
         )
         
