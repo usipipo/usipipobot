@@ -44,7 +44,9 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             referred_by=model.referred_by,
             total_referral_earnings=model.total_referral_earnings or 0,
             is_vip=model.is_vip or False,
-            vip_expires_at=vip_expires
+            vip_expires_at=vip_expires,
+            free_data_limit_bytes=getattr(model, 'free_data_limit_bytes', 0) or 0,
+            free_data_used_bytes=getattr(model, 'free_data_used_bytes', 0) or 0
         )
 
     def _entity_to_model(self, entity: User) -> UserModel:
@@ -60,7 +62,9 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             referred_by=entity.referred_by,
             total_referral_earnings=entity.total_referral_earnings,
             is_vip=entity.is_vip,
-            vip_expires_at=entity.vip_expires_at
+            vip_expires_at=entity.vip_expires_at,
+            free_data_limit_bytes=entity.free_data_limit_bytes,
+            free_data_used_bytes=entity.free_data_used_bytes
         )
 
     async def get_by_id(self, telegram_id: int, current_user_id: int) -> Optional[User]:
@@ -185,3 +189,21 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
         except Exception as e:
             logger.error(f"Error al obtener todos los usuarios: {e}")
             return []
+
+    async def update_free_data_usage(self, telegram_id: int, bytes_used: int, current_user_id: int) -> bool:
+        """Actualiza el uso de datos gratuitos de un usuario."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = (
+                update(UserModel)
+                .where(UserModel.telegram_id == telegram_id)
+                .values(free_data_used_bytes=UserModel.free_data_used_bytes + bytes_used)
+            )
+            await self.session.execute(query)
+            await self.session.commit()
+            logger.debug(f"Uso de datos gratuitos actualizado para usuario {telegram_id}")
+            return True
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error al actualizar uso de datos gratuitos: {e}")
+            return False
