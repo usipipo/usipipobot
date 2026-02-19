@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from config import settings
-from infrastructure.persistence.supabase.models.base import Base
+from infrastructure.persistence.postgresql.models.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
