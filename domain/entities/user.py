@@ -45,6 +45,9 @@ class User:
     announcer_expires_at: Optional[datetime] = None
     
     keys: List = field(default_factory=list)
+    
+    free_data_limit_bytes: int = 10 * 1024**3
+    free_data_used_bytes: int = 0
 
     @property
     def is_active(self) -> bool:
@@ -121,6 +124,15 @@ class User:
         else:
             vip_exp = vip_exp.astimezone(timezone.utc)
         return now < vip_exp
+    
+    @property
+    def free_data_remaining_bytes(self) -> int:
+        """Calcula los bytes restantes de datos gratuitos."""
+        return max(0, self.free_data_limit_bytes - self.free_data_used_bytes)
+    
+    def add_free_data_usage(self, bytes_used: int) -> None:
+        """Agrega uso a los datos gratuitos."""
+        self.free_data_used_bytes += bytes_used
 
     def __repr__(self):
         return f"<User(id={self.telegram_id}, username={self.username}, status={self.status})>"
