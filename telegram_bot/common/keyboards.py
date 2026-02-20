@@ -253,33 +253,18 @@ class CommonKeyboards:
         """
         Main menu keyboard.
 
-        Args:
-            is_admin: Whether to include admin options
-
-        Returns:
-            InlineKeyboardMarkup: Main menu keyboard
+        NOTE: Para el menú principal simplificado, usar:
+        from telegram_bot.keyboards import MainMenuKeyboard
+        MainMenuKeyboard.main_menu()
         """
-        keyboard = [
-            [
-                InlineKeyboardButton("🛡️ Mis Llaves", callback_data="key_management"),
-                InlineKeyboardButton("📊 Estado", callback_data="status")
-            ],
-            [
-                InlineKeyboardButton("💰 Operaciones", callback_data="operations"),
-                InlineKeyboardButton("🏆 Logros", callback_data="achievements")
-            ],
-            [
-                InlineKeyboardButton("⚙️ Ayuda", callback_data="help")
-            ]
-        ]
-
-        # Add admin options if applicable
+        from telegram_bot.keyboards import MainMenuKeyboard
         if is_admin:
-            keyboard.insert(0, [
-                InlineKeyboardButton("🔧 Panel Admin", callback_data="admin")
-            ])
-
-        return InlineKeyboardMarkup(keyboard)
+            from infrastructure.config import Settings
+            settings = Settings()
+            return MainMenuKeyboard.main_menu_with_admin(
+                settings.ADMIN_TELEGRAM_ID, 0
+            )
+        return MainMenuKeyboard.main_menu()
 
     @staticmethod
     def empty_state(help_callback: str = "help", back_callback: str = "back") -> InlineKeyboardMarkup:
