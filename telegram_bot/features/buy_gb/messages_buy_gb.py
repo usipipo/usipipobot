@@ -78,15 +78,49 @@ class BuyGbMessages:
     class Data:
         """Mensajes para comando /data."""
 
-        HEADER = "💾 *Mis Datos*\n"
+        HEADER = "💾 *Tu Consumo de Datos*\n"
+        SEPARATOR = "═══════════════════════\n"
 
-        DATA_INFO = (
-            "📊 *Resumen de consumo:*\n\n"
-            "📦 Paquetes activos: {active_packages}\n"
-            "📥 Total disponible: {total_gb:.2f} GB\n"
-            "📤 Datos usados: {used_gb:.2f} GB\n"
-            "📥 Datos restantes: {remaining_gb:.2f} GB\n"
-        )
+        @staticmethod
+        def format_packages_list(packages: list) -> str:
+            if not packages:
+                return ""
+            lines = ["📦 *Paquetes Activos:*"]
+            for pkg in packages:
+                lines.append(f"   • {pkg['name']} {pkg['total_gb']:.0f}GB ({pkg['days_remaining']} días restantes)")
+                lines.append(f"     Usado: {pkg['used_gb']:.1f} GB / {pkg['total_gb']:.0f} GB")
+                lines.append(f"     Disponible: {pkg['remaining_gb']:.1f} GB")
+            return "\n".join(lines)
+
+        @staticmethod
+        def format_free_plan(free_plan: dict) -> str:
+            return (
+                f"🎁 *Plan Free:*\n"
+                f"   Disponible: {free_plan['remaining_gb']:.1f} GB"
+            )
+
+        @staticmethod
+        def DATA_INFO(summary: dict) -> str:
+            lines = [BuyGbMessages.Data.HEADER]
+            lines.append("")
+            lines.append(BuyGbMessages.Data.SEPARATOR)
+            lines.append("")
+            
+            if summary.get("packages"):
+                lines.append(BuyGbMessages.Data.format_packages_list(summary["packages"]))
+                lines.append("")
+                lines.append(BuyGbMessages.Data.SEPARATOR)
+                lines.append("")
+            
+            lines.append(BuyGbMessages.Data.format_free_plan(summary["free_plan"]))
+            lines.append("")
+            lines.append(BuyGbMessages.Data.SEPARATOR)
+            lines.append("")
+            lines.append(f"📊 *TOTAL DISPONIBLE:* {summary['remaining_gb']:.1f} GB")
+            lines.append("")
+            lines.append("💡 El consumo usa primero los paquetes comprados")
+            
+            return "\n".join(lines)
 
         NO_DATA = (
             "💾 *Mis Datos*\n\n"
