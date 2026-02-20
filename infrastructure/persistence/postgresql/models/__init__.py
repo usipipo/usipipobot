@@ -5,6 +5,7 @@ from .base import (
     UserModel,
     VpnKeyModel,
     DataPackageModel,
+    TransactionModel,
 )
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "UserModel",
     "VpnKeyModel",
     "DataPackageModel",
+    "TransactionModel",
 ]
