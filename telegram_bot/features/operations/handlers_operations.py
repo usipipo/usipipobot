@@ -8,7 +8,6 @@ Version: 2.0.0 - Feature-based architecture
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler, CommandHandler
 from application.services.vpn_service import VpnService
-from application.services.referral_service import ReferralService
 from .messages_operations import OperationsMessages
 from .keyboards_operations import OperationsKeyboards
 from telegram_bot.features.user_management.keyboards_user_management import UserManagementKeyboards
@@ -19,16 +18,14 @@ from utils.logger import logger
 class OperationsHandler:
     """Handler para operaciones del usuario."""
     
-    def __init__(self, vpn_service: VpnService, referral_service: ReferralService = None):
+    def __init__(self, vpn_service: VpnService):
         """
         Inicializa el handler de operaciones.
         
         Args:
             vpn_service: Servicio de VPN
-            referral_service: Servicio de referidos (opcional)
         """
         self.vpn_service = vpn_service
-        self.referral_service = referral_service
         logger.info("💰 OperationsHandler inicializado")
 
     async def operations_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -99,43 +96,24 @@ class OperationsHandler:
         """
         Muestra el sistema de referidos.
         """
-        if not self.referral_service:
-            error_text = OperationsMessages.Error.SERVICE_UNAVAILABLE
-            
-            if update.message:
-                await update.message.reply_text(
-                    text=error_text,
-                    reply_markup=OperationsKeyboards.operations_menu(),
-                    parse_mode="Markdown"
-                )
-            elif update.callback_query:
-                await update.callback_query.answer()
-                await update.callback_query.edit_message_text(
-                    text=error_text,
-                    reply_markup=OperationsKeyboards.operations_menu(),
-                    parse_mode="Markdown"
-                )
-            return
-            
         user_id = update.effective_user.id
         
         try:
-            referral_data = await self.referral_service.get_user_referral_data(user_id, current_user_id=user_id)
+            user_status = await self.vpn_service.get_user_status(user_id, current_user_id=user_id)
+            user = user_status["user"]
             
-            # Generar el enlace de referido
-            referral_code = referral_data.get("code", "N/A")
+            referral_code = getattr(user, 'referral_code', 'N/A')
             referral_link = f"https://t.me/{settings.BOT_USERNAME}?start={referral_code}"
             
             text = OperationsMessages.Referral.MENU.format(
                 bot_username=settings.BOT_USERNAME,
                 referral_link=referral_link,
                 referral_code=referral_code,
-                direct_referrals=referral_data.get("direct_referrals", 0),
-                total_earnings=referral_data.get("total_earnings", 0),
+                direct_referrals=getattr(user, 'direct_referrals', 0),
+                total_earnings=getattr(user, 'total_referral_earnings', 0),
                 commission=10
             )
             
-            # Manejar tanto mensaje como callback
             if update.message:
                 await update.message.reply_text(
                     text=text,
@@ -251,18 +229,17 @@ class OperationsHandler:
             )
 
 
-def get_operations_handlers(vpn_service: VpnService, referral_service: ReferralService = None):
+def get_operations_handlers(vpn_service: VpnService):
     """
     Retorna los handlers de operaciones.
     
     Args:
         vpn_service: Servicio de VPN
-        referral_service: Servicio de referidos (opcional)
         
     Returns:
         list: Lista de handlers
     """
-    handler = OperationsHandler(vpn_service, referral_service)
+    handler = OperationsHandler(vpn_service)
     
     return [
         MessageHandler(filters.Regex("^💰 Operaciones$"), handler.operations_menu),
@@ -278,18 +255,17 @@ def get_operations_handlers(vpn_service: VpnService, referral_service: ReferralS
     ]
 
 
-def get_operations_callback_handlers(vpn_service: VpnService, referral_service: ReferralService = None):
+def get_operations_callback_handlers(vpn_service: VpnService):
     """
     Retorna los handlers de callbacks para operaciones.
     
     Args:
         vpn_service: Servicio de VPN
-        referral_service: Servicio de referidos (opcional)
         
     Returns:
         list: Lista de CallbackQueryHandler
     """
-    handler = OperationsHandler(vpn_service, referral_service)
+    handler = OperationsHandler(vpn_service)
     
     return [
         CallbackQueryHandler(handler.operations_menu_callback, pattern="^operations_menu$"),
