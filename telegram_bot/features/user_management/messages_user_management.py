@@ -30,6 +30,32 @@ class UserManagementMessages:
             "Todo listo para continuar.\n\n"
             "📊 Usa el menú para gestionar tus accesos."
         )
+        
+        NEW_USER_SIMPLIFIED = (
+            "🎉 *¡Bienvenido a uSipipo!*\n\n"
+            "Tu VPN personal está lista para usar.\n\n"
+            "📱 *Usa el menú de abajo para:*\n"
+            "• Ver tus claves VPN activas\n"
+            "• Crear nuevas claves\n"
+            "• Comprar más datos\n"
+            "• Ver tu consumo\n\n"
+            "¿Necesitas ayuda? Presiona el botón ❓"
+        )
+        
+        RETURNING_USER_SIMPLIFIED = (
+            "👋 *¡Bienvenido de vuelta!*\n\n"
+            "Usa el menú de abajo para gestionar tu VPN:\n"
+        )
+        
+        HELP_TEXT = (
+            "❓ *Ayuda de uSipipo*\n\n"
+            "*Opciones del menú:*\n"
+            "🔑 *Mis Claves VPN* - Ver todas tus claves activas\n"
+            "➕ *Nueva Clave* - Crear una nueva clave VPN\n"
+            "📦 *Comprar GB* - Adquirir más datos\n"
+            "💾 *Mis Datos* - Ver tu consumo actual\n\n"
+            "¿Necesitas más ayuda? Contáctanos."
+        )
     
     # ============================================
     # STATUS
