@@ -33,6 +33,9 @@ from telegram_bot.features.vpn_keys.handlers_vpn_keys import (
 from telegram_bot.features.buy_gb.handlers_buy_gb import (
     get_buy_gb_handlers, get_buy_gb_callback_handlers, get_buy_gb_payment_handlers
 )
+from telegram_bot.features.basic_commands.handlers_basic import (
+    get_basic_handlers, get_basic_callback_handlers
+)
 
 from application.services.vpn_service import VpnService
 from application.services.data_package_service import DataPackageService
@@ -79,6 +82,10 @@ def _get_core_handlers(vpn_service, payment_service, data_package_service) -> Li
     handlers.extend(get_buy_gb_callback_handlers(data_package_service))
     handlers.extend(get_buy_gb_payment_handlers(data_package_service))
     logger.info("Buy GB handlers configured")
+
+    handlers.extend(get_basic_handlers())
+    handlers.extend(get_basic_callback_handlers())
+    logger.info("Basic commands handlers configured")
 
     return handlers
 
