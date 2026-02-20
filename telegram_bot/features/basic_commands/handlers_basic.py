@@ -9,37 +9,37 @@ from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler
 from utils.logger import logger
 from .messages_basic import BasicMessages
-from telegram_bot.keyboards import MainMenuKeyboard
-from config import settings
-from application.services.vpn_service import VpnService
 
 
 class BasicHandler:
     """Handler para comandos básicos."""
 
-    def __init__(self, vpn_service: VpnService):
-        self.vpn_service = vpn_service
+    def __init__(self):
         logger.info("📋 BasicHandler inicializado")
 
     async def help_handler(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
         """Muestra la lista de comandos disponibles."""
-        logger.info(f"📋 /help ejecutado por usuario {update.effective_user.id}")
-        
-        await update.message.reply_text(
-            text=BasicMessages.HELP_TEXT,
-            parse_mode="Markdown"
-        )
+        user_id = update.effective_user.id
+        logger.info(f"📋 /help ejecutado por usuario {user_id}")
+
+        try:
+            await update.message.reply_text(
+                text=BasicMessages.HELP_TEXT,
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            logger.error(f"❌ Error en /help para usuario {user_id}: {e}")
 
 
-def get_basic_handlers(vpn_service: VpnService):
+def get_basic_handlers():
     """Retorna los handlers de comandos básicos."""
-    handler = BasicHandler(vpn_service)
+    handler = BasicHandler()
 
     return [
         CommandHandler("help", handler.help_handler),
     ]
 
 
-def get_basic_callback_handlers(vpn_service: VpnService):
+def get_basic_callback_handlers():
     """Retorna los handlers de callbacks para comandos básicos."""
     return []
