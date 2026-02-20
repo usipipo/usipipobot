@@ -11,7 +11,7 @@ from utils.logger import logger
 from telegram.ext import ApplicationBuilder
 
 from config import settings
-from application.services.common.container import get_container
+from application.services.common.container import get_service
 from application.services.vpn_service import VpnService
 from application.services.payment_service import PaymentService
 
@@ -19,6 +19,8 @@ from infrastructure.persistence.database import init_database, close_database
 from telegram_bot.handlers.handler_initializer import initialize_handlers
 from infrastructure.jobs.usage_sync import sync_vpn_usage_job
 from infrastructure.jobs.key_cleanup_job import key_cleanup_job
+from infrastructure.jobs.package_expiration_job import expire_packages_job
+from application.services.data_package_service import DataPackageService
 
 
 async def startup():
@@ -38,9 +40,9 @@ def main():
     logger.info("🚀 Iniciando uSipipo VPN Manager Bot...")
 
     try:
-        container = get_container()
-        vpn_service = container.resolve(VpnService)
-        payment_service = container.resolve(PaymentService)
+        vpn_service = get_service(VpnService)
+        payment_service = get_service(PaymentService)
+        data_package_service = get_service(DataPackageService)
         logger.info("✅ Contenedor de dependencias configurado correctamente.")
     except Exception as e:
         logger.critical(f"❌ Error al inicializar el contenedor: {e}")
@@ -83,6 +85,14 @@ def main():
         data={'vpn_service': vpn_service}
     )
     logger.info("⏰ Job de limpieza de llaves programado.")
+
+    job_queue.run_repeating(
+        expire_packages_job,
+        interval=86400,
+        first=10,
+        data={'data_package_service': data_package_service}
+    )
+    logger.info("⏰ Job de expiración de paquetes programado.")
 
     handlers = initialize_handlers(vpn_service, payment_service)
     for handler in handlers:
