@@ -40,3 +40,7 @@ class IDataPackageRepository(Protocol):
     async def delete(self, package_id: uuid.UUID, current_user_id: int) -> bool:
         """Elimina un paquete de la base de datos."""
         ...
+
+    async def get_expired_packages(self, current_user_id: int) -> List[DataPackage]:
+        """Recupera todos los paquetes activos que han expirado."""
+        ...
