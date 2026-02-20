@@ -74,3 +74,22 @@ class BuyGbMessages:
             "✅ **Restante:** {remaining_gb:.2f} GB\n\n"
             "💡 *Compra mas paquetes si necesitas mas datos*"
         )
+
+    class Data:
+        """Mensajes para comando /data."""
+
+        HEADER = "💾 *Mis Datos*\n"
+
+        DATA_INFO = (
+            "📊 *Resumen de consumo:*\n\n"
+            "📦 Paquetes activos: {active_packages}\n"
+            "📥 Total disponible: {total_gb:.2f} GB\n"
+            "📤 Datos usados: {used_gb:.2f} GB\n"
+            "📥 Datos restantes: {remaining_gb:.2f} GB\n"
+        )
+
+        NO_DATA = (
+            "💾 *Mis Datos*\n\n"
+            "No tienes paquetes de datos activos.\n\n"
+            "Usa /buy para adquirir más datos."
+        )
