@@ -142,16 +142,58 @@ class TestConsumeData:
         
         mock_package_repo.update_usage.assert_called_once()
 
+    @pytest.mark.asyncio
+    async def test_consume_returns_false_when_no_packages(self, service, mock_package_repo):
+        mock_package_repo.get_valid_by_user.return_value = []
+        
+        result = await service.consume_data(123, 1024, current_user_id=123)
+        
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_consume_returns_true_when_packages_exist(self, service, mock_package_repo):
+        package = DataPackage(
+            id=uuid.uuid4(),
+            user_id=123,
+            package_type=PackageType.BASIC,
+            data_limit_bytes=10 * 1024**3,
+            stars_paid=50,
+            data_used_bytes=0,
+            expires_at=datetime.now(timezone.utc) + timedelta(days=35)
+        )
+        mock_package_repo.get_valid_by_user.return_value = [package]
+        mock_package_repo.update_usage.return_value = True
+        
+        result = await service.consume_data(123, 1024, current_user_id=123)
+        
+        assert result is True
+
 
 class TestExpireOldPackages:
     @pytest.mark.asyncio
     async def test_expire_deactivates_old_packages(self, service, mock_package_repo):
-        mock_package_repo.session = AsyncMock()
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = []
-        mock_package_repo.session.execute.return_value = mock_result
+        expired_package = DataPackage(
+            id=uuid.uuid4(),
+            user_id=123,
+            package_type=PackageType.BASIC,
+            data_limit_bytes=10 * 1024**3,
+            stars_paid=50,
+            data_used_bytes=0,
+            expires_at=datetime.now(timezone.utc) - timedelta(days=1)
+        )
+        mock_package_repo.get_expired_packages.return_value = [expired_package]
         mock_package_repo.deactivate.return_value = True
         
         result = await service.expire_old_packages(admin_user_id=1)
         
-        assert result >= 0
+        assert result == 1
+        mock_package_repo.get_expired_packages.assert_called_once_with(1)
+        mock_package_repo.deactivate.assert_called_once_with(expired_package.id, 1)
+
+    @pytest.mark.asyncio
+    async def test_expire_returns_zero_when_no_expired_packages(self, service, mock_package_repo):
+        mock_package_repo.get_expired_packages.return_value = []
+        
+        result = await service.expire_old_packages(admin_user_id=1)
+        
+        assert result == 0
