@@ -31,6 +31,7 @@ from domain.interfaces.idata_package_repository import IDataPackageRepository
 from application.services.vpn_service import VpnService
 from application.services.payment_service import PaymentService
 from application.services.admin_service import AdminService
+from application.services.data_package_service import DataPackageService
 
 from telegram_bot.features.vpn_keys import (
     get_vpn_keys_handler,
@@ -151,6 +152,10 @@ def _configure_application_services(container: punq.Container) -> None:
         session = session_factory()
         return PostgresKeyRepository(session)
 
+    def create_data_package_repo() -> PostgresDataPackageRepository:
+        session = session_factory()
+        return PostgresDataPackageRepository(session)
+
     def create_vpn_service() -> VpnService:
         return VpnService(
             user_repo=create_user_repo(),
@@ -172,9 +177,16 @@ def _configure_application_services(container: punq.Container) -> None:
             payment_repository=create_key_repo()
         )
 
+    def create_data_package_service() -> DataPackageService:
+        return DataPackageService(
+            package_repo=create_data_package_repo(),
+            user_repo=create_user_repo()
+        )
+
     container.register(VpnService, factory=create_vpn_service)
     container.register(PaymentService, factory=create_payment_service)
     container.register(AdminService, factory=create_admin_service)
+    container.register(DataPackageService, factory=create_data_package_service)
 
 
 def _configure_handlers(container: punq.Container) -> None:
