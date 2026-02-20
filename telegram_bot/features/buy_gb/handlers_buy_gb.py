@@ -252,15 +252,10 @@ class BuyGbHandler:
                 current_user_id=user_id
             )
 
-            if summary["active_packages"] == 0:
+            if summary["active_packages"] == 0 and summary["free_plan"]["remaining_gb"] <= 0:
                 message = BuyGbMessages.Data.NO_DATA
             else:
-                message = BuyGbMessages.Data.HEADER + BuyGbMessages.Data.DATA_INFO.format(
-                    active_packages=summary["active_packages"],
-                    total_gb=summary["total_limit_gb"],
-                    used_gb=summary["total_used_gb"],
-                    remaining_gb=summary["remaining_gb"]
-                )
+                message = BuyGbMessages.Data.DATA_INFO(summary)
 
             await update.message.reply_text(
                 text=message,
