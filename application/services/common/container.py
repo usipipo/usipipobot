@@ -219,14 +219,12 @@ def _configure_handlers(container: punq.Container) -> None:
     def create_payment_handlers_list() -> list:
         return get_payments_handlers(
             payment_service=create_payment_service(),
-            vpn_service=create_vpn_service(),
-            referral_service=None
+            vpn_service=create_vpn_service()
         )
 
     def create_monitoring_handlers_list() -> list:
         return get_operations_handlers(
-            vpn_service=create_vpn_service(),
-            referral_service=None
+            vpn_service=create_vpn_service()
         )
 
     def create_admin_handlers() -> list:
@@ -237,12 +235,12 @@ def _configure_handlers(container: punq.Container) -> None:
         handlers = []
         handlers.extend(get_admin_callback_handlers(create_admin_service()))
         handlers.extend(get_payments_callback_handlers(
-            create_payment_service(), create_vpn_service(), None
+            create_payment_service(), create_vpn_service()
         ))
         handlers.extend(get_vpn_keys_callback_handlers(create_vpn_service()))
         handlers.extend(get_key_management_callback_handlers(create_vpn_service()))
         handlers.extend(get_operations_callback_handlers(
-            create_vpn_service(), None
+            create_vpn_service()
         ))
         return handlers
 
