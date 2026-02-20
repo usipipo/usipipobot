@@ -133,7 +133,7 @@ class DataPackageService:
                 "remaining_gb": user.free_data_remaining_bytes / (1024**3)
             }
         
-        total_remaining = (total_limit_bytes - total_used_bytes) + (user.free_data_remaining_bytes if user else 0)
+        total_remaining = max(0, total_limit_bytes - total_used_bytes) + (user.free_data_remaining_bytes if user else 0)
         
         return {
             "active_packages": len(packages),
