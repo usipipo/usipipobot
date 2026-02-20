@@ -198,7 +198,7 @@ def get_vpn_keys_handler(vpn_service: VpnService) -> ConversationHandler:
         entry_points=[
             MessageHandler(filters.Regex("^➕ Crear Nueva$"), handler.start_creation),
             CallbackQueryHandler(handler.start_creation, pattern="^create_key$"),
-            CommandHandler("newkeys", handler.start_creation)
+            CommandHandler("newkey", handler.start_creation)
         ],
         states={
             SELECT_TYPE: [
