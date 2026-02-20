@@ -95,7 +95,7 @@ class TestGetUserPackages:
 
 class TestGetUserDataSummary:
     @pytest.mark.asyncio
-    async def test_returns_aggregated_summary(self, service, mock_package_repo):
+    async def test_returns_aggregated_summary(self, service, mock_package_repo, mock_user_repo):
         mock_package_repo.get_valid_by_user.return_value = [
             DataPackage(
                 user_id=123,
@@ -114,6 +114,7 @@ class TestGetUserDataSummary:
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35)
             )
         ]
+        mock_user_repo.get_by_id.return_value = None
         
         result = await service.get_user_data_summary(123, current_user_id=123)
         

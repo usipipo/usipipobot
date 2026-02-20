@@ -95,16 +95,53 @@ class DataPackageService:
 
     async def get_user_data_summary(self, user_id: int, current_user_id: int) -> Dict[str, Any]:
         packages = await self.package_repo.get_valid_by_user(user_id, current_user_id)
-
+        user = await self.user_repo.get_by_id(user_id, current_user_id)
+        
+        now = datetime.now(timezone.utc)
+        packages_detail = []
+        
+        for pkg in packages:
+            expires_at = pkg.expires_at
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            days_remaining = max(0, (expires_at - now).days)
+            
+            option = self._get_package_option(pkg.package_type.value)
+            package_name = option.name if option else pkg.package_type.value.title()
+            
+            packages_detail.append({
+                "name": package_name,
+                "total_gb": pkg.data_limit_bytes / (1024**3),
+                "used_gb": pkg.data_used_bytes / (1024**3),
+                "remaining_gb": pkg.remaining_bytes / (1024**3),
+                "days_remaining": days_remaining
+            })
+        
         total_limit_bytes = sum(p.data_limit_bytes for p in packages)
         total_used_bytes = sum(p.data_used_bytes for p in packages)
-        remaining_bytes = max(0, total_limit_bytes - total_used_bytes)
-
+        
+        free_plan = {
+            "limit_gb": 0.0,
+            "used_gb": 0.0,
+            "remaining_gb": 0.0
+        }
+        
+        if user:
+            free_plan = {
+                "limit_gb": user.free_data_limit_bytes / (1024**3),
+                "used_gb": user.free_data_used_bytes / (1024**3),
+                "remaining_gb": user.free_data_remaining_bytes / (1024**3)
+            }
+        
+        total_remaining = (total_limit_bytes - total_used_bytes) + (user.free_data_remaining_bytes if user else 0)
+        
         return {
+            "active_packages": len(packages),
+            "packages": packages_detail,
+            "free_plan": free_plan,
             "total_limit_gb": total_limit_bytes / (1024**3),
             "total_used_gb": total_used_bytes / (1024**3),
-            "remaining_gb": remaining_bytes / (1024**3),
-            "active_packages": len(packages)
+            "remaining_gb": total_remaining / (1024**3)
         }
 
     async def consume_data(self, user_id: int, bytes_used: int, current_user_id: int) -> bool:
