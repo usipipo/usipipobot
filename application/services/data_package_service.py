@@ -133,33 +133,21 @@ class DataPackageService:
         return True
 
     async def expire_old_packages(self, admin_user_id: int) -> int:
-        if not hasattr(self.package_repo, 'session'):
-            return 0
-            
         try:
-            now = datetime.now(timezone.utc)
-            
-            from infrastructure.persistence.postgresql.models.base import DataPackageModel
-            from sqlalchemy import select
-
-            session = self.package_repo.session
-            query = select(DataPackageModel).where(
-                DataPackageModel.is_active == True,
-                DataPackageModel.expires_at < now
-            )
-            result = await session.execute(query)
-            expired_packages = result.scalars().all()
+            expired_packages = await self.package_repo.get_expired_packages(admin_user_id)
 
             count = 0
             for pkg in expired_packages:
+                if pkg.id is None:
+                    continue
                 success = await self.package_repo.deactivate(pkg.id, admin_user_id)
                 if success:
                     count += 1
 
             logger.info(f"📦 {count} paquetes expirados desactivados")
             return count
-        except ImportError:
-            logger.warning("SQLAlchemy no disponible para expirar paquetes")
+        except Exception as e:
+            logger.error(f"Error al expirar paquetes: {e}")
             return 0
 
     async def get_package_by_id(self, package_id: uuid.UUID, current_user_id: int) -> Optional[DataPackage]:

@@ -173,3 +173,17 @@ class PostgresDataPackageRepository(BasePostgresRepository, IDataPackageReposito
             await self.session.rollback()
             logger.error(f"Error al eliminar paquete {package_id}: {e}")
             return False
+
+    async def get_expired_packages(self, current_user_id: int) -> List[DataPackage]:
+        await self._set_current_user(current_user_id)
+        try:
+            now = datetime.now(timezone.utc)
+            query = select(DataPackageModel).where(
+                DataPackageModel.is_active == True,
+                DataPackageModel.expires_at < now
+            )
+            result = await self.session.execute(query)
+            return [self._model_to_entity(m) for m in result.scalars().all()]
+        except Exception as e:
+            logger.error(f"Error al obtener paquetes expirados: {e}")
+            return []
