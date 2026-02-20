@@ -430,7 +430,7 @@ def get_key_management_handlers(vpn_service: VpnService):
     
     return [
         MessageHandler(filters.Regex("^🛡️ Mis Llaves$"), handler.show_key_submenu),
-        CommandHandler("mykeys", handler.show_key_submenu),
+        CommandHandler("keys", handler.show_key_submenu),
     ]
 
 
