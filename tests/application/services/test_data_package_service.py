@@ -122,6 +122,38 @@ class TestGetUserDataSummary:
         assert result["remaining_gb"] == 85.0
         assert result["active_packages"] == 2
 
+    @pytest.mark.asyncio
+    async def test_returns_detailed_packages_info(self, service, mock_package_repo, mock_user_repo):
+        from domain.entities.user import User
+        
+        expires_at = datetime.now(timezone.utc) + timedelta(days=15)
+        mock_package_repo.get_valid_by_user.return_value = [
+            DataPackage(
+                id=uuid.uuid4(),
+                user_id=123,
+                package_type=PackageType.BASIC,
+                data_limit_bytes=10 * 1024**3,
+                stars_paid=50,
+                data_used_bytes=int(3.2 * 1024**3),
+                expires_at=expires_at,
+                purchased_at=datetime.now(timezone.utc) - timedelta(days=20)
+            )
+        ]
+        mock_user_repo.get_by_id.return_value = User(
+            telegram_id=123,
+            free_data_limit_bytes=10 * 1024**3,
+            free_data_used_bytes=int(1.5 * 1024**3)
+        )
+        
+        result = await service.get_user_data_summary(123, current_user_id=123)
+        
+        assert "packages" in result
+        assert len(result["packages"]) == 1
+        assert result["packages"][0]["name"] == "Básico"
+        assert result["packages"][0]["days_remaining"] > 0
+        assert "free_plan" in result
+        assert result["free_plan"]["remaining_gb"] == 8.5
+
 
 class TestConsumeData:
     @pytest.mark.asyncio
