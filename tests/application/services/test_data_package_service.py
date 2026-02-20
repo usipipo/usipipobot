@@ -154,6 +154,7 @@ class TestGetUserDataSummary:
         assert result["packages"][0]["days_remaining"] > 0
         assert "free_plan" in result
         assert result["free_plan"]["remaining_gb"] == 8.5
+        assert result["remaining_gb"] == pytest.approx(15.3)
 
 
 class TestConsumeData:
