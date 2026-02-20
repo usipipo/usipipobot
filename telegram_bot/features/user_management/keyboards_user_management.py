@@ -16,30 +16,20 @@ class UserManagementKeyboards:
         """
         Genera el menú principal según el tipo de usuario.
         
+        NOTE: Para el nuevo menú simplificado, usar MainMenuKeyboard
+        from telegram_bot.keyboards import MainMenuKeyboard
+        
         Args:
             is_admin: Si es True, incluye opciones de administrador
             
         Returns:
             InlineKeyboardMarkup: Teclado del menú principal
         """
-        keyboard = [
-            [
-                InlineKeyboardButton("🛡️ Mis Llaves", callback_data="key_management"),
-                InlineKeyboardButton("📊 Estado", callback_data="status")
-            ],
-            [
-                InlineKeyboardButton("💰 Operaciones", callback_data="operations"),
-                InlineKeyboardButton("🏆 Logros", callback_data="achievements")
-            ],
-            [
-                InlineKeyboardButton("⚙️ Ayuda", callback_data="help")
-            ]
-        ]
-        
-        # Agregar opciones de administrador si corresponde
+        from telegram_bot.keyboards import MainMenuKeyboard
         if is_admin:
-            keyboard.insert(0, [
-                InlineKeyboardButton("🔧 Panel Admin", callback_data="admin")
-            ])
-        
-        return InlineKeyboardMarkup(keyboard)
+            from infrastructure.config import Settings
+            settings = Settings()
+            return MainMenuKeyboard.main_menu_with_admin(
+                settings.ADMIN_TELEGRAM_ID, 0
+            )
+        return MainMenuKeyboard.main_menu()
