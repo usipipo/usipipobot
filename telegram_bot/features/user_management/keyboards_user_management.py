@@ -27,9 +27,9 @@ class UserManagementKeyboards:
         """
         from telegram_bot.keyboards import MainMenuKeyboard
         if is_admin:
-            from infrastructure.config import Settings
-            settings = Settings()
+            from config import settings
             return MainMenuKeyboard.main_menu_with_admin(
-                settings.ADMIN_TELEGRAM_ID, 0
+                admin_id=int(settings.ADMIN_ID),
+                current_user_id=int(settings.ADMIN_ID)
             )
         return MainMenuKeyboard.main_menu()
