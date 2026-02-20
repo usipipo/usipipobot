@@ -241,6 +241,39 @@ class BuyGbHandler:
                 parse_mode="Markdown"
             )
 
+    async def data_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Muestra el consumo de datos del usuario."""
+        user_id = update.effective_user.id
+        logger.info(f"💾 /data ejecutado por usuario {user_id}")
+
+        try:
+            summary = await self.data_package_service.get_user_data_summary(
+                user_id=user_id,
+                current_user_id=user_id
+            )
+
+            if summary["active_packages"] == 0:
+                message = BuyGbMessages.Data.NO_DATA
+            else:
+                message = BuyGbMessages.Data.HEADER + BuyGbMessages.Data.DATA_INFO.format(
+                    active_packages=summary["active_packages"],
+                    total_gb=summary["total_limit_gb"],
+                    used_gb=summary["total_used_gb"],
+                    remaining_gb=summary["remaining_gb"]
+                )
+
+            await update.message.reply_text(
+                text=message,
+                parse_mode="Markdown"
+            )
+
+        except Exception as e:
+            logger.error(f"Error en data_handler: {e}")
+            await update.message.reply_text(
+                text=BuyGbMessages.Error.SYSTEM_ERROR,
+                parse_mode="Markdown"
+            )
+
 
 def get_buy_gb_handlers(data_package_service: DataPackageService):
     handler = BuyGbHandler(data_package_service)
@@ -249,6 +282,7 @@ def get_buy_gb_handlers(data_package_service: DataPackageService):
         MessageHandler(filters.Regex("^📦 Comprar GB$"), handler.show_packages),
         CommandHandler("buy", handler.show_packages),
         CommandHandler("packages", handler.show_packages),
+        CommandHandler("data", handler.data_handler),
     ]
 
 
