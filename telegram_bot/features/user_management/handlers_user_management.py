@@ -20,6 +20,7 @@ from application.services.achievement_service import AchievementService
 from application.services.admin_service import AdminService
 from .messages_user_management import UserManagementMessages
 from .keyboards_user_management import UserManagementKeyboards
+from telegram_bot.keyboards import MainMenuKeyboard
 
 
 class UserManagementHandler:
@@ -61,9 +62,7 @@ class UserManagementHandler:
                     username=user.username,
                     full_name=full_name
                 )
-                welcome_message = (
-                    UserManagementMessages.Welcome.NEW_USER.format(name=user.first_name)
-                )
+                welcome_message = UserManagementMessages.Welcome.NEW_USER_SIMPLIFIED
 
                 # Inicializar logros para nuevo usuario
                 if self.achievement_service:
@@ -76,9 +75,7 @@ class UserManagementHandler:
 
                 logger.info(f"✅ Nuevo usuario registrado: {user.id} - {user.first_name}")
             else:
-                welcome_message = (
-                    UserManagementMessages.Welcome.RETURNING_USER.format(name=user.first_name)
-                )
+                welcome_message = UserManagementMessages.Welcome.RETURNING_USER_SIMPLIFIED
                 logger.info(f"👋 Usuario existente: {user.id} - {user.first_name}")
 
             # Determinar si es admin
@@ -86,7 +83,10 @@ class UserManagementHandler:
 
             await update.message.reply_text(
                 text=welcome_message,
-                reply_markup=UserManagementKeyboards.main_menu(is_admin=is_admin),
+                reply_markup=MainMenuKeyboard.main_menu_with_admin(
+                    admin_id=int(settings.ADMIN_ID),
+                    current_user_id=user.id
+                ),
                 parse_mode="Markdown"
             )
 
@@ -94,7 +94,7 @@ class UserManagementHandler:
             logger.error(f"❌ Error en start_handler para usuario {user.id}: {e}")
             await update.message.reply_text(
                 text=UserManagementMessages.Error.REGISTRATION_FAILED,
-                reply_markup=UserManagementKeyboards.main_menu()
+                reply_markup=MainMenuKeyboard.main_menu()
             )
 
     async def status_handler(self, update: Update, _context: ContextTypes.DEFAULT_TYPE,
