@@ -9,7 +9,6 @@ from telegram import Update, LabeledPrice, InlineKeyboardButton, InlineKeyboardM
 from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler, CommandHandler, ConversationHandler, PreCheckoutQueryHandler
 from application.services.payment_service import PaymentService
 from application.services.vpn_service import VpnService
-from application.services.referral_service import ReferralService
 from .messages_payments import PaymentsMessages
 from .keyboards_payments import PaymentsKeyboards
 from config import settings
@@ -25,18 +24,16 @@ CONFIRMING_PAYMENT = 3
 class PaymentsHandler:
     """Handler para sistema de procesamiento de pagos."""
     
-    def __init__(self, payment_service: PaymentService, vpn_service: VpnService = None, referral_service: ReferralService = None):
+    def __init__(self, payment_service: PaymentService, vpn_service: VpnService = None):
         """
         Inicializa el handler de pagos.
         
         Args:
             payment_service: Servicio de pagos
             vpn_service: Servicio de VPN (opcional)
-            referral_service: Servicio de referidos (opcional)
         """
         self.payment_service = payment_service
         self.vpn_service = vpn_service
-        self.referral_service = referral_service
         logger.info("💳 PaymentsHandler inicializado")
 
     async def show_payment_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -514,19 +511,18 @@ class PaymentsHandler:
             logger.error(f"Error registrando transacción: {e}")
 
 
-def get_payments_handlers(payment_service: PaymentService, vpn_service: VpnService = None, referral_service: ReferralService = None):
+def get_payments_handlers(payment_service: PaymentService, vpn_service: VpnService = None):
     """
     Retorna los handlers de pagos.
     
     Args:
         payment_service: Servicio de pagos
         vpn_service: Servicio de VPN (opcional)
-        referral_service: Servicio de referidos (opcional)
         
     Returns:
         list: Lista de handlers
     """
-    handler = PaymentsHandler(payment_service, vpn_service, referral_service)
+    handler = PaymentsHandler(payment_service, vpn_service)
     
     return [
         MessageHandler(filters.Regex("^💳 Pagos$"), handler.show_payment_menu),
@@ -535,19 +531,18 @@ def get_payments_handlers(payment_service: PaymentService, vpn_service: VpnServi
     ]
 
 
-def get_payments_callback_handlers(payment_service: PaymentService, vpn_service: VpnService = None, referral_service: ReferralService = None):
+def get_payments_callback_handlers(payment_service: PaymentService, vpn_service: VpnService = None):
     """
     Retorna los handlers de callbacks de pagos.
     
     Args:
         payment_service: Servicio de pagos
         vpn_service: Servicio de VPN (opcional)
-        referral_service: Servicio de referidos (opcional)
         
     Returns:
         list: Lista de CallbackQueryHandler
     """
-    handler = PaymentsHandler(payment_service, vpn_service, referral_service)
+    handler = PaymentsHandler(payment_service, vpn_service)
     
     return [
         CallbackQueryHandler(handler.show_balance_status, pattern="^balance_status$"),
@@ -556,19 +551,18 @@ def get_payments_callback_handlers(payment_service: PaymentService, vpn_service:
     ]
 
 
-def get_payments_conversation_handler(payment_service: PaymentService, vpn_service: VpnService = None, referral_service: ReferralService = None) -> ConversationHandler:
+def get_payments_conversation_handler(payment_service: PaymentService, vpn_service: VpnService = None) -> ConversationHandler:
     """
     Retorna el ConversationHandler para pagos.
     
     Args:
         payment_service: Servicio de pagos
         vpn_service: Servicio de VPN (opcional)
-        referral_service: Servicio de referidos (opcional)
         
     Returns:
         ConversationHandler: Handler configurado
     """
-    handler = PaymentsHandler(payment_service, vpn_service, referral_service)
+    handler = PaymentsHandler(payment_service, vpn_service)
     
     return ConversationHandler(
         entry_points=[
