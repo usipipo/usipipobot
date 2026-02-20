@@ -97,6 +97,53 @@ class UserManagementHandler:
                 reply_markup=MainMenuKeyboard.main_menu()
             )
 
+    async def main_menu_callback(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
+        """
+        Maneja los callbacks del menú principal.
+        """
+        query = update.callback_query
+        await query.answer()
+
+        callback_data = query.data
+        user_id = update.effective_user.id
+
+        if callback_data == "show_keys":
+            from telegram_bot.features.key_management.handlers_key_management import KeyManagementHandler
+            handler = KeyManagementHandler(self.vpn_service)
+            await handler.show_key_submenu(update, _context)
+
+        elif callback_data == "create_key":
+            from telegram_bot.features.vpn_keys.handlers_vpn_keys import VpnKeysHandler
+            handler = VpnKeysHandler(self.vpn_service)
+            await handler.start_creation(update, _context)
+
+        elif callback_data == "buy_data":
+            from telegram_bot.features.payments.handlers_payments import PaymentsHandler
+            from application.services.payment_service import PaymentService
+            from application.services.common.container import get_container
+            container = get_container()
+            payment_service = container.resolve(PaymentService)
+            handler = PaymentsHandler(payment_service, self.vpn_service)
+            await handler.show_payment_menu(update, _context)
+
+        elif callback_data == "show_usage":
+            from telegram_bot.features.user_management.handlers_user_management import UserManagementHandler
+            await self.status_handler(update, _context)
+
+        elif callback_data == "help":
+            await query.edit_message_text(
+                text=UserManagementMessages.Welcome.HELP_TEXT,
+                reply_markup=MainMenuKeyboard.main_menu()
+            )
+
+        elif callback_data == "admin_panel":
+            from telegram_bot.features.admin.handlers_admin import AdminHandler
+            from application.services.common.container import get_container
+            container = get_container()
+            admin_service = container.resolve(AdminService)
+            handler = AdminHandler(admin_service)
+            await handler.admin_menu(update, _context)
+
     async def status_handler(self, update: Update, _context: ContextTypes.DEFAULT_TYPE,
                            admin_service: Optional[AdminService] = None):
         """
@@ -328,5 +375,10 @@ def get_user_callback_handlers(vpn_service: VpnService,
         CallbackQueryHandler(
             lambda u, c: handler.status_handler(u, c, None),
             pattern="^status$"
+        ),
+        # Callbacks del menú principal
+        CallbackQueryHandler(
+            handler.main_menu_callback,
+            pattern="^(show_keys|create_key|buy_data|show_usage|help|admin_panel)$"
         ),
     ]
