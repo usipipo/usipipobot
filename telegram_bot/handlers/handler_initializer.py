@@ -30,8 +30,12 @@ from telegram_bot.features.user_management.handlers_user_management import (
 from telegram_bot.features.vpn_keys.handlers_vpn_keys import (
     get_vpn_keys_handlers, get_vpn_keys_callback_handlers
 )
+from telegram_bot.features.buy_gb.handlers_buy_gb import (
+    get_buy_gb_handlers, get_buy_gb_callback_handlers, get_buy_gb_payment_handlers
+)
 
 from application.services.vpn_service import VpnService
+from application.services.data_package_service import DataPackageService
 from application.services.payment_service import PaymentService
 from application.services.admin_service import AdminService
 from application.services.common.container import get_container
@@ -47,7 +51,7 @@ def _get_admin_handlers(container) -> List[BaseHandler]:
     return handlers
 
 
-def _get_core_handlers(vpn_service, payment_service) -> List[BaseHandler]:
+def _get_core_handlers(vpn_service, payment_service, data_package_service) -> List[BaseHandler]:
     """Initialize and return core feature handlers."""
     handlers = []
 
@@ -71,6 +75,11 @@ def _get_core_handlers(vpn_service, payment_service) -> List[BaseHandler]:
     handlers.extend(get_vpn_keys_callback_handlers(vpn_service))
     logger.info("VPN keys handlers configured")
 
+    handlers.extend(get_buy_gb_handlers(data_package_service))
+    handlers.extend(get_buy_gb_callback_handlers(data_package_service))
+    handlers.extend(get_buy_gb_payment_handlers(data_package_service))
+    logger.info("Buy GB handlers configured")
+
     return handlers
 
 
@@ -83,9 +92,10 @@ def initialize_handlers(
 
     try:
         container = get_container()
+        data_package_service = container.resolve(DataPackageService)
 
         handlers.extend(_get_admin_handlers(container))
-        handlers.extend(_get_core_handlers(vpn_service, payment_service))
+        handlers.extend(_get_core_handlers(vpn_service, payment_service, data_package_service))
 
         logger.info(f"Total handlers configured: {len(handlers)}")
         return handlers
