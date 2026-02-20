@@ -18,18 +18,3 @@ class BasicMessages:
         "/buy - Comprar GB\n"
         "/data - Ver consumo\n"
     )
-
-    WELCOME_NEW_USER = (
-        "🎉 *¡Bienvenido a uSipipo!*\n\n"
-        "Tu VPN personal está lista para usar.\n\n"
-        "🎁 *Plan Free:*\n"
-        "• 10 GB de datos\n"
-        "• 2 claves VPN\n\n"
-        "📱 Usa el menú para gestionar tu VPN.\n\n"
-        "¿Necesitas ayuda? Usa /help"
-    )
-
-    WELCOME_RETURNING = (
-        "👋 *¡Bienvenido de vuelta!*\n\n"
-        "Usa el menú para gestionar tu VPN.\n"
-    )
