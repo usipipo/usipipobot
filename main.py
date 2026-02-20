@@ -14,7 +14,6 @@ from config import settings
 from application.services.common.container import get_container
 from application.services.vpn_service import VpnService
 from application.services.payment_service import PaymentService
-from application.services.referral_service import ReferralService
 
 from infrastructure.persistence.database import init_database, close_database
 from telegram_bot.handlers.handler_initializer import initialize_handlers
@@ -41,7 +40,6 @@ def main():
     try:
         container = get_container()
         vpn_service = container.resolve(VpnService)
-        referral_service = container.resolve(ReferralService)
         payment_service = container.resolve(PaymentService)
         logger.info("✅ Contenedor de dependencias configurado correctamente.")
     except Exception as e:
@@ -86,7 +84,7 @@ def main():
     )
     logger.info("⏰ Job de limpieza de llaves programado.")
 
-    handlers = initialize_handlers(vpn_service, referral_service, payment_service)
+    handlers = initialize_handlers(vpn_service, payment_service)
     for handler in handlers:
         application.add_handler(handler)
 
