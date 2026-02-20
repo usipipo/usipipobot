@@ -107,7 +107,7 @@ class DataPackageModel(Base):
         BigInteger, ForeignKey("users.telegram_id", ondelete="CASCADE")
     )
     package_type: Mapped[str] = mapped_column(
-        SQLEnum("basic", "premium", "unlimited", name="package_type_enum"),
+        SQLEnum("basic", "estandar", "avanzado", "premium", "unlimited", name="package_type_enum"),
         nullable=False
     )
     data_limit_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)

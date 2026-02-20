@@ -6,6 +6,8 @@ import uuid
 
 class PackageType(str, Enum):
     BASIC = "basic"
+    ESTANDAR = "estandar"
+    AVANZADO = "avanzado"
     PREMIUM = "premium"
     UNLIMITED = "unlimited"
 
