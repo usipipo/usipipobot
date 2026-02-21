@@ -10,4 +10,4 @@ Version: 2.0.0
 
 from .handler_initializer import initialize_handlers
 
-__all__ = ['initialize_handlers']
+__all__ = ["initialize_handlers"]

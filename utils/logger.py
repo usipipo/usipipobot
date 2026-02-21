@@ -11,6 +11,7 @@ import sys
 import traceback
 from pathlib import Path
 from typing import Optional, Union
+
 try:
     from loguru import logger as _loguru_logger
 except Exception:
@@ -22,23 +23,33 @@ except Exception:
     _std_logger.setLevel(_std_logging.INFO)
     if not _std_logger.handlers:
         _handler = _std_logging.StreamHandler(sys.stdout)
-        _handler.setFormatter(_std_logging.Formatter("%(asctime)s | %(levelname)s | %(name)s:%(lineno)s - %(message)s"))
+        _handler.setFormatter(
+            _std_logging.Formatter(
+                "%(asctime)s | %(levelname)s | %(name)s:%(lineno)s - %(message)s"
+            )
+        )
         _std_logger.addHandler(_handler)
 
     class _StdLoggerProxy:
         def debug(self, *args, **kwargs):
             _std_logger.debug(*args, **kwargs)
+
         def info(self, *args, **kwargs):
             _std_logger.info(*args, **kwargs)
+
         def warning(self, *args, **kwargs):
             _std_logger.warning(*args, **kwargs)
+
         def error(self, *args, **kwargs):
             _std_logger.error(*args, **kwargs)
+
         def critical(self, *args, **kwargs):
             _std_logger.critical(*args, **kwargs)
+
         def remove(self):
             # no-op for proxy
             return
+
         def add(self, *args, **kwargs):
             # no-op for proxy
             return
@@ -69,7 +80,7 @@ class Logger:
             level="INFO",
             colorize=True,
             backtrace=True,
-            diagnose=False
+            diagnose=False,
         )
 
     def configure_from_settings(self, settings):
@@ -96,7 +107,7 @@ class Logger:
             level=log_level,
             colorize=True,
             backtrace=True,
-            diagnose=True
+            diagnose=True,
         )
 
         # File handler (para producción) - rotativo como en logger.py
@@ -111,7 +122,7 @@ class Logger:
             retention="30 days",
             compression="zip",
             backtrace=True,
-            diagnose=True
+            diagnose=True,
         )
 
         # Error file handler (solo errores y críticos) - como en bot_logger.py
@@ -124,7 +135,7 @@ class Logger:
             retention="60 days",
             compression="zip",
             backtrace=True,
-            diagnose=True
+            diagnose=True,
         )
 
     def _format_clean_traceback(self, error: Exception) -> str:
@@ -146,8 +157,17 @@ class Logger:
 
         for line in tb_lines:
             # Saltar líneas de bibliotecas estándar comunes
-            if any(lib in line for lib in ['/lib/python', 'site-packages', '<frozen']):
-                if 'File "' in line and not any(app_dir in line for app_dir in ['usipipo', 'application', 'telegram_bot', 'infrastructure', 'domain']):
+            if any(lib in line for lib in ["/lib/python", "site-packages", "<frozen"]):
+                if 'File "' in line and not any(
+                    app_dir in line
+                    for app_dir in [
+                        "usipipo",
+                        "application",
+                        "telegram_bot",
+                        "infrastructure",
+                        "domain",
+                    ]
+                ):
                     skip_next = True
                     continue
             if skip_next:
@@ -184,7 +204,13 @@ class Logger:
         """Log de nivel WARNING."""
         _loguru_logger.warning(message, *args, **kwargs)
 
-    def error(self, message: Union[str, Exception], error: Optional[Exception] = None, *args, **kwargs):
+    def error(
+        self,
+        message: Union[str, Exception],
+        error: Optional[Exception] = None,
+        *args,
+        **kwargs,
+    ):
         """Log de nivel ERROR con manejo opcional de excepciones.
 
         Permite pasar directamente una Exception como primer argumento
@@ -212,7 +238,9 @@ class Logger:
         log_method(message, *args, **kwargs)
 
     # Método compatible con logger.py
-    def add_log_line(self, message: str, level: str = "INFO", error: Optional[Exception] = None):
+    def add_log_line(
+        self, message: str, level: str = "INFO", error: Optional[Exception] = None
+    ):
         """
         Registra un mensaje en el log (compatible con logger.py).
 
@@ -229,7 +257,9 @@ class Logger:
         self.log(level, message)
 
     # Métodos especializados de bot_logger.py
-    def log_bot_event(self, level: str, message: str, user_id: Optional[int] = None, **kwargs):
+    def log_bot_event(
+        self, level: str, message: str, user_id: Optional[int] = None, **kwargs
+    ):
         """Registra un evento del bot y lo añade al sistema de monitorización."""
         # Log con loguru
         log_method = getattr(_loguru_logger, level.lower(), _loguru_logger.info)
@@ -247,7 +277,12 @@ class Logger:
             message += f" - {details}"
         self.log_bot_event("INFO", message, user_id)
 
-    def log_error(self, error: Exception, context: Optional[str] = None, user_id: Optional[int] = None):
+    def log_error(
+        self,
+        error: Exception,
+        context: Optional[str] = None,
+        user_id: Optional[int] = None,
+    ):
         """Registra errores con contexto y traceback limpio."""
         message = f"Error: {str(error)}"
         if context:
@@ -259,7 +294,13 @@ class Logger:
 
         self.log_bot_event("ERROR", message, user_id)
 
-    def log_vpn_operation(self, operation: str, success: bool, user_id: Optional[int] = None, details: Optional[str] = None):
+    def log_vpn_operation(
+        self,
+        operation: str,
+        success: bool,
+        user_id: Optional[int] = None,
+        details: Optional[str] = None,
+    ):
         """Registra operaciones VPN."""
         level = "INFO" if success else "ERROR"
         status = "✅" if success else "❌"
@@ -268,7 +309,14 @@ class Logger:
             message += f" - {details}"
         self.log_bot_event(level, message, user_id)
 
-    def log_payment_event(self, event_type: str, amount: int, user_id: int, success: bool, details: Optional[str] = None):
+    def log_payment_event(
+        self,
+        event_type: str,
+        amount: int,
+        user_id: int,
+        success: bool,
+        details: Optional[str] = None,
+    ):
         """Registra eventos de pagos."""
         level = "INFO" if success else "ERROR"
         status = "✅" if success else "❌"
@@ -277,14 +325,18 @@ class Logger:
             message += f" - {details}"
         self.log_bot_event(level, message, user_id)
 
-    def log_referral_event(self, event_type: str, user_id: int, details: Optional[str] = None):
+    def log_referral_event(
+        self, event_type: str, user_id: int, details: Optional[str] = None
+    ):
         """Registra eventos de referidos."""
         message = f"Referral {event_type}"
         if details:
             message += f" - {details}"
         self.log_bot_event("INFO", message, user_id)
 
-    def log_system_event(self, event: str, level: str = "INFO", details: Optional[str] = None):
+    def log_system_event(
+        self, event: str, level: str = "INFO", details: Optional[str] = None
+    ):
         """Registra eventos del sistema."""
         message = f"System: {event}"
         if details:
@@ -301,6 +353,7 @@ class Logger:
         if not log_file_path:
             try:
                 from config import settings
+
                 log_file_path = settings.LOG_FILE_PATH
             except Exception:
                 return "📂 El archivo de log aún no existe."
@@ -310,7 +363,7 @@ class Logger:
             return "📂 El archivo de log aún no existe."
 
         try:
-            with open(log_file, "r", encoding="utf-8", errors='ignore') as f:
+            with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
                 all_lines = f.readlines()
 
                 if len(all_lines) < lines:

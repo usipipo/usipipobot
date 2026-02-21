@@ -1,7 +1,10 @@
-import httpx
 from urllib.parse import quote
-from utils.logger import logger
+
+import httpx
+
 from config import settings
+from utils.logger import logger
+
 
 class OutlineClient:
     """
@@ -12,10 +15,7 @@ class OutlineClient:
     def __init__(self):
         self.api_url = settings.OUTLINE_API_URL
         # Outline utiliza certificados autofirmados por defecto
-        self.client = httpx.AsyncClient(
-            verify=False, 
-            timeout=15.0
-        )
+        self.client = httpx.AsyncClient(verify=False, timeout=15.0)
         self.brand = "uSipipo VPN"
 
     @staticmethod
@@ -29,25 +29,22 @@ class OutlineClient:
         try:
             server_res = await self.client.get(f"{self.api_url}/server")
             keys_res = await self.client.get(f"{self.api_url}/access-keys")
-            
+
             server_res.raise_for_status()
-            
+
             data = server_res.json()
             keys_data = keys_res.json()
-            
+
             return {
                 "name": data.get("name", "Outline Server"),
                 "serverId": data.get("serverId"),
                 "version": data.get("version"),
                 "total_keys": len(keys_data.get("accessKeys", [])),
-                "is_healthy": True
+                "is_healthy": True,
             }
         except Exception as e:
             logger.error(f"Error en getServerInfo: {e}")
-            return {
-                "is_healthy": False,
-                "error": str(e)
-            }
+            return {"is_healthy": False, "error": str(e)}
 
     async def create_key(self, name: str = "Usuario") -> dict:
         """Crea una llave, la renombra y aplica branding."""
@@ -56,13 +53,12 @@ class OutlineClient:
             res = await self.client.post(f"{self.api_url}/access-keys")
             res.raise_for_status()
             key_data = res.json()
-            
+
             key_id = key_data["id"]
 
             # 2. Renombrar la llave
             await self.client.put(
-                f"{self.api_url}/access-keys/{key_id}/name", 
-                data={"name": name}
+                f"{self.api_url}/access-keys/{key_id}/name", data={"name": name}
             )
 
             # 3. Formatear respuesta con branding
@@ -71,7 +67,7 @@ class OutlineClient:
                 "name": name,
                 "access_url": self.apply_branding(key_data["accessUrl"], self.brand),
                 "port": key_data.get("port"),
-                "method": key_data.get("method")
+                "method": key_data.get("method"),
             }
         except Exception as e:
             logger.error(f"Error en createKey: {e}")
@@ -107,23 +103,18 @@ class OutlineClient:
         try:
             res = await self.client.get(f"{self.api_url}/metrics/transfer")
             usage_map = res.json().get("bytesTransferredByUserId", {})
-            
+
             bytes_used = usage_map.get(key_id, 0)
-            
+
             return {
                 "keyId": key_id,
                 "bytesUsed": bytes_used,
                 "mbUsed": round(bytes_used / (1024 * 1024), 2),
-                "error": False
+                "error": False,
             }
         except Exception as e:
             logger.error(f"Error en getKeyUsage para {key_id}: {e}")
-            return {
-                "keyId": key_id, 
-                "bytesUsed": 0, 
-                "mbUsed": 0, 
-                "error": True
-            }
+            return {"keyId": key_id, "bytesUsed": 0, "mbUsed": 0, "error": True}
 
     async def close(self):
         """Cierra la sesión del cliente HTTP."""

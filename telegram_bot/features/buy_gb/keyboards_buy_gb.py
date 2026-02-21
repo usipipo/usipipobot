@@ -6,6 +6,7 @@ Version: 1.0.0
 """
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 from application.services.data_package_service import PACKAGE_OPTIONS
 
 
@@ -16,23 +17,31 @@ class BuyGbKeyboards:
     def packages_menu() -> InlineKeyboardMarkup:
         keyboard = []
         row = []
-        
+
         for pkg in PACKAGE_OPTIONS:
             button_text = f"⭐ {pkg.name} - {pkg.data_gb}GB"
-            row.append(InlineKeyboardButton(button_text, callback_data=f"buy_package_{pkg.package_type.value}"))
-            
+            row.append(
+                InlineKeyboardButton(
+                    button_text, callback_data=f"buy_package_{pkg.package_type.value}"
+                )
+            )
+
             if len(row) == 2:
                 keyboard.append(row)
                 row = []
-        
+
         if row:
             keyboard.append(row)
-        
-        keyboard.append([
-            InlineKeyboardButton("📊 Ver Mis Datos", callback_data="view_data_summary"),
-            InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")
-        ])
-        
+
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "📊 Ver Mis Datos", callback_data="view_data_summary"
+                ),
+                InlineKeyboardButton("🔙 Volver", callback_data="operations_menu"),
+            ]
+        )
+
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
@@ -40,7 +49,7 @@ class BuyGbKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton("📦 Ver Paquetes", callback_data="buy_gb_menu"),
-                InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")
+                InlineKeyboardButton("🔙 Volver", callback_data="operations_menu"),
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -50,10 +59,10 @@ class BuyGbKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton("📦 Comprar Otro", callback_data="buy_gb_menu"),
-                InlineKeyboardButton("📊 Ver Mis Datos", callback_data="view_data_summary")
+                InlineKeyboardButton(
+                    "📊 Ver Mis Datos", callback_data="view_data_summary"
+                ),
             ],
-            [
-                InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")
-            ]
+            [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)

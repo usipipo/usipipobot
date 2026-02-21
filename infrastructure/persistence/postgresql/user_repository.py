@@ -5,18 +5,19 @@ Author: uSipipo Team
 Version: 2.1.0
 """
 
-from typing import Optional, List
-from datetime import datetime, timezone
 import secrets
+from datetime import datetime, timezone
+from typing import List, Optional
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils.logger import logger
 
 from domain.entities.user import User, UserStatus
 from domain.interfaces.iuser_repository import IUserRepository
-from .models import UserModel
+from utils.logger import logger
+
 from .base_repository import BasePostgresRepository
+from .models import UserModel
 
 
 class PostgresUserRepository(BasePostgresRepository, IUserRepository):
@@ -45,8 +46,8 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             total_referral_earnings=model.total_referral_earnings or 0,
             is_vip=model.is_vip or False,
             vip_expires_at=vip_expires,
-            free_data_limit_bytes=getattr(model, 'free_data_limit_bytes', 0) or 0,
-            free_data_used_bytes=getattr(model, 'free_data_used_bytes', 0) or 0
+            free_data_limit_bytes=getattr(model, "free_data_limit_bytes", 0) or 0,
+            free_data_used_bytes=getattr(model, "free_data_used_bytes", 0) or 0,
         )
 
     def _entity_to_model(self, entity: User) -> UserModel:
@@ -54,7 +55,11 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             telegram_id=entity.telegram_id,
             username=entity.username,
             full_name=entity.full_name,
-            status=entity.status.value if isinstance(entity.status, UserStatus) else entity.status,
+            status=(
+                entity.status.value
+                if isinstance(entity.status, UserStatus)
+                else entity.status
+            ),
             max_keys=entity.max_keys,
             balance_stars=entity.balance_stars,
             total_deposited=entity.total_deposited,
@@ -64,7 +69,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             is_vip=entity.is_vip,
             vip_expires_at=entity.vip_expires_at,
             free_data_limit_bytes=entity.free_data_limit_bytes,
-            free_data_used_bytes=entity.free_data_used_bytes
+            free_data_used_bytes=entity.free_data_used_bytes,
         )
 
     async def get_by_id(self, telegram_id: int, current_user_id: int) -> Optional[User]:
@@ -88,7 +93,11 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             if existing:
                 existing.username = user.username
                 existing.full_name = user.full_name
-                existing.status = user.status.value if isinstance(user.status, UserStatus) else user.status
+                existing.status = (
+                    user.status.value
+                    if isinstance(user.status, UserStatus)
+                    else user.status
+                )
                 existing.max_keys = user.max_keys
                 existing.balance_stars = user.balance_stars
                 existing.total_deposited = user.total_deposited
@@ -99,9 +108,13 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 if user.vip_expires_at is None:
                     existing.vip_expires_at = None
                 elif user.vip_expires_at.tzinfo is None:
-                    existing.vip_expires_at = user.vip_expires_at.replace(tzinfo=timezone.utc)
+                    existing.vip_expires_at = user.vip_expires_at.replace(
+                        tzinfo=timezone.utc
+                    )
                 else:
-                    existing.vip_expires_at = user.vip_expires_at.astimezone(timezone.utc)
+                    existing.vip_expires_at = user.vip_expires_at.astimezone(
+                        timezone.utc
+                    )
             else:
                 model = self._entity_to_model(user)
                 self.session.add(model)
@@ -113,12 +126,24 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             logger.error(f"Error al guardar usuario: {e}")
             raise
 
-    async def create_user(self, user_id: int, username: str = None, full_name: str = None,
-                         referral_code: str = None, referred_by: int = None, current_user_id: int = None) -> User:
+    async def create_user(
+        self,
+        user_id: int,
+        username: str = None,
+        full_name: str = None,
+        referral_code: str = None,
+        referred_by: int = None,
+        current_user_id: int = None,
+    ) -> User:
         if referral_code is None:
             referral_code = secrets.token_hex(4).upper()
-        user = User(telegram_id=user_id, username=username, full_name=full_name,
-                    referral_code=referral_code, referred_by=referred_by)
+        user = User(
+            telegram_id=user_id,
+            username=username,
+            full_name=full_name,
+            referral_code=referral_code,
+            referred_by=referred_by,
+        )
         if current_user_id is None:
             current_user_id = user_id
         return await self.save(user, current_user_id)
@@ -126,14 +151,18 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
     async def exists(self, telegram_id: int, current_user_id: int) -> bool:
         await self._set_current_user(current_user_id)
         try:
-            query = select(UserModel.telegram_id).where(UserModel.telegram_id == telegram_id)
+            query = select(UserModel.telegram_id).where(
+                UserModel.telegram_id == telegram_id
+            )
             result = await self.session.execute(query)
             return result.scalar_one_or_none() is not None
         except Exception as e:
             logger.error(f"Error verificando existencia de usuario: {e}")
             return False
 
-    async def get_by_referral_code(self, referral_code: str, current_user_id: int) -> Optional[User]:
+    async def get_by_referral_code(
+        self, referral_code: str, current_user_id: int
+    ) -> Optional[User]:
         await self._set_current_user(current_user_id)
         try:
             query = select(UserModel).where(UserModel.referral_code == referral_code)
@@ -144,10 +173,16 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             logger.error(f"Error al buscar por referral_code {referral_code}: {e}")
             return None
 
-    async def update_balance(self, telegram_id: int, new_balance: int, current_user_id: int) -> bool:
+    async def update_balance(
+        self, telegram_id: int, new_balance: int, current_user_id: int
+    ) -> bool:
         await self._set_current_user(current_user_id)
         try:
-            query = update(UserModel).where(UserModel.telegram_id == telegram_id).values(balance_stars=new_balance)
+            query = (
+                update(UserModel)
+                .where(UserModel.telegram_id == telegram_id)
+                .values(balance_stars=new_balance)
+            )
             await self.session.execute(query)
             await self.session.commit()
             return True
@@ -162,13 +197,22 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             query = select(UserModel).where(UserModel.referred_by == referrer_id)
             result = await self.session.execute(query)
             models = result.scalars().all()
-            return [{"telegram_id": m.telegram_id, "username": m.username,
-                     "full_name": m.full_name, "created_at": m.created_at} for m in models]
+            return [
+                {
+                    "telegram_id": m.telegram_id,
+                    "username": m.username,
+                    "full_name": m.full_name,
+                    "created_at": m.created_at,
+                }
+                for m in models
+            ]
         except Exception as e:
             logger.error(f"Error al obtener referidos: {e}")
             return []
 
-    async def get_referrals_by_user(self, telegram_id: int, current_user_id: int) -> List[User]:
+    async def get_referrals_by_user(
+        self, telegram_id: int, current_user_id: int
+    ) -> List[User]:
         await self._set_current_user(current_user_id)
         try:
             query = select(UserModel).where(UserModel.referred_by == telegram_id)
@@ -190,18 +234,24 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             logger.error(f"Error al obtener todos los usuarios: {e}")
             return []
 
-    async def update_free_data_usage(self, telegram_id: int, bytes_used: int, current_user_id: int) -> bool:
+    async def update_free_data_usage(
+        self, telegram_id: int, bytes_used: int, current_user_id: int
+    ) -> bool:
         """Actualiza el uso de datos gratuitos de un usuario."""
         await self._set_current_user(current_user_id)
         try:
             query = (
                 update(UserModel)
                 .where(UserModel.telegram_id == telegram_id)
-                .values(free_data_used_bytes=UserModel.free_data_used_bytes + bytes_used)
+                .values(
+                    free_data_used_bytes=UserModel.free_data_used_bytes + bytes_used
+                )
             )
             await self.session.execute(query)
             await self.session.commit()
-            logger.debug(f"Uso de datos gratuitos actualizado para usuario {telegram_id}")
+            logger.debug(
+                f"Uso de datos gratuitos actualizado para usuario {telegram_id}"
+            )
             return True
         except Exception as e:
             await self.session.rollback()

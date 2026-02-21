@@ -7,6 +7,7 @@ Version: 2.1.0
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from utils.logger import logger
 
 
@@ -33,8 +34,7 @@ class BasePostgresRepository:
         """
         try:
             await self.session.execute(
-                text("SET app.current_user_id = :user_id"),
-                {"user_id": user_id}
+                text("SET app.current_user_id = :user_id"), {"user_id": user_id}
             )
         except Exception as e:
             logger.error(f"Error setting current user {user_id}: {e}")

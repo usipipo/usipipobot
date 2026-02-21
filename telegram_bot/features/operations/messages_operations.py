@@ -8,14 +8,14 @@ Version: 2.0.0 - Feature-based architecture
 
 class OperationsMessages:
     """Mensajes para operaciones del usuario."""
-    
+
     # ============================================
     # MENU
     # ============================================
-    
+
     class Menu:
         """Mensajes del menú de operaciones."""
-        
+
         MAIN = (
             "💰 **Centro de Operaciones**\n\n"
             "Gestiona tu cuenta y accede a servicios premium:\n\n"
@@ -25,14 +25,14 @@ class OperationsMessages:
             "🎮 **Juegos y Recompensas**\n\n"
             "Selecciona una opción:"
         )
-    
+
     # ============================================
     # BALANCE
     # ============================================
-    
+
     class Balance:
         """Mensajes de balance."""
-        
+
         DISPLAY = (
             "💰 **Tu Balance**\n\n"
             "👤 **Usuario:** {name}\n"
@@ -42,7 +42,7 @@ class OperationsMessages:
             "🎁 **Ganancias Referidos:** {referral_earnings} estrellas\n\n"
             "💡 Usa tus estrellas para desbloquear contenido premium."
         )
-        
+
         NO_BALANCE = (
             "💰 **Sin Balance**\n\n"
             "No tienes estrellas en tu cuenta.\n\n"
@@ -51,26 +51,26 @@ class OperationsMessages:
             "• Invita amigos (referidos)\n"
             "• Completa logros y juegos"
         )
-        
+
         TRANSACTION_SUCCESS = (
             "✅ **Transacción Exitosa**\n\n"
             "Tu balance ha sido actualizado.\n\n"
             "💰 **Nuevo Balance:** {balance} estrellas"
         )
-        
+
         TRANSACTION_FAILED = (
             "❌ **Transacción Fallida**\n\n"
             "No pude procesar tu transacción.\n\n"
             "Error: {error}"
         )
-    
+
     # ============================================
     # REFERRAL
     # ============================================
-    
+
     class Referral:
         """Mensajes de referidos."""
-        
+
         MENU = (
             "👥 **Sistema de Referidos**\n\n"
             "🔗 **Tu Enlace de Referido:**\n"
@@ -82,32 +82,32 @@ class OperationsMessages:
             "• **Comisión:** {commission}% por cada depósito\n\n"
             "💡 *Comparte tu enlace y gana estrellas!*"
         )
-        
+
         NEW_REFERRAL = (
             "🎉 **¡Nuevo Referido!**\n\n"
             "Alguien se ha registrado con tu código.\n\n"
             "🎁 **Ganarás estrellas cuando realice su primer depósito.**"
         )
-        
+
         REFERRAL_EARNED = (
             "⭐ **¡Ganancia de Referido!**\n\n"
             "Has ganado {earnings} estrellas por el depósito de tu referido.\n\n"
             "💰 **Balance Actualizado:** {balance} estrellas"
         )
-        
+
         NO_REFERRALS = (
             "📭 **Sin Referidos**\n\n"
             "Aún no tienes referidos registrados.\n\n"
             "💡 *Comparte tu enlace para empezar a ganar!*"
         )
-    
+
     # ============================================
     # VIP
     # ============================================
-    
+
     class VIP:
         """Mensajes de planes VIP."""
-        
+
         PLANS = (
             "👑 **Planes VIP uSipipo**\n\n"
             "Desbloquea funciones exclusivas y beneficios premium:\n\n"
@@ -127,14 +127,14 @@ class OperationsMessages:
             "• Soporte 24/7 exclusivo\n\n"
             "💡 *Selecciona el plan que mejor se adapte a tus necesidades*"
         )
-        
+
         ALREADY_VIP = (
             "👑 **Ya eres VIP**\n\n"
             "Tu plan actual está activo.\n\n"
             "📅 **Renueva:** {renewal_date}\n"
             "🎁 **Beneficios activos:** Disfruta de todas las funciones VIP"
         )
-        
+
         UPGRADE_SUCCESS = (
             "🎉 **¡Actualización VIP Exitosa!**\n\n"
             "Tu plan ha sido actualizado correctamente.\n\n"
@@ -142,14 +142,14 @@ class OperationsMessages:
             "📅 **Válido hasta:** {expiry_date}\n\n"
             "💎 *Disfruta de tus nuevos beneficios VIP*"
         )
-    
+
     # ============================================
     # GAME
     # ============================================
-    
+
     class Game:
         """Mensajes de juegos."""
-        
+
         MENU = (
             "🎮 **Juegos y Recompensas**\n\n"
             "Diviértete mientras ganas estrellas:\n\n"
@@ -164,7 +164,7 @@ class OperationsMessages:
             "• Recompensas variables\n\n"
             "💡 *Juega responsablemente y diviértete*"
         )
-        
+
         SPIN_SUCCESS = (
             "🎲 **Resultado de la Ruleta**\n\n"
             "🎯 **Premio:** {prize}\n"
@@ -172,27 +172,27 @@ class OperationsMessages:
             "💰 **Nuevo Balance:** {balance} estrellas\n\n"
             "🔄 **Próxima tirada gratis:** {next_spin}"
         )
-        
+
         SPIN_FAILED = (
             "❌ **Error en la Ruleta**\n\n"
             "No pude procesar tu tirada.\n\n"
             "💡 *Inténtalo de nuevo más tarde*"
         )
-    
+
     # ============================================
     # TRANSACTIONS
     # ============================================
-    
+
     class Transactions:
         """Mensajes de transacciones."""
-        
+
         HISTORY = (
             "📊 **Historial de Transacciones**\n\n"
             "Usuario: {user_id}\n"
             "Total de transacciones: {count}\n\n"
             "📋 *Aquí se mostrará tu historial completo*"
         )
-        
+
         TRANSACTION_DETAIL = (
             "📋 **Detalle de Transacción**\n\n"
             "🆔 **ID:** {transaction_id}\n"
@@ -202,62 +202,62 @@ class OperationsMessages:
             "🟢 **Estado:** {status}\n\n"
             "💡 *Esta transacción ya ha sido procesada*"
         )
-        
+
         NO_TRANSACTIONS = (
             "📭 **Sin Transacciones**\n\n"
             "No tienes transacciones registradas.\n\n"
             "💡 *Realiza tu primera operación para ver el historial*"
         )
-    
+
     # ============================================
     # ERRORS
     # ============================================
-    
+
     class Error:
         """Mensajes de error."""
-        
+
         SYSTEM_ERROR = (
             "❌ **Error del Sistema**\n\n"
             "No pude procesar tu solicitud.\n\n"
             "Por favor, intenta más tarde."
         )
-        
+
         SERVICE_UNAVAILABLE = (
             "⚠️ **Servicio No Disponible**\n\n"
             "Esta función no está disponible temporalmente.\n\n"
             "Por favor, intenta más tarde."
         )
-        
+
         INSUFFICIENT_BALANCE = (
             "💸 **Balance Insuficiente**\n\n"
             "No tienes suficientes estrellas para esta operación.\n\n"
             "💡 *Recarga tu balance para continuar*"
         )
-        
+
         INVALID_AMOUNT = (
             "❌ **Monto Inválido**\n\n"
             "El monto especificado no es válido.\n\n"
             "💡 *Verifica el amounto e intenta nuevamente*"
         )
-    
+
     # ============================================
     # SUCCESS
     # ============================================
-    
+
     class Success:
         """Mensajes de éxito."""
-        
+
         OPERATION_COMPLETED = (
             "✅ **Operación Completada**\n\n"
             "Tu solicitud ha sido procesada exitosamente."
         )
-        
+
         PAYMENT_PROCESSED = (
             "💳 **Pago Procesado**\n\n"
             "Tu pago ha sido procesado correctamente.\n\n"
             "💰 **Balance Actualizado:** {balance} estrellas"
         )
-        
+
         REFERRAL_LINK_SHARED = (
             "🔗 **Enlace Compartido**\n\n"
             "Tu enlace de referido está listo para compartir.\n\n"

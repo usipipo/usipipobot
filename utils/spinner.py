@@ -9,10 +9,12 @@ del usuario al proporcionar feedback visual inmediato.
 import asyncio
 import random
 import time
-from typing import Callable, Optional, Any
 from functools import wraps
+from typing import Any, Callable, Optional
+
 from telegram import Update
 from telegram.ext import ContextTypes
+
 from utils.logger import logger
 
 

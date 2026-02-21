@@ -10,7 +10,6 @@ from typing import Sequence, Union
 
 from alembic import op
 
-
 revision: str = '004_update_package_type_enum'
 down_revision: Union[str, None] = '003_add_key_type_enum'
 branch_labels: Union[str, Sequence[str], None] = None

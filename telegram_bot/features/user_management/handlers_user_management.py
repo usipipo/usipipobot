@@ -6,26 +6,38 @@ Version: 2.0.0 - Feature-based architecture
 """
 
 from typing import Optional
-from telegram import Update
-from telegram.ext import ContextTypes, CommandHandler, MessageHandler, CallbackQueryHandler, filters
 
-# First party imports
-from config import settings
-from utils.logger import logger
-from utils.spinner import registration_spinner
+from telegram import Update
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
+
+from application.services.achievement_service import AchievementService
+from application.services.admin_service import AdminService
 
 # Local imports
 from application.services.vpn_service import VpnService
-from application.services.achievement_service import AchievementService
-from application.services.admin_service import AdminService
-from .messages_user_management import UserManagementMessages
-from .keyboards_user_management import UserManagementKeyboards
+
+# First party imports
+from config import settings
 from telegram_bot.keyboards import MainMenuKeyboard
+from utils.logger import logger
+from utils.spinner import registration_spinner
+
+from .keyboards_user_management import UserManagementKeyboards
+from .messages_user_management import UserManagementMessages
 
 
 class UserManagementHandler:
     """Handler para gestión de usuarios."""
-    def __init__(self, vpn_service: VpnService, achievement_service: AchievementService = None):
+
+    def __init__(
+        self, vpn_service: VpnService, achievement_service: AchievementService = None
+    ):
         """
         Inicializa el handler de gestión de usuarios.
 
@@ -42,7 +54,9 @@ class UserManagementHandler:
         """
         Maneja el comando /start y el registro de usuarios.
         """
-        logger.info(f"🔄 start_handler iniciado para usuario {update.effective_user.id}")
+        logger.info(
+            f"🔄 start_handler iniciado para usuario {update.effective_user.id}"
+        )
 
         user = update.effective_user
 
@@ -58,24 +72,28 @@ class UserManagementHandler:
 
                 # Crear nuevo usuario
                 await self.vpn_service.user_repo.create_user(
-                    user_id=user.id,
-                    username=user.username,
-                    full_name=full_name
+                    user_id=user.id, username=user.username, full_name=full_name
                 )
                 welcome_message = UserManagementMessages.Welcome.NEW_USER_SIMPLIFIED
 
                 # Inicializar logros para nuevo usuario
                 if self.achievement_service:
                     try:
-                        await self.achievement_service.initialize_user_achievements(user.id)
+                        await self.achievement_service.initialize_user_achievements(
+                            user.id
+                        )
                     except (ConnectionError, TimeoutError) as e:
                         logger.warning(
                             f"⚠️ Error inicializando logros para usuario {user.id}: {e}"
                         )
 
-                logger.info(f"✅ Nuevo usuario registrado: {user.id} - {user.first_name}")
+                logger.info(
+                    f"✅ Nuevo usuario registrado: {user.id} - {user.first_name}"
+                )
             else:
-                welcome_message = UserManagementMessages.Welcome.RETURNING_USER_SIMPLIFIED
+                welcome_message = (
+                    UserManagementMessages.Welcome.RETURNING_USER_SIMPLIFIED
+                )
                 logger.info(f"👋 Usuario existente: {user.id} - {user.first_name}")
 
             # Determinar si es admin
@@ -84,20 +102,21 @@ class UserManagementHandler:
             await update.message.reply_text(
                 text=welcome_message,
                 reply_markup=MainMenuKeyboard.main_menu_with_admin(
-                    admin_id=int(settings.ADMIN_ID),
-                    current_user_id=user.id
+                    admin_id=int(settings.ADMIN_ID), current_user_id=user.id
                 ),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
 
         except (AttributeError, ValueError) as e:
             logger.error(f"❌ Error en start_handler para usuario {user.id}: {e}")
             await update.message.reply_text(
                 text=UserManagementMessages.Error.REGISTRATION_FAILED,
-                reply_markup=MainMenuKeyboard.main_menu()
+                reply_markup=MainMenuKeyboard.main_menu(),
             )
 
-    async def main_menu_callback(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
+    async def main_menu_callback(
+        self, update: Update, _context: ContextTypes.DEFAULT_TYPE
+    ):
         """
         Maneja los callbacks del menú principal.
         """
@@ -108,44 +127,57 @@ class UserManagementHandler:
         user_id = update.effective_user.id
 
         if callback_data == "show_keys":
-            from telegram_bot.features.key_management.handlers_key_management import KeyManagementHandler
+            from telegram_bot.features.key_management.handlers_key_management import (
+                KeyManagementHandler,
+            )
+
             handler = KeyManagementHandler(self.vpn_service)
             await handler.show_key_submenu(update, _context)
 
         elif callback_data == "create_key":
             from telegram_bot.features.vpn_keys.handlers_vpn_keys import VpnKeysHandler
+
             handler = VpnKeysHandler(self.vpn_service)
             await handler.start_creation(update, _context)
 
         elif callback_data == "buy_data":
-            from telegram_bot.features.payments.handlers_payments import PaymentsHandler
-            from application.services.payment_service import PaymentService
             from application.services.common.container import get_container
+            from application.services.payment_service import PaymentService
+            from telegram_bot.features.payments.handlers_payments import PaymentsHandler
+
             container = get_container()
             payment_service = container.resolve(PaymentService)
             handler = PaymentsHandler(payment_service, self.vpn_service)
             await handler.show_payment_menu(update, _context)
 
         elif callback_data == "show_usage":
-            from telegram_bot.features.user_management.handlers_user_management import UserManagementHandler
+            from telegram_bot.features.user_management.handlers_user_management import (
+                UserManagementHandler,
+            )
+
             await self.status_handler(update, _context)
 
         elif callback_data == "help":
             await query.edit_message_text(
                 text=UserManagementMessages.Welcome.HELP_TEXT,
-                reply_markup=MainMenuKeyboard.main_menu()
+                reply_markup=MainMenuKeyboard.main_menu(),
             )
 
         elif callback_data == "admin_panel":
-            from telegram_bot.features.admin.handlers_admin import AdminHandler
             from application.services.common.container import get_container
+            from telegram_bot.features.admin.handlers_admin import AdminHandler
+
             container = get_container()
             admin_service = container.resolve(AdminService)
             handler = AdminHandler(admin_service)
             await handler.admin_menu(update, _context)
 
-    async def status_handler(self, update: Update, _context: ContextTypes.DEFAULT_TYPE,
-                           admin_service: Optional[AdminService] = None):
+    async def status_handler(
+        self,
+        update: Update,
+        _context: ContextTypes.DEFAULT_TYPE,
+        admin_service: Optional[AdminService] = None,
+    ):
         """
         Muestra el estado del usuario o panel administrativo.
         """
@@ -167,23 +199,29 @@ class UserManagementHandler:
 
                 # Formatear fecha de unión
                 join_date = "N/A"
-                if user_entity and hasattr(user_entity, 'created_at') and user_entity.created_at:
+                if (
+                    user_entity
+                    and hasattr(user_entity, "created_at")
+                    and user_entity.created_at
+                ):
                     join_date = user_entity.created_at.strftime("%Y-%m-%d")
 
                 # Determinar estado
                 status_text = "Inactivo ⚠️"
-                if (user_entity and
-                        (getattr(user_entity, 'is_active', False) or
-                         getattr(user_entity, 'status', None) == 'active')):
+                if user_entity and (
+                    getattr(user_entity, "is_active", False)
+                    or getattr(user_entity, "status", None) == "active"
+                ):
                     status_text = "Activo ✅"
 
                 text = (
-                    UserManagementMessages.Status.HEADER + "\n\n" +
-                    UserManagementMessages.Status.USER_INFO.format(
+                    UserManagementMessages.Status.HEADER
+                    + "\n\n"
+                    + UserManagementMessages.Status.USER_INFO.format(
                         name=user_name,
                         user_id=telegram_id,
                         join_date=join_date,
-                        status=status_text
+                        status=status_text,
                     )
                 )
 
@@ -194,14 +232,18 @@ class UserManagementHandler:
             if update.message:
                 await update.message.reply_text(
                     text=text,
-                    reply_markup=UserManagementKeyboards.main_menu(is_admin=is_admin_menu),
-                    parse_mode="Markdown"
+                    reply_markup=UserManagementKeyboards.main_menu(
+                        is_admin=is_admin_menu
+                    ),
+                    parse_mode="Markdown",
                 )
             elif update.callback_query:
                 await update.callback_query.message.edit_text(
                     text=text,
-                    reply_markup=UserManagementKeyboards.main_menu(is_admin=is_admin_menu),
-                    parse_mode="Markdown"
+                    reply_markup=UserManagementKeyboards.main_menu(
+                        is_admin=is_admin_menu
+                    ),
+                    parse_mode="Markdown",
                 )
 
         except (AttributeError, ValueError, KeyError) as e:
@@ -210,12 +252,12 @@ class UserManagementHandler:
             if update.message:
                 await update.message.reply_text(
                     text=UserManagementMessages.Error.STATUS_FAILED,
-                    reply_markup=UserManagementKeyboards.main_menu()
+                    reply_markup=UserManagementKeyboards.main_menu(),
                 )
             elif update.callback_query:
                 await update.callback_query.message.edit_text(
                     text=UserManagementMessages.Error.STATUS_FAILED,
-                    reply_markup=UserManagementKeyboards.main_menu()
+                    reply_markup=UserManagementKeyboards.main_menu(),
                 )
 
     async def info_handler(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
@@ -232,59 +274,68 @@ class UserManagementHandler:
             # Obtener datos completos del usuario
             status_data = await self.vpn_service.get_user_status(telegram_id)
             user_entity = status_data.get("user")
-            
+
             if not user_entity:
                 await update.message.reply_text(
                     text=UserManagementMessages.Error.INFO_FAILED,
-                    reply_markup=UserManagementKeyboards.main_menu()
+                    reply_markup=UserManagementKeyboards.main_menu(),
                 )
                 return
 
             # Formatear fecha de unión
             join_date = "N/A"
-            if hasattr(user_entity, 'created_at') and user_entity.created_at:
+            if hasattr(user_entity, "created_at") and user_entity.created_at:
                 join_date = user_entity.created_at.strftime("%Y-%m-%d")
 
             # Determinar estado
             status_text = "Inactivo ⚠️"
-            if (getattr(user_entity, 'is_active', False) or
-                    getattr(user_entity, 'status', None) == 'active'):
+            if (
+                getattr(user_entity, "is_active", False)
+                or getattr(user_entity, "status", None) == "active"
+            ):
                 status_text = "Activo ✅"
 
             # Obtener información adicional del usuario y claves
             keys = status_data.get("keys", [])
-            keys_used = len([k for k in keys if getattr(k, 'is_active', True)])
+            keys_used = len([k for k in keys if getattr(k, "is_active", True)])
             keys_total = user_entity.max_keys
             data_used = f"{status_data.get('total_used_gb', 0):.2f} GB"
             balance = user_entity.balance_stars
-            
+
             # Determinar plan
             plan = "VIP" if user_entity.is_vip_active() else "Gratis"
-            
+
             # Obtener nivel y logros del servicio de logros
             level = 1
             achievements = 0
-            
+
             if self.achievement_service:
                 try:
                     # Obtener resumen de logros del usuario
-                    achievement_summary = await self.achievement_service.get_user_summary(telegram_id)
+                    achievement_summary = (
+                        await self.achievement_service.get_user_summary(telegram_id)
+                    )
                     if achievement_summary:
-                        achievements = achievement_summary.get('completed_achievements', 0)
-                        
+                        achievements = achievement_summary.get(
+                            "completed_achievements", 0
+                        )
+
                         # Calcular nivel basado en logros completados (cada 5 logros = 1 nivel)
                         level = max(1, (achievements // 5) + 1)
-                        
+
                 except Exception as e:
-                    logger.warning(f"⚠️ Error obteniendo logros para usuario {telegram_id}: {e}")
+                    logger.warning(
+                        f"⚠️ Error obteniendo logros para usuario {telegram_id}: {e}"
+                    )
                     # Usar valores por defecto si hay error
                     level = 1
                     achievements = 0
 
             # Construir mensaje de información
             text = (
-                UserManagementMessages.Info.HEADER + "\n\n" +
-                UserManagementMessages.Info.USER_INFO.format(
+                UserManagementMessages.Info.HEADER
+                + "\n\n"
+                + UserManagementMessages.Info.USER_INFO.format(
                     name=full_name,
                     user_id=telegram_id,
                     username=update.effective_user.username or "N/A",
@@ -296,7 +347,7 @@ class UserManagementHandler:
                     data_used=data_used,
                     balance=balance,
                     level=level,
-                    achievements=achievements
+                    achievements=achievements,
                 )
             )
 
@@ -306,14 +357,14 @@ class UserManagementHandler:
             await update.message.reply_text(
                 text=text,
                 reply_markup=UserManagementKeyboards.main_menu(is_admin=is_admin_menu),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
 
         except (AttributeError, ValueError, KeyError) as e:
             logger.error(f"❌ Error en info_handler para usuario {telegram_id}: {e}")
             await update.message.reply_text(
                 text=UserManagementMessages.Error.INFO_FAILED,
-                reply_markup=UserManagementKeyboards.main_menu()
+                reply_markup=UserManagementKeyboards.main_menu(),
             )
 
     def _format_admin_dashboard(self, user_name: str, stats: dict) -> str:
@@ -322,16 +373,17 @@ class UserManagementHandler:
         """
         return UserManagementMessages.Status.ADMIN_DASHBOARD.format(
             name=user_name,
-            total_users=stats.get('total_users', 0),
-            active_users=stats.get('active_users', 0),
-            total_keys=stats.get('total_keys', 0),
-            active_keys=stats.get('active_keys', 0),
-            server_load=stats.get('server_load', 'N/A')
+            total_users=stats.get("total_users", 0),
+            active_users=stats.get("active_users", 0),
+            total_keys=stats.get("total_keys", 0),
+            active_keys=stats.get("active_keys", 0),
+            server_load=stats.get("server_load", "N/A"),
         )
 
 
-def get_user_management_handlers(vpn_service: VpnService,
-                               achievement_service: AchievementService = None):
+def get_user_management_handlers(
+    vpn_service: VpnService, achievement_service: AchievementService = None
+):
     """
     Retorna los handlers de gestión de usuarios.
 
@@ -356,8 +408,9 @@ def get_user_management_handlers(vpn_service: VpnService,
     ]
 
 
-def get_user_callback_handlers(vpn_service: VpnService,
-                              achievement_service: AchievementService = None):
+def get_user_callback_handlers(
+    vpn_service: VpnService, achievement_service: AchievementService = None
+):
     """
     Retorna los handlers de callbacks para gestión de usuarios.
 
@@ -373,12 +426,11 @@ def get_user_callback_handlers(vpn_service: VpnService,
     return [
         # Callbacks de estado
         CallbackQueryHandler(
-            lambda u, c: handler.status_handler(u, c, None),
-            pattern="^status$"
+            lambda u, c: handler.status_handler(u, c, None), pattern="^status$"
         ),
         # Callbacks del menú principal
         CallbackQueryHandler(
             handler.main_menu_callback,
-            pattern="^(show_keys|create_key|buy_data|show_usage|help|admin_panel)$"
+            pattern="^(show_keys|create_key|buy_data|show_usage|help|admin_panel)$",
         ),
     ]

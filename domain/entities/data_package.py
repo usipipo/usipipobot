@@ -1,8 +1,9 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
-import uuid
+
 
 class PackageType(str, Enum):
     BASIC = "basic"
@@ -10,6 +11,7 @@ class PackageType(str, Enum):
     AVANZADO = "avanzado"
     PREMIUM = "premium"
     UNLIMITED = "unlimited"
+
 
 @dataclass
 class DataPackage:

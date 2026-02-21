@@ -8,37 +8,26 @@ Author: uSipipo Team
 Version: 3.0.0
 """
 
+import uuid
 from datetime import datetime
 from typing import List, Optional
-import uuid
 
-from sqlalchemy import (
-    BigInteger,
-    String,
-    Integer,
-    DateTime,
-    ForeignKey,
-    Boolean,
-    Text,
-    text,
-    Enum as SQLEnum,
-)
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-    relationship,
-)
+from sqlalchemy import BigInteger, Boolean, DateTime
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey, Integer, String, Text, text
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 
 class Base(DeclarativeBase):
     """Clase base única para todos los modelos de SQLAlchemy."""
+
     pass
 
 
 class UserModel(Base):
     """Modelo de usuarios del sistema."""
+
     __tablename__ = "users"
 
     telegram_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
@@ -55,9 +44,7 @@ class UserModel(Base):
     free_data_limit_bytes: Mapped[int] = mapped_column(
         BigInteger, server_default="10737418240"
     )
-    free_data_used_bytes: Mapped[int] = mapped_column(
-        BigInteger, server_default="0"
-    )
+    free_data_used_bytes: Mapped[int] = mapped_column(BigInteger, server_default="0")
 
     keys: Mapped[List["VpnKeyModel"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
@@ -69,6 +56,7 @@ class UserModel(Base):
 
 class VpnKeyModel(Base):
     """Modelo de llaves VPN."""
+
     __tablename__ = "vpn_keys"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -78,8 +66,7 @@ class VpnKeyModel(Base):
         BigInteger, ForeignKey("users.telegram_id", ondelete="CASCADE")
     )
     key_type: Mapped[str] = mapped_column(
-        SQLEnum("wireguard", "outline", name="key_type_enum"),
-        nullable=False
+        SQLEnum("wireguard", "outline", name="key_type_enum"), nullable=False
     )
     name: Mapped[str] = mapped_column(String, nullable=False)
     key_data: Mapped[str] = mapped_column(String, nullable=False)
@@ -98,6 +85,7 @@ class VpnKeyModel(Base):
 
 class DataPackageModel(Base):
     """Modelo de paquetes de datos comprados."""
+
     __tablename__ = "data_packages"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -107,8 +95,15 @@ class DataPackageModel(Base):
         BigInteger, ForeignKey("users.telegram_id", ondelete="CASCADE")
     )
     package_type: Mapped[str] = mapped_column(
-        SQLEnum("basic", "estandar", "avanzado", "premium", "unlimited", name="package_type_enum"),
-        nullable=False
+        SQLEnum(
+            "basic",
+            "estandar",
+            "avanzado",
+            "premium",
+            "unlimited",
+            name="package_type_enum",
+        ),
+        nullable=False,
     )
     data_limit_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
     data_used_bytes: Mapped[int] = mapped_column(BigInteger, server_default="0")
@@ -116,7 +111,9 @@ class DataPackageModel(Base):
     purchased_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     telegram_payment_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 

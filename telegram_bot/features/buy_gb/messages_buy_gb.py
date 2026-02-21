@@ -23,14 +23,18 @@ class BuyGbMessages:
         def format_packages_list() -> str:
             lines = []
             for pkg in PACKAGE_OPTIONS:
-                bonus_text = f" (+{pkg.bonus_percent}% bonus)" if pkg.bonus_percent > 0 else ""
-                lines.append(f"⭐ **{pkg.name}** - {pkg.data_gb} GB - {pkg.stars} ⭐{bonus_text}")
+                bonus_text = (
+                    f" (+{pkg.bonus_percent}% bonus)" if pkg.bonus_percent > 0 else ""
+                )
+                lines.append(
+                    f"⭐ **{pkg.name}** - {pkg.data_gb} GB - {pkg.stars} ⭐{bonus_text}"
+                )
             return "\n".join(lines)
 
     class Payment:
         INVOICE_TITLE = "Paquete {package_name}"
         INVOICE_DESCRIPTION = "{gb_amount} GB de datos - Valido 35 dias"
-        
+
         CONFIRMATION = (
             "✅ **Compra Exitosa**\n\n"
             "📦 **Paquete:** {package_name}\n"
@@ -87,8 +91,12 @@ class BuyGbMessages:
                 return ""
             lines = ["📦 *Paquetes Activos:*"]
             for pkg in packages:
-                lines.append(f"   • {pkg['name']} {pkg['total_gb']:.0f}GB ({pkg['days_remaining']} días restantes)")
-                lines.append(f"     Usado: {pkg['used_gb']:.1f} GB / {pkg['total_gb']:.0f} GB")
+                lines.append(
+                    f"   • {pkg['name']} {pkg['total_gb']:.0f}GB ({pkg['days_remaining']} días restantes)"
+                )
+                lines.append(
+                    f"     Usado: {pkg['used_gb']:.1f} GB / {pkg['total_gb']:.0f} GB"
+                )
                 lines.append(f"     Disponible: {pkg['remaining_gb']:.1f} GB")
             return "\n".join(lines)
 
@@ -105,13 +113,15 @@ class BuyGbMessages:
             lines.append("")
             lines.append(BuyGbMessages.Data.SEPARATOR)
             lines.append("")
-            
+
             if summary.get("packages"):
-                lines.append(BuyGbMessages.Data.format_packages_list(summary["packages"]))
+                lines.append(
+                    BuyGbMessages.Data.format_packages_list(summary["packages"])
+                )
                 lines.append("")
                 lines.append(BuyGbMessages.Data.SEPARATOR)
                 lines.append("")
-            
+
             lines.append(BuyGbMessages.Data.format_free_plan(summary["free_plan"]))
             lines.append("")
             lines.append(BuyGbMessages.Data.SEPARATOR)
@@ -119,7 +129,7 @@ class BuyGbMessages:
             lines.append(f"📊 *TOTAL DISPONIBLE:* {summary['remaining_gb']:.1f} GB")
             lines.append("")
             lines.append("💡 El consumo usa primero los paquetes comprados")
-            
+
             return "\n".join(lines)
 
         NO_DATA = (
