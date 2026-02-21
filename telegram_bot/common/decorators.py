@@ -11,12 +11,8 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from utils.logger import logger
-from utils.spinner import (
-    database_spinner,
-    database_spinner_callback,
-    vpn_spinner,
-    with_spinner,
-)
+from utils.spinner import (database_spinner, database_spinner_callback,
+                           vpn_spinner, with_spinner)
 
 from .messages import CommonMessages
 

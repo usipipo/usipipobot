@@ -9,12 +9,8 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
-from domain.entities.admin import (
-    AdminKeyInfo,
-    AdminOperationResult,
-    AdminUserInfo,
-    ServerStatus,
-)
+from domain.entities.admin import (AdminKeyInfo, AdminOperationResult,
+                                   AdminUserInfo, ServerStatus)
 from domain.entities.user import UserRole, UserStatus
 from domain.entities.vpn_key import VpnKey as Key
 from domain.interfaces.iadmin_service import IAdminService
