@@ -16,7 +16,6 @@ from telegram.ext import (
     filters,
 )
 
-from application.services.achievement_service import AchievementService
 from application.services.admin_service import AdminService
 
 # Local imports
@@ -35,18 +34,14 @@ from .messages_user_management import UserManagementMessages
 class UserManagementHandler:
     """Handler para gestión de usuarios."""
 
-    def __init__(
-        self, vpn_service: VpnService, achievement_service: AchievementService = None
-    ):
+    def __init__(self, vpn_service: VpnService):
         """
         Inicializa el handler de gestión de usuarios.
 
         Args:
             vpn_service: Servicio de VPN
-            achievement_service: Servicio de logros (opcional)
         """
         self.vpn_service = vpn_service
-        self.achievement_service = achievement_service
         logger.info("👤 UserManagementHandler inicializado")
 
     @registration_spinner
@@ -75,17 +70,6 @@ class UserManagementHandler:
                     user_id=user.id, username=user.username, full_name=full_name
                 )
                 welcome_message = UserManagementMessages.Welcome.NEW_USER_SIMPLIFIED
-
-                # Inicializar logros para nuevo usuario
-                if self.achievement_service:
-                    try:
-                        await self.achievement_service.initialize_user_achievements(
-                            user.id
-                        )
-                    except (ConnectionError, TimeoutError) as e:
-                        logger.warning(
-                            f"⚠️ Error inicializando logros para usuario {user.id}: {e}"
-                        )
 
                 logger.info(
                     f"✅ Nuevo usuario registrado: {user.id} - {user.first_name}"
@@ -305,31 +289,9 @@ class UserManagementHandler:
             # Determinar plan
             plan = "VIP" if user_entity.is_vip_active() else "Gratis"
 
-            # Obtener nivel y logros del servicio de logros
+            # Valores por defecto para nivel y logros
             level = 1
             achievements = 0
-
-            if self.achievement_service:
-                try:
-                    # Obtener resumen de logros del usuario
-                    achievement_summary = (
-                        await self.achievement_service.get_user_summary(telegram_id)
-                    )
-                    if achievement_summary:
-                        achievements = achievement_summary.get(
-                            "completed_achievements", 0
-                        )
-
-                        # Calcular nivel basado en logros completados (cada 5 logros = 1 nivel)
-                        level = max(1, (achievements // 5) + 1)
-
-                except Exception as e:
-                    logger.warning(
-                        f"⚠️ Error obteniendo logros para usuario {telegram_id}: {e}"
-                    )
-                    # Usar valores por defecto si hay error
-                    level = 1
-                    achievements = 0
 
             # Construir mensaje de información
             text = (
@@ -381,54 +343,42 @@ class UserManagementHandler:
         )
 
 
-def get_user_management_handlers(
-    vpn_service: VpnService, achievement_service: AchievementService = None
-):
+def get_user_management_handlers(vpn_service: VpnService):
     """
     Retorna los handlers de gestión de usuarios.
 
     Args:
         vpn_service: Servicio de VPN
-        achievement_service: Servicio de logros (opcional)
 
     Returns:
         list: Lista de handlers
     """
-    handler = UserManagementHandler(vpn_service, achievement_service)
+    handler = UserManagementHandler(vpn_service)
 
     return [
-        # Comando /start
         CommandHandler("start", handler.start_handler),
-        # Comando /info
         CommandHandler("info", handler.info_handler),
-        # Botón de estado
         MessageHandler(filters.Regex("^📊 Estado$"), handler.status_handler),
-        # Comando /status
         CommandHandler("status", handler.status_handler),
     ]
 
 
-def get_user_callback_handlers(
-    vpn_service: VpnService, achievement_service: AchievementService = None
-):
+def get_user_callback_handlers(vpn_service: VpnService):
     """
     Retorna los handlers de callbacks para gestión de usuarios.
 
     Args:
         vpn_service: Servicio de VPN
-        achievement_service: Servicio de logros (opcional)
 
     Returns:
         list: Lista de CallbackQueryHandler
     """
-    handler = UserManagementHandler(vpn_service, achievement_service)
+    handler = UserManagementHandler(vpn_service)
 
     return [
-        # Callbacks de estado
         CallbackQueryHandler(
             lambda u, c: handler.status_handler(u, c, None), pattern="^status$"
         ),
-        # Callbacks del menú principal
         CallbackQueryHandler(
             handler.main_menu_callback,
             pattern="^(show_keys|create_key|buy_data|show_usage|help|admin_panel)$",
