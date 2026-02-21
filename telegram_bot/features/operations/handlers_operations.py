@@ -6,19 +6,13 @@ Version: 2.0.0 - Feature-based architecture
 """
 
 from telegram import Update
-from telegram.ext import (
-    CallbackQueryHandler,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
+                          MessageHandler, filters)
 
 from application.services.vpn_service import VpnService
 from config import settings
-from telegram_bot.features.user_management.keyboards_user_management import (
-    UserManagementKeyboards,
-)
+from telegram_bot.features.user_management.keyboards_user_management import \
+    UserManagementKeyboards
 from utils.logger import logger
 
 from .keyboards_operations import OperationsKeyboards
