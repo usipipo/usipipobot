@@ -13,8 +13,7 @@ import sys
 
 # Importar el módulo con nombre de archivo con puntos usando importlib
 spec = importlib.util.spec_from_file_location(
-    "handlers_admin",
-    "telegram_bot/features/admin/handlers_admin.py"
+    "handlers_admin", "telegram_bot/features/admin/handlers_admin.py"
 )
 module = importlib.util.module_from_spec(spec)
 module.__package__ = "telegram_bot.features.admin"
@@ -26,8 +25,4 @@ AdminHandler = module.AdminHandler
 get_admin_handlers = module.get_admin_handlers
 get_admin_callback_handlers = module.get_admin_callback_handlers
 
-__all__ = [
-    'AdminHandler',
-    'get_admin_handlers', 
-    'get_admin_callback_handlers'
-]
+__all__ = ["AdminHandler", "get_admin_handlers", "get_admin_callback_handlers"]

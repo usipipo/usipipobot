@@ -9,39 +9,48 @@ Version: 2.0.0
 """
 
 from typing import List
+
 from telegram.ext import BaseHandler
-from utils.logger import logger
 
-from telegram_bot.features.admin.handlers_admin import (
-    get_admin_handlers, get_admin_callback_handlers
-)
-from telegram_bot.features.key_management.handlers_key_management import (
-    get_key_management_handlers, get_key_management_callback_handlers
-)
-from telegram_bot.features.operations.handlers_operations import (
-    get_operations_handlers, get_operations_callback_handlers
-)
-from telegram_bot.features.payments.handlers_payments import (
-    get_payments_handlers, get_payments_callback_handlers
-)
-from telegram_bot.features.user_management.handlers_user_management import (
-    get_user_management_handlers, get_user_callback_handlers
-)
-from telegram_bot.features.vpn_keys.handlers_vpn_keys import (
-    get_vpn_keys_handlers, get_vpn_keys_callback_handlers
-)
-from telegram_bot.features.buy_gb.handlers_buy_gb import (
-    get_buy_gb_handlers, get_buy_gb_callback_handlers, get_buy_gb_payment_handlers
-)
-from telegram_bot.features.basic_commands.handlers_basic import (
-    get_basic_handlers, get_basic_callback_handlers
-)
-
-from application.services.vpn_service import VpnService
-from application.services.data_package_service import DataPackageService
-from application.services.payment_service import PaymentService
 from application.services.admin_service import AdminService
 from application.services.common.container import get_container
+from application.services.data_package_service import DataPackageService
+from application.services.payment_service import PaymentService
+from application.services.vpn_service import VpnService
+from telegram_bot.features.admin.handlers_admin import (
+    get_admin_callback_handlers,
+    get_admin_handlers,
+)
+from telegram_bot.features.basic_commands.handlers_basic import (
+    get_basic_callback_handlers,
+    get_basic_handlers,
+)
+from telegram_bot.features.buy_gb.handlers_buy_gb import (
+    get_buy_gb_callback_handlers,
+    get_buy_gb_handlers,
+    get_buy_gb_payment_handlers,
+)
+from telegram_bot.features.key_management.handlers_key_management import (
+    get_key_management_callback_handlers,
+    get_key_management_handlers,
+)
+from telegram_bot.features.operations.handlers_operations import (
+    get_operations_callback_handlers,
+    get_operations_handlers,
+)
+from telegram_bot.features.payments.handlers_payments import (
+    get_payments_callback_handlers,
+    get_payments_handlers,
+)
+from telegram_bot.features.user_management.handlers_user_management import (
+    get_user_callback_handlers,
+    get_user_management_handlers,
+)
+from telegram_bot.features.vpn_keys.handlers_vpn_keys import (
+    get_vpn_keys_callback_handlers,
+    get_vpn_keys_handlers,
+)
+from utils.logger import logger
 
 
 def _get_admin_handlers(container) -> List[BaseHandler]:
@@ -54,7 +63,9 @@ def _get_admin_handlers(container) -> List[BaseHandler]:
     return handlers
 
 
-def _get_core_handlers(vpn_service, payment_service, data_package_service) -> List[BaseHandler]:
+def _get_core_handlers(
+    vpn_service, payment_service, data_package_service
+) -> List[BaseHandler]:
     """Initialize and return core feature handlers."""
     handlers = []
 
@@ -91,8 +102,7 @@ def _get_core_handlers(vpn_service, payment_service, data_package_service) -> Li
 
 
 def initialize_handlers(
-    vpn_service: VpnService,
-    payment_service: PaymentService
+    vpn_service: VpnService, payment_service: PaymentService
 ) -> List[BaseHandler]:
     logger.info("Initializing bot handlers...")
     handlers = []
@@ -102,7 +112,9 @@ def initialize_handlers(
         data_package_service = container.resolve(DataPackageService)
 
         handlers.extend(_get_admin_handlers(container))
-        handlers.extend(_get_core_handlers(vpn_service, payment_service, data_package_service))
+        handlers.extend(
+            _get_core_handlers(vpn_service, payment_service, data_package_service)
+        )
 
         logger.info(f"Total handlers configured: {len(handlers)}")
         return handlers

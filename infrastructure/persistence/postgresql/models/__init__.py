@@ -1,11 +1,6 @@
 """Exports de modelos SQLAlchemy."""
 
-from .base import (
-    Base,
-    UserModel,
-    VpnKeyModel,
-    DataPackageModel,
-)
+from .base import Base, DataPackageModel, UserModel, VpnKeyModel
 
 __all__ = [
     "Base",

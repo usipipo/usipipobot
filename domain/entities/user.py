@@ -3,27 +3,33 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import List, Optional
 
+
 class UserStatus(str, Enum):
     """Estados posibles de un usuario en el sistema."""
+
     ACTIVE = "active"
     SUSPENDED = "suspended"
     BLOCKED = "blocked"
     FREE_TRIAL = "free_trial"
 
+
 class UserRole(str, Enum):
     """Roles disponibles en el sistema."""
+
     USER = "user"  # Usuario regular
     ADMIN = "admin"  # Administrador del sistema
     TASK_MANAGER = "task_manager"  # Gestor de tareas - Rol especial de pago
     ANNOUNCER = "announcer"  # Anunciante - Rol especial de pago
 
+
 @dataclass
 class User:
     """
     Entidad fundamental que representa a un usuario del bot/API.
-    
+
     Esta clase es pura: no depende de ninguna base de datos ni librería externa.
     """
+
     telegram_id: int
     username: Optional[str] = None
     full_name: Optional[str] = None
@@ -31,7 +37,7 @@ class User:
     role: UserRole = UserRole.USER
     max_keys: int = 2
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    
+
     balance_stars: int = 0
     total_deposited: int = 0
     referral_code: Optional[str] = None
@@ -39,13 +45,13 @@ class User:
     total_referral_earnings: int = 0
     is_vip: bool = False
     vip_expires_at: Optional[datetime] = None
-    
+
     # Atributos para roles especiales
     task_manager_expires_at: Optional[datetime] = None
     announcer_expires_at: Optional[datetime] = None
-    
+
     keys: List = field(default_factory=list)
-    
+
     free_data_limit_bytes: int = 10 * 1024**3
     free_data_used_bytes: int = 0
 
@@ -53,17 +59,17 @@ class User:
     def is_active(self) -> bool:
         """Verifica si el usuario está activo."""
         return self.status == UserStatus.ACTIVE
-    
+
     @property
     def is_blocked(self) -> bool:
         """Verifica si el usuario está bloqueado."""
         return self.status == UserStatus.BLOCKED
-    
+
     def is_task_manager_active(self) -> bool:
         """Verifica si el usuario tiene rol de Gestor de Tareas activo."""
         if self.role != UserRole.TASK_MANAGER or not self.task_manager_expires_at:
             return False
-        
+
         now = datetime.now(timezone.utc)
         exp = self.task_manager_expires_at
         if exp.tzinfo is None:
@@ -71,12 +77,12 @@ class User:
         else:
             exp = exp.astimezone(timezone.utc)
         return now < exp
-    
+
     def is_announcer_active(self) -> bool:
         """Verifica si el usuario tiene rol de Anunciante activo."""
         if self.role != UserRole.ANNOUNCER or not self.announcer_expires_at:
             return False
-        
+
         now = datetime.now(timezone.utc)
         exp = self.announcer_expires_at
         if exp.tzinfo is None:
@@ -84,20 +90,20 @@ class User:
         else:
             exp = exp.astimezone(timezone.utc)
         return now < exp
-    
+
     def can_create_more_keys(self) -> bool:
         """
-        Lógica de negocio: Verifica si el usuario tiene permiso 
+        Lógica de negocio: Verifica si el usuario tiene permiso
         para generar una nueva llave según su límite.
         Los administradores pueden crear ilimitadas.
         """
         # Los administradores pueden crear ilimitadas
         if self.role == UserRole.ADMIN:
             return True
-            
-        active_keys = [k for k in self.keys if getattr(k, 'is_active', True)]
+
+        active_keys = [k for k in self.keys if getattr(k, "is_active", True)]
         return len(active_keys) < self.max_keys
-    
+
     def can_delete_keys(self) -> bool:
         """
         Lógica de negocio: Solo usuarios que han recargado pueden eliminar claves.
@@ -106,9 +112,9 @@ class User:
         # Los administradores pueden eliminar sin restricciones
         if self.role == UserRole.ADMIN:
             return True
-            
+
         return self.total_deposited > 0
-    
+
     def is_vip_active(self) -> bool:
         """
         Verifica si el usuario tiene VIP activo (pagado y no expirado).
@@ -116,7 +122,7 @@ class User:
         """
         if not self.is_vip or not self.vip_expires_at:
             return False
-        
+
         now = datetime.now(timezone.utc)
         vip_exp = self.vip_expires_at
         if vip_exp.tzinfo is None:
@@ -124,12 +130,12 @@ class User:
         else:
             vip_exp = vip_exp.astimezone(timezone.utc)
         return now < vip_exp
-    
+
     @property
     def free_data_remaining_bytes(self) -> int:
         """Calcula los bytes restantes de datos gratuitos."""
         return max(0, self.free_data_limit_bytes - self.free_data_used_bytes)
-    
+
     def add_free_data_usage(self, bytes_used: int) -> None:
         """Agrega uso a los datos gratuitos."""
         self.free_data_used_bytes += bytes_used

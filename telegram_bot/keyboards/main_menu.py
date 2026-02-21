@@ -16,23 +16,23 @@ class MainMenuKeyboard:
         keyboard = [
             [
                 InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
-                InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key")
+                InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
             ],
             [
                 InlineKeyboardButton("📦 Comprar GB", callback_data="buy_data"),
-                InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage")
+                InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage"),
             ],
-            [
-                InlineKeyboardButton("❓ Ayuda", callback_data="help")
-            ]
+            [InlineKeyboardButton("❓ Ayuda", callback_data="help")],
         ]
         return InlineKeyboardMarkup(keyboard)
-    
+
     @staticmethod
-    def main_menu_with_admin(admin_id: int, current_user_id: int) -> InlineKeyboardMarkup:
+    def main_menu_with_admin(
+        admin_id: int, current_user_id: int
+    ) -> InlineKeyboardMarkup:
         keyboard = MainMenuKeyboard.main_menu()
         if str(current_user_id) == str(admin_id):
-            keyboard.keyboard.insert(0, [
-                InlineKeyboardButton("🔧 Admin", callback_data="admin_panel")
-            ])
+            keyboard.keyboard.insert(
+                0, [InlineKeyboardButton("🔧 Admin", callback_data="admin_panel")]
+            )
         return keyboard

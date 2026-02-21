@@ -5,22 +5,22 @@ Author: uSipipo Team
 Version: 2.0.0
 """
 
-import sys
 import asyncio
-from utils.logger import logger
+import sys
+
 from telegram.ext import ApplicationBuilder
 
-from config import settings
 from application.services.common.container import get_service
-from application.services.vpn_service import VpnService
+from application.services.data_package_service import DataPackageService
 from application.services.payment_service import PaymentService
-
-from infrastructure.persistence.database import init_database, close_database
-from telegram_bot.handlers.handler_initializer import initialize_handlers
-from infrastructure.jobs.usage_sync import sync_vpn_usage_job
+from application.services.vpn_service import VpnService
+from config import settings
 from infrastructure.jobs.key_cleanup_job import key_cleanup_job
 from infrastructure.jobs.package_expiration_job import expire_packages_job
-from application.services.data_package_service import DataPackageService
+from infrastructure.jobs.usage_sync import sync_vpn_usage_job
+from infrastructure.persistence.database import close_database, init_database
+from telegram_bot.handlers.handler_initializer import initialize_handlers
+from utils.logger import logger
 
 
 async def startup():
@@ -71,18 +71,12 @@ def main():
     job_queue = application.job_queue
 
     job_queue.run_repeating(
-        sync_vpn_usage_job,
-        interval=1800,
-        first=60,
-        data={'vpn_service': vpn_service}
+        sync_vpn_usage_job, interval=1800, first=60, data={"vpn_service": vpn_service}
     )
     logger.info("⏰ Job de cuota programado.")
 
     job_queue.run_repeating(
-        key_cleanup_job,
-        interval=3600,
-        first=30,
-        data={'vpn_service': vpn_service}
+        key_cleanup_job, interval=3600, first=30, data={"vpn_service": vpn_service}
     )
     logger.info("⏰ Job de limpieza de llaves programado.")
 
@@ -90,7 +84,7 @@ def main():
         expire_packages_job,
         interval=86400,
         first=10,
-        data={'data_package_service': data_package_service}
+        data={"data_package_service": data_package_service},
     )
     logger.info("⏰ Job de expiración de paquetes programado.")
 

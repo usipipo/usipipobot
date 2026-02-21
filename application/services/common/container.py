@@ -12,48 +12,43 @@ from functools import lru_cache
 from typing import Callable
 
 import punq
-
 from sqlalchemy.ext.asyncio import AsyncSession
-from utils.logger import logger
-from config import settings
 
-from infrastructure.persistence.database import get_session_factory
-from infrastructure.api_clients.client_outline import OutlineClient
-from infrastructure.api_clients.client_wireguard import WireGuardClient
-from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
-from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
-from infrastructure.persistence.postgresql.data_package_repository import PostgresDataPackageRepository
-
-from domain.interfaces.iuser_repository import IUserRepository
-from domain.interfaces.ikey_repository import IKeyRepository
-from domain.interfaces.idata_package_repository import IDataPackageRepository
-
-from application.services.vpn_service import VpnService
-from application.services.payment_service import PaymentService
 from application.services.admin_service import AdminService
 from application.services.data_package_service import DataPackageService
-
-from telegram_bot.features.vpn_keys import (
-    get_vpn_keys_handler,
-    get_vpn_keys_handlers,
-    get_vpn_keys_callback_handlers
+from application.services.payment_service import PaymentService
+from application.services.vpn_service import VpnService
+from config import settings
+from domain.interfaces.idata_package_repository import IDataPackageRepository
+from domain.interfaces.ikey_repository import IKeyRepository
+from domain.interfaces.iuser_repository import IUserRepository
+from infrastructure.api_clients.client_outline import OutlineClient
+from infrastructure.api_clients.client_wireguard import WireGuardClient
+from infrastructure.persistence.database import get_session_factory
+from infrastructure.persistence.postgresql.data_package_repository import (
+    PostgresDataPackageRepository,
 )
+from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
+from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
+from telegram_bot.features.admin import get_admin_callback_handlers, get_admin_handlers
 from telegram_bot.features.key_management import (
+    get_key_management_callback_handlers,
     get_key_management_handlers,
-    get_key_management_callback_handlers
-)
-from telegram_bot.features.payments import (
-    get_payments_handlers,
-    get_payments_callback_handlers
 )
 from telegram_bot.features.operations import (
+    get_operations_callback_handlers,
     get_operations_handlers,
-    get_operations_callback_handlers
 )
-from telegram_bot.features.admin import (
-    get_admin_handlers,
-    get_admin_callback_handlers
+from telegram_bot.features.payments import (
+    get_payments_callback_handlers,
+    get_payments_handlers,
 )
+from telegram_bot.features.vpn_keys import (
+    get_vpn_keys_callback_handlers,
+    get_vpn_keys_handler,
+    get_vpn_keys_handlers,
+)
+from utils.logger import logger
 
 
 class SessionManager:
@@ -161,26 +156,22 @@ def _configure_application_services(container: punq.Container) -> None:
             user_repo=create_user_repo(),
             key_repo=create_key_repo(),
             outline_client=container.resolve(OutlineClient),
-            wireguard_client=container.resolve(WireGuardClient)
+            wireguard_client=container.resolve(WireGuardClient),
         )
 
     def create_payment_service() -> PaymentService:
-        return PaymentService(
-            user_repo=create_user_repo(),
-            key_repo=create_key_repo()
-        )
+        return PaymentService(user_repo=create_user_repo(), key_repo=create_key_repo())
 
     def create_admin_service() -> AdminService:
         return AdminService(
             key_repository=create_key_repo(),
             user_repository=create_user_repo(),
-            payment_repository=create_key_repo()
+            payment_repository=create_key_repo(),
         )
 
     def create_data_package_service() -> DataPackageService:
         return DataPackageService(
-            package_repo=create_data_package_repo(),
-            user_repo=create_user_repo()
+            package_repo=create_data_package_repo(), user_repo=create_user_repo()
         )
 
     container.register(VpnService, factory=create_vpn_service)
@@ -206,20 +197,17 @@ def _configure_handlers(container: punq.Container) -> None:
             user_repo=create_user_repo(),
             key_repo=create_key_repo(),
             outline_client=container.resolve(OutlineClient),
-            wireguard_client=container.resolve(WireGuardClient)
+            wireguard_client=container.resolve(WireGuardClient),
         )
 
     def create_payment_service() -> PaymentService:
-        return PaymentService(
-            user_repo=create_user_repo(),
-            key_repo=create_key_repo()
-        )
+        return PaymentService(user_repo=create_user_repo(), key_repo=create_key_repo())
 
     def create_admin_service() -> AdminService:
         return AdminService(
             key_repository=create_key_repo(),
             user_repository=create_user_repo(),
-            payment_repository=create_key_repo()
+            payment_repository=create_key_repo(),
         )
 
     def create_creation_handlers() -> object:
@@ -230,14 +218,11 @@ def _configure_handlers(container: punq.Container) -> None:
 
     def create_payment_handlers_list() -> list:
         return get_payments_handlers(
-            payment_service=create_payment_service(),
-            vpn_service=create_vpn_service()
+            payment_service=create_payment_service(), vpn_service=create_vpn_service()
         )
 
     def create_monitoring_handlers_list() -> list:
-        return get_operations_handlers(
-            vpn_service=create_vpn_service()
-        )
+        return get_operations_handlers(vpn_service=create_vpn_service())
 
     def create_admin_handlers() -> list:
         handlers = get_admin_handlers(create_admin_service())
@@ -246,14 +231,14 @@ def _configure_handlers(container: punq.Container) -> None:
     def create_inline_callback_handlers_list() -> list:
         handlers = []
         handlers.extend(get_admin_callback_handlers(create_admin_service()))
-        handlers.extend(get_payments_callback_handlers(
-            create_payment_service(), create_vpn_service()
-        ))
+        handlers.extend(
+            get_payments_callback_handlers(
+                create_payment_service(), create_vpn_service()
+            )
+        )
         handlers.extend(get_vpn_keys_callback_handlers(create_vpn_service()))
         handlers.extend(get_key_management_callback_handlers(create_vpn_service()))
-        handlers.extend(get_operations_callback_handlers(
-            create_vpn_service()
-        ))
+        handlers.extend(get_operations_callback_handlers(create_vpn_service()))
         return handlers
 
     container.register("creation_handlers", factory=create_creation_handlers)
@@ -261,7 +246,9 @@ def _configure_handlers(container: punq.Container) -> None:
     container.register("payment_handlers", factory=create_payment_handlers_list)
     container.register("monitoring_handlers", factory=create_monitoring_handlers_list)
     container.register("admin_handlers", factory=create_admin_handlers)
-    container.register("inline_callback_handlers", factory=create_inline_callback_handlers_list)
+    container.register(
+        "inline_callback_handlers", factory=create_inline_callback_handlers_list
+    )
 
 
 def get_service(service_class):

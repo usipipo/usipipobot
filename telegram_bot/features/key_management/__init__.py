@@ -14,7 +14,7 @@ import sys
 # Importar el módulo con nombre de archivo con puntos usando importlib
 spec = importlib.util.spec_from_file_location(
     "handlers_key_management",
-    "telegram_bot/features/key_management/handlers_key_management.py"
+    "telegram_bot/features/key_management/handlers_key_management.py",
 )
 module = importlib.util.module_from_spec(spec)
 module.__package__ = "telegram_bot.features.key_management"
@@ -27,7 +27,7 @@ get_key_management_handlers = module.get_key_management_handlers
 get_key_management_callback_handlers = module.get_key_management_callback_handlers
 
 __all__ = [
-    'KeyManagementHandler',
-    'get_key_management_handlers', 
-    'get_key_management_callback_handlers'
+    "KeyManagementHandler",
+    "get_key_management_handlers",
+    "get_key_management_callback_handlers",
 ]

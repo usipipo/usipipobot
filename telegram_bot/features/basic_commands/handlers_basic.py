@@ -6,8 +6,10 @@ Version: 1.0.0
 """
 
 from telegram import Update
-from telegram.ext import ContextTypes, CommandHandler
+from telegram.ext import CommandHandler, ContextTypes
+
 from utils.logger import logger
+
 from .messages_basic import BasicMessages
 
 
@@ -24,8 +26,7 @@ class BasicHandler:
 
         try:
             await update.message.reply_text(
-                text=BasicMessages.HELP_TEXT,
-                parse_mode="Markdown"
+                text=BasicMessages.HELP_TEXT, parse_mode="Markdown"
             )
         except Exception as e:
             logger.error(f"❌ Error en /help para usuario {user_id}: {e}")
