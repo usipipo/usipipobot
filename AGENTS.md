@@ -496,3 +496,84 @@ class BaseHandler:
 - Write tests for new functionality
 - Keep the codebase maintainable and readable
 - Follow security best practices at all times
+## Setup Script
+
+The project includes a comprehensive setup script for automated installation:
+
+```bash
+# Run the setup manager
+./scripts/setup.sh
+```
+
+### Setup Options
+
+| Option | Description |
+|--------|-------------|
+| 1 | 🐳 Install Docker (required for Outline) |
+| 2 | ⚙️ Install Outline VPN Server |
+| 3 | ⚙️ Install WireGuard VPN Server |
+| 4 | 🗄️ Install/Configure PostgreSQL |
+| 5 | 🐍 Setup Python Environment (venv + deps) |
+| 6 | 🔄 Run Database Migrations (Alembic) |
+| 7 | 🚀 Create Systemd Service |
+| 8 | ▶️ Start Bot (main.py) |
+| 9 | 🔁 Full Setup (automated 1-7) |
+| 10 | 📊 System Status |
+
+### Module Structure
+
+```
+scripts/
+├── setup.sh              # Main orchestrator
+├── install.sh            # Legacy VPN installer
+└── modules/
+    ├── common.sh         # Shared functions
+    ├── database.sh       # PostgreSQL setup
+    ├── python.sh         # venv + requirements
+    ├── systemd.sh        # Service management
+    ├── bot.sh            # Bot validation/start
+    └── vpn.sh            # VPN installation
+```
+
+### Manual Installation
+
+If you prefer manual installation:
+
+```bash
+# 1. Install PostgreSQL
+sudo apt install postgresql postgresql-contrib
+
+# 2. Create database and user
+sudo -u postgres psql -c "CREATE DATABASE usipipo;"
+sudo -u postgres psql -c "CREATE USER usipipo WITH PASSWORD 'your_password';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE usipipo TO usipipo;"
+
+# 3. Create virtual environment
+python3 -m venv venv
+
+# 4. Install dependencies
+./venv/bin/pip install -r requirements.txt
+
+# 5. Configure .env
+cp example.env .env
+# Edit .env with your settings
+
+# 6. Run migrations
+./venv/bin/alembic upgrade head
+
+# 7. Start bot
+./venv/bin/python main.py
+```
+
+### Quick Start
+
+```bash
+# Clone and setup
+git clone https://github.com/usipipo/usipipobot.git
+cd usipipobot
+./scripts/setup.sh
+
+# Select option 9 for full automated setup
+# Then configure TELEGRAM_TOKEN in .env
+# Start: sudo systemctl start usipipo
+```
