@@ -1,9 +1,9 @@
 # uSipipo VPN Bot
 
-[![CI](https://github.com/mowgli/usipipobot/actions/workflows/ci.yml/badge.svg)](https://github.com/mowgli/usipipobot/actions/workflows/ci.yml)
-[![Docker Build](https://github.com/mowgli/usipipobot/actions/workflows/docker.yml/badge.svg)](https://github.com/mowgli/usipipobot/actions/workflows/docker.yml)
-[![CodeQL](https://github.com/mowgli/usipipobot/actions/workflows/codeql.yml/badge.svg)](https://github.com/mowgli/usipipobot/actions/workflows/codeql.yml)
-[![codecov](https://codecov.io/gh/mowgli/usipipobot/branch/main/graph/badge.svg)](https://codecov.io/gh/mowgli/usipipobot)
+[![CI](https://github.com/usipipo/usipipobot/actions/workflows/ci.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml)
+[![CodeQL](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml)
+[![codecov](https://codecov.io/gh/usipipo/usipipobot/branch/main/graph/badge.svg)](https://codecov.io/gh/usipipo/usipipobot)
 
 Bot de Telegram para gestión de VPN (WireGuard + Outline) con sistema de pagos integrado.
 
@@ -14,14 +14,12 @@ Bot de Telegram para gestión de VPN (WireGuard + Outline) con sistema de pagos 
 - Pagos con Telegram Stars
 - Programa de referidos
 - Panel de administración
-- Juegos Play & Earn
 
 ## Tech Stack
 
-- Python 3.9+
+- Python 3.11+
 - python-telegram-bot 21+
 - SQLAlchemy 2.0 + PostgreSQL
-- FastAPI
 - Clean Architecture
 
 ## Instalación Rápida
@@ -57,18 +55,19 @@ python main.py
 TELEGRAM_TOKEN=your_bot_token
 ADMIN_ID=your_telegram_id
 DATABASE_URL=postgresql+asyncpg://...
-SUPABASE_URL=...
-SUPABASE_SERVICE_KEY=...
+SERVER_IP=your_server_ip
+SECRET_KEY=your_secret_key
 ```
 
 ## Comandos del Bot
 
 - `/start` - Iniciar bot
 - `/help` - Ayuda
-- `/profile` - Ver perfil
 - `/keys` - Mis claves VPN
 - `/buy` - Comprar GB
-- `/ref` - Programa referidos
+- `/data` - Ver consumo de datos
+- `/newkey` - Crear nueva clave
+- `/admin` - Panel de administración (admins)
 
 ## Licencia
 

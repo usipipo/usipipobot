@@ -59,13 +59,20 @@ Este documento describe los flujos principales de la aplicación uSipipo Bot.
 | Estado | Descripción | Transiciones |
 |--------|-------------|--------------|
 | `IDLE` | Estado inicial/default | Cualquier comando |
-| `CREATING_KEY` | Creando nueva clave VPN | Seleccionar protocolo/servidor |
-| `SELECTING_SERVER` | Eligiendo servidor | Confirmar/Cancelar |
+| `SELECT_TYPE` | Seleccionando tipo de VPN (WireGuard/Outline) | Nombre/Cancelar |
+| `INPUT_NAME` | Ingresando nombre para la clave | Confirmar/Cancelar |
 | `VIEWING_KEYS` | Viendo lista de claves | Eliminar/Detalles/Volver |
 | `BUYING_GB` | En proceso de compra | Confirmar/Cancelar |
-| `SUPPORT_CHAT` | En chat de soporte | Enviar mensaje/Salir |
-| `PLAYING_GAME` | Jugando mini-juego | Finalizar/Volver |
-| `REFERRAL_VIEW` | Viendo programa referidos | Copiar enlace/Volver |
+| `DEPOSIT_AMOUNT` | Seleccionando monto de depósito | Confirmar/Cancelar |
+| `SELECTING_AMOUNT` | Seleccionando cantidad | Método/Cancelar |
+| `SELECTING_METHOD` | Seleccionando método de pago | Confirmar/Cancelar |
+| `CONFIRMING_PAYMENT` | Confirmando pago | Pagar/Cancelar |
+| `ADMIN_MENU` | En menú de administración | Ver usuarios/Ver claves/Volver |
+| `VIEWING_USERS` | Viendo lista de usuarios | Detalles/Volver |
+| `VIEWING_KEYS` | Viendo claves de usuario | Eliminar/Volver |
+| `DELETING_KEY` | Confirmando eliminación de clave | Confirmar/Cancelar |
+
+> **Nota:** Los estados `SUPPORT_CHAT`, `PLAYING_GAME`, `REFERRAL_VIEW` están planificados para futuras versiones.
 
 ### 2.2 Diagrama de Estados
 
@@ -75,8 +82,8 @@ Este documento describe los flujos principales de la aplicación uSipipo Bot.
            │       └────┬─────┘                  │
            │            │                        │
     ┌──────▼─────┐ ┌────▼─────┐ ┌──────────┐  ┌─┴──────────┐
-    │  CREATING  │ │ SELECTING│ │ VIEWING  │  │    BUYING  │
-    │    KEY     │ │  SERVER  │ │   KEYS   │  │     GB     │
+    │  SELECT    │ │ INPUT    │ │ VIEWING  │  │   BUYING   │
+    │   TYPE     │ │  NAME    │ │  KEYS    │  │    GB      │
     └──────┬─────┘ └────┬─────┘ └────┬─────┘  └─────┬──────┘
            │            │            │              │
            └────────────┴────────────┴──────────────┘

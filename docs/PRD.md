@@ -136,28 +136,28 @@ Menú Principal → "Referidos" → Copiar enlace
 
 ## 6. Roadmap
 
-### Fase 1: Documentación Esencial
-- [ ] Crear PRD, APPFLOW, TECHNOLOGY
-- [ ] Actualizar README.md
+### Fase 1: Documentación Esencial ✅
+- [x] Crear PRD, APPFLOW, TECHNOLOGY
+- [x] Actualizar README.md
 
-### Fase 2: Core VPN
-- [ ] Implementar creación de claves WireGuard
-- [ ] Implementar creación de claves Outline
-- [ ] Gestión básica de claves
+### Fase 2: Core VPN ✅
+- [x] Implementar creación de claves WireGuard
+- [x] Implementar creación de claves Outline
+- [x] Gestión básica de claves
 
-### Fase 3: Sistema de Pagos
-- [ ] Integración Telegram Stars
-- [ ] Planes Gratis y VIP
-- [ ] Sistema de referidos
+### Fase 3: Sistema de Pagos ✅
+- [x] Integración Telegram Stars
+- [x] Planes Gratis y VIP
+- [x] Sistema de referidos
 
 ### Fase 4: Gamificación
 - [ ] Juegos Play & Earn
 - [ ] Sistema de niveles
 
-### Fase 5: Admin Avanzado
-- [ ] Dashboard completo
+### Fase 5: Admin Avanzado 🔶
+- [x] Dashboard básico
 - [ ] Estadísticas en tiempo real
-- [ ] Automatización de tareas
+- [x] Automatización de tareas (jobs de expiración, sync, cleanup)
 
 ---
 
