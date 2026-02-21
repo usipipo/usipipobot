@@ -8,13 +8,20 @@ Version: 2.0.0 - Feature-based architecture
 from typing import Optional
 
 from telegram import Update
-from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
-                          MessageHandler, filters)
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 
 from application.services.achievement_service import AchievementService
 from application.services.admin_service import AdminService
+
 # Local imports
 from application.services.vpn_service import VpnService
+
 # First party imports
 from config import settings
 from telegram_bot.keyboards import MainMenuKeyboard
@@ -120,15 +127,15 @@ class UserManagementHandler:
         user_id = update.effective_user.id
 
         if callback_data == "show_keys":
-            from telegram_bot.features.key_management.handlers_key_management import \
-                KeyManagementHandler
+            from telegram_bot.features.key_management.handlers_key_management import (
+                KeyManagementHandler,
+            )
 
             handler = KeyManagementHandler(self.vpn_service)
             await handler.show_key_submenu(update, _context)
 
         elif callback_data == "create_key":
-            from telegram_bot.features.vpn_keys.handlers_vpn_keys import \
-                VpnKeysHandler
+            from telegram_bot.features.vpn_keys.handlers_vpn_keys import VpnKeysHandler
 
             handler = VpnKeysHandler(self.vpn_service)
             await handler.start_creation(update, _context)
@@ -136,8 +143,7 @@ class UserManagementHandler:
         elif callback_data == "buy_data":
             from application.services.common.container import get_container
             from application.services.payment_service import PaymentService
-            from telegram_bot.features.payments.handlers_payments import \
-                PaymentsHandler
+            from telegram_bot.features.payments.handlers_payments import PaymentsHandler
 
             container = get_container()
             payment_service = container.resolve(PaymentService)
@@ -145,8 +151,9 @@ class UserManagementHandler:
             await handler.show_payment_menu(update, _context)
 
         elif callback_data == "show_usage":
-            from telegram_bot.features.user_management.handlers_user_management import \
-                UserManagementHandler
+            from telegram_bot.features.user_management.handlers_user_management import (
+                UserManagementHandler,
+            )
 
             await self.status_handler(update, _context)
 

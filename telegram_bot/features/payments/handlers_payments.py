@@ -5,11 +5,16 @@ Author: uSipipo Team
 Version: 2.0.0 - Feature-based architecture
 """
 
-from telegram import (InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice,
-                      Update)
-from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
-                          ConversationHandler, MessageHandler,
-                          PreCheckoutQueryHandler, filters)
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, LabeledPrice, Update
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+    ConversationHandler,
+    MessageHandler,
+    PreCheckoutQueryHandler,
+    filters,
+)
 
 from application.services.payment_service import PaymentService
 from application.services.vpn_service import VpnService

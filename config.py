@@ -12,8 +12,14 @@ import secrets
 from pathlib import Path
 from typing import List, Optional, Union
 
-from pydantic import (AnyHttpUrl, Field, PostgresDsn, field_validator,
-                      model_validator, validator)
+from pydantic import (
+    AnyHttpUrl,
+    Field,
+    PostgresDsn,
+    field_validator,
+    model_validator,
+    validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

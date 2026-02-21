@@ -9,8 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from domain.entities.data_package import DataPackage, PackageType
-from infrastructure.persistence.postgresql.data_package_repository import \
-    PostgresDataPackageRepository
+from infrastructure.persistence.postgresql.data_package_repository import (
+    PostgresDataPackageRepository,
+)
 
 
 @pytest.fixture
