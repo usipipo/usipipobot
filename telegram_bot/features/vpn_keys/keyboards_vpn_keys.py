@@ -88,11 +88,11 @@ class VpnKeysKeyboards:
         """
         keyboard = [
             [
-                InlineKeyboardButton("🛡️ Mis Llaves", callback_data="operations"),
-                InlineKeyboardButton("📊 Estado", callback_data="status")
+                InlineKeyboardButton("🛡️ Mis Llaves", callback_data="key_management"),
+                InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key")
             ],
             [
-                InlineKeyboardButton("💰 Operaciones", callback_data="operations"),
+                InlineKeyboardButton("📊 Estado", callback_data="status"),
                 InlineKeyboardButton("🏆 Logros", callback_data="achievements")
             ],
             [
