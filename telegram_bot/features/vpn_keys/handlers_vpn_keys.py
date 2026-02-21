@@ -42,9 +42,29 @@ class VpnKeysHandler:
 
     async def start_creation(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Inicia el flujo de creación preguntando el tipo de VPN."""
-        # Manejar tanto Message como CallbackQuery
+        telegram_id = update.effective_user.id
+        is_admin = telegram_id == int(settings.ADMIN_ID)
+        
+        user = await self._get_or_create_user(telegram_id)
+        can_create, message = await self.vpn_service.can_user_create_key(user, current_user_id=telegram_id)
+        
+        if not can_create:
+            if hasattr(update, 'callback_query') and update.callback_query:
+                await update.callback_query.answer()
+                await update.callback_query.edit_message_text(
+                    text=VpnKeysMessages.Error.KEY_LIMIT_REACHED,
+                    reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+                    parse_mode="Markdown"
+                )
+            else:
+                await update.message.reply_text(
+                    text=VpnKeysMessages.Error.KEY_LIMIT_REACHED,
+                    reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+                    parse_mode="Markdown"
+                )
+            return ConversationHandler.END
+        
         if hasattr(update, 'callback_query') and update.callback_query:
-            # Es un callback
             await update.callback_query.answer()
             await update.callback_query.edit_message_text(
                 text=VpnKeysMessages.SELECT_TYPE,
@@ -52,13 +72,20 @@ class VpnKeysHandler:
                 parse_mode="Markdown"
             )
         else:
-            # Es un mensaje directo
             await update.message.reply_text(
                 text=VpnKeysMessages.SELECT_TYPE,
                 reply_markup=VpnKeysKeyboards.vpn_types(),
                 parse_mode="Markdown"
             )
         return SELECT_TYPE
+
+    async def _get_or_create_user(self, telegram_id: int) -> 'User':
+        """Helper para obtener o crear usuario."""
+        from domain.entities.user import User
+        user = await self.vpn_service.user_repo.get_by_id(telegram_id, telegram_id)
+        if not user:
+            user = User(telegram_id=telegram_id)
+        return user
 
     async def type_selected(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Maneja la selección del protocolo y pide el nombre de la llave."""
