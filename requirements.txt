@@ -46,7 +46,7 @@ loguru==0.7.3
 qrcode[pil]==8.1
 pillow==12.1.1
 cachetools==6.2.4
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
 pytz==2025.2
 
 # -----------------------------------------------------------------------------
