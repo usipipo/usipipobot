@@ -5,7 +5,6 @@ Author: uSipipo Team
 Version: 2.0.0
 """
 
-import asyncio
 import sys
 
 from telegram.ext import ApplicationBuilder
