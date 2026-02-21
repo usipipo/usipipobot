@@ -60,6 +60,14 @@ class VpnKeysMessages:
             "Sigue las instrucciones para conectarte."
         )
         
+        KEY_CREATED_WITH_DATA = (
+            "✅ **¡Llave creada exitosamente!**\n\n"
+            "📡 **Protocolo:** {type}\n"
+            "🔑 **Nombre:** {name}\n"
+            "📊 **Datos disponibles:** {data_limit:.1f} GB\n\n"
+            "Sigue las instrucciones para conectarte."
+        )
+        
         KEY_DELETED = (
             "🗑️ **Llave eliminada**\n\n"
             "La llave **{name}** ha sido eliminada permanentemente.\n\n"
