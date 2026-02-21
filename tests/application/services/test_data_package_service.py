@@ -4,8 +4,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from application.services.data_package_service import (PACKAGE_OPTIONS,
-                                                       DataPackageService)
+from application.services.data_package_service import (
+    PACKAGE_OPTIONS,
+    DataPackageService,
+)
 from domain.entities.data_package import DataPackage, PackageType
 
 
