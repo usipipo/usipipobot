@@ -320,28 +320,46 @@ WantedBy=multi-user.target
 ### 9.1 requirements.txt
 
 ```
-# Core
-python-telegram-bot[webhooks]>=21.0
-fastapi>=0.115.0
-uvicorn[standard]>=0.27.0
+# Telegram Bot
+python-telegram-bot[job-queue]==21.10
 
-# Database
-sqlalchemy>=2.0.0
-asyncpg>=0.29.0
-alembic>=1.13.0
+# Database (PostgreSQL + SQLAlchemy Async)
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+psycopg2-binary==2.9.10
 
-# Infrastructure
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
-punq>=0.7.0
-loguru>=0.7.0
-aiohttp>=3.9.0
+# Configuration & Validation
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-dotenv==1.0.1
+PyYAML==6.0.3
 
-# Utils
-python-dotenv>=1.0.0
-qrcode>=7.4.0
-pillow>=10.2.0
-cryptography>=42.0.0
+# HTTP Client
+httpx==0.27.2
+aiohttp==3.13.3
+
+# Security & Authentication
+PyJWT==2.10.1
+cryptography==46.0.5
+
+# Utilities
+punq==0.7.0
+loguru==0.7.3
+qrcode[pil]==8.1
+pillow==12.1.1
+cachetools==6.2.4
+python-dateutil==2.8.2
+pytz==2025.2
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==1.3.0
+
+# Optional / Development
+rich==14.2.0
+StrEnum==0.4.15
+tenacity==9.1.2
 ```
 
 ---
