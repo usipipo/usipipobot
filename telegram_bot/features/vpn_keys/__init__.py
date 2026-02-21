@@ -13,8 +13,7 @@ import sys
 
 # Importar el módulo con nombre de archivo con puntos usando importlib
 spec = importlib.util.spec_from_file_location(
-    "handlers_vpn_keys",
-    "telegram_bot/features/vpn_keys/handlers_vpn_keys.py"
+    "handlers_vpn_keys", "telegram_bot/features/vpn_keys/handlers_vpn_keys.py"
 )
 module = importlib.util.module_from_spec(spec)
 module.__package__ = "telegram_bot.features.vpn_keys"
@@ -28,8 +27,8 @@ get_vpn_keys_handlers = module.get_vpn_keys_handlers
 get_vpn_keys_callback_handlers = module.get_vpn_keys_callback_handlers
 
 __all__ = [
-    'VpnKeysHandler',
-    'get_vpn_keys_handler',
-    'get_vpn_keys_handlers', 
-    'get_vpn_keys_callback_handlers'
+    "VpnKeysHandler",
+    "get_vpn_keys_handler",
+    "get_vpn_keys_handlers",
+    "get_vpn_keys_callback_handlers",
 ]

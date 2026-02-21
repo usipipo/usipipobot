@@ -1,5 +1,7 @@
 from typing import Protocol
+
 from domain.entities.vpn_key import VpnKey
+
 
 class IVpnService(Protocol):
     """

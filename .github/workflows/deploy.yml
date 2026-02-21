@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://github.com/${{ github.repository }}
+    
+    permissions:
+      contents: read
+      packages: read
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy notification
+        run: |
+          echo "🚀 Deploying version ${{ github.ref_name }}"
+          echo "Image: ghcr.io/${{ github.repository }}:${{ github.ref_name }}"
+
+      - name: Create deployment summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+      # Add your deployment commands here
+      # Example: SSH to server, kubectl apply, etc.
