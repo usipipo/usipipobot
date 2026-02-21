@@ -14,7 +14,7 @@ import sys
 # Importar el módulo con nombre de archivo con puntos usando importlib
 spec = importlib.util.spec_from_file_location(
     "handlers_user_management",
-    "telegram_bot/features/user_management/handlers_user_management.py"
+    "telegram_bot/features/user_management/handlers_user_management.py",
 )
 module = importlib.util.module_from_spec(spec)
 module.__package__ = "telegram_bot.features.user_management"
@@ -27,7 +27,7 @@ get_user_management_handlers = module.get_user_management_handlers
 get_user_callback_handlers = module.get_user_callback_handlers
 
 __all__ = [
-    'UserManagementHandler',
-    'get_user_management_handlers', 
-    'get_user_callback_handlers'
+    "UserManagementHandler",
+    "get_user_management_handlers",
+    "get_user_callback_handlers",
 ]

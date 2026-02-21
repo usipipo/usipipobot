@@ -9,10 +9,10 @@ Version: 2.1.0
 """
 
 from .base_repository import BasePostgresRepository
-from .user_repository import PostgresUserRepository
-from .key_repository import PostgresKeyRepository
 from .data_package_repository import PostgresDataPackageRepository
-from .models import Base, UserModel, VpnKeyModel, DataPackageModel
+from .key_repository import PostgresKeyRepository
+from .models import Base, DataPackageModel, UserModel, VpnKeyModel
+from .user_repository import PostgresUserRepository
 
 __all__ = [
     "BasePostgresRepository",

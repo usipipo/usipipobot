@@ -1,6 +1,8 @@
-from typing import Protocol, List, Optional
-from domain.entities.vpn_key import VpnKey
 import uuid
+from typing import List, Optional, Protocol
+
+from domain.entities.vpn_key import VpnKey
+
 
 class IKeyRepository(Protocol):
     """
@@ -16,11 +18,15 @@ class IKeyRepository(Protocol):
         """Recupera todas las llaves que le pertenecen a un usuario."""
         ...
 
-    async def get_by_user_id(self, telegram_id: int, current_user_id: int) -> List[VpnKey]:
+    async def get_by_user_id(
+        self, telegram_id: int, current_user_id: int
+    ) -> List[VpnKey]:
         """Recupera todas las llaves que le pertenecen a un usuario (alias)."""
         ...
 
-    async def get_by_id(self, key_id: uuid.UUID, current_user_id: int) -> Optional[VpnKey]:
+    async def get_by_id(
+        self, key_id: uuid.UUID, current_user_id: int
+    ) -> Optional[VpnKey]:
         """Busca una llave específica por su ID interno (UUID)."""
         ...
 
@@ -36,7 +42,9 @@ class IKeyRepository(Protocol):
         """Obtiene todas las llaves del sistema (activas e inactivas)."""
         ...
 
-    async def update_usage(self, key_id: uuid.UUID, used_bytes: int, current_user_id: int) -> bool:
+    async def update_usage(
+        self, key_id: uuid.UUID, used_bytes: int, current_user_id: int
+    ) -> bool:
         """Actualiza el uso de datos de una llave."""
         ...
 
@@ -44,7 +52,9 @@ class IKeyRepository(Protocol):
         """Resetea el uso de datos de una llave."""
         ...
 
-    async def update_data_limit(self, key_id: uuid.UUID, data_limit_bytes: int, current_user_id: int) -> bool:
+    async def update_data_limit(
+        self, key_id: uuid.UUID, data_limit_bytes: int, current_user_id: int
+    ) -> bool:
         """Actualiza el límite de datos de una llave."""
         ...
 

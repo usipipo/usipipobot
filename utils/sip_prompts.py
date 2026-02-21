@@ -9,7 +9,7 @@ Version: 1.0.0
 def get_system_prompt() -> str:
     """
     Retorna el prompt del sistema que define la personalidad de Sip.
-    
+
     Returns:
         str: Prompt del sistema para Sip
     """
@@ -47,7 +47,7 @@ Sip aquí para ayudarte 🌊"""
 def get_troubleshooting_prompt() -> str:
     """
     Retorna prompt especializado para troubleshooting de VPN.
-    
+
     Returns:
         str: Prompt para troubleshooting
     """
@@ -71,7 +71,7 @@ Si el problema parece complejo o requiere acceso administrativo, sugiere escalar
 def get_security_prompt() -> str:
     """
     Retorna prompt especializado para temas de seguridad.
-    
+
     Returns:
         str: Prompt para seguridad
     """
@@ -97,7 +97,7 @@ Recuerda: La seguridad es un proceso continuo, no un producto."""
 def get_configuration_prompt() -> str:
     """
     Retorna prompt especializado para configuración de VPN.
-    
+
     Returns:
         str: Prompt para configuración
     """
@@ -122,7 +122,7 @@ Siempre verifica que el usuario tenga la aplicación correcta instalada."""
 def get_optimization_prompt() -> str:
     """
     Retorna prompt especializado para optimización de velocidad.
-    
+
     Returns:
         str: Prompt para optimización
     """
@@ -157,7 +157,7 @@ Expectativas realistas:
 def get_escalation_prompt() -> str:
     """
     Retorna prompt para detectar cuándo escalar a soporte humano.
-    
+
     Returns:
         str: Prompt para escalado
     """
@@ -184,28 +184,28 @@ Frase de escalado:
 def get_context_prompt(context: dict) -> str:
     """
     Construye prompt con contexto específico del usuario.
-    
+
     Args:
         context: Diccionario con información de contexto
-        
+
     Returns:
         str: Prompt con contexto
     """
     context_parts = []
-    
+
     if context.get("user_name"):
         context_parts.append(f"Usuario: {context['user_name']}")
-    
+
     if context.get("vpn_type"):
         context_parts.append(f"Tipo de VPN: {context['vpn_type']}")
-    
+
     if context.get("device"):
         context_parts.append(f"Dispositivo: {context['device']}")
-    
+
     if context.get("issue_type"):
         context_parts.append(f"Tipo de problema: {context['issue_type']}")
-    
+
     if context_parts:
         return "\n".join(context_parts)
-    
+
     return "Sin contexto específico disponible."

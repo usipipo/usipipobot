@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 
 class ITransactionRepository(ABC):
@@ -13,14 +13,10 @@ class ITransactionRepository(ABC):
         balance_after: int,
         description: str,
         reference_id: Optional[str] = None,
-        telegram_payment_id: Optional[str] = None
+        telegram_payment_id: Optional[str] = None,
     ) -> None:
         pass
-    
+
     @abstractmethod
-    async def get_user_transactions(
-        self,
-        user_id: int,
-        limit: int = 10
-    ) -> list:
+    async def get_user_transactions(self, user_id: int, limit: int = 10) -> list:
         pass

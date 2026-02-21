@@ -4,6 +4,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 import pytest
+
 from domain.entities.data_package import DataPackage, PackageType
 
 
