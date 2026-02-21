@@ -378,7 +378,7 @@ class PaymentsKeyboards:
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="payment_back")],
         ]
-        return InlineKeyboard(keyboard)
+        return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
     def bank_options() -> InlineKeyboardMarkup:
@@ -391,7 +391,7 @@ class PaymentsKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton("🏦 Banco Central", callback_data="bank_central"),
-                inlineKeyboardButton(
+                InlineKeyboardButton(
                     "🏦 Banco de Occidente", callback_data="bank_occidente"
                 ),
                 InlineKeyboardButton(
@@ -539,7 +539,7 @@ class PaymentsKeyboards:
                 InlineKeyboardButton("🔙 Volver", callback_data="payment_back"),
             ],
         ]
-        return InlineKeyboard(keyboard)
+        return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
     def subscription_confirmation(

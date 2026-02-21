@@ -5,7 +5,10 @@ Author: uSipipo Team
 Version: 2.0.0 - Feature-based architecture
 """
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
@@ -25,6 +28,9 @@ from utils.spinner import vpn_spinner
 
 from .keyboards_vpn_keys import VpnKeysKeyboards
 from .messages_vpn_keys import VpnKeysMessages
+
+if TYPE_CHECKING:
+    from domain.entities.user import User
 
 # Estados de la conversación
 SELECT_TYPE, INPUT_NAME = range(2)
