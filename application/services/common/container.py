@@ -9,7 +9,6 @@ Version: 2.0.0
 """
 
 from functools import lru_cache
-from typing import Callable
 
 import punq
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +17,6 @@ from application.services.admin_service import AdminService
 from application.services.data_package_service import DataPackageService
 from application.services.payment_service import PaymentService
 from application.services.vpn_service import VpnService
-from config import settings
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
 from domain.interfaces.iuser_repository import IUserRepository
@@ -35,10 +33,6 @@ from telegram_bot.features.key_management import (
     get_key_management_callback_handlers,
     get_key_management_handlers,
 )
-from telegram_bot.features.operations import (
-    get_operations_callback_handlers,
-    get_operations_handlers,
-)
 from telegram_bot.features.payments import (
     get_payments_callback_handlers,
     get_payments_handlers,
@@ -46,7 +40,6 @@ from telegram_bot.features.payments import (
 from telegram_bot.features.vpn_keys import (
     get_vpn_keys_callback_handlers,
     get_vpn_keys_handler,
-    get_vpn_keys_handlers,
 )
 from utils.logger import logger
 
@@ -182,69 +175,40 @@ def _configure_application_services(container: punq.Container) -> None:
 
 def _configure_handlers(container: punq.Container) -> None:
     """Configura los handlers en el contenedor."""
-    session_factory = get_session_factory()
-
-    def create_user_repo() -> PostgresUserRepository:
-        session = session_factory()
-        return PostgresUserRepository(session)
-
-    def create_key_repo() -> PostgresKeyRepository:
-        session = session_factory()
-        return PostgresKeyRepository(session)
-
-    def create_vpn_service() -> VpnService:
-        return VpnService(
-            user_repo=create_user_repo(),
-            key_repo=create_key_repo(),
-            outline_client=container.resolve(OutlineClient),
-            wireguard_client=container.resolve(WireGuardClient),
-        )
-
-    def create_payment_service() -> PaymentService:
-        return PaymentService(user_repo=create_user_repo(), key_repo=create_key_repo())
-
-    def create_admin_service() -> AdminService:
-        return AdminService(
-            key_repository=create_key_repo(),
-            user_repository=create_user_repo(),
-            payment_repository=create_key_repo(),
-        )
 
     def create_creation_handlers() -> object:
-        return get_vpn_keys_handler(create_vpn_service())
+        return get_vpn_keys_handler(container.resolve(VpnService))
 
     def create_key_submenu_handlers() -> object:
-        return get_key_management_handlers(create_vpn_service())
+        return get_key_management_handlers(container.resolve(VpnService))
 
     def create_payment_handlers_list() -> list:
         return get_payments_handlers(
-            payment_service=create_payment_service(), vpn_service=create_vpn_service()
+            payment_service=container.resolve(PaymentService),
+            vpn_service=container.resolve(VpnService),
         )
 
-    def create_monitoring_handlers_list() -> list:
-        return get_operations_handlers(vpn_service=create_vpn_service())
-
     def create_admin_handlers() -> list:
-        handlers = get_admin_handlers(create_admin_service())
+        handlers = get_admin_handlers(container.resolve(AdminService))
         return handlers if isinstance(handlers, list) else [handlers]
 
     def create_inline_callback_handlers_list() -> list:
         handlers = []
-        handlers.extend(get_admin_callback_handlers(create_admin_service()))
+        handlers.extend(get_admin_callback_handlers(container.resolve(AdminService)))
         handlers.extend(
             get_payments_callback_handlers(
-                create_payment_service(), create_vpn_service()
+                container.resolve(PaymentService), container.resolve(VpnService)
             )
         )
-        handlers.extend(get_vpn_keys_callback_handlers(create_vpn_service()))
-        handlers.extend(get_key_management_callback_handlers(create_vpn_service()))
-        handlers.extend(get_operations_callback_handlers(create_vpn_service()))
+        handlers.extend(get_vpn_keys_callback_handlers(container.resolve(VpnService)))
+        handlers.extend(
+            get_key_management_callback_handlers(container.resolve(VpnService))
+        )
         return handlers
 
     container.register("creation_handlers", factory=create_creation_handlers)
     container.register("key_submenu_handlers", factory=create_key_submenu_handlers)
     container.register("payment_handlers", factory=create_payment_handlers_list)
-    container.register("monitoring_handlers", factory=create_monitoring_handlers_list)
     container.register("admin_handlers", factory=create_admin_handlers)
     container.register(
         "inline_callback_handlers", factory=create_inline_callback_handlers_list
