@@ -104,64 +104,6 @@ class OperationsHandler:
                     parse_mode="Markdown",
                 )
 
-    async def referidos(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """
-        Muestra el sistema de referidos.
-        """
-        user_id = update.effective_user.id
-
-        try:
-            user_status = await self.vpn_service.get_user_status(
-                user_id, current_user_id=user_id
-            )
-            user = user_status["user"]
-
-            referral_code = getattr(user, "referral_code", "N/A")
-            referral_link = (
-                f"https://t.me/{settings.BOT_USERNAME}?start={referral_code}"
-            )
-
-            text = OperationsMessages.Referral.MENU.format(
-                bot_username=settings.BOT_USERNAME,
-                referral_link=referral_link,
-                referral_code=referral_code,
-                direct_referrals=getattr(user, "direct_referrals", 0),
-                total_earnings=getattr(user, "total_referral_earnings", 0),
-                commission=10,
-            )
-
-            if update.message:
-                await update.message.reply_text(
-                    text=text,
-                    reply_markup=OperationsKeyboards.referral_actions(),
-                    parse_mode="Markdown",
-                )
-            elif update.callback_query:
-                await update.callback_query.answer()
-                await update.callback_query.edit_message_text(
-                    text=text,
-                    reply_markup=OperationsKeyboards.referral_actions(),
-                    parse_mode="Markdown",
-                )
-
-        except Exception as e:
-            logger.error(f"Error en referidos: {e}")
-            error_text = OperationsMessages.Error.SYSTEM_ERROR
-
-            if update.message:
-                await update.message.reply_text(
-                    text=error_text,
-                    reply_markup=OperationsKeyboards.operations_menu(),
-                    parse_mode="Markdown",
-                )
-            elif update.callback_query:
-                await update.callback_query.answer()
-                await update.callback_query.edit_message_text(
-                    text=error_text,
-                    reply_markup=OperationsKeyboards.operations_menu(),
-                    parse_mode="Markdown",
-                )
-
     async def back_to_main_menu(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
@@ -196,26 +138,6 @@ class OperationsHandler:
         await query.edit_message_text(
             text=OperationsMessages.Menu.MAIN,
             reply_markup=OperationsKeyboards.operations_menu(),
-            parse_mode="Markdown",
-        )
-
-    async def show_vip_plans(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """
-        Muestra los planes VIP disponibles.
-        """
-        await update.message.reply_text(
-            text=OperationsMessages.VIP.PLANS,
-            reply_markup=OperationsKeyboards.vip_plans(),
-            parse_mode="Markdown",
-        )
-
-    async def show_game_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """
-        Muestra el menú de juegos.
-        """
-        await update.message.reply_text(
-            text=OperationsMessages.Game.MENU,
-            reply_markup=OperationsKeyboards.game_menu(),
             parse_mode="Markdown",
         )
 
@@ -266,12 +188,6 @@ def get_operations_handlers(vpn_service: VpnService):
         MessageHandler(filters.Regex("^💰 Operaciones$"), handler.operations_menu),
         MessageHandler(filters.Regex("^💰 Mi Balance$"), handler.mi_balance),
         CommandHandler("balance", handler.mi_balance),
-        MessageHandler(filters.Regex("^👑 Plan VIP$"), handler.show_vip_plans),
-        CommandHandler("vip", handler.show_vip_plans),
-        MessageHandler(filters.Regex("^🎮 Juega y Gana$"), handler.show_game_menu),
-        CommandHandler("game", handler.show_game_menu),
-        MessageHandler(filters.Regex("^👥 Referidos$"), handler.referidos),
-        CommandHandler("referrals", handler.referidos),
         MessageHandler(filters.Regex("^🔙 Atrás$"), handler.back_to_main_menu),
     ]
 
@@ -295,11 +211,5 @@ def get_operations_callback_handlers(vpn_service: VpnService):
         CallbackQueryHandler(handler.operations_menu_callback, pattern="^operations$"),
         CallbackQueryHandler(handler.back_to_main_menu, pattern="^main_menu$"),
         CallbackQueryHandler(handler.mi_balance, pattern="^balance$"),
-        CallbackQueryHandler(handler.referidos, pattern="^referrals$"),
-        CallbackQueryHandler(handler.show_vip_plans, pattern="^vip_plans$"),
-        CallbackQueryHandler(handler.show_game_menu, pattern="^game_menu$"),
         CallbackQueryHandler(handler.show_transactions, pattern="^transactions$"),
-        CallbackQueryHandler(
-            handler.show_transactions, pattern="^rewards$"
-        ),  # Usar mismo handler para recompensas
     ]
