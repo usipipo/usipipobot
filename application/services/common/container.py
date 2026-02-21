@@ -25,23 +25,29 @@ from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
 from infrastructure.persistence.database import get_session_factory
-from infrastructure.persistence.postgresql.data_package_repository import \
-    PostgresDataPackageRepository
-from infrastructure.persistence.postgresql.key_repository import \
-    PostgresKeyRepository
-from infrastructure.persistence.postgresql.user_repository import \
-    PostgresUserRepository
-from telegram_bot.features.admin import (get_admin_callback_handlers,
-                                         get_admin_handlers)
+from infrastructure.persistence.postgresql.data_package_repository import (
+    PostgresDataPackageRepository,
+)
+from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
+from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
+from telegram_bot.features.admin import get_admin_callback_handlers, get_admin_handlers
 from telegram_bot.features.key_management import (
-    get_key_management_callback_handlers, get_key_management_handlers)
-from telegram_bot.features.operations import (get_operations_callback_handlers,
-                                              get_operations_handlers)
-from telegram_bot.features.payments import (get_payments_callback_handlers,
-                                            get_payments_handlers)
-from telegram_bot.features.vpn_keys import (get_vpn_keys_callback_handlers,
-                                            get_vpn_keys_handler,
-                                            get_vpn_keys_handlers)
+    get_key_management_callback_handlers,
+    get_key_management_handlers,
+)
+from telegram_bot.features.operations import (
+    get_operations_callback_handlers,
+    get_operations_handlers,
+)
+from telegram_bot.features.payments import (
+    get_payments_callback_handlers,
+    get_payments_handlers,
+)
+from telegram_bot.features.vpn_keys import (
+    get_vpn_keys_callback_handlers,
+    get_vpn_keys_handler,
+    get_vpn_keys_handlers,
+)
 from utils.logger import logger
 
 

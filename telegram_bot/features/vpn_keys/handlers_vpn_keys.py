@@ -8,8 +8,14 @@ Version: 2.0.0 - Feature-based architecture
 import os
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
-                          ConversationHandler, MessageHandler, filters)
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+    ConversationHandler,
+    MessageHandler,
+    filters,
+)
 
 from application.services.vpn_service import VpnService
 from config import settings

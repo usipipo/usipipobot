@@ -77,7 +77,7 @@ jobs:
         run: black --check --diff .
 
       - name: Run isort
-        run: isort --check-only --diff .
+        run: isort --check-only --diff . --profile black
 
       - name: Run Flake8
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
