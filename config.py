@@ -380,10 +380,6 @@ class Settings(BaseSettings):
     # =========================================================================
     # RUTAS Y DIRECTORIOS
     # =========================================================================
-    VPN_TEMPLATES_PATH: str = Field(
-        default="./templates", description="Ruta de plantillas de configuración"
-    )
-
     TEMP_PATH: str = Field(default="./temp", description="Directorio temporal")
 
     QR_CODE_PATH: str = Field(
@@ -500,7 +496,6 @@ class Settings(BaseSettings):
             "TEMP_PATH",
             "QR_CODE_PATH",
             "CLIENT_CONFIGS_PATH",
-            "VPN_TEMPLATES_PATH",
         ]:
             path_value = getattr(self, path_attr)
             Path(path_value).mkdir(parents=True, exist_ok=True)
