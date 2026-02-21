@@ -5,7 +5,6 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
-import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
@@ -615,7 +614,7 @@ class AdminService(IAdminService):
 
             # Calcular offset
             offset = (page - 1) * per_page
-            paginated_users = all_users[offset : offset + per_page]
+            paginated_users = all_users[offset:offset + per_page]
 
             user_list = []
             for user in paginated_users:
