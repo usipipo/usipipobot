@@ -1,5 +1,10 @@
 # uSipipo VPN Bot
 
+[![CI](https://github.com/mowgli/usipipobot/actions/workflows/ci.yml/badge.svg)](https://github.com/mowgli/usipipobot/actions/workflows/ci.yml)
+[![Docker Build](https://github.com/mowgli/usipipobot/actions/workflows/docker.yml/badge.svg)](https://github.com/mowgli/usipipobot/actions/workflows/docker.yml)
+[![CodeQL](https://github.com/mowgli/usipipobot/actions/workflows/codeql.yml/badge.svg)](https://github.com/mowgli/usipipobot/actions/workflows/codeql.yml)
+[![codecov](https://codecov.io/gh/mowgli/usipipobot/branch/main/graph/badge.svg)](https://codecov.io/gh/mowgli/usipipobot)
+
 Bot de Telegram para gestión de VPN (WireGuard + Outline) con sistema de pagos integrado.
 
 ## Características
