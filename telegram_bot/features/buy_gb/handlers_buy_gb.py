@@ -8,19 +8,11 @@ Version: 1.0.0
 from datetime import datetime, timezone
 
 from telegram import LabeledPrice, Update
-from telegram.ext import (
-    CallbackQueryHandler,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    PreCheckoutQueryHandler,
-    filters,
-)
+from telegram.ext import (CallbackQueryHandler, CommandHandler, ContextTypes,
+                          MessageHandler, PreCheckoutQueryHandler, filters)
 
-from application.services.data_package_service import (
-    PACKAGE_OPTIONS,
-    DataPackageService,
-)
+from application.services.data_package_service import (PACKAGE_OPTIONS,
+                                                       DataPackageService)
 from domain.entities.data_package import PackageType
 from utils.logger import logger
 
