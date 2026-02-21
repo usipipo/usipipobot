@@ -1,9 +1,12 @@
-from application.services.vpn_service import VpnService
-from telegram.ext import ContextTypes
 from datetime import datetime, timedelta, timezone
 from typing import List
+
+from telegram.ext import ContextTypes
+
+from application.services.vpn_service import VpnService
 from domain.entities.vpn_key import VpnKey
 from utils.logger import logger
+
 
 def _normalize_datetime(dt: datetime) -> datetime:
     """
@@ -24,7 +27,7 @@ async def key_cleanup_job(context: ContextTypes.DEFAULT_TYPE):
     resetea el uso de datos cuando corresponde, y notifica límites de datos.
     Se ejecuta periódicamente.
     """
-    vpn_service: VpnService = context.job.data['vpn_service']
+    vpn_service: VpnService = context.job.data["vpn_service"]
 
     try:
         logger.info("🧹 Iniciando limpieza de llaves y verificación de límites...")
@@ -64,7 +67,9 @@ async def cleanup_inactive_keys(vpn_service: VpnService, keys: List[VpnKey]):
                 # Desactivar la llave
                 if await vpn_service.deactivate_inactive_key(key.id):
                     deactivated_count += 1
-                    logger.info(f"🔒 Llave {key.id} desactivada por inactividad (última actividad: {key.last_seen_at})")
+                    logger.info(
+                        f"🔒 Llave {key.id} desactivada por inactividad (última actividad: {key.last_seen_at})"
+                    )
 
     logger.info(f"🗑️ {deactivated_count} llaves desactivadas por inactividad.")
 
@@ -83,7 +88,9 @@ async def reset_data_usage(vpn_service: VpnService, keys: List[VpnKey]):
     logger.info(f"📊 {reset_count} ciclos de facturación reseteados.")
 
 
-async def check_and_notify_data_limits(context: ContextTypes.DEFAULT_TYPE, vpn_service: VpnService, keys: List[VpnKey]):
+async def check_and_notify_data_limits(
+    context: ContextTypes.DEFAULT_TYPE, vpn_service: VpnService, keys: List[VpnKey]
+):
     """
     Verifica si alguna llave ha excedido su límite de datos y notifica al usuario.
     """
@@ -95,12 +102,14 @@ async def check_and_notify_data_limits(context: ContextTypes.DEFAULT_TYPE, vpn_s
                 await context.bot.send_message(
                     chat_id=key.user_id,
                     text=f"⚠️ **Límite de datos excedido**\n\n"
-                         f"Tu llave '{key.name}' ha consumido {key.used_gb:.2f} GB de {key.data_limit_gb:.2f} GB permitidos.\n\n"
-                         f"Considera actualizar tu plan o esperar al próximo ciclo de facturación.",
-                    parse_mode="Markdown"
+                    f"Tu llave '{key.name}' ha consumido {key.used_gb:.2f} GB de {key.data_limit_gb:.2f} GB permitidos.\n\n"
+                    f"Considera actualizar tu plan o esperar al próximo ciclo de facturación.",
+                    parse_mode="Markdown",
                 )
                 notified_users.add(key.user_id)
-                logger.info(f"📢 Notificación enviada a usuario {key.user_id} por exceder límite de datos.")
+                logger.info(
+                    f"📢 Notificación enviada a usuario {key.user_id} por exceder límite de datos."
+                )
             except Exception as e:
                 logger.warning(f"⚠️ No se pudo notificar al usuario {key.user_id}: {e}")
 
