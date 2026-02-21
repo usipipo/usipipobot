@@ -14,7 +14,7 @@ python-telegram-bot[job-queue]==21.10
 # Database (PostgreSQL + SQLAlchemy Async)
 # -----------------------------------------------------------------------------
 sqlalchemy[asyncio]==2.0.36
-asyncpg==0.30.0
+asyncpg==0.31.0
 alembic==1.14.0
 psycopg2-binary==2.9.10
 
