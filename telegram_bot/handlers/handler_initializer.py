@@ -81,8 +81,8 @@ def _get_core_handlers(
     handlers.extend(get_payments_callback_handlers(payment_service, vpn_service))
     logger.info("Payments handlers configured")
 
-    handlers.extend(get_user_management_handlers(vpn_service, None))
-    handlers.extend(get_user_callback_handlers(vpn_service, None))
+    handlers.extend(get_user_management_handlers(vpn_service))
+    handlers.extend(get_user_callback_handlers(vpn_service))
     logger.info("User management handlers configured")
 
     handlers.extend(get_vpn_keys_handlers(vpn_service))
