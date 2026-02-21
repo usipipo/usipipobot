@@ -88,7 +88,7 @@ class VpnKeysHandler:
 
         try:
             # 1. Crear llave mediante el Servicio de Aplicación
-            new_key = await self.vpn_service.create_key(telegram_id, key_type, key_name)
+            new_key = await self.vpn_service.create_key(telegram_id, key_type, key_name, current_user_id=telegram_id)
              
             # 2. Preparar ID de archivo único
             safe_name = "".join(x for x in key_name if x.isalnum())
