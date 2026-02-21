@@ -49,16 +49,17 @@ class VpnKeysHandler:
         can_create, message = await self.vpn_service.can_user_create_key(user, current_user_id=telegram_id)
         
         if not can_create:
+            error_message = VpnKeysMessages.Error.KEY_LIMIT_REACHED.format(max_keys=user.max_keys)
             if hasattr(update, 'callback_query') and update.callback_query:
                 await update.callback_query.answer()
                 await update.callback_query.edit_message_text(
-                    text=VpnKeysMessages.Error.KEY_LIMIT_REACHED,
+                    text=error_message,
                     reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
                     parse_mode="Markdown"
                 )
             else:
                 await update.message.reply_text(
-                    text=VpnKeysMessages.Error.KEY_LIMIT_REACHED,
+                    text=error_message,
                     reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
                     parse_mode="Markdown"
                 )
