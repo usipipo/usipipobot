@@ -1,0 +1,8 @@
+# ShellCheck configuration for VPN server scripts
+# These scripts source system files that won't exist during static analysis
+
+# Disable warning for sourced system files
+disable=SC1091
+
+# Target shell
+shell=bash
