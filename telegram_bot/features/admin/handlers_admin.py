@@ -5,17 +5,27 @@ Author: uSipipo Team
 Version: 2.0.0 - Feature-based architecture
 """
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ContextTypes, MessageHandler, filters, CallbackQueryHandler, ConversationHandler, CommandHandler
-from application.services.admin_service import AdminService
-from .messages_admin import AdminMessages
-from .keyboards_admin import AdminKeyboards
-from config import settings
-from utils.logger import logger
-from utils.spinner import admin_spinner_callback, SpinnerManager, with_spinner
-from telegram_bot.common.base_handler import BaseConversationHandler
 from datetime import datetime
 from pathlib import Path
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+    ConversationHandler,
+    MessageHandler,
+    filters,
+)
+
+from application.services.admin_service import AdminService
+from config import settings
+from telegram_bot.common.base_handler import BaseConversationHandler
+from utils.logger import logger
+from utils.spinner import SpinnerManager, admin_spinner_callback, with_spinner
+
+from .keyboards_admin import AdminKeyboards
+from .messages_admin import AdminMessages
 
 # Estados de la conversación de administración
 ADMIN_MENU = 0
@@ -45,19 +55,28 @@ class AdminHandler(BaseConversationHandler):
 
         # Verificar si es admin
         if admin_id != int(settings.ADMIN_ID):
-            await self._reply_message(update, "⚠️ Acceso denegado. Función solo para administradores.", parse_mode="Markdown")
+            await self._reply_message(
+                update,
+                "⚠️ Acceso denegado. Función solo para administradores.",
+                parse_mode="Markdown",
+            )
             return ConversationHandler.END
 
         await self._reply_message(
             update,
             text=AdminMessages.Menu.MAIN,
             reply_markup=AdminKeyboards.main_menu(),
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
         return ADMIN_MENU
 
     @admin_spinner_callback
-    async def show_users(self, update: Update, context: ContextTypes.DEFAULT_TYPE, spinner_message_id: int = None):
+    async def show_users(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
         """Muestra lista de usuarios."""
         query = update.callback_query
         await self._safe_answer_query(query)
@@ -79,10 +98,12 @@ class AdminHandler(BaseConversationHandler):
 
             # Reemplazar spinner con el mensaje final
             await SpinnerManager.replace_spinner_with_message(
-                update, context, spinner_message_id,
+                update,
+                context,
+                spinner_message_id,
                 text=message,
                 reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
             return VIEWING_USERS
 
@@ -91,7 +112,12 @@ class AdminHandler(BaseConversationHandler):
             return ADMIN_MENU
 
     @admin_spinner_callback
-    async def show_keys(self, update: Update, context: ContextTypes.DEFAULT_TYPE, spinner_message_id: int = None):
+    async def show_keys(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
         """Muestra lista de llaves VPN."""
         query = update.callback_query
         await self._safe_answer_query(query)
@@ -106,17 +132,21 @@ class AdminHandler(BaseConversationHandler):
                 message = AdminMessages.Keys.HEADER
                 for key in keys[:20]:  # Limitar a 20 llaves
                     status = "✅ Activa" if key.is_active else "❌ Inactiva"
-                    message += f"\n🔑 {key.key_name or 'N/A'} ({key.user_id})\n   {status}\n"
+                    message += (
+                        f"\n🔑 {key.key_name or 'N/A'} ({key.user_id})\n   {status}\n"
+                    )
 
                 if len(keys) > 20:
                     message += f"\n... y {len(keys) - 20} más llaves"
 
             # Reemplazar spinner con el mensaje final
             await SpinnerManager.replace_spinner_with_message(
-                update, context, spinner_message_id,
+                update,
+                context,
+                spinner_message_id,
                 text=message,
                 reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
             return VIEWING_KEYS
 
@@ -125,7 +155,12 @@ class AdminHandler(BaseConversationHandler):
             return ADMIN_MENU
 
     @admin_spinner_callback
-    async def show_server_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE, spinner_message_id: int = None):
+    async def show_server_status(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
         """Muestra estado del servidor."""
         query = update.callback_query
         await self._safe_answer_query(query)
@@ -145,10 +180,12 @@ class AdminHandler(BaseConversationHandler):
 
             # Reemplazar spinner con el mensaje final
             await SpinnerManager.replace_spinner_with_message(
-                update, context, spinner_message_id,
+                update,
+                context,
+                spinner_message_id,
                 text=message,
                 reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
             return ADMIN_MENU
 
@@ -164,22 +201,29 @@ class AdminHandler(BaseConversationHandler):
 
         # Verificar si es admin
         if admin_id != int(settings.ADMIN_ID):
-            await self._reply_message(update, AdminMessages.Error.ACCESS_DENIED, parse_mode="Markdown")
+            await self._reply_message(
+                update, AdminMessages.Error.ACCESS_DENIED, parse_mode="Markdown"
+            )
             return ConversationHandler.END
 
         try:
             # Obtener logs usando el logger
             logs_content = logger.get_last_logs(lines=20)
-            
+
             # Si hay error o no hay logs
-            if "Error leyendo logs:" in logs_content or "El archivo de log aún no existe" in logs_content:
+            if (
+                "Error leyendo logs:" in logs_content
+                or "El archivo de log aún no existe" in logs_content
+            ):
                 message = AdminMessages.Logs.NO_LOGS
             else:
                 # Formatear logs para mostrar
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 message = AdminMessages.Logs.LOGS_DISPLAY.format(
-                    logs_content=logs_content[-3000:],  # Limitar para evitar mensaje muy largo
-                    timestamp=timestamp
+                    logs_content=logs_content[
+                        -3000:
+                    ],  # Limitar para evitar mensaje muy largo
+                    timestamp=timestamp,
                 )
 
             if update.message:
@@ -187,10 +231,11 @@ class AdminHandler(BaseConversationHandler):
             elif update.callback_query:
                 await self._safe_answer_query(update.callback_query)
                 await self._safe_edit_message(
-                    update.callback_query, context,
+                    update.callback_query,
+                    context,
                     text=message,
                     reply_markup=AdminKeyboards.back_to_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
             return ADMIN_MENU
 
@@ -201,10 +246,11 @@ class AdminHandler(BaseConversationHandler):
             elif update.callback_query:
                 await self._safe_answer_query(update.callback_query)
                 await self._safe_edit_message(
-                    update.callback_query, context,
+                    update.callback_query,
+                    context,
                     text=error_message,
                     reply_markup=AdminKeyboards.back_to_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
             return ADMIN_MENU
 
@@ -214,23 +260,29 @@ class AdminHandler(BaseConversationHandler):
         await self._safe_answer_query(query)
 
         await self._safe_edit_message(
-            query, context,
+            query,
+            context,
             text=AdminMessages.Menu.MAIN,
             reply_markup=AdminKeyboards.main_menu(),
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
         return ADMIN_MENU
 
     async def end_admin(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Finaliza la sesión administrativa."""
         if update.message:
-            await self._reply_message(update, "👋 Sesión administrativa finalizada.", reply_markup=AdminKeyboards.back_to_user_menu())
+            await self._reply_message(
+                update,
+                "👋 Sesión administrativa finalizada.",
+                reply_markup=AdminKeyboards.back_to_user_menu(),
+            )
         elif update.callback_query:
             await self._handle_callback_query(update, context)
             await self._safe_edit_message(
-                update.callback_query, context,
+                update.callback_query,
+                context,
                 text="👋 Sesión administrativa finalizada.",
-                reply_markup=AdminKeyboards.back_to_user_menu()
+                reply_markup=AdminKeyboards.back_to_user_menu(),
             )
         return ConversationHandler.END
 
@@ -238,15 +290,15 @@ class AdminHandler(BaseConversationHandler):
 def get_admin_handlers(admin_service: AdminService):
     """
     Retorna los handlers administrativos.
-    
+
     Args:
         admin_service: Servicio de administración
-        
+
     Returns:
         list: Lista de handlers
     """
     handler = AdminHandler(admin_service)
-    
+
     return [
         CommandHandler("admin", handler.admin_menu),
         CommandHandler("logs", handler.logs_handler),
@@ -256,15 +308,15 @@ def get_admin_handlers(admin_service: AdminService):
 def get_admin_callback_handlers(admin_service: AdminService):
     """
     Retorna los handlers de callbacks para administración.
-    
+
     Args:
         admin_service: Servicio de administración
-        
+
     Returns:
         list: Lista de CallbackQueryHandler
     """
     handler = AdminHandler(admin_service)
-    
+
     return [
         CallbackQueryHandler(handler.show_users, pattern="^show_users$"),
         CallbackQueryHandler(handler.show_keys, pattern="^show_keys$"),
@@ -278,22 +330,24 @@ def get_admin_callback_handlers(admin_service: AdminService):
 def get_admin_conversation_handler(admin_service: AdminService) -> ConversationHandler:
     """
     Retorna el ConversationHandler para administración.
-    
+
     Args:
         admin_service: Servicio de administración
-        
+
     Returns:
         ConversationHandler: Handler configurado
     """
     handler = AdminHandler(admin_service)
-    
+
     return ConversationHandler(
         entry_points=[CommandHandler("admin", handler.admin_menu)],
         states={
             ADMIN_MENU: [
                 CallbackQueryHandler(handler.show_users, pattern="^show_users$"),
                 CallbackQueryHandler(handler.show_keys, pattern="^show_keys$"),
-                CallbackQueryHandler(handler.show_server_status, pattern="^server_status$"),
+                CallbackQueryHandler(
+                    handler.show_server_status, pattern="^server_status$"
+                ),
                 CallbackQueryHandler(handler.logs_handler, pattern="^logs$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
@@ -313,5 +367,5 @@ def get_admin_conversation_handler(admin_service: AdminService) -> ConversationH
         per_message=False,
         per_chat=True,
         per_user=True,
-        allow_reentry=True
+        allow_reentry=True,
     )
