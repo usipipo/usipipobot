@@ -22,15 +22,9 @@ class OperationsKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton("💰 Mi Balance", callback_data="balance"),
-                InlineKeyboardButton("👥 Referidos", callback_data="referrals"),
-            ],
-            [
-                InlineKeyboardButton("👑 Plan VIP", callback_data="vip_plans"),
-                InlineKeyboardButton("🎮 Juega y Gana", callback_data="game_menu"),
             ],
             [
                 InlineKeyboardButton("📊 Transacciones", callback_data="transactions"),
-                InlineKeyboardButton("🎁 Recompensas", callback_data="rewards"),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="main_menu")],
         ]
@@ -65,90 +59,6 @@ class OperationsKeyboards:
                 0, [InlineKeyboardButton("🔧 Panel Admin", callback_data="admin")]
             )
 
-        return InlineKeyboardMarkup(keyboard)
-
-    @staticmethod
-    def referral_actions() -> InlineKeyboardMarkup:
-        """
-        Teclado de acciones de referidos.
-
-        Returns:
-            InlineKeyboardMarkup: Teclado de referidos
-        """
-        keyboard = [
-            [
-                InlineKeyboardButton("📋 Copiar Enlace", callback_data="copy_referral"),
-                InlineKeyboardButton("📤 Compartir", callback_data="share_referral"),
-            ],
-            [
-                InlineKeyboardButton("📊 Estadísticas", callback_data="referral_stats"),
-                InlineKeyboardButton(
-                    "🎆 Ranking", callback_data="referral_leaderboard"
-                ),
-            ],
-            [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
-        ]
-        return InlineKeyboardMarkup(keyboard)
-
-    @staticmethod
-    def vip_plans() -> InlineKeyboardMarkup:
-        """
-        Teclado de planes VIP.
-
-        Returns:
-            InlineKeyboardMarkup: Teclado de planes VIP
-        """
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🌟 Plan Básico - $9.99/mes", callback_data="vip_basic"
-                ),
-                InlineKeyboardButton(
-                    "💎 Plan Premium - $19.99/mes", callback_data="vip_premium"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    "💎 Plan Elite - $39.99/mes", callback_data="vip_elite"
-                ),
-                InlineKeyboardButton("🔍 Comparar Planes", callback_data="compare_vip"),
-            ],
-            [
-                InlineKeyboardButton("🎁 Prueba Gratuita", callback_data="vip_trial"),
-                InlineKeyboardButton("🔙 Volver", callback_data="operations_menu"),
-            ],
-        ]
-        return InlineKeyboardMarkup(keyboard)
-
-    @staticmethod
-    def game_menu() -> InlineKeyboardMarkup:
-        """
-        Teclado del menú de juegos.
-
-        Returns:
-            InlineKeyboardMarkup: Teclado de juegos
-        """
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🎲 Ruleta de la Suerte", callback_data="spin_wheel"
-                ),
-                InlineKeyboardButton("🎯 Trivia uSipipo", callback_data="trivia_game"),
-            ],
-            [
-                InlineKeyboardButton(
-                    "🏆 Desafíos Diarios", callback_data="daily_challenges"
-                ),
-                InlineKeyboardButton("🎁 Recompensas", callback_data="game_rewards"),
-            ],
-            [
-                InlineKeyboardButton("📊 Estadísticas", callback_data="game_stats"),
-                InlineKeyboardButton(
-                    "🏅 Leaderboard", callback_data="game_leaderboard"
-                ),
-            ],
-            [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
-        ]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
@@ -266,56 +176,5 @@ class OperationsKeyboards:
                 ),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
-        ]
-        return InlineKeyboardMarkup(keyboard)
-
-    @staticmethod
-    def spin_wheel(spins_left: int) -> InlineKeyboardMarkup:
-        """
-        Teclado para la ruleta de la suerte.
-
-        Args:
-            spins_left: Tiradas restantes
-
-        Returns:
-            InlineKeyboardMarkup: Teclado de ruleta
-        """
-        if spins_left > 0:
-            button_text = f"🎲 Girar ({spins_left} restantes)"
-        else:
-            button_text = "🎲 Girar (0 restantes)"
-
-        keyboard = [
-            [
-                InlineKeyboardButton(button_text, callback_data="spin_wheel"),
-                InlineKeyboardButton("💰 Comprar Tiradas", callback_data="buy_spins"),
-            ],
-            [
-                InlineKeyboardButton("📊 Historial", callback_data="spin_history"),
-                InlineKeyboardButton("🔙 Volver", callback_data="game_menu"),
-            ],
-        ]
-        return InlineKeyboardMarkup(keyboard)
-
-    @staticmethod
-    def trivia_categories() -> InlineKeyboardMarkup:
-        """
-        Teclado de categorías de trivia.
-
-        Returns:
-            InlineKeyboardMarkup: Teclado de categorías
-        """
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔐 VPN y Seguridad", callback_data="trivia_security"
-                ),
-                InlineKeyboardButton("🌐 Internet", callback_data="trivia_internet"),
-            ],
-            [
-                InlineKeyboardButton("💻 Tecnología", callback_data="trivia_tech"),
-                InlineKeyboardButton("🎮 General", callback_data="trivia_general"),
-            ],
-            [InlineKeyboardButton("🔙 Volver", callback_data="game_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)

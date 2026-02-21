@@ -131,10 +131,10 @@ class TestGetByUser:
         assert result[0].user_id == 123456789
 
     @pytest.mark.asyncio
-    async def test_get_by_user_returns_empty_list_on_error(
+    async def test_get_get_by_user_returns_empty_list_on_error(
         self, repository, mock_session
     ):
-        mock_session.execute.side_effect = Exception("DB error")
+        mock_session.execute.side_effect = [None, Exception("DB error")]
 
         result = await repository.get_by_user(123456789, current_user_id=123456789)
 
@@ -157,7 +157,7 @@ class TestUpdateUsage:
     @pytest.mark.asyncio
     async def test_update_usage_returns_false_on_error(self, repository, mock_session):
         package_id = uuid.uuid4()
-        mock_session.execute.side_effect = Exception("DB error")
+        mock_session.execute.side_effect = [None, Exception("DB error")]
 
         result = await repository.update_usage(
             package_id, 1024, current_user_id=123456789
@@ -181,7 +181,7 @@ class TestDeactivate:
     @pytest.mark.asyncio
     async def test_deactivate_returns_false_on_error(self, repository, mock_session):
         package_id = uuid.uuid4()
-        mock_session.execute.side_effect = Exception("DB error")
+        mock_session.execute.side_effect = [None, Exception("DB error")]
 
         result = await repository.deactivate(package_id, current_user_id=123456789)
 
