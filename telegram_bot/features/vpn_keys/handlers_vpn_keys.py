@@ -130,14 +130,14 @@ class VpnKeysHandler:
 
             # 4. Entrega diferenciada
             if key_type == "outline":
-                # Escapar caracteres especiales para MarkdownV2
                 escaped_data = new_key.key_data.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`').replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-').replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}').replace('.', '\\.').replace('!', '\\!')
                 
-                caption = (
-                    f"✅ ¡Llave *OUTLINE* generada con éxito\\!\n\n"
-                    f"Copia el siguiente código en tu aplicación Outline:\n"
-                    f"```\n{escaped_data}\n```"
-                )
+                caption = VpnKeysMessages.Success.KEY_CREATED_WITH_DATA.format(
+                    type="OUTLINE",
+                    name=key_name,
+                    data_limit=new_key.data_limit_gb
+                ).replace('*', '\\*').replace('_', '\\_').replace('[', '\\[').replace(']', '\\]')
+                caption += f"\n\nCopia el siguiente código en tu aplicación Outline:\n```\n{escaped_data}\n```"
                 
                 with open(qr_path, "rb") as photo:
                     await update.message.reply_photo(
@@ -150,10 +150,11 @@ class VpnKeysHandler:
             elif key_type == "wireguard":
                 conf_path = QrGenerator.save_conf_file(new_key.key_data, file_id)
                 
-                caption = (
-                    f"✅ ¡Llave **WIREGUARD** generada con éxito!\n\n"
-                    "Escanea el QR en tu móvil o usa el archivo adjunto en tu PC."
-                )
+                caption = VpnKeysMessages.Success.KEY_CREATED_WITH_DATA.format(
+                    type="WIREGUARD",
+                    name=key_name,
+                    data_limit=new_key.data_limit_gb
+                ) + "\n\nEscanea el QR en tu móvil o usa el archivo adjunto en tu PC."
                 
                 with open(qr_path, "rb") as photo:
                     await update.message.reply_photo(
