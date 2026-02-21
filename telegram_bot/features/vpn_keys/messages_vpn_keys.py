@@ -35,9 +35,9 @@ class VpnKeysMessages:
         
         KEY_LIMIT_REACHED = (
             "❌ **Límite de llaves alcanzado**\n\n"
-            "Has alcanzado el límite de llaves para tu plan.\n\n"
+            "Has alcanzado el límite de **{max_keys}** llaves para tu plan.\n\n"
             "💡 *Soluciones:*\n"
-            "• Elimina llaves que no usas\n"
+            "• Elimina llaves que no usas desde **🛡️ Mis Llaves**\n"
             "• Actualiza tu plan para más llaves"
         )
         
