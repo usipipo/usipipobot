@@ -220,7 +220,7 @@ class UserManagementHandler:
 
             if is_admin and admin_service:
                 # Mostrar panel de control administrativo
-                stats = await admin_service.get_dashboard_stats()
+                stats = await admin_service.get_dashboard_stats(current_user_id=telegram_id)
                 text = self._format_admin_dashboard(user_name, stats)
             else:
                 # Mostrar estado de usuario regular

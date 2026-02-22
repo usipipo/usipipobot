@@ -32,22 +32,17 @@ class AdminService(IAdminService):
         self.wireguard_client = WireGuardClient()
         self.outline_client = OutlineClient()
 
-    async def get_dashboard_stats(self) -> Dict:
+    async def get_dashboard_stats(self, current_user_id: int) -> Dict:
         """
         Genera estadísticas completas para el panel de control administrativo.
         Centraliza la lógica de negocio para respetar arquitectura hexagonal.
         """
         try:
-            # 1. Obtener datos crudos
-            users = await self.user_repository.get_all_users()
-            all_keys = await self.key_repository.get_all_keys()
+            users = await self.user_repository.get_all_users(current_user_id)
+            all_keys = await self.key_repository.get_all_keys(current_user_id)
             server_status = await self.get_server_status()
 
-            # 2. Calcular estadísticas de usuarios
             total_users = len(users)
-            # Asumiendo que User tiene status o is_active. Si no, usamos active_keys > 0 como proxy o status='active'
-            # Revisando User entity (no visible aquí pero inferido), usaremos una lógica segura.
-            # Si users es lista de entidades User:
             active_users = sum(
                 1
                 for u in users
@@ -55,15 +50,15 @@ class AdminService(IAdminService):
                 or getattr(u, "is_active", False)
             )
 
-            # 3. Calcular estadísticas de llaves
             total_keys = len(all_keys)
             active_keys = sum(1 for k in all_keys if k.is_active)
             wireguard_keys = sum(
-                1 for k in all_keys if k.key_type.lower() == "wireguard"
+                1 for k in all_keys if hasattr(k.key_type, 'value') and k.key_type.value.lower() == "wireguard" or str(k.key_type).lower() == "wireguard"
             )
-            outline_keys = sum(1 for k in all_keys if k.key_type.lower() == "outline")
+            outline_keys = sum(
+                1 for k in all_keys if hasattr(k.key_type, 'value') and k.key_type.value.lower() == "outline" or str(k.key_type).lower() == "outline"
+            )
 
-            # 4. Calcular porcentajes
             wireguard_pct = round(
                 (wireguard_keys / total_keys * 100) if total_keys > 0 else 0, 1
             )
@@ -71,20 +66,10 @@ class AdminService(IAdminService):
                 (outline_keys / total_keys * 100) if total_keys > 0 else 0, 1
             )
 
-            # 5. Calcular consumo total (iterando keys)
-            # Nota: esto puede ser lento si hay muchas keys y requiere consulta individual de métricas
-            # Para el dashboard rápido, usaremos el 'data_used' almacenado en BD o 0 si no está actualizado.
-            # Si queremos real-time, habría que llamar a get_key_usage_stats para cada uno, lo cual es muy lento.
-            # Usaremos una aproximación o datos cacheados si existen.
-            # Por ahora, sumaremos 0 si no tenemos el dato en la entidad Key (Key entity usually has data_used??)
-            # Revisando Key entity en imports: from domain.entities.vpn_key import VpnKey as Key
-            # VpnKey tiene data_limit, pero data_used a veces se guarda.
-            # Asumiremos 0 por ahora para no bloquear, o implementaremos lógica de cache.
-            total_usage_gb = 0  # Placeholder simplificado para no ralentizar dashboard
+            total_usage_gb = 0
 
             avg_usage = round(total_usage_gb / total_users, 2) if total_users > 0 else 0
 
-            # 6. Estado del servidor
             wireguard_healthy = server_status.get("wireguard", {}).get(
                 "is_healthy", False
             )
@@ -95,19 +80,14 @@ class AdminService(IAdminService):
                 else "⚠️ Problemas"
             )
 
-            # 7. Calcular ingresos totales
             total_revenue = await self._calculate_total_revenue()
-
-            # 8. Calcular nuevos usuarios hoy
-            new_users_today = await self._calculate_new_users_today()
-
-            # 9. Calcular llaves creadas hoy
-            keys_created_today = await self._calculate_keys_created_today()
+            new_users_today = await self._calculate_new_users_today(current_user_id)
+            keys_created_today = await self._calculate_keys_created_today(current_user_id)
 
             return {
                 "total_users": total_users,
                 "active_users": active_users,
-                "total_deposited": 0,  # Eliminado del modelo - usar referral_credits
+                "total_deposited": 0,
                 "total_keys": total_keys,
                 "active_keys": active_keys,
                 "wireguard_keys": wireguard_keys,
@@ -128,21 +108,20 @@ class AdminService(IAdminService):
             logger.error(f"Error generando estadísticas de dashboard: {e}")
             raise e
 
-    async def get_all_users(self) -> List[Dict]:
+    async def get_all_users(self, current_user_id: int) -> List[Dict]:
         """Obtener lista de todos los usuarios registrados."""
         try:
-            users = await self.user_repository.get_all_users()
+            users = await self.user_repository.get_all_users(current_user_id)
 
             user_list = []
             for user in users:
-                # Obtener claves del usuario
-                user_keys = await self.key_repository.get_user_keys(user.user_id)
+                user_keys = await self.key_repository.get_by_user(user.telegram_id, current_user_id)
                 active_keys = [k for k in user_keys if k.is_active]
 
-                balance = await self.payment_repository.get_balance(user.user_id)
+                balance = await self.payment_repository.get_balance(user.telegram_id)
 
                 user_info = AdminUserInfo(
-                    user_id=user.user_id,
+                    user_id=user.telegram_id,
                     username=user.username,
                     first_name=user.first_name,
                     last_name=user.last_name,
@@ -170,32 +149,30 @@ class AdminService(IAdminService):
             logger.error(f"Error obteniendo claves del usuario {user_id}: {e}")
             return []
 
-    async def get_all_keys(self) -> List[Dict]:
+    async def get_all_keys(self, current_user_id: int) -> List[Dict]:
         """Obtener todas las claves de todos los usuarios."""
         try:
-            all_keys = await self.key_repository.get_all_keys()
+            all_keys = await self.key_repository.get_all_keys(current_user_id)
 
             key_list = []
             for key in all_keys:
-                # Obtener información del usuario
-                user = await self.user_repository.get_user(key.user_id)
+                user = await self.user_repository.get_by_id(key.user_id, current_user_id)
                 user_name = (
                     f"{user.first_name} {user.last_name or ''}" if user else "Unknown"
                 )
 
-                # Obtener estadísticas de uso según el tipo
-                usage_stats = await self.get_key_usage_stats(key.key_id)
+                usage_stats = await self.get_key_usage_stats(str(key.id))
 
                 key_info = AdminKeyInfo(
-                    key_id=key.key_id,
+                    key_id=str(key.id),
                     user_id=key.user_id,
                     user_name=user_name,
-                    key_type=key.key_type,
-                    key_name=key.key_name,
-                    access_url=key.access_url,
+                    key_type=key.key_type.value if hasattr(key.key_type, 'value') else str(key.key_type),
+                    key_name=key.name,
+                    access_url=key.key_data,
                     created_at=key.created_at,
-                    last_used=key.last_used,
-                    data_limit=key.data_limit,
+                    last_used=key.last_seen_at,
+                    data_limit=key.data_limit_bytes,
                     data_used=usage_stats.get("data_used", 0),
                     is_active=key.is_active,
                     server_status=usage_stats.get("server_status", "unknown"),
@@ -670,15 +647,13 @@ class AdminService(IAdminService):
             logger.error(f"Error calculando ingresos totales: {e}")
             return 0.00
 
-    async def _calculate_new_users_today(self) -> int:
+    async def _calculate_new_users_today(self, current_user_id: int) -> int:
         """
         Calcula la cantidad de nuevos usuarios registrados hoy.
         """
         try:
-            # Obtener todos los usuarios
-            all_users = await self.user_repository.get_all_users()
+            all_users = await self.user_repository.get_all_users(current_user_id)
 
-            # Filtrar usuarios creados hoy
             today = datetime.now(timezone.utc).date()
             new_users_today = sum(
                 1
@@ -692,15 +667,13 @@ class AdminService(IAdminService):
             logger.error(f"Error calculando nuevos usuarios hoy: {e}")
             return 0
 
-    async def _calculate_keys_created_today(self) -> int:
+    async def _calculate_keys_created_today(self, current_user_id: int) -> int:
         """
         Calcula la cantidad de llaves VPN creadas hoy.
         """
         try:
-            # Obtener todas las llaves
-            all_keys = await self.key_repository.get_all_keys()
+            all_keys = await self.key_repository.get_all_keys(current_user_id)
 
-            # Filtrar llaves creadas hoy
             today = datetime.now(timezone.utc).date()
             keys_created_today = sum(
                 1
@@ -713,3 +686,45 @@ class AdminService(IAdminService):
         except Exception as e:
             logger.error(f"Error calculando llaves creadas hoy: {e}")
             return 0
+
+    async def get_server_stats(self, current_user_id: int) -> Dict:
+        """Obtener estadísticas del servidor para el panel admin."""
+        try:
+            users = await self.user_repository.get_all_users(current_user_id)
+            all_keys = await self.key_repository.get_all_keys(current_user_id)
+            server_status = await self.get_server_status()
+
+            total_users = len(users)
+            active_users = sum(
+                1
+                for u in users
+                if getattr(u, "status", "").lower() == "active"
+                or getattr(u, "is_active", False)
+            )
+
+            total_keys = len(all_keys)
+            active_keys = sum(1 for k in all_keys if k.is_active)
+
+            return {
+                "total_users": total_users,
+                "active_users": active_users,
+                "total_keys": total_keys,
+                "active_keys": active_keys,
+                "storage_usage": "N/A",
+                "cpu_usage": "N/A",
+                "network_usage": "N/A",
+                "server_status": server_status,
+            }
+
+        except Exception as e:
+            logger.error(f"Error obteniendo estadísticas del servidor: {e}")
+            return {
+                "total_users": 0,
+                "active_users": 0,
+                "total_keys": 0,
+                "active_keys": 0,
+                "storage_usage": "N/A",
+                "cpu_usage": "N/A",
+                "network_usage": "N/A",
+            }
+
