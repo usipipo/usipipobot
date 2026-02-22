@@ -21,6 +21,7 @@ from telegram.ext import (
 from application.services.admin_service import AdminService
 from config import settings
 from telegram_bot.common.base_handler import BaseConversationHandler
+from telegram_bot.common.decorators import admin_required
 from utils.logger import logger
 from utils.spinner import SpinnerManager, admin_spinner_callback, with_spinner
 
@@ -70,6 +71,7 @@ class AdminHandler(BaseConversationHandler):
         )
         return ADMIN_MENU
 
+    @admin_required
     @admin_spinner_callback
     async def show_users(
         self,
@@ -111,6 +113,7 @@ class AdminHandler(BaseConversationHandler):
             await self._handle_error(update, context, e, "show_users")
             return ADMIN_MENU
 
+    @admin_required
     @admin_spinner_callback
     async def show_keys(
         self,
@@ -123,6 +126,9 @@ class AdminHandler(BaseConversationHandler):
         await self._safe_answer_query(query)
         admin_id = update.effective_user.id
 
+        if admin_id != int(settings.ADMIN_ID):
+            return None
+
         try:
             keys = await self.service.get_all_keys(current_user_id=admin_id)
 
@@ -130,7 +136,7 @@ class AdminHandler(BaseConversationHandler):
                 message = AdminMessages.Keys.NO_KEYS
             else:
                 message = AdminMessages.Keys.HEADER
-                for key in keys[:20]:  # Limitar a 20 llaves
+                for key in keys[:20]:
                     status = "✅ Activa" if key.is_active else "❌ Inactiva"
                     message += (
                         f"\n🔑 {key.key_name or 'N/A'} ({key.user_id})\n   {status}\n"
@@ -139,7 +145,6 @@ class AdminHandler(BaseConversationHandler):
                 if len(keys) > 20:
                     message += f"\n... y {len(keys) - 20} más llaves"
 
-            # Reemplazar spinner con el mensaje final
             await SpinnerManager.replace_spinner_with_message(
                 update,
                 context,
@@ -154,6 +159,7 @@ class AdminHandler(BaseConversationHandler):
             await self._handle_error(update, context, e, "show_keys")
             return ADMIN_MENU
 
+    @admin_required
     @admin_spinner_callback
     async def show_server_status(
         self,
@@ -318,10 +324,10 @@ def get_admin_callback_handlers(admin_service: AdminService):
     handler = AdminHandler(admin_service)
 
     return [
-        CallbackQueryHandler(handler.show_users, pattern="^show_users$"),
-        CallbackQueryHandler(handler.show_keys, pattern="^show_keys$"),
-        CallbackQueryHandler(handler.show_server_status, pattern="^server_status$"),
-        CallbackQueryHandler(handler.logs_handler, pattern="^logs$"),
+        CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
+        CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
+        CallbackQueryHandler(handler.show_server_status, pattern="^admin_server_status$"),
+        CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
         CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
         CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
     ]
@@ -343,12 +349,12 @@ def get_admin_conversation_handler(admin_service: AdminService) -> ConversationH
         entry_points=[CommandHandler("admin", handler.admin_menu)],
         states={
             ADMIN_MENU: [
-                CallbackQueryHandler(handler.show_users, pattern="^show_users$"),
-                CallbackQueryHandler(handler.show_keys, pattern="^show_keys$"),
+                CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
+                CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
                 CallbackQueryHandler(
-                    handler.show_server_status, pattern="^server_status$"
+                    handler.show_server_status, pattern="^admin_server_status$"
                 ),
-                CallbackQueryHandler(handler.logs_handler, pattern="^logs$"),
+                CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             VIEWING_USERS: [
