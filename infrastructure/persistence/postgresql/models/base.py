@@ -41,6 +41,23 @@ class UserModel(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    
+    status: Mapped[Optional[str]] = mapped_column(String, server_default="active")
+    role: Mapped[Optional[str]] = mapped_column(String, server_default="user")
+    max_keys: Mapped[int] = mapped_column(Integer, server_default="2")
+    
+    balance_stars: Mapped[int] = mapped_column(Integer, server_default="0")
+    total_deposited: Mapped[int] = mapped_column(Integer, server_default="0")
+    
+    referral_code: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    referred_by: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    total_referral_earnings: Mapped[int] = mapped_column(Integer, server_default="0")
+    
+    is_vip: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    vip_expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    
     free_data_limit_bytes: Mapped[int] = mapped_column(
         BigInteger, server_default="10737418240"
     )
