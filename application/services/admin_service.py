@@ -141,10 +141,10 @@ class AdminService(IAdminService):
             logger.error(f"Error obteniendo todos los usuarios: {e}")
             return []
 
-    async def get_user_keys(self, user_id: int) -> List[Key]:
+    async def get_user_keys(self, user_id: int, current_user_id: int = 0) -> List[Key]:
         """Obtener todas las claves de un usuario específico."""
         try:
-            return await self.key_repository.get_user_keys(user_id)
+            return await self.key_repository.get_by_user(user_id, current_user_id)
         except Exception as e:
             logger.error(f"Error obteniendo claves del usuario {user_id}: {e}")
             return []
@@ -161,7 +161,7 @@ class AdminService(IAdminService):
                     f"{user.first_name} {user.last_name or ''}" if user else "Unknown"
                 )
 
-                usage_stats = await self.get_key_usage_stats(str(key.id))
+                usage_stats = await self.get_key_usage_stats(str(key.id), current_user_id)
 
                 key_info = AdminKeyInfo(
                     key_id=str(key.id),
@@ -185,27 +185,27 @@ class AdminService(IAdminService):
             logger.error(f"Error obteniendo todas las claves: {e}")
             return []
 
-    async def delete_key_from_servers(self, key_id: str, key_type: str) -> bool:
+    async def delete_key_from_servers(self, key_id: str, key_type, current_user_id: int = 0) -> bool:
         """Eliminar una clave de los servidores VPN (WireGuard y Outline)."""
         try:
-            key = await self.key_repository.get_key(key_id)
+            import uuid
+            key = await self.key_repository.get_by_id(uuid.UUID(key_id), current_user_id)
             if not key:
                 logger.error(f"Clave {key_id} no encontrada en BD")
                 return False
 
             success = True
+            key_type_str = key_type.value if hasattr(key_type, 'value') else str(key_type)
 
-            if key_type.lower() == "wireguard":
-                # Eliminar de WireGuard
-                wg_result = await self.wireguard_client.delete_client(key.key_name)
+            if key_type_str.lower() == "wireguard":
+                wg_result = await self.wireguard_client.delete_client(key.name)
                 if not wg_result:
                     logger.error(f"Error eliminando clave {key_id} de WireGuard")
                     success = False
                 else:
                     logger.info(f"Clave {key_id} eliminada de WireGuard")
 
-            elif key_type.lower() == "outline":
-                # Eliminar de Outline
+            elif key_type_str.lower() == "outline":
                 outline_result = await self.outline_client.delete_key(key_id)
                 if not outline_result:
                     logger.error(f"Error eliminando clave {key_id} de Outline")
@@ -219,10 +219,11 @@ class AdminService(IAdminService):
             logger.error(f"Error eliminando clave {key_id} de servidores: {e}")
             return False
 
-    async def delete_key_from_db(self, key_id: str) -> bool:
+    async def delete_key_from_db(self, key_id: str, current_user_id: int = 0) -> bool:
         """Eliminar una clave de la base de datos."""
         try:
-            result = await self.key_repository.delete_key(key_id)
+            import uuid
+            result = await self.key_repository.delete(uuid.UUID(key_id), current_user_id)
             if result:
                 logger.info(f"Clave {key_id} eliminada de la base de datos")
             else:
@@ -232,10 +233,11 @@ class AdminService(IAdminService):
             logger.error(f"Error eliminando clave {key_id} de BD: {e}")
             return False
 
-    async def delete_user_key_complete(self, key_id: str) -> Dict[str, Any]:
+    async def delete_user_key_complete(self, key_id: str, current_user_id: int = 0) -> Dict[str, Any]:
         """Eliminar completamente una clave (servidores + BD)."""
         try:
-            key = await self.key_repository.get_key(key_id)
+            import uuid
+            key = await self.key_repository.get_by_id(uuid.UUID(key_id), current_user_id)
             if not key:
                 return {
                     "success": False,
@@ -244,11 +246,9 @@ class AdminService(IAdminService):
                     "error": "Clave no encontrada",
                 }
 
-            # Eliminar de servidores
-            server_deleted = await self.delete_key_from_servers(key_id, key.key_type)
+            server_deleted = await self.delete_key_from_servers(key_id, key.key_type, current_user_id)
 
-            # Eliminar de BD
-            db_deleted = await self.delete_key_from_db(key_id)
+            db_deleted = await self.delete_key_from_db(key_id, current_user_id)
 
             success = server_deleted and db_deleted
 
@@ -257,7 +257,7 @@ class AdminService(IAdminService):
                 "server_deleted": server_deleted,
                 "db_deleted": db_deleted,
                 "key_type": key.key_type,
-                "key_name": key.key_name,
+                "key_name": key.name,
             }
 
             if success:
@@ -347,19 +347,21 @@ class AdminService(IAdminService):
             logger.error(f"Error obteniendo estado de servidores: {e}")
             return {}
 
-    async def get_key_usage_stats(self, key_id: str) -> Dict:
+    async def get_key_usage_stats(self, key_id: str, current_user_id: int = 0) -> Dict:
         """Obtener estadísticas de uso de una clave."""
         try:
-            key = await self.key_repository.get_key(key_id)
+            import uuid
+            key = await self.key_repository.get_by_id(uuid.UUID(key_id), current_user_id)
             if not key:
                 return {"data_used": 0, "server_status": "not_found"}
 
             data_used = 0
             server_status = "unknown"
+            key_type_str = key.key_type.value if hasattr(key.key_type, 'value') else str(key.key_type)
 
-            if key.key_type.lower() == "wireguard":
+            if key_type_str.lower() == "wireguard":
                 try:
-                    metrics = await self.wireguard_client.get_peer_metrics(key.key_name)
+                    metrics = await self.wireguard_client.get_peer_metrics(key.name)
                     data_used = metrics.get("transfer_total", 0)
                     server_status = "active" if data_used > 0 else "inactive"
                 except Exception as e:
@@ -368,7 +370,7 @@ class AdminService(IAdminService):
                     )
                     server_status = "error"
 
-            elif key.key_type.lower() == "outline":
+            elif key_type_str.lower() == "outline":
                 try:
                     metrics = await self.outline_client.get_key_usage(key_id)
                     data_used = metrics.get("bytes", 0)
@@ -393,14 +395,14 @@ class AdminService(IAdminService):
     # MÉTODOS DE GESTIÓN DE USUARIOS
     # ============================================
 
-    async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
+    async def get_user_by_id(self, user_id: int, current_user_id: int = 0) -> Optional[Dict]:
         """Obtener información detallada de un usuario."""
         try:
-            user = await self.user_repository.get_user(user_id)
+            user = await self.user_repository.get_user(user_id, current_user_id)
             if not user:
                 return None
 
-            user_keys = await self.key_repository.get_user_keys(user_id)
+            user_keys = await self.key_repository.get_by_user(user_id, current_user_id)
             active_keys = [k for k in user_keys if k.is_active]
             balance = await self.payment_repository.get_balance(user_id)
 
@@ -412,7 +414,7 @@ class AdminService(IAdminService):
                 "role": user.role.value,
                 "total_keys": len(user_keys),
                 "active_keys": len(active_keys),
-                "balance_stars": 0,  # Eliminado del modelo
+                "balance_stars": 0,
                 "total_deposited": getattr(user, "referral_credits", 0) or 0,
                 "referral_credits": user.referral_credits,
                 "created_at": user.created_at,
@@ -422,11 +424,11 @@ class AdminService(IAdminService):
             return None
 
     async def update_user_status(
-        self, user_id: int, status: str
+        self, user_id: int, status: str, current_user_id: int = 0
     ) -> AdminOperationResult:
         """Actualizar estado del usuario (ACTIVE, SUSPENDED, BLOCKED)."""
         try:
-            user = await self.user_repository.get_user(user_id)
+            user = await self.user_repository.get_user(user_id, current_user_id)
             if not user:
                 return AdminOperationResult(
                     success=False,
@@ -435,7 +437,6 @@ class AdminService(IAdminService):
                     message="Usuario no encontrado",
                 )
 
-            # Validar estado
             valid_statuses = [s.value for s in UserStatus]
             if status not in valid_statuses:
                 return AdminOperationResult(
@@ -446,7 +447,7 @@ class AdminService(IAdminService):
                 )
 
             user.status = UserStatus(status)
-            await self.user_repository.update_user(user)
+            await self.user_repository.update_user(user, current_user_id)
 
             logger.info(f"Usuario {user_id} actualizado a estado: {status}")
             return AdminOperationResult(
@@ -466,11 +467,11 @@ class AdminService(IAdminService):
             )
 
     async def assign_role_to_user(
-        self, user_id: int, role: str, duration_days: Optional[int] = None
+        self, user_id: int, role: str, duration_days: Optional[int] = None, current_user_id: int = 0
     ) -> AdminOperationResult:
         """Asignar rol a un usuario."""
         try:
-            user = await self.user_repository.get_user(user_id)
+            user = await self.user_repository.get_user(user_id, current_user_id)
             if not user:
                 return AdminOperationResult(
                     success=False,
@@ -479,7 +480,6 @@ class AdminService(IAdminService):
                     message="Usuario no encontrado",
                 )
 
-            # Validar rol
             valid_roles = [r.value for r in UserRole]
             if role not in valid_roles:
                 return AdminOperationResult(
@@ -491,7 +491,7 @@ class AdminService(IAdminService):
 
             user.role = UserRole(role)
 
-            await self.user_repository.update_user(user)
+            await self.user_repository.update_user(user, current_user_id)
 
             message = f'Rol "{role}" asignado a usuario {user_id}'
 
@@ -512,18 +512,18 @@ class AdminService(IAdminService):
                 message=f"Error: {str(e)}",
             )
 
-    async def block_user(self, user_id: int) -> AdminOperationResult:
+    async def block_user(self, user_id: int, current_user_id: int = 0) -> AdminOperationResult:
         """Bloquear un usuario."""
-        return await self.update_user_status(user_id, UserStatus.BLOCKED.value)
+        return await self.update_user_status(user_id, UserStatus.BLOCKED.value, current_user_id)
 
-    async def unblock_user(self, user_id: int) -> AdminOperationResult:
+    async def unblock_user(self, user_id: int, current_user_id: int = 0) -> AdminOperationResult:
         """Desbloquear un usuario."""
-        return await self.update_user_status(user_id, UserStatus.ACTIVE.value)
+        return await self.update_user_status(user_id, UserStatus.ACTIVE.value, current_user_id)
 
-    async def delete_user(self, user_id: int) -> AdminOperationResult:
+    async def delete_user(self, user_id: int, current_user_id: int = 0) -> AdminOperationResult:
         """Eliminar un usuario y sus claves asociadas."""
         try:
-            user = await self.user_repository.get_user(user_id)
+            user = await self.user_repository.get_user(user_id, current_user_id)
             if not user:
                 return AdminOperationResult(
                     success=False,
@@ -532,21 +532,18 @@ class AdminService(IAdminService):
                     message="Usuario no encontrado",
                 )
 
-            # Obtener todas las claves del usuario
-            user_keys = await self.key_repository.get_user_keys(user_id)
+            user_keys = await self.key_repository.get_by_user(user_id, current_user_id)
 
-            # Eliminar todas las claves
             deleted_keys_count = 0
             for key in user_keys:
                 try:
-                    result = await self.delete_user_key_complete(key.key_id)
+                    result = await self.delete_user_key_complete(str(key.id), current_user_id)
                     if result["success"]:
                         deleted_keys_count += 1
                 except Exception as e:
-                    logger.error(f"Error eliminando clave {key.key_id}: {e}")
+                    logger.error(f"Error eliminando clave {key.id}: {e}")
 
-            # Eliminar el usuario
-            await self.user_repository.delete_user(user_id)
+            await self.user_repository.delete_user(user_id, current_user_id)
 
             message = (
                 f"Usuario {user_id} eliminado junto con {deleted_keys_count} claves"
@@ -568,19 +565,18 @@ class AdminService(IAdminService):
                 message=f"Error: {str(e)}",
             )
 
-    async def get_users_paginated(self, page: int = 1, per_page: int = 10) -> Dict:
+    async def get_users_paginated(self, page: int = 1, per_page: int = 10, current_user_id: int = 0) -> Dict:
         """Obtener usuarios paginados."""
         try:
-            all_users = await self.user_repository.get_all_users()
+            all_users = await self.user_repository.get_all_users(current_user_id)
             total_users = len(all_users)
 
-            # Calcular offset
             offset = (page - 1) * per_page
             paginated_users = all_users[offset:offset + per_page]
 
             user_list = []
             for user in paginated_users:
-                user_keys = await self.key_repository.get_user_keys(user.telegram_id)
+                user_keys = await self.key_repository.get_by_user(user.telegram_id, current_user_id)
                 active_keys = [k for k in user_keys if k.is_active]
                 balance = await self.payment_repository.get_balance(user.telegram_id)
 
