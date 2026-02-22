@@ -46,7 +46,8 @@ class AdminMessages:
             "📅 **Registro:** {created_at}\n"
             "🟢 **Estado:** {status}\n"
             "⭐ **Balance:** {balance} estrellas\n"
-            "👑 **VIP:** {vip_status}\n"
+            "💰 **Total Depositado:** {total_deposited} estrellas\n"
+            "🎁 **Créditos Referidos:** {referral_credits}\n"
             "🔑 **Llaves:** {keys_count} activas"
         )
 

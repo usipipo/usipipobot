@@ -286,8 +286,8 @@ class UserManagementHandler:
             data_used = f"{status_data.get('total_used_gb', 0):.2f} GB"
             balance = user_entity.balance_stars
 
-            # Determinar plan
-            plan = "VIP" if user_entity.is_vip_active() else "Gratis"
+            # Determinar plan basado en depósitos
+            plan = "Premium" if user_entity.total_deposited > 0 else "Gratis"
 
             # Valores por defecto para nivel y logros
             level = 1

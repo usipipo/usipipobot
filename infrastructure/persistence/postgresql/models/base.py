@@ -51,12 +51,7 @@ class UserModel(Base):
     
     referral_code: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     referred_by: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
-    total_referral_earnings: Mapped[int] = mapped_column(Integer, server_default="0")
-    
-    is_vip: Mapped[bool] = mapped_column(Boolean, server_default="false")
-    vip_expires_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    referral_credits: Mapped[int] = mapped_column(Integer, server_default="0")
     
     free_data_limit_bytes: Mapped[int] = mapped_column(
         BigInteger, server_default="10737418240"
