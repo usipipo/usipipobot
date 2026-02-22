@@ -2,10 +2,10 @@
 Mensajes para el modulo de compra de GB.
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 1.1.0
 """
 
-from application.services.data_package_service import PACKAGE_OPTIONS
+from application.services.data_package_service import PACKAGE_OPTIONS, SLOT_OPTIONS
 
 
 class BuyGbMessages:
@@ -136,4 +136,38 @@ class BuyGbMessages:
             "💾 *Mis Datos*\n\n"
             "No tienes paquetes de datos activos.\n\n"
             "Usa /buy para adquirir más datos."
+        )
+
+    class Slots:
+        """Mensajes para compra de slots de claves."""
+
+        MENU = (
+            "🔑 **Slots de Claves Adicionales**\n\n"
+            "Cada slot te permite crear una clave VPN adicional.\n\n"
+            "{slots_list}\n\n"
+            "💡 *Selecciona cuantas claves extra necesitas*"
+        )
+
+        @staticmethod
+        def format_slots_list() -> str:
+            lines = []
+            for slot in SLOT_OPTIONS:
+                lines.append(f"🔑 **{slot.name}** - {slot.stars} ⭐")
+            return "\n".join(lines)
+
+        INVOICE_TITLE = "Slots de Claves - {slots_name}"
+        INVOICE_DESCRIPTION = "{slots} claves VPN adicionales"
+
+        CONFIRMATION = (
+            "✅ **Compra Exitosa**\n\n"
+            "🔑 **Slots Adquiridos:** +{slots_added}\n"
+            "📊 **Total de Claves:** {new_max_keys}\n"
+            "⭐ **Pagado:** {stars} estrellas\n\n"
+            "💎 *Ya puedes crear mas claves VPN*"
+        )
+
+        ERROR_MAX_KEYS = (
+            "❌ **Limite Alcanzado**\n\n"
+            "Ya tienes el maximo de claves permitidas.\n\n"
+            "💡 *Contacta a soporte si necesitas mas*"
         )
