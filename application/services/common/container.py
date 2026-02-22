@@ -19,6 +19,7 @@ from application.services.payment_service import PaymentService
 from application.services.vpn_service import VpnService
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
+from domain.interfaces.itransaction_repository import ITransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
@@ -27,6 +28,9 @@ from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
 )
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
+from infrastructure.persistence.postgresql.transaction_repository import (
+    PostgresTransactionRepository,
+)
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from telegram_bot.features.admin import get_admin_callback_handlers, get_admin_handlers
 from telegram_bot.features.key_management import (
@@ -123,9 +127,14 @@ def _configure_repositories(container: punq.Container) -> None:
         session = session_factory()
         return PostgresDataPackageRepository(session)
 
+    def create_transaction_repo() -> PostgresTransactionRepository:
+        session = session_factory()
+        return PostgresTransactionRepository(session)
+
     container.register(IUserRepository, factory=create_user_repo)
     container.register(IKeyRepository, factory=create_key_repo)
     container.register(IDataPackageRepository, factory=create_data_package_repo)
+    container.register(ITransactionRepository, factory=create_transaction_repo)
 
 
 def _configure_application_services(container: punq.Container) -> None:
@@ -144,6 +153,10 @@ def _configure_application_services(container: punq.Container) -> None:
         session = session_factory()
         return PostgresDataPackageRepository(session)
 
+    def create_transaction_repo() -> PostgresTransactionRepository:
+        session = session_factory()
+        return PostgresTransactionRepository(session)
+
     def create_vpn_service() -> VpnService:
         return VpnService(
             user_repo=create_user_repo(),
@@ -153,13 +166,16 @@ def _configure_application_services(container: punq.Container) -> None:
         )
 
     def create_payment_service() -> PaymentService:
-        return PaymentService(user_repo=create_user_repo(), key_repo=create_key_repo())
+        return PaymentService(
+            user_repo=create_user_repo(),
+            transaction_repo=create_transaction_repo(),
+        )
 
     def create_admin_service() -> AdminService:
         return AdminService(
             key_repository=create_key_repo(),
             user_repository=create_user_repo(),
-            payment_repository=create_key_repo(),
+            payment_repository=create_transaction_repo(),
         )
 
     def create_data_package_service() -> DataPackageService:
