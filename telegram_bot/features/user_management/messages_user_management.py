@@ -48,13 +48,48 @@ class UserManagementMessages:
         )
 
         HELP_TEXT = (
-            "❓ *Ayuda de uSipipo*\n\n"
-            "*Opciones del menú:*\n"
-            "🔑 *Mis Claves VPN* - Ver todas tus claves activas\n"
-            "➕ *Nueva Clave* - Crear una nueva clave VPN\n"
-            "📦 *Comprar GB* - Adquirir más datos\n"
-            "💾 *Mis Datos* - Ver tu consumo actual\n\n"
-            "¿Necesitas más ayuda? Contáctanos."
+            "❓ *Centro de Ayuda de uSipipo*\n\n"
+            "📱 *Guía Rápida:*\n"
+            "🔑 _Mis Claves VPN_ - Ver todas tus claves activas\n"
+            "➕ _Nueva Clave_ - Crear una nueva clave VPN\n"
+            "📦 _Comprar GB_ - Adquirir más datos\n"
+            "💾 _Mis Datos_ - Ver tu consumo actual\n\n"
+            "💡 *Consejos:*\n"
+            "• Puedes crear hasta 2 claves gratis\n"
+            "• Cada clave tiene 10GB de datos\n"
+            "• Compra más GB cuando los necesites"
+        )
+
+        FAQ_TEXT = (
+            "📚 *Preguntas Frecuentes*\n\n"
+            "❓ *¿Cómo configuro mi VPN?*\n"
+            "Descarga la app WireGuard o Outline, importa tu clave y conecta\\.\n\n"
+            "❓ *¿Cuántos dispositivos puedo usar?*\n"
+            "Puedes crear hasta 2 claves gratuitas\\. Cada clave = 1 dispositivo\\.\n\n"
+            "❓ *¿Qué pasa si agoto mis datos?*\n"
+            "Compra más GB desde el menú principal con Telegram Stars\\.\n\n"
+            "❓ *¿Cómo funciona el programa de referidos?*\n"
+            "Comparte tu código de referido\\. Cuando alguien se registra, ambos reciben créditos\\.\n\n"
+            "❓ *¿Necesitas más ayuda?*\n"
+            "Crea un ticket de soporte y te responderemos pronto\\."
+        )
+
+        SUPPORT_PROMPT = (
+            "🎫 *Soporte Técnico*\n\n"
+            "¿Tienes un problema que no puedes resolver?\n\n"
+            "Crea un ticket y nuestro equipo te ayudará:\n"
+            "• Problemas de conexión\n"
+            "• Errores en pagos\n"
+            "• Solicitudes especiales\n"
+            "• Reporte de bugs\n\n"
+            "_Respuesta en menos de 24 horas_"
+        )
+
+        TICKET_CREATED = (
+            "✅ *Ticket Creado*\n\n"
+            "Tu ticket \\#{ticket_id} ha sido enviado\\.\n\n"
+            "Te responderemos lo antes posible\\.\n\n"
+            "Estado: 🟡 Pendiente"
         )
 
     # ============================================

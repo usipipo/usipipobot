@@ -187,7 +187,22 @@ class UserManagementHandler:
         elif callback_data == "help":
             await query.edit_message_text(
                 text=UserManagementMessages.Welcome.HELP_TEXT,
-                reply_markup=MainMenuKeyboard.main_menu(),
+                reply_markup=UserManagementKeyboards.help_menu(),
+                parse_mode="Markdown",
+            )
+
+        elif callback_data == "help_faq":
+            await query.edit_message_text(
+                text=UserManagementMessages.Welcome.FAQ_TEXT,
+                reply_markup=UserManagementKeyboards.back_to_help(),
+                parse_mode="MarkdownV2",
+            )
+
+        elif callback_data == "help_support":
+            await query.edit_message_text(
+                text=UserManagementMessages.Welcome.SUPPORT_PROMPT,
+                reply_markup=UserManagementKeyboards.support_menu(),
+                parse_mode="Markdown",
             )
 
         elif callback_data == "admin_panel":
@@ -522,6 +537,6 @@ def get_user_callback_handlers(
         ),
         CallbackQueryHandler(
             handler.main_menu_callback,
-            pattern="^(show_keys|buy_data|show_usage|help|admin_panel|show_history)$",
+            pattern="^(show_keys|buy_data|show_usage|help|help_faq|help_support|admin_panel|show_history)$",
         ),
     ]
