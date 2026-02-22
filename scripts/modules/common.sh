@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+
+# Guard against re-sourcing
+if [[ -n "${_COMMON_SH_LOADED:-}" ]]; then
+    return 0 2>/dev/null || exit 0
+fi
+_COMMON_SH_LOADED=1
+
 set -Eeuo pipefail
 
 # ==============================================================================
@@ -30,17 +37,17 @@ readonly INFO_ICON="ℹ️"
 
 log() {
     local message="${1:-}"
-    echo -e "${BLUE}[INFO]${NC} ${message}"
+    echo -e "${BLUE}[INFO]${NC} ${message}" >&2
 }
 
 log_ok() {
     local message="${1:-}"
-    echo -e "${GREEN}[OK]${NC} ${message}"
+    echo -e "${GREEN}[OK]${NC} ${message}" >&2
 }
 
 log_warn() {
     local message="${1:-}"
-    echo -e "${YELLOW}[WARN]${NC} ${message}"
+    echo -e "${YELLOW}[WARN]${NC} ${message}" >&2
 }
 
 log_err() {
@@ -80,13 +87,23 @@ confirm() {
 generate_random_string() {
     local length="${1:-32}"
     local use_special="${2:-false}"
-    local charset='A-Za-z0-9'
+    local password
 
-    if [[ "${use_special}" == "true" ]]; then
-        charset='A-Za-z0-9!@#$%^&*'
+    if command -v openssl &>/dev/null; then
+        if [[ "${use_special}" == "true" ]]; then
+            password=$(openssl rand -base64 48 | tr -d '/+=' | head -c "${length}")
+        else
+            password=$(openssl rand -hex 32 | head -c "${length}")
+        fi
+    else
+        if [[ "${use_special}" == "true" ]]; then
+            password=$(head -c 100 /dev/urandom | base64 | tr -d '/+=' | head -c "${length}")
+        else
+            password=$(head -c 100 /dev/urandom | base64 | tr -dc 'a-zA-Z0-9' | head -c "${length}")
+        fi
     fi
 
-    tr -dc "${charset}" </dev/urandom | head -c "${length}"
+    echo "${password}"
 }
 
 check_dependencies() {
@@ -159,6 +176,7 @@ env_set() {
     local env_file="${1:-.env}"
     local key="${2:-}"
     local value="${3:-}"
+    local temp_file
 
     if [[ -z "${key}" ]]; then
         log_err "env_set: key is required"
@@ -167,11 +185,14 @@ env_set() {
 
     ensure_env_exists "${env_file}"
 
+    temp_file=$(mktemp)
     if grep -q "^${key}=" "${env_file}" 2>/dev/null; then
-        sed -i "s|^${key}=.*|${key}=${value}|" "${env_file}"
+        grep -v "^${key}=" "${env_file}" > "${temp_file}" 2>/dev/null || true
     else
-        echo "${key}=${value}" >> "${env_file}"
+        cat "${env_file}" > "${temp_file}" 2>/dev/null || true
     fi
+    echo "${key}=${value}" >> "${temp_file}"
+    mv "${temp_file}" "${env_file}"
 }
 
 env_get() {

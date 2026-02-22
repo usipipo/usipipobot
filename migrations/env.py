@@ -1,15 +1,20 @@
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, create_engine
+import asyncio
 
 from config import settings
 from infrastructure.persistence.postgresql.models.base import Base
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+
+def get_sync_url(async_url: str) -> str:
+    """Convert asyncpg URL to psycopg2 sync URL for Alembic migrations."""
+    return async_url.replace("+asyncpg", "")
+
+sync_url = get_sync_url(settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", sync_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

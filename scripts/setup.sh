@@ -184,7 +184,7 @@ run_full_setup() {
     log "📦 Step 6/6: Systemd service..."
     # shellcheck source=./modules/systemd.sh
     source "${MODULES_DIR}/systemd.sh"
-    setup_systemd "usipipo" || log_warn "Systemd setup skipped"
+    setup_systemd "$PROJECT_DIR" || log_warn "Systemd setup skipped"
     
     echo ""
     log_ok "🎉 Full setup complete!"
@@ -256,7 +256,7 @@ show_menu() {
         7)
             # shellcheck source=./modules/systemd.sh
             source "${MODULES_DIR}/systemd.sh"
-            setup_systemd "usipipo"
+            setup_systemd "$PROJECT_DIR"
             ;;
         8)
             # shellcheck source=./modules/bot.sh

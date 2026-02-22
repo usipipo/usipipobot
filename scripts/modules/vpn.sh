@@ -210,22 +210,22 @@ install_outline() {
         outline_dashboard="${apiUrl:-}"
 
         if [ -n "$apiUrl" ]; then
-            env_set "OUTLINE_API_URL" "$apiUrl" "$ENV_FILE"
+            env_set "$ENV_FILE" "OUTLINE_API_URL" "$apiUrl"
             log_ok "OUTLINE_API_URL saved"
         else
             log_warn "Could not extract OUTLINE_API_URL from ${access_file}"
         fi
         if [ -n "$certSha" ]; then
-            env_set "OUTLINE_CERT_SHA256" "$certSha" "$ENV_FILE"
+            env_set "$ENV_FILE" "OUTLINE_CERT_SHA256" "$certSha"
             log_ok "OUTLINE_CERT_SHA256 saved"
         else
             log_warn "Could not extract OUTLINE_CERT_SHA256 from ${access_file}"
         fi
 
-        env_set "OUTLINE_API_PORT" "$api_port" "$ENV_FILE"
-        env_set "OUTLINE_KEYS_PORT" "$keys_port" "$ENV_FILE"
-        env_set "OUTLINE_SERVER_IP" "$outline_server_ip" "$ENV_FILE"
-        env_set "OUTLINE_DASHBOARD_URL" "$outline_dashboard" "$ENV_FILE"
+        env_set "$ENV_FILE" "OUTLINE_API_PORT" "$api_port"
+        env_set "$ENV_FILE" "OUTLINE_KEYS_PORT" "$keys_port"
+        env_set "$ENV_FILE" "OUTLINE_SERVER_IP" "$outline_server_ip"
+        env_set "$ENV_FILE" "OUTLINE_DASHBOARD_URL" "$outline_dashboard"
 
         log_ok "Outline variables exported to ${ENV_FILE}"
     else
@@ -295,15 +295,15 @@ install_wireguard_extract_only() {
         fi
     fi
 
-    [ -n "$WG_SERVER_WG_NIC" ] && env_set "WG_INTERFACE" "$WG_SERVER_WG_NIC" "$ENV_FILE"
-    [ -n "$WG_SERVER_WG_IPV4" ] && env_set "WG_SERVER_IPV4" "$WG_SERVER_WG_IPV4" "$ENV_FILE"
-    [ -n "$WG_SERVER_WG_IPV6" ] && env_set "WG_SERVER_IPV6" "$WG_SERVER_WG_IPV6" "$ENV_FILE"
-    [ -n "$WG_SERVER_PORT" ] && env_set "WG_SERVER_PORT" "$WG_SERVER_PORT" "$ENV_FILE"
-    [ -n "$WG_SERVER_PUB_KEY" ] && env_set "WG_SERVER_PUBKEY" "$WG_SERVER_PUB_KEY" "$ENV_FILE"
-    [ -n "$WG_SERVER_PRIV_KEY" ] && env_set "WG_SERVER_PRIVKEY" "$WG_SERVER_PRIV_KEY" "$ENV_FILE"
-    [ -n "$ALLOWED_IPS" ] && env_set "WG_ALLOWED_IPS" "$ALLOWED_IPS" "$ENV_FILE"
-    [ -n "$CLIENT_DNS_1" ] && env_set "WG_CLIENT_DNS_1" "$CLIENT_DNS_1" "$ENV_FILE"
-    [ -n "$CLIENT_DNS_2" ] && env_set "WG_CLIENT_DNS_2" "$CLIENT_DNS_2" "$ENV_FILE"
+    [ -n "$WG_SERVER_WG_NIC" ] && env_set "$ENV_FILE" "WG_INTERFACE" "$WG_SERVER_WG_NIC"
+    [ -n "$WG_SERVER_WG_IPV4" ] && env_set "$ENV_FILE" "WG_SERVER_IPV4" "$WG_SERVER_WG_IPV4"
+    [ -n "$WG_SERVER_WG_IPV6" ] && env_set "$ENV_FILE" "WG_SERVER_IPV6" "$WG_SERVER_WG_IPV6"
+    [ -n "$WG_SERVER_PORT" ] && env_set "$ENV_FILE" "WG_SERVER_PORT" "$WG_SERVER_PORT"
+    [ -n "$WG_SERVER_PUB_KEY" ] && env_set "$ENV_FILE" "WG_SERVER_PUBKEY" "$WG_SERVER_PUB_KEY"
+    [ -n "$WG_SERVER_PRIV_KEY" ] && env_set "$ENV_FILE" "WG_SERVER_PRIVKEY" "$WG_SERVER_PRIV_KEY"
+    [ -n "$ALLOWED_IPS" ] && env_set "$ENV_FILE" "WG_ALLOWED_IPS" "$ALLOWED_IPS"
+    [ -n "$CLIENT_DNS_1" ] && env_set "$ENV_FILE" "WG_CLIENT_DNS_1" "$CLIENT_DNS_1"
+    [ -n "$CLIENT_DNS_2" ] && env_set "$ENV_FILE" "WG_CLIENT_DNS_2" "$CLIENT_DNS_2"
 
     local server_ip
     server_ip=$(get_public_ip)
@@ -314,9 +314,9 @@ install_wireguard_extract_only() {
         server_ip=$(ip -4 addr show dev "$iface" 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1 | head -n1 || true)
     fi
     if [[ -n "$server_ip" ]]; then
-        env_set "SERVER_IP" "$server_ip" "$ENV_FILE"
+        env_set "$ENV_FILE" "SERVER_IP" "$server_ip"
         if [ -n "$WG_SERVER_PORT" ]; then
-            env_set "WG_ENDPOINT" "${server_ip}:${WG_SERVER_PORT}" "$ENV_FILE"
+            env_set "$ENV_FILE" "WG_ENDPOINT" "${server_ip}:${WG_SERVER_PORT}"
         fi
     else
         log_warn "Could not determine public IP during extraction."
@@ -339,16 +339,16 @@ extract_vpn_vars() {
         apiUrl=$(run_sudo grep -E "^apiUrl:" "$access_file" 2>/dev/null | sed 's/^apiUrl://' | tr -d '[:space:]' || true)
         certSha=$(run_sudo grep -E "^certSha256:" "$access_file" 2>/dev/null | sed 's/^certSha256://' | tr -d '[:space:]' || true)
 
-        [ -n "$apiUrl" ] && env_set "OUTLINE_API_URL" "$apiUrl" "$ENV_FILE"
-        [ -n "$certSha" ] && env_set "OUTLINE_CERT_SHA256" "$certSha" "$ENV_FILE"
+        [ -n "$apiUrl" ] && env_set "$ENV_FILE" "OUTLINE_API_URL" "$apiUrl"
+        [ -n "$certSha" ] && env_set "$ENV_FILE" "OUTLINE_CERT_SHA256" "$certSha"
 
         if run_sudo test -f /opt/outline/persisted-state/shadowbox_server_config.json; then
             local cfg="/opt/outline/persisted-state/shadowbox_server_config.json"
             local hostname portForNewAccessKeys
             hostname=$(run_sudo jq -r '.hostname' "$cfg" 2>/dev/null || true)
             portForNewAccessKeys=$(run_sudo jq -r '.portForNewAccessKeys' "$cfg" 2>/dev/null || true)
-            [ -n "$hostname" ] && env_set "OUTLINE_SERVER_IP" "$hostname" "$ENV_FILE"
-            [ -n "$portForNewAccessKeys" ] && env_set "OUTLINE_KEYS_PORT" "$portForNewAccessKeys" "$ENV_FILE"
+            [ -n "$hostname" ] && env_set "$ENV_FILE" "OUTLINE_SERVER_IP" "$hostname"
+            [ -n "$portForNewAccessKeys" ] && env_set "$ENV_FILE" "OUTLINE_KEYS_PORT" "$portForNewAccessKeys"
         fi
     else
         log_warn "Outline access file not found at ${access_file}"
