@@ -148,11 +148,8 @@ class OperationsHandler:
         user_id = update.effective_user.id
 
         try:
-            # Aquí iría la lógica para obtener el historial de transacciones
-            # Por ahora mostramos un mensaje placeholder
-
             text = OperationsMessages.Transactions.HISTORY.format(
-                user_id=user_id, count=0  # Placeholder
+                user_id=user_id, count=0
             )
 
             await update.message.reply_text(
@@ -168,6 +165,24 @@ class OperationsHandler:
                 reply_markup=OperationsKeyboards.operations_menu(),
                 parse_mode="Markdown",
             )
+
+    async def show_referral_menu(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """
+        Redirige al menu de referidos.
+        """
+        from application.services.common.container import get_container
+        from application.services.referral_service import ReferralService
+        from telegram_bot.features.referral.handlers_referral import ReferralHandler
+
+        query = update.callback_query
+        await query.answer()
+
+        container = get_container()
+        referral_service = container.resolve(ReferralService)
+        handler = ReferralHandler(referral_service)
+        await handler.show_referral_menu(update, context)
 
 
 def get_operations_handlers(vpn_service: VpnService):
@@ -210,4 +225,5 @@ def get_operations_callback_handlers(vpn_service: VpnService):
         CallbackQueryHandler(handler.back_to_main_menu, pattern="^main_menu$"),
         CallbackQueryHandler(handler.mi_balance, pattern="^balance$"),
         CallbackQueryHandler(handler.show_transactions, pattern="^transactions$"),
+        CallbackQueryHandler(handler.show_referral_menu, pattern="^referral_menu$"),
     ]
