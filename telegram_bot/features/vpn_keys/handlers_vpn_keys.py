@@ -317,10 +317,9 @@ def get_vpn_keys_callback_handlers(vpn_service: VpnService):
 
     Returns:
         list: Lista de CallbackQueryHandler
+
+    Note:
+        El callback 'create_key' ya está manejado por el ConversationHandler
+        en get_vpn_keys_handler(), por lo que no se duplica aquí.
     """
-    return [
-        CallbackQueryHandler(
-            lambda u, c: VpnKeysHandler(vpn_service).start_creation(u, c),
-            pattern="^create_key$",
-        ),
-    ]
+    return []
