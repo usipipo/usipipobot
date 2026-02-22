@@ -17,6 +17,7 @@ from application.services.admin_service import AdminService
 from application.services.data_package_service import DataPackageService
 from application.services.payment_service import PaymentService
 from application.services.referral_service import ReferralService
+from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
@@ -190,11 +191,20 @@ def _configure_application_services(container: punq.Container) -> None:
             transaction_repo=create_transaction_repo(),
         )
 
+    def create_user_profile_service() -> UserProfileService:
+        return UserProfileService(
+            transaction_repo=create_transaction_repo(),
+            data_package_service=container.resolve(DataPackageService),
+            referral_service=container.resolve(ReferralService),
+            vpn_service=container.resolve(VpnService),
+        )
+
     container.register(VpnService, factory=create_vpn_service)
     container.register(PaymentService, factory=create_payment_service)
     container.register(AdminService, factory=create_admin_service)
     container.register(DataPackageService, factory=create_data_package_service)
     container.register(ReferralService, factory=create_referral_service)
+    container.register(UserProfileService, factory=create_user_profile_service)
 
 
 def _configure_handlers(container: punq.Container) -> None:
