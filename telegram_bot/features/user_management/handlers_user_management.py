@@ -522,6 +522,6 @@ def get_user_callback_handlers(
         ),
         CallbackQueryHandler(
             handler.main_menu_callback,
-            pattern="^(show_keys|create_key|buy_data|show_usage|help|admin_panel|show_history)$",
+            pattern="^(show_keys|buy_data|show_usage|help|admin_panel|show_history)$",
         ),
     ]
