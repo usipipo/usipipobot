@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -Eeuo pipefail
 
 # =============================================================================
 # uSipipo install.sh - Manager / Installer for Outline & WireGuard (official)
@@ -49,6 +49,15 @@ LOG_DIR="$PROJECT_DIR/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/install_$(date +%Y%m%d_%H%M%S).log"
 
+# Temporary directory for safe operations
+TMPDIR=$(mktemp -d 2>/dev/null || echo "")
+if [[ -n "$TMPDIR" ]]; then
+    trap 'rm -rf -- "$TMPDIR" 2>/dev/null || true' EXIT
+fi
+
+# Error trap for debugging
+trap 'log_err "Error on line $LINENO in ${FUNCNAME[0]:-main}"' ERR
+
 # =============================================================================
 # Helpers: Logging & sudo wrapper
 # =============================================================================
@@ -73,6 +82,29 @@ confirm() {
 
 get_random_port() {
     shuf -i 20000-55000 -n 1
+}
+
+# =============================================================================
+# Dependency checking
+# =============================================================================
+check_dependencies() {
+    local -a missing_deps=()
+    local -a required=("curl" "ip" "sed" "grep" "awk" "systemctl")
+
+    for cmd in "${required[@]}"; do
+        if ! command -v "$cmd" &>/dev/null; then
+            missing_deps+=("$cmd")
+        fi
+    done
+
+    if [[ ${#missing_deps[@]} -gt 0 ]]; then
+        log_err "Missing required commands: ${missing_deps[*]}"
+        log_err "Please install missing dependencies and retry."
+        return 1
+    fi
+
+    log_ok "All required dependencies found."
+    return 0
 }
 
 # =============================================================================
@@ -133,7 +165,15 @@ ensure_env_exists() {
 
 # set or update a key in .env (keeps comments intact)
 env_set() {
-    local key="$1"; local value="$2"
+    local key="$1"
+    local value="$2"
+
+    # Validate arguments
+    if [[ -z "$key" ]]; then
+        log_err "env_set: key argument is required"
+        return 1
+    fi
+
     ensure_env_exists
     local esc_value
     esc_value=$(printf '%s\n' "$value" | sed -e 's/[\/&]/\\&/g')
@@ -296,6 +336,12 @@ install_outline() {
     keys_port=$(get_random_port)
     # ensure different
     while [ "$keys_port" = "$api_port" ]; do keys_port=$(get_random_port); done
+
+    # Validate ports are in valid range
+    if [[ "$api_port" -lt 1024 || "$api_port" -gt 65535 || "$keys_port" -lt 1024 || "$keys_port" -gt 65535 ]]; then
+        log_err "Generated ports out of valid range. Aborting."
+        return 1
+    fi
 
     echo ""
     echo "Outline installation will run with:"
@@ -871,6 +917,7 @@ EOF
 # Main
 # =============================================================================
 main() {
+    check_dependencies || exit 1
     bootstrap
     show_menu
 }
