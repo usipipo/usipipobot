@@ -36,8 +36,6 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             status=UserStatus(model.status) if model.status else UserStatus.ACTIVE,
             role=UserRole(model.role) if model.role else UserRole.USER,
             max_keys=model.max_keys or 2,
-            balance_stars=model.balance_stars or 0,
-            total_deposited=model.total_deposited or 0,
             referral_code=model.referral_code,
             referred_by=model.referred_by,
             referral_credits=model.referral_credits or 0,
@@ -61,8 +59,6 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 else entity.role
             ),
             max_keys=entity.max_keys,
-            balance_stars=entity.balance_stars,
-            total_deposited=entity.total_deposited,
             referral_code=entity.referral_code,
             referred_by=entity.referred_by,
             referral_credits=entity.referral_credits,
@@ -102,8 +98,6 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                     else user.role
                 )
                 existing.max_keys = user.max_keys
-                existing.balance_stars = user.balance_stars
-                existing.total_deposited = user.total_deposited
                 existing.referral_code = user.referral_code
                 existing.referred_by = user.referred_by
                 existing.referral_credits = user.referral_credits
@@ -166,24 +160,6 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
         except Exception as e:
             logger.error(f"Error al buscar por referral_code {referral_code}: {e}")
             return None
-
-    async def update_balance(
-        self, telegram_id: int, new_balance: int, current_user_id: int
-    ) -> bool:
-        await self._set_current_user(current_user_id)
-        try:
-            query = (
-                update(UserModel)
-                .where(UserModel.telegram_id == telegram_id)
-                .values(balance_stars=new_balance)
-            )
-            await self.session.execute(query)
-            await self.session.commit()
-            return True
-        except Exception as e:
-            await self.session.rollback()
-            logger.error(f"Error al actualizar balance: {e}")
-            return False
 
     async def get_referrals(self, referrer_id: int, current_user_id: int) -> List[dict]:
         await self._set_current_user(current_user_id)

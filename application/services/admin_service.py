@@ -54,7 +54,6 @@ class AdminService(IAdminService):
                 if getattr(u, "status", "").lower() == "active"
                 or getattr(u, "is_active", False)
             )
-            total_deposited_sum = sum(getattr(u, "total_deposited", 0) or 0 for u in users)
 
             # 3. Calcular estadísticas de llaves
             total_keys = len(all_keys)
@@ -108,7 +107,7 @@ class AdminService(IAdminService):
             return {
                 "total_users": total_users,
                 "active_users": active_users,
-                "total_deposited": total_deposited_sum,
+                "total_deposited": 0,  # Eliminado del modelo - usar referral_credits
                 "total_keys": total_keys,
                 "active_keys": active_keys,
                 "wireguard_keys": wireguard_keys,
@@ -150,7 +149,7 @@ class AdminService(IAdminService):
                     total_keys=len(user_keys),
                     active_keys=len(active_keys),
                     stars_balance=balance.stars if balance else 0,
-                    total_deposited=getattr(user, "total_deposited", 0) or 0,
+                    total_deposited=getattr(user, "referral_credits", 0) or 0,
                     referral_credits=getattr(user, "referral_credits", 0) or 0,
                     registration_date=user.created_at,
                     last_activity=getattr(user, "last_activity", None),
@@ -436,8 +435,8 @@ class AdminService(IAdminService):
                 "role": user.role.value,
                 "total_keys": len(user_keys),
                 "active_keys": len(active_keys),
-                "balance_stars": balance.stars if balance else 0,
-                "total_deposited": user.total_deposited,
+                "balance_stars": 0,  # Eliminado del modelo
+                "total_deposited": getattr(user, "referral_credits", 0) or 0,
                 "referral_credits": user.referral_credits,
                 "created_at": user.created_at,
             }
@@ -617,7 +616,7 @@ class AdminService(IAdminService):
                         "role": user.role.value,
                         "total_keys": len(user_keys),
                         "active_keys": len(active_keys),
-                        "balance_stars": balance.stars if balance else 0,
+                        "balance_stars": getattr(user, "referral_credits", 0) or 0,
                         "created_at": user.created_at.isoformat(),
                     }
                 )

@@ -284,10 +284,10 @@ class UserManagementHandler:
             keys_used = len([k for k in keys if getattr(k, "is_active", True)])
             keys_total = user_entity.max_keys
             data_used = f"{status_data.get('total_used_gb', 0):.2f} GB"
-            balance = user_entity.balance_stars
+            credits = user_entity.referral_credits
 
-            # Determinar plan basado en depósitos
-            plan = "Premium" if user_entity.total_deposited > 0 else "Gratis"
+            # Determinar plan basado en créditos
+            plan = "Premium" if credits > 0 else "Gratis"
 
             # Valores por defecto para nivel y logros
             level = 1
@@ -307,7 +307,7 @@ class UserManagementHandler:
                     keys_used=keys_used,
                     keys_total=keys_total,
                     data_used=data_used,
-                    balance=balance,
+                    credits=credits,
                     level=level,
                     achievements=achievements,
                 )

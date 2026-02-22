@@ -46,9 +46,6 @@ class UserModel(Base):
     role: Mapped[Optional[str]] = mapped_column(String, server_default="user")
     max_keys: Mapped[int] = mapped_column(Integer, server_default="2")
     
-    balance_stars: Mapped[int] = mapped_column(Integer, server_default="0")
-    total_deposited: Mapped[int] = mapped_column(Integer, server_default="0")
-    
     referral_code: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     referred_by: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     referral_credits: Mapped[int] = mapped_column(Integer, server_default="0")

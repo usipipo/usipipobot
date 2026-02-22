@@ -65,10 +65,8 @@ class OperationsHandler:
 
             text = OperationsMessages.Balance.DISPLAY.format(
                 name=user.full_name or user.username or f"Usuario {user.telegram_id}",
-                balance=user.balance_stars,
-                total_deposited=user.total_deposited,
+                credits=getattr(user, "referral_credits", 0) or 0,
                 total_spent=total_spent,
-                referral_earnings=user.total_referral_earnings,
             )
 
             # Manejar tanto mensaje como callback

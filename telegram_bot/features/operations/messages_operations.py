@@ -33,13 +33,11 @@ class OperationsMessages:
         """Mensajes de balance."""
 
         DISPLAY = (
-            "💰 **Tu Balance**\n\n"
+            "💰 **Tu Cuenta**\n\n"
             "👤 **Usuario:** {name}\n"
-            "⭐ **Balance Actual:** {balance} estrellas\n"
-            "💳 **Total Depositado:** ${total_deposited:.2f}\n"
-            "💸 **Total Gastado:** ${total_spent:.2f}\n"
-            "🎁 **Ganancias Referidos:** {referral_earnings} estrellas\n\n"
-            "💡 Usa tus estrellas para desbloquear contenido premium."
+            "🎁 **Créditos de Referido:** {credits} créditos\n"
+            "📊 **Total Gastado:** ${total_spent:.2f}\n\n"
+            "💡 Usa tus créditos para obtener datos gratis o slots extra."
         )
 
         NO_BALANCE = (

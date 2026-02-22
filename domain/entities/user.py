@@ -35,8 +35,6 @@ class User:
     max_keys: int = 2
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
-    balance_stars: int = 0
-    total_deposited: int = 0
     referral_code: Optional[str] = None
     referred_by: Optional[int] = None
     referral_credits: int = 0
@@ -70,13 +68,13 @@ class User:
 
     def can_delete_keys(self) -> bool:
         """
-        Lógica de negocio: Solo usuarios que han recargado pueden eliminar claves.
+        Lógica de negocio: Usuarios con créditos pueden eliminar claves.
         Los administradores pueden eliminar sin restricciones.
         """
         if self.role == UserRole.ADMIN:
             return True
 
-        return self.total_deposited > 0
+        return self.referral_credits > 0
 
     @property
     def free_data_remaining_bytes(self) -> int:

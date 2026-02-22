@@ -168,12 +168,10 @@ class PaymentsMessages:
         """Mensajes de balance."""
 
         STATUS = (
-            "💰 **Estado de Balance**\n\n"
-            "💳 **Balance Actual:** ${balance:.2f} estrellas\n"
-            "💸 **Total Depositado:** ${total_deposited:.2f}\n"
-            "💸 **Total Gastado:** ${total_spent:.2f}\n"
-            "💎 **Disponible:** ${available:.2f}\n\n"
-            "💡 *Tu balance está listo para usar*"
+            "💰 **Estado de tu Cuenta**\n\n"
+            "🎁 **Créditos de Referido:** {credits}\n"
+            "💸 **Total Gastado:** ${total_spent:.2f}\n\n"
+            "💡 *Usa tus créditos para obtener datos gratis o slots extra*"
         )
 
         UPDATED = (

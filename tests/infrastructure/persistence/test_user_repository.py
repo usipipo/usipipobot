@@ -166,15 +166,6 @@ class TestUserRepository:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_update_balance(self, mock_user_repo):
-        mock_user_repo.update_balance.return_value = True
-
-        result = await mock_user_repo.update_balance(123456789, 200, current_user_id=123456789)
-
-        assert result is True
-        mock_user_repo.update_balance.assert_called_once()
-
-    @pytest.mark.asyncio
     async def test_get_referrals_returns_list(self, mock_user_repo, sample_user):
         mock_user_repo.get_referrals.return_value = [
             {"telegram_id": 111, "username": "ref1"},
