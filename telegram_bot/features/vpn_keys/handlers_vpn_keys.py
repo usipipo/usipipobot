@@ -25,6 +25,7 @@ from config import settings
 from utils.logger import logger
 from utils.qr_generator import QrGenerator
 from utils.spinner import vpn_spinner
+from utils.telegram_utils import escape_markdown
 
 from .keyboards_vpn_keys import VpnKeysKeyboards
 from .messages_vpn_keys import VpnKeysMessages
@@ -146,35 +147,12 @@ class VpnKeysHandler:
 
             # 4. Entrega diferenciada
             if key_type == "outline":
-                escaped_data = (
-                    new_key.key_data.replace("_", "\\_")
-                    .replace("*", "\\*")
-                    .replace("[", "\\[")
-                    .replace("]", "\\]")
-                    .replace("(", "\\(")
-                    .replace(")", "\\)")
-                    .replace("~", "\\~")
-                    .replace("`", "\\`")
-                    .replace(">", "\\>")
-                    .replace("#", "\\#")
-                    .replace("+", "\\+")
-                    .replace("-", "\\-")
-                    .replace("=", "\\=")
-                    .replace("|", "\\|")
-                    .replace("{", "\\{")
-                    .replace("}", "\\}")
-                    .replace(".", "\\.")
-                    .replace("!", "\\!")
-                )
-
-                caption = (
+                escaped_data = escape_markdown(new_key.key_data)
+                
+                caption = escape_markdown(
                     VpnKeysMessages.Success.KEY_CREATED_WITH_DATA.format(
                         type="OUTLINE", name=key_name, data_limit=new_key.data_limit_gb
                     )
-                    .replace("*", "\\*")
-                    .replace("_", "\\_")
-                    .replace("[", "\\[")
-                    .replace("]", "\\]")
                 )
                 caption += f"\n\nCopia el siguiente código en tu aplicación Outline:\n```\n{escaped_data}\n```"
 
