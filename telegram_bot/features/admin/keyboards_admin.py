@@ -28,7 +28,7 @@ class AdminKeyboards:
                 InlineKeyboardButton(
                     "📊 Estado Servidor", callback_data="admin_server_status"
                 ),
-                InlineKeyboardButton("📋 Ver Logs", callback_data="admin_logs"),
+                InlineKeyboardButton("🎫 Tickets", callback_data="admin_tickets"),
             ],
             [
                 InlineKeyboardButton("⚙️ Configuración", callback_data="settings"),
