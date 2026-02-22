@@ -55,15 +55,15 @@ def main():
         """Callback ejecutado después de inicializar la aplicación."""
         await startup()
 
-    async def post_shutdown_callback(app):
-        """Callback ejecutado después de cerrar la aplicación."""
+    async def post_stop_callback(app):
+        """Callback ejecutado después de detener la aplicación."""
         await shutdown()
 
     application = (
         ApplicationBuilder()
         .token(settings.TELEGRAM_TOKEN)
         .post_init(post_init_callback)
-        .post_shutdown(post_shutdown_callback)
+        .post_stop(post_stop_callback)
         .build()
     )
 
