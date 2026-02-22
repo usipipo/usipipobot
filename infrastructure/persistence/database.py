@@ -143,13 +143,11 @@ def get_engine() -> AsyncEngine:
 
         _engine = create_async_engine(
             database_url,
-            echo=False,  # Desactivar echo ya que usamos nuestro propio logging
+            echo=False,
             pool_size=settings.DB_POOL_SIZE,
             max_overflow=10,
             pool_timeout=settings.DB_TIMEOUT,
-            pool_pre_ping=True,  # Verificar conexiones antes de usar
-            # Para PostgreSQL en producción, considera NullPool si hay problemas
-            # poolclass=NullPool,
+            pool_pre_ping=True,
         )
 
         logger.info("🔌 Engine SQLAlchemy async creado exitosamente")
@@ -264,7 +262,13 @@ async def close_database() -> None:
     global _engine, _session_factory
 
     if _engine is not None:
-        await _engine.dispose()
-        _engine = None
-        _session_factory = None
-        logger.info("🔌 Conexión a base de datos cerrada")
+        try:
+            await _engine.dispose()
+            import asyncio
+            await asyncio.sleep(0.1)
+        except Exception as e:
+            logger.warning(f"Error durante dispose del engine: {e}")
+        finally:
+            _engine = None
+            _session_factory = None
+            logger.info("🔌 Conexión a base de datos cerrada")
