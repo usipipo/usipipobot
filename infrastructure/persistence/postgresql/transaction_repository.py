@@ -11,7 +11,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.interfaces.itransaction_repository import ITransactionRepository
+from domain.interfaces.itransaction_repository import ITransactionRepository, Balance
 from utils.logger import logger
 
 from .base_repository import BasePostgresRepository
@@ -85,6 +85,10 @@ class PostgresTransactionRepository(BasePostgresRepository, ITransactionReposito
         except Exception as e:
             logger.error(f"Error al obtener transacciones del usuario {user_id}: {e}")
             return []
+
+    async def get_balance(self, user_id: int) -> Balance:
+        """Get the balance for a user (returns 0 stars balance)."""
+        return Balance(stars=0)
 
     async def get_transactions_by_type(
         self, transaction_type: str, limit: int = 100
