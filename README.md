@@ -10,9 +10,11 @@ Bot de Telegram para gestión de VPN (WireGuard + Outline) con sistema de pagos 
 ## Características
 
 - Creación de claves VPN (WireGuard y Outline)
-- Sistema de planes (Gratis y VIP)
+- Sistema de planes con datos gratuitos (10GB)
 - Pagos con Telegram Stars
-- Programa de referidos
+- Paquetes de datos (10/25/50/100 GB)
+- Compra de slots de claves adicionales
+- Sistema de referidos con créditos canjeables
 - Panel de administración
 
 ## Tech Stack
@@ -64,9 +66,10 @@ SECRET_KEY=your_secret_key
 - `/start` - Iniciar bot
 - `/help` - Ayuda
 - `/keys` - Mis claves VPN
-- `/buy` - Comprar GB
+- `/buy` - Comprar GB o slots
 - `/data` - Ver consumo de datos
 - `/newkey` - Crear nueva clave
+- `/referir` - Sistema de referidos y créditos
 - `/admin` - Panel de administración (admins)
 
 ## Licencia

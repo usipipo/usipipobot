@@ -30,15 +30,17 @@ Simplificar la creación y gestión de conexiones VPN para usuarios no técnicos
 |--------------|-------------|-----------|
 | Registro automático | Crear cuenta al iniciar `/start` | Alta |
 | Perfil de usuario | Ver información y estadísticas | Alta |
-| Sistema de referidos | Invitar amigos y ganar recompensas | Media |
+| Sistema de referidos | Invitar amigos y ganar créditos | Alta |
+| Canje de créditos | Cambiar créditos por GB o slots | Alta |
 | Soporte al usuario | Chat directo con administradores | Media |
 
 ### 2.3 Sistema de Pagos
 | Funcionalidad | Descripción | Prioridad |
 |--------------|-------------|-----------|
 | Telegram Stars | Pagar con la moneda nativa de Telegram | Alta |
-| Planes Gratis | Cuota mensual de GB gratuitos | Alta |
-| Planes VIP | Mayor velocidad y límites | Alta |
+| Planes Gratis | Cuota mensual de 10GB gratuitos | Alta |
+| Paquetes de Datos | 10/25/50/100 GB con Stars | Alta |
+| Slots de Claves | Comprar claves adicionales (+1/+3/+5) | Alta |
 | Historial de transacciones | Ver movimientos de estrellas | Media |
 
 ### 2.4 Gamificación
@@ -86,8 +88,9 @@ Menú Principal → "Soporte" → Enviar mensaje
 
 ### 3.5 Flujo de Referidos
 ```
-Menú Principal → "Referidos" → Copiar enlace 
-→ Amigo se registra → Recibir recompensa
+Menú Principal → /referir → Ver código y link → Compartir
+→ Amigo se registra → Recibir 100 créditos
+→ Canjear por GB (100 créditos) o +1 slot (500 créditos)
 ```
 
 ---
@@ -147,8 +150,9 @@ Menú Principal → "Referidos" → Copiar enlace
 
 ### Fase 3: Sistema de Pagos ✅
 - [x] Integración Telegram Stars
-- [x] Planes Gratis y VIP
-- [x] Sistema de referidos
+- [x] Paquetes de Datos (10/25/50/100 GB)
+- [x] Sistema de créditos por referidos
+- [x] Compra de slots de claves
 
 ### Fase 4: Gamificación
 - [ ] Juegos Play & Earn
@@ -161,4 +165,4 @@ Menú Principal → "Referidos" → Copiar enlace
 
 ---
 
-*Documento versión 1.0 - Fecha: 2026-02-18*
+*Documento versión 2.0 - Fecha: 2026-02-22*
