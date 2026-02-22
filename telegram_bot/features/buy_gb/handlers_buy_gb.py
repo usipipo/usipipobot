@@ -2,7 +2,7 @@
 Handlers para compra de GB con Telegram Stars.
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 1.1.0
 """
 
 from datetime import datetime, timezone
@@ -19,6 +19,7 @@ from telegram.ext import (
 
 from application.services.data_package_service import (
     PACKAGE_OPTIONS,
+    SLOT_OPTIONS,
     DataPackageService,
 )
 from domain.entities.data_package import PackageType
@@ -127,6 +128,75 @@ class BuyGbHandler:
                 parse_mode="Markdown",
             )
 
+    async def show_slots_menu(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        query = update.callback_query
+        await query.answer()
+
+        try:
+            slots_list = BuyGbMessages.Slots.format_slots_list()
+            message = BuyGbMessages.Slots.MENU.format(slots_list=slots_list)
+            keyboard = BuyGbKeyboards.slots_menu()
+
+            await query.edit_message_text(
+                text=message, reply_markup=keyboard, parse_mode="Markdown"
+            )
+        except Exception as e:
+            logger.error(f"Error en show_slots_menu: {e}")
+            await query.edit_message_text(
+                text=BuyGbMessages.Error.SYSTEM_ERROR,
+                reply_markup=BuyGbKeyboards.back_to_packages(),
+                parse_mode="Markdown",
+            )
+
+    async def buy_slots(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+
+        user_id = update.effective_user.id
+        slots_str = query.data.split("_")[-1]
+        slots = int(slots_str)
+
+        try:
+            slot_option = None
+            for slot in SLOT_OPTIONS:
+                if slot.slots == slots:
+                    slot_option = slot
+                    break
+
+            if not slot_option:
+                await query.edit_message_text(
+                    text=BuyGbMessages.Error.SYSTEM_ERROR,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            payload = f"key_slots_{slots}_{user_id}"
+
+            await context.bot.send_invoice(
+                chat_id=update.effective_chat.id,
+                title=BuyGbMessages.Slots.INVOICE_TITLE.format(
+                    slots_name=slot_option.name
+                ),
+                description=BuyGbMessages.Slots.INVOICE_DESCRIPTION.format(slots=slots),
+                payload=payload,
+                provider_token="",
+                currency="XTR",
+                prices=[LabeledPrice(f"+{slots} Claves", slot_option.stars)],
+            )
+
+            logger.info(f"🔑 Invoice enviado: {slot_option.name} para usuario {user_id}")
+
+        except Exception as e:
+            logger.error(f"Error en buy_slots: {e}")
+            await query.edit_message_text(
+                text=BuyGbMessages.Error.SYSTEM_ERROR,
+                reply_markup=BuyGbKeyboards.back_to_packages(),
+                parse_mode="Markdown",
+            )
+
     async def pre_checkout_callback(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
@@ -135,6 +205,30 @@ class BuyGbHandler:
         try:
             payload = query.invoice_payload
             parts = payload.split("_")
+
+            if len(parts) >= 3 and parts[0] == "key" and parts[1] == "slots":
+                slots = int(parts[2])
+                user_id = int(parts[3])
+
+                slot_option = None
+                for slot in SLOT_OPTIONS:
+                    if slot.slots == slots:
+                        slot_option = slot
+                        break
+
+                if not slot_option:
+                    await query.answer(ok=False, error_message="Slots no encontrados")
+                    return
+
+                if query.total_amount != slot_option.stars:
+                    await query.answer(ok=False, error_message="Monto incorrecto")
+                    return
+
+                await query.answer(ok=True)
+                logger.info(
+                    f"🔑 Pre-checkout exitoso: +{slots} slots para usuario {user_id}"
+                )
+                return
 
             if len(parts) != 4 or parts[0] != "data" or parts[1] != "package":
                 await query.answer(ok=False, error_message="Payload invalido")
@@ -175,6 +269,34 @@ class BuyGbHandler:
         try:
             payload = payment.invoice_payload
             parts = payload.split("_")
+
+            if len(parts) >= 3 and parts[0] == "key" and parts[1] == "slots":
+                slots = int(parts[2])
+                telegram_payment_id = payment.telegram_payment_charge_id
+
+                result = await self.data_package_service.purchase_key_slots(
+                    user_id=user_id,
+                    slots=slots,
+                    telegram_payment_id=telegram_payment_id,
+                    current_user_id=user_id,
+                )
+
+                success_message = BuyGbMessages.Slots.CONFIRMATION.format(
+                    slots_added=result["slots_added"],
+                    new_max_keys=result["new_max_keys"],
+                    stars=result["stars_paid"],
+                )
+
+                await update.message.reply_text(
+                    text=success_message,
+                    reply_markup=BuyGbKeyboards.slots_success(),
+                    parse_mode="Markdown",
+                )
+
+                logger.info(
+                    f"🔑 Slots comprados exitosamente: +{slots} para usuario {user_id}"
+                )
+                return
 
             if len(parts) != 4:
                 logger.error(f"Payload invalido: {payload}")
@@ -311,6 +433,8 @@ def get_buy_gb_callback_handlers(data_package_service: DataPackageService):
         CallbackQueryHandler(handler.show_packages, pattern="^buy_gb_menu$"),
         CallbackQueryHandler(handler.buy_package, pattern="^buy_package_"),
         CallbackQueryHandler(handler.view_data_summary, pattern="^view_data_summary$"),
+        CallbackQueryHandler(handler.show_slots_menu, pattern="^buy_slots_menu$"),
+        CallbackQueryHandler(handler.buy_slots, pattern="^buy_slots_"),
     ]
 
 
