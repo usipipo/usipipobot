@@ -57,7 +57,7 @@ class UserManagementHandler:
 
         try:
             # Verificar si el usuario ya existe
-            existing_user = await self.vpn_service.user_repo.get_by_id(user.id)
+            existing_user = await self.vpn_service.user_repo.get_by_id(user.id, user.id)
 
             if not existing_user:
                 # Construir full_name
