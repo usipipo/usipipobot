@@ -207,6 +207,30 @@ class Settings(BaseSettings):
         description="Porcentaje de comisión por referidos (0-100)",
     )
 
+    REFERRAL_CREDITS_PER_REFERRAL: int = Field(
+        default=100,
+        ge=0,
+        description="Créditos otorgados por cada referido exitoso",
+    )
+
+    REFERRAL_BONUS_NEW_USER: int = Field(
+        default=50,
+        ge=0,
+        description="Créditos de bienvenida para nuevo usuario referido",
+    )
+
+    REFERRAL_CREDITS_PER_GB: int = Field(
+        default=100,
+        ge=1,
+        description="Créditos necesarios para canjear 1 GB de datos",
+    )
+
+    REFERRAL_CREDITS_PER_SLOT: int = Field(
+        default=500,
+        ge=1,
+        description="Créditos necesarios para canjear +1 slot de clave",
+    )
+
     KEY_CLEANUP_DAYS: int = Field(
         default=90, ge=30, description="Días de inactividad para limpiar una clave"
     )

@@ -227,3 +227,49 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             await self.session.rollback()
             logger.error(f"Error al actualizar uso de datos gratuitos: {e}")
             return False
+
+    async def update_referral_credits(
+        self, telegram_id: int, credits_delta: int, current_user_id: int
+    ) -> bool:
+        """Actualiza los créditos de referido de un usuario."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = (
+                update(UserModel)
+                .where(UserModel.telegram_id == telegram_id)
+                .values(
+                    referral_credits=UserModel.referral_credits + credits_delta
+                )
+            )
+            await self.session.execute(query)
+            await self.session.commit()
+            logger.debug(
+                f"Créditos actualizados para usuario {telegram_id}: {credits_delta:+d}"
+            )
+            return True
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error al actualizar créditos de referido: {e}")
+            return False
+
+    async def increment_max_keys(
+        self, telegram_id: int, slots: int, current_user_id: int
+    ) -> bool:
+        """Incrementa el límite de claves de un usuario."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = (
+                update(UserModel)
+                .where(UserModel.telegram_id == telegram_id)
+                .values(max_keys=UserModel.max_keys + slots)
+            )
+            await self.session.execute(query)
+            await self.session.commit()
+            logger.debug(
+                f"Límite de claves incrementado para usuario {telegram_id}: +{slots}"
+            )
+            return True
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error al incrementar límite de claves: {e}")
+            return False
