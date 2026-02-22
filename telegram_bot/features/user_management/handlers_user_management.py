@@ -17,6 +17,7 @@ from telegram.ext import (
 )
 
 from application.services.admin_service import AdminService
+from application.services.user_profile_service import UserProfileService
 
 # Local imports
 from application.services.vpn_service import VpnService
@@ -34,14 +35,20 @@ from .messages_user_management import UserManagementMessages
 class UserManagementHandler:
     """Handler para gestión de usuarios."""
 
-    def __init__(self, vpn_service: VpnService):
+    def __init__(
+        self,
+        vpn_service: VpnService,
+        user_profile_service: Optional[UserProfileService] = None,
+    ):
         """
         Inicializa el handler de gestión de usuarios.
 
         Args:
             vpn_service: Servicio de VPN
+            user_profile_service: Servicio de perfil de usuario (opcional)
         """
         self.vpn_service = vpn_service
+        self.user_profile_service = user_profile_service
         logger.info("👤 UserManagementHandler inicializado")
 
     @registration_spinner
@@ -192,6 +199,9 @@ class UserManagementHandler:
             handler = AdminHandler(admin_service)
             await handler.admin_menu(update, _context)
 
+        elif callback_data == "show_history":
+            await self.history_handler(update, _context)
+
     async def status_handler(
         self,
         update: Update,
@@ -285,74 +295,93 @@ class UserManagementHandler:
         Muestra información detallada del usuario.
         """
         telegram_id = update.effective_user.id
-        user_name = update.effective_user.username or update.effective_user.first_name
-        full_name = update.effective_user.first_name or ""
-        if update.effective_user.last_name:
-            full_name = f"{full_name} {update.effective_user.last_name}".strip()
 
         try:
-            # Obtener datos completos del usuario
-            status_data = await self.vpn_service.get_user_status(telegram_id)
-            user_entity = status_data.get("user")
-
-            if not user_entity:
-                await update.message.reply_text(
-                    text=UserManagementMessages.Error.INFO_FAILED,
-                    reply_markup=UserManagementKeyboards.main_menu(),
+            if self.user_profile_service:
+                profile = await self.user_profile_service.get_user_profile_summary(
+                    telegram_id, telegram_id
                 )
-                return
 
-            # Formatear fecha de unión
-            join_date = "N/A"
-            if hasattr(user_entity, "created_at") and user_entity.created_at:
-                join_date = user_entity.created_at.strftime("%Y-%m-%d")
+                if not profile:
+                    message = update.message or update.callback_query.message
+                    await message.reply_text(
+                        text=UserManagementMessages.Error.INFO_FAILED,
+                        reply_markup=UserManagementKeyboards.main_menu(),
+                    )
+                    return
 
-            # Determinar estado
-            status_text = "Inactivo ⚠️"
-            if (
-                getattr(user_entity, "is_active", False)
-                or getattr(user_entity, "status", None) == "active"
-            ):
-                status_text = "Activo ✅"
+                join_date = profile.created_at.strftime("%Y-%m-%d")
+                status_text = "Activo ✅" if profile.status == "active" else "Inactivo ⚠️"
 
-            # Obtener información adicional del usuario y claves
-            keys = status_data.get("keys", [])
-            keys_used = len([k for k in keys if getattr(k, "is_active", True)])
-            keys_total = user_entity.max_keys
-            data_used = f"{status_data.get('total_used_gb', 0):.2f} GB"
-            credits = user_entity.referral_credits
-
-            # Determinar plan basado en créditos
-            plan = "Premium" if credits > 0 else "Gratis"
-
-            # Valores por defecto para nivel y logros
-            level = 1
-            achievements = 0
-
-            # Construir mensaje de información
-            text = (
-                UserManagementMessages.Info.HEADER
-                + "\n\n"
-                + UserManagementMessages.Info.USER_INFO.format(
-                    name=full_name,
-                    user_id=telegram_id,
-                    username=update.effective_user.username or "N/A",
-                    join_date=join_date,
-                    status=status_text,
-                    plan=plan,
-                    keys_used=keys_used,
-                    keys_total=keys_total,
-                    data_used=data_used,
-                    credits=credits,
-                    level=level,
-                    achievements=achievements,
+                text = (
+                    UserManagementMessages.Info.HEADER
+                    + "\n\n"
+                    + UserManagementMessages.Info.USER_INFO.format(
+                        name=profile.full_name or "N/A",
+                        user_id=profile.user_id,
+                        username=profile.username or "N/A",
+                        join_date=join_date,
+                        status=status_text,
+                        data_used=f"{profile.total_used_gb:.2f} GB",
+                        free_data_remaining=f"{profile.free_data_remaining_gb:.2f} GB",
+                        active_packages=profile.active_packages,
+                        keys_used=profile.keys_used,
+                        keys_total=profile.max_keys,
+                        referral_code=profile.referral_code or "N/A",
+                        total_referrals=profile.total_referrals,
+                        credits=profile.referral_credits,
+                    )
                 )
-            )
+            else:
+                status_data = await self.vpn_service.get_user_status(telegram_id)
+                user_entity = status_data.get("user")
 
-            # Determinar si es admin para el menú
+                if not user_entity:
+                    message = update.message or update.callback_query.message
+                    await message.reply_text(
+                        text=UserManagementMessages.Error.INFO_FAILED,
+                        reply_markup=UserManagementKeyboards.main_menu(),
+                    )
+                    return
+
+                join_date = "N/A"
+                if hasattr(user_entity, "created_at") and user_entity.created_at:
+                    join_date = user_entity.created_at.strftime("%Y-%m-%d")
+
+                status_text = "Inactivo ⚠️"
+                if getattr(user_entity, "is_active", False) or getattr(
+                    user_entity, "status", None
+                ) == "active":
+                    status_text = "Activo ✅"
+
+                keys = status_data.get("keys", [])
+                keys_used = len([k for k in keys if getattr(k, "is_active", True)])
+                data_used = f"{status_data.get('total_used_gb', 0):.2f} GB"
+
+                text = (
+                    UserManagementMessages.Info.HEADER
+                    + "\n\n"
+                    + UserManagementMessages.Info.USER_INFO.format(
+                        name=user_entity.full_name or "N/A",
+                        user_id=telegram_id,
+                        username=user_entity.username or "N/A",
+                        join_date=join_date,
+                        status=status_text,
+                        data_used=data_used,
+                        free_data_remaining="N/A",
+                        active_packages=0,
+                        keys_used=keys_used,
+                        keys_total=user_entity.max_keys,
+                        referral_code="N/A",
+                        total_referrals=0,
+                        credits=user_entity.referral_credits or 0,
+                    )
+                )
+
             is_admin_menu = telegram_id == int(settings.ADMIN_ID)
+            message = update.message or update.callback_query.message
 
-            await update.message.reply_text(
+            await message.reply_text(
                 text=text,
                 reply_markup=UserManagementKeyboards.main_menu(is_admin=is_admin_menu),
                 parse_mode="Markdown",
@@ -360,8 +389,75 @@ class UserManagementHandler:
 
         except (AttributeError, ValueError, KeyError) as e:
             logger.error(f"❌ Error en info_handler para usuario {telegram_id}: {e}")
-            await update.message.reply_text(
+            message = update.message or update.callback_query.message
+            await message.reply_text(
                 text=UserManagementMessages.Error.INFO_FAILED,
+                reply_markup=UserManagementKeyboards.main_menu(),
+            )
+
+    async def history_handler(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
+        """
+        Muestra el historial de transacciones del usuario.
+        """
+        telegram_id = update.effective_user.id
+
+        try:
+            if not self.user_profile_service:
+                message = update.message or update.callback_query.message
+                await message.reply_text(
+                    text="❌ Servicio de historial no disponible.",
+                    reply_markup=UserManagementKeyboards.main_menu(),
+                )
+                return
+
+            transactions = await self.user_profile_service.get_user_transactions(
+                telegram_id, limit=5
+            )
+
+            message = update.message or update.callback_query.message
+
+            if not transactions:
+                await message.reply_text(
+                    text=UserManagementMessages.History.NO_TRANSACTIONS,
+                    reply_markup=UserManagementKeyboards.main_menu(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            text = UserManagementMessages.History.HEADER
+            for i, tx in enumerate(transactions, 1):
+                date_str = tx.get("created_at", "N/A")
+                if hasattr(date_str, "strftime"):
+                    date_str = date_str.strftime("%Y-%m-%d")
+                description = tx.get("description", tx.get("type", "Transacción"))
+                amount = tx.get("amount", 0)
+                status = tx.get("status", "completado")
+
+                text += UserManagementMessages.History.TRANSACTION_ITEM.format(
+                    number=i,
+                    date=date_str,
+                    description=description,
+                    amount=f"{amount} ⭐" if amount else "N/A",
+                    status=status,
+                )
+                text += "\n"
+
+            text += UserManagementMessages.History.FOOTER
+
+            is_admin_menu = telegram_id == int(settings.ADMIN_ID)
+            await message.reply_text(
+                text=text,
+                reply_markup=UserManagementKeyboards.main_menu(is_admin=is_admin_menu),
+                parse_mode="Markdown",
+            )
+
+        except (AttributeError, ValueError, KeyError) as e:
+            logger.error(
+                f"❌ Error en history_handler para usuario {telegram_id}: {e}"
+            )
+            message = update.message or update.callback_query.message
+            await message.reply_text(
+                text="❌ Error al obtener historial.",
                 reply_markup=UserManagementKeyboards.main_menu(),
             )
 
@@ -379,37 +475,46 @@ class UserManagementHandler:
         )
 
 
-def get_user_management_handlers(vpn_service: VpnService):
+def get_user_management_handlers(
+    vpn_service: VpnService,
+    user_profile_service: Optional[UserProfileService] = None,
+):
     """
     Retorna los handlers de gestión de usuarios.
 
     Args:
         vpn_service: Servicio de VPN
+        user_profile_service: Servicio de perfil de usuario (opcional)
 
     Returns:
         list: Lista de handlers
     """
-    handler = UserManagementHandler(vpn_service)
+    handler = UserManagementHandler(vpn_service, user_profile_service)
 
     return [
         CommandHandler("start", handler.start_handler),
         CommandHandler("info", handler.info_handler),
+        CommandHandler("history", handler.history_handler),
         MessageHandler(filters.Regex("^📊 Estado$"), handler.status_handler),
         CommandHandler("status", handler.status_handler),
     ]
 
 
-def get_user_callback_handlers(vpn_service: VpnService):
+def get_user_callback_handlers(
+    vpn_service: VpnService,
+    user_profile_service: Optional[UserProfileService] = None,
+):
     """
     Retorna los handlers de callbacks para gestión de usuarios.
 
     Args:
         vpn_service: Servicio de VPN
+        user_profile_service: Servicio de perfil de usuario (opcional)
 
     Returns:
         list: Lista de CallbackQueryHandler
     """
-    handler = UserManagementHandler(vpn_service)
+    handler = UserManagementHandler(vpn_service, user_profile_service)
 
     return [
         CallbackQueryHandler(
@@ -417,6 +522,6 @@ def get_user_callback_handlers(vpn_service: VpnService):
         ),
         CallbackQueryHandler(
             handler.main_menu_callback,
-            pattern="^(show_keys|create_key|buy_data|show_usage|help|admin_panel)$",
+            pattern="^(show_keys|create_key|buy_data|show_usage|help|admin_panel|show_history)$",
         ),
     ]

@@ -17,6 +17,7 @@ from application.services.common.container import get_container
 from application.services.data_package_service import DataPackageService
 from application.services.payment_service import PaymentService
 from application.services.referral_service import ReferralService
+from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from telegram_bot.features.admin.handlers_admin import (
     get_admin_callback_handlers,
@@ -79,7 +80,7 @@ def _get_referral_handlers(container) -> List[BaseHandler]:
 
 
 def _get_core_handlers(
-    vpn_service, payment_service, data_package_service
+    vpn_service, payment_service, data_package_service, user_profile_service
 ) -> List[BaseHandler]:
     """Initialize and return core feature handlers."""
     handlers = []
@@ -96,8 +97,8 @@ def _get_core_handlers(
     handlers.extend(get_payments_callback_handlers(payment_service, vpn_service))
     logger.info("Payments handlers configured")
 
-    handlers.extend(get_user_management_handlers(vpn_service))
-    handlers.extend(get_user_callback_handlers(vpn_service))
+    handlers.extend(get_user_management_handlers(vpn_service, user_profile_service))
+    handlers.extend(get_user_callback_handlers(vpn_service, user_profile_service))
     logger.info("User management handlers configured")
 
     handlers.extend(get_vpn_keys_handlers(vpn_service))
@@ -125,11 +126,12 @@ def initialize_handlers(
     try:
         container = get_container()
         data_package_service = container.resolve(DataPackageService)
+        user_profile_service = container.resolve(UserProfileService)
 
         handlers.extend(_get_admin_handlers(container))
         handlers.extend(_get_referral_handlers(container))
         handlers.extend(
-            _get_core_handlers(vpn_service, payment_service, data_package_service)
+            _get_core_handlers(vpn_service, payment_service, data_package_service, user_profile_service)
         )
 
         logger.info(f"Total handlers configured: {len(handlers)}")

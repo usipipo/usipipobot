@@ -94,19 +94,44 @@ class UserManagementMessages:
         HEADER = "ℹ️ **Información de tu Cuenta**"
 
         USER_INFO = (
-            "ℹ️ **Información Detallada**\n\n"
-            "👤 **Usuario:** {name}\n"
-            "🆔 **ID:** {user_id}\n"
-            "👥 **Username:** @{username}\n"
-            "📅 **Registro:** {join_date}\n"
-            "🟢 **Estado:** {status}\n"
-            "👑 **Plan:** {plan}\n"
-            "🔑 **Llaves:** {keys_used}/{keys_total}\n"
-            "📊 **Datos usados:** {data_used}\n"
-            "🎁 **Créditos:** {credits}\n"
-            "🎮 **Nivel:** {level}\n"
-            "🏆 **Logros:** {achievements}"
+            "ℹ️ *Información Detallada*\n\n"
+            "👤 *Usuario:* {name}\n"
+            "🆔 *ID:* {user_id}\n"
+            "👥 *Username:* @{username}\n"
+            "📅 *Registro:* {join_date}\n"
+            "🟢 *Estado:* {status}\n\n"
+            "📊 *Datos:*\n"
+            "├─ Usados: {data_used}\n"
+            "├─ Gratuitos restantes: {free_data_remaining}\n"
+            "└─ Paquetes activos: {active_packages}\n\n"
+            "🔑 *Claves VPN:*\n"
+            "└─ Usadas: {keys_used}/{keys_total}\n\n"
+            "🎁 *Referidos:*\n"
+            "├─ Código: {referral_code}\n"
+            "├─ Invitados: {total_referrals}\n"
+            "└─ Créditos: {credits}"
         )
+
+    # ============================================
+    # HISTORY
+    # ============================================
+
+    class History:
+        """Mensajes de historial de transacciones."""
+
+        HEADER = "📜 *Historial de Transacciones*\n\n"
+
+        NO_TRANSACTIONS = (
+            "📜 *Historial de Transacciones*\n\n"
+            "No tienes transacciones registradas aún."
+        )
+
+        TRANSACTION_ITEM = (
+            "{number}\\. `{date}` \\- {description}\n"
+            "   {amount} | {status}"
+        )
+
+        FOOTER = "\n\n📄 _Ver más_ | 🏠 _Menú principal_"
 
     # ============================================
     # ERRORS
