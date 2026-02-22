@@ -14,14 +14,17 @@ class OperationsKeyboards:
     @staticmethod
     def operations_menu() -> InlineKeyboardMarkup:
         """
-        Teclado del menú principal de operaciones.
+        Teclado del menu principal de operaciones.
 
         Returns:
-            InlineKeyboardMarkup: Teclado del menú de operaciones
+            InlineKeyboardMarkup: Teclado del menu de operaciones
         """
         keyboard = [
             [
                 InlineKeyboardButton("💰 Mi Balance", callback_data="balance"),
+            ],
+            [
+                InlineKeyboardButton("🎁 Referidos", callback_data="referral_menu"),
             ],
             [
                 InlineKeyboardButton("📊 Transacciones", callback_data="transactions"),
