@@ -29,12 +29,16 @@ class BasePostgresRepository:
         """
         Set the current user ID in the database session for audit/logging.
 
+        Uses set_config() for custom session variables (app.*) instead of SET
+        because PostgreSQL doesn't support SET for custom variable names.
+
         Args:
             user_id: The telegram_id of the current user.
         """
         try:
             await self.session.execute(
-                text("SET app.current_user_id = :user_id"), {"user_id": user_id}
+                text("SELECT set_config('app.current_user_id', :user_id, false)"),
+                {"user_id": str(user_id)},
             )
         except Exception as e:
             logger.error(f"Error setting current user {user_id}: {e}")
