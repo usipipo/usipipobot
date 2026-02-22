@@ -50,6 +50,11 @@ run_migrations() {
 
     log "Running database migrations..."
 
+    cd "${PROJECT_ROOT}" || {
+        log_err "Failed to change to project root: ${PROJECT_ROOT}"
+        return 1
+    }
+
     if [[ ! -f "alembic.ini" ]]; then
         log_err "alembic.ini not found in project root"
         return 1
