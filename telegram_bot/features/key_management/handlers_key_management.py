@@ -48,9 +48,7 @@ class KeyManagementHandler(BaseHandler):
         """
         query = update.callback_query
 
-        # Handle both command and callback scenarios
         if query is None:
-            # This is a direct command, send a new message
             user_id = update.effective_user.id
             try:
                 user_status = await self.vpn_service.get_user_status(
@@ -58,9 +56,7 @@ class KeyManagementHandler(BaseHandler):
                 )
                 keys = user_status.get("keys", [])
 
-                # Contar llaves por servidor dinámicamente
                 keys_summary = {"total_count": len(keys)}
-                message = KeyManagementMessages.MAIN_MENU
 
                 for protocol in settings.get_vpn_protocols():
                     count = len(
@@ -68,12 +64,14 @@ class KeyManagementHandler(BaseHandler):
                     )
                     keys_summary[f"{protocol}_count"] = count
 
-                # Formatear mensaje con conteo
-                message = KeyManagementMessages.MAIN_MENU.format(
-                    total_keys=keys_summary["total_count"],
-                    outline_count=keys_summary.get("outline_count", 0),
-                    wireguard_count=keys_summary.get("wireguard_count", 0),
-                )
+                if keys_summary["total_count"] == 0:
+                    message = KeyManagementMessages.NO_KEYS
+                else:
+                    message = KeyManagementMessages.MAIN_MENU.format(
+                        total_keys=keys_summary["total_count"],
+                        outline_count=keys_summary.get("outline_count", 0),
+                        wireguard_count=keys_summary.get("wireguard_count", 0),
+                    )
 
                 await update.message.reply_text(
                     text=message,
@@ -87,7 +85,6 @@ class KeyManagementHandler(BaseHandler):
                     text=KeyManagementMessages.Error.SYSTEM_ERROR, parse_mode="Markdown"
                 )
         else:
-            # This is a callback, edit the existing message
             await self._safe_answer_query(query)
             user_id = update.effective_user.id
 
@@ -97,7 +94,6 @@ class KeyManagementHandler(BaseHandler):
                 )
                 keys = user_status.get("keys", [])
 
-                # Contar llaves por servidor dinámicamente
                 keys_summary = {"total_count": len(keys)}
 
                 for protocol in settings.get_vpn_protocols():
@@ -106,12 +102,14 @@ class KeyManagementHandler(BaseHandler):
                     )
                     keys_summary[f"{protocol}_count"] = count
 
-                # Formatear mensaje con conteo
-                message = KeyManagementMessages.MAIN_MENU.format(
-                    total_keys=keys_summary["total_count"],
-                    outline_count=keys_summary.get("outline_count", 0),
-                    wireguard_count=keys_summary.get("wireguard_count", 0),
-                )
+                if keys_summary["total_count"] == 0:
+                    message = KeyManagementMessages.NO_KEYS
+                else:
+                    message = KeyManagementMessages.MAIN_MENU.format(
+                        total_keys=keys_summary["total_count"],
+                        outline_count=keys_summary.get("outline_count", 0),
+                        wireguard_count=keys_summary.get("wireguard_count", 0),
+                    )
 
                 await self._safe_edit_message(
                     query,

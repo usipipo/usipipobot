@@ -22,6 +22,12 @@ class KeyManagementMessages:
         "Selecciona una opción para gestionar tus accesos:"
     )
 
+    NO_KEYS = (
+        "📭 **Sin Llaves VPN**\n\n"
+        "No tienes llaves VPN activas.\n\n"
+        "💡 Crea una nueva llave para comenzar a usar el servicio."
+    )
+
     BACK_TO_MAIN = "🔙 Volviendo al menú principal..."
 
     # ============================================

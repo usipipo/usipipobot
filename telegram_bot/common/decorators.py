@@ -63,6 +63,7 @@ def safe_callback_query(func):
 def admin_required(func):
     """
     Decorator to require admin privileges.
+    Handles both direct messages and callback queries.
     """
 
     @wraps(func)
@@ -70,12 +71,24 @@ def admin_required(func):
         self, update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
     ):
         from config import settings
+        from telegram_bot.keyboards import MainMenuKeyboard
 
         user = update.effective_user
         if user.id != int(settings.ADMIN_ID):
-            await update.message.reply_text(
-                text=CommonMessages.Error.ACCESS_DENIED, parse_mode="Markdown"
-            )
+            logger.warning(f"Access denied for user {user.id} attempting admin action: {func.__name__}")
+            if update.callback_query:
+                await update.callback_query.answer()
+                await update.callback_query.edit_message_text(
+                    text=CommonMessages.Error.ACCESS_DENIED,
+                    reply_markup=MainMenuKeyboard.main_menu(),
+                    parse_mode="Markdown",
+                )
+            elif update.message:
+                await update.message.reply_text(
+                    text=CommonMessages.Error.ACCESS_DENIED,
+                    reply_markup=MainMenuKeyboard.main_menu(),
+                    parse_mode="Markdown",
+                )
             return None
 
         return await func(self, update, context, *args, **kwargs)
