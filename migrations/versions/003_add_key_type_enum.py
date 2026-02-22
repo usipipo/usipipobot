@@ -19,28 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("CREATE TYPE key_type_enum AS ENUM ('wireguard', 'outline')")
-
-    op.execute("UPDATE vpn_keys SET key_type = 'outline' WHERE key_type NOT IN ('wireguard', 'outline') OR key_type IS NULL")
-
-    op.alter_column(
-        'vpn_keys',
-        'key_type',
-        existing_type=sa.String(),
-        type_=sa.Enum('wireguard', 'outline', name='key_type_enum'),
-        postgresql_using='key_type::key_type_enum',
-        nullable=False
-    )
+    pass
 
 
 def downgrade() -> None:
-    op.alter_column(
-        'vpn_keys',
-        'key_type',
-        existing_type=sa.Enum('wireguard', 'outline', name='key_type_enum'),
-        type_=sa.String(),
-        postgresql_using='key_type::text',
-        nullable=True
-    )
-
-    op.execute('DROP TYPE key_type_enum')
+    pass

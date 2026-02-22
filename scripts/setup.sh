@@ -251,7 +251,7 @@ show_menu() {
         6)
             # shellcheck source=./modules/bot.sh
             source "${MODULES_DIR}/bot.sh"
-            run_migrations "$PROJECT_DIR/venv"
+            run_migrations "$PROJECT_DIR/.env"
             ;;
         7)
             # shellcheck source=./modules/systemd.sh
