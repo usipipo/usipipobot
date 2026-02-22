@@ -114,19 +114,6 @@ class TestGetUserBalance:
         assert balance is None
 
 
-class TestActivateVip:
-    @pytest.mark.asyncio
-    async def test_activate_vip_sets_expiry(self, payment_service, mock_user_repo, sample_user):
-        mock_user_repo.get_by_id.return_value = sample_user
-        mock_user_repo.save.return_value = sample_user
-
-        result = await payment_service.activate_vip(123456789, days=30)
-
-        assert result is True
-        assert sample_user.is_vip is True
-        assert sample_user.vip_expires_at is not None
-
-
 class TestAddStorage:
     @pytest.mark.asyncio
     async def test_add_storage_increases(self, payment_service, mock_user_repo, sample_user):

@@ -29,10 +29,6 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
         super().__init__(session)
 
     def _model_to_entity(self, model: UserModel) -> User:
-        vip_expires = model.vip_expires_at
-        if vip_expires is not None and vip_expires.tzinfo is None:
-            vip_expires = vip_expires.replace(tzinfo=timezone.utc)
-
         return User(
             telegram_id=model.telegram_id,
             username=model.username,
@@ -44,9 +40,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             total_deposited=model.total_deposited or 0,
             referral_code=model.referral_code,
             referred_by=model.referred_by,
-            total_referral_earnings=model.total_referral_earnings or 0,
-            is_vip=model.is_vip or False,
-            vip_expires_at=vip_expires,
+            referral_credits=model.referral_credits or 0,
             free_data_limit_bytes=model.free_data_limit_bytes or 10 * 1024**3,
             free_data_used_bytes=model.free_data_used_bytes or 0,
         )
@@ -61,14 +55,17 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 if isinstance(entity.status, UserStatus)
                 else entity.status
             ),
+            role=(
+                entity.role.value
+                if isinstance(entity.role, UserRole)
+                else entity.role
+            ),
             max_keys=entity.max_keys,
             balance_stars=entity.balance_stars,
             total_deposited=entity.total_deposited,
             referral_code=entity.referral_code,
             referred_by=entity.referred_by,
-            total_referral_earnings=entity.total_referral_earnings,
-            is_vip=entity.is_vip,
-            vip_expires_at=entity.vip_expires_at,
+            referral_credits=entity.referral_credits,
             free_data_limit_bytes=entity.free_data_limit_bytes,
             free_data_used_bytes=entity.free_data_used_bytes,
         )
@@ -99,23 +96,19 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                     if isinstance(user.status, UserStatus)
                     else user.status
                 )
+                existing.role = (
+                    user.role.value
+                    if isinstance(user.role, UserRole)
+                    else user.role
+                )
                 existing.max_keys = user.max_keys
                 existing.balance_stars = user.balance_stars
                 existing.total_deposited = user.total_deposited
                 existing.referral_code = user.referral_code
                 existing.referred_by = user.referred_by
-                existing.total_referral_earnings = user.total_referral_earnings
-                existing.is_vip = user.is_vip
-                if user.vip_expires_at is None:
-                    existing.vip_expires_at = None
-                elif user.vip_expires_at.tzinfo is None:
-                    existing.vip_expires_at = user.vip_expires_at.replace(
-                        tzinfo=timezone.utc
-                    )
-                else:
-                    existing.vip_expires_at = user.vip_expires_at.astimezone(
-                        timezone.utc
-                    )
+                existing.referral_credits = user.referral_credits
+                existing.free_data_limit_bytes = user.free_data_limit_bytes
+                existing.free_data_used_bytes = user.free_data_used_bytes
             else:
                 model = self._entity_to_model(user)
                 self.session.add(model)

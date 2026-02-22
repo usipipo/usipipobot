@@ -113,8 +113,6 @@ class VpnService:
 
     def _get_user_data_limit(self, user: User) -> int:
         """Retorna el límite de datos en bytes según el plan del usuario."""
-        if user.is_vip_active():
-            return settings.VIP_PLAN_DATA_LIMIT_GB * (1024**3)
         return settings.FREE_PLAN_DATA_LIMIT_GB * (1024**3)
 
     async def can_user_create_key(
@@ -184,29 +182,6 @@ class VpnService:
         except Exception as e:
             logger.error(f"❌ Error al revocar llave {key_id}: {e}")
             return False
-
-    async def upgrade_to_vip(
-        self, user: User, current_user_id: int, months: int = 1
-    ) -> bool:
-        """Actualiza un usuario a VIP por la cantidad de meses especificada."""
-        if user.is_vip_active():
-            # Extender la fecha de expiración
-            new_expiry = user.vip_expires_at + timedelta(days=30 * months)
-        else:
-            new_expiry = datetime.now(timezone.utc) + timedelta(days=30 * months)
-
-        user.is_vip = True
-        user.vip_expires_at = new_expiry
-        user.max_keys = settings.VIP_PLAN_MAX_KEYS
-
-        # Actualizar límites de datos de las llaves existentes
-        keys = await self.key_repo.get_by_user_id(user.telegram_id, current_user_id)
-        for key in keys:
-            key.data_limit_bytes = settings.VIP_PLAN_DATA_LIMIT_GB * (1024**3)
-            await self.key_repo.save(key, current_user_id)
-        await self.user_repo.save(user, current_user_id)
-
-        return True
 
     async def rename_key(
         self, key_id: str, new_name: str, current_user_id: int

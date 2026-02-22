@@ -54,7 +54,7 @@ class AdminService(IAdminService):
                 if getattr(u, "status", "").lower() == "active"
                 or getattr(u, "is_active", False)
             )
-            vip_users = sum(1 for u in users if getattr(u, "is_vip", False))
+            total_deposited_sum = sum(getattr(u, "total_deposited", 0) or 0 for u in users)
 
             # 3. Calcular estadísticas de llaves
             total_keys = len(all_keys)
@@ -108,7 +108,7 @@ class AdminService(IAdminService):
             return {
                 "total_users": total_users,
                 "active_users": active_users,
-                "vip_users": vip_users,
+                "total_deposited": total_deposited_sum,
                 "total_keys": total_keys,
                 "active_keys": active_keys,
                 "wireguard_keys": wireguard_keys,
@@ -140,7 +140,6 @@ class AdminService(IAdminService):
                 user_keys = await self.key_repository.get_user_keys(user.user_id)
                 active_keys = [k for k in user_keys if k.is_active]
 
-                # Obtener balance de estrellas
                 balance = await self.payment_repository.get_balance(user.user_id)
 
                 user_info = AdminUserInfo(
@@ -148,13 +147,13 @@ class AdminService(IAdminService):
                     username=user.username,
                     first_name=user.first_name,
                     last_name=user.last_name,
-                    is_vip=user.is_vip,
-                    vip_expiry=user.vip_expiry,
                     total_keys=len(user_keys),
                     active_keys=len(active_keys),
                     stars_balance=balance.stars if balance else 0,
+                    total_deposited=getattr(user, "total_deposited", 0) or 0,
+                    referral_credits=getattr(user, "referral_credits", 0) or 0,
                     registration_date=user.created_at,
-                    last_activity=user.last_activity,
+                    last_activity=getattr(user, "last_activity", None),
                 )
                 user_list.append(user_info.__dict__)
 
@@ -435,14 +434,11 @@ class AdminService(IAdminService):
                 "full_name": user.full_name,
                 "status": user.status.value,
                 "role": user.role.value,
-                "is_vip": user.is_vip,
-                "vip_expires_at": user.vip_expires_at,
-                "task_manager_expires_at": user.task_manager_expires_at,
-                "announcer_expires_at": user.announcer_expires_at,
                 "total_keys": len(user_keys),
                 "active_keys": len(active_keys),
                 "balance_stars": balance.stars if balance else 0,
                 "total_deposited": user.total_deposited,
+                "referral_credits": user.referral_credits,
                 "created_at": user.created_at,
             }
         except Exception as e:
@@ -519,19 +515,9 @@ class AdminService(IAdminService):
 
             user.role = UserRole(role)
 
-            # Si es un rol especial con duración, configurar fecha de expiración
-            if duration_days and role in ["task_manager", "announcer"]:
-                expires_at = datetime.now(timezone.utc) + timedelta(days=duration_days)
-                if role == "task_manager":
-                    user.task_manager_expires_at = expires_at
-                elif role == "announcer":
-                    user.announcer_expires_at = expires_at
-
             await self.user_repository.update_user(user)
 
             message = f'Rol "{role}" asignado a usuario {user_id}'
-            if duration_days:
-                message += f" por {duration_days} días"
 
             logger.info(message)
             return AdminOperationResult(
@@ -539,7 +525,7 @@ class AdminService(IAdminService):
                 operation="assign_role",
                 target_id=str(user_id),
                 message=message,
-                details={"role": role, "duration_days": duration_days},
+                details={"role": role},
             )
         except Exception as e:
             logger.error(f"Error asignando rol a usuario {user_id}: {e}")
@@ -629,7 +615,6 @@ class AdminService(IAdminService):
                         "full_name": user.full_name,
                         "status": user.status.value,
                         "role": user.role.value,
-                        "is_vip": user.is_vip,
                         "total_keys": len(user_keys),
                         "active_keys": len(active_keys),
                         "balance_stars": balance.stars if balance else 0,

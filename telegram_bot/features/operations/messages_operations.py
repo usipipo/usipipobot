@@ -18,10 +18,9 @@ class OperationsMessages:
 
         MAIN = (
             "💰 **Centro de Operaciones**\n\n"
-            "Gestiona tu cuenta y accede a servicios premium:\n\n"
+            "Gestiona tu cuenta y accede a servicios:\n\n"
             "💎 **Balance y Transacciones**\n"
             "👥 **Sistema de Referidos**\n"
-            "👑 **Planes VIP**\n"
             "🎮 **Juegos y Recompensas**\n\n"
             "Selecciona una opción:"
         )

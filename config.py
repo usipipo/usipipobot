@@ -200,18 +200,6 @@ class Settings(BaseSettings):
         description="Límite de datos por clave en GB para el plan gratuito",
     )
 
-    VIP_PLAN_MAX_KEYS: int = Field(
-        default=10, ge=1, description="Máximo de llaves para el plan VIP"
-    )
-
-    VIP_PLAN_DATA_LIMIT_GB: int = Field(
-        default=50, ge=1, description="Límite de datos por clave en GB para el plan VIP"
-    )
-
-    VIP_PLAN_COST_STARS: int = Field(
-        default=10, ge=1, description="Costo en Telegram Stars por mes de VIP"
-    )
-
     REFERRAL_COMMISSION_PERCENT: int = Field(
         default=10,
         ge=0,
