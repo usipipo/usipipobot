@@ -73,7 +73,7 @@ class AdminKeyboards:
 
     @staticmethod
     def user_actions(
-        user_id: int, is_active: bool, is_vip: bool
+        user_id: int, is_active: bool
     ) -> InlineKeyboardMarkup:
         """
         Teclado de acciones para un usuario específico.
@@ -81,14 +81,12 @@ class AdminKeyboards:
         Args:
             user_id: ID del usuario
             is_active: Si el usuario está activo
-            is_vip: Si el usuario es VIP
 
         Returns:
             InlineKeyboardMarkup: Teclado de acciones
         """
         keyboard = []
 
-        # Acciones básicas
         keyboard.append(
             [
                 InlineKeyboardButton(
@@ -97,7 +95,6 @@ class AdminKeyboards:
             ]
         )
 
-        # Acciones de estado
         if is_active:
             keyboard.append(
                 [
@@ -115,25 +112,6 @@ class AdminKeyboards:
                 ]
             )
 
-        # Acciones VIP
-        if not is_vip:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "👑 Dar VIP", callback_data=f"user_grant_vip_{user_id}"
-                    )
-                ]
-            )
-        else:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "🚫 Quitar VIP", callback_data=f"user_revoke_vip_{user_id}"
-                    )
-                ]
-            )
-
-        # Acciones peligrosas
         keyboard.append(
             [
                 InlineKeyboardButton(

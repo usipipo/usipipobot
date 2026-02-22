@@ -129,15 +129,6 @@ class OperationsKeyboards:
                     InlineKeyboardButton("❌ Cancelar", callback_data="cancel_add"),
                 ]
             )
-        elif action == "vip_upgrade":
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "✅ Confirmar Actualización", callback_data="confirm_vip"
-                    ),
-                    InlineKeyboardButton("❌ Cancelar", callback_data="cancel_vip"),
-                ]
-            )
         else:
             keyboard.append(
                 [
