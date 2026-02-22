@@ -120,7 +120,7 @@ class TestRevokeKey:
     async def test_revoke_key_success(self, vpn_service, mock_key_repo, mock_user_repo, sample_vpn_key, sample_user):
         mock_key_repo.get_by_id.return_value = sample_vpn_key
         mock_user_repo.get_by_id.return_value = sample_user
-        sample_user.total_deposited = 100
+        sample_user.referral_credits = 100
         mock_key_repo.delete.return_value = True
 
         result = await vpn_service.revoke_key(sample_vpn_key.id, 123456789)
@@ -138,11 +138,11 @@ class TestRevokeKey:
 
     @pytest.mark.asyncio
     async def test_revoke_key_user_cannot_delete(self, vpn_service, mock_key_repo, mock_user_repo, sample_vpn_key, sample_user):
-        sample_user.total_deposited = 0
+        sample_user.referral_credits = 0
         mock_key_repo.get_by_id.return_value = sample_vpn_key
         mock_user_repo.get_by_id.return_value = sample_user
 
-        with pytest.raises(ValueError, match="depósito"):
+        with pytest.raises(ValueError, match="créditos"):
             await vpn_service.revoke_key(sample_vpn_key.id, 123456789)
 
 

@@ -61,13 +61,10 @@ class PaymentsHandler:
             user_id = update.effective_user.id
 
         try:
-            # Obtener balance del usuario
-            balance = await self.payment_service.get_user_balance(
-                user_id, current_user_id=user_id
-            )
-            balance = balance if balance is not None else 0
+            credits = await self.payment_service.get_user_credits(user_id)
+            credits = credits if credits is not None else 0
 
-            message = PaymentsMessages.Menu.MAIN.format(balance=balance)
+            message = PaymentsMessages.Menu.MAIN.format(balance=credits)
             keyboard = PaymentsKeyboards.main_menu()
 
             if query:
@@ -401,9 +398,6 @@ class PaymentsHandler:
         user_id = update.effective_user.id
 
         try:
-            balance = await self.payment_service.get_user_balance(user_id)
-            balance = balance if balance is not None else 0
-
             # Obtener estadísticas del usuario
             user_status = (
                 await self.vpn_service.get_user_status(user_id, current_user_id=user_id)
@@ -412,14 +406,12 @@ class PaymentsHandler:
             )
             user = user_status.get("user", {})
 
-            total_deposited = getattr(user, "total_deposited", 0)
+            credits = getattr(user, "referral_credits", 0) or 0
             total_spent = getattr(user, "total_spent", 0)
 
             message = PaymentsMessages.Balance.STATUS.format(
-                balance=balance,
-                total_deposited=total_deposited,
+                credits=credits,
                 total_spent=total_spent,
-                available=balance,
             )
 
             keyboard = PaymentsKeyboards.balance_actions()
@@ -438,32 +430,24 @@ class PaymentsHandler:
 
     # Métodos privados
     async def _process_balance_payment(self, user_id: int, amount: float) -> bool:
-        """Procesa pago con balance."""
+        """Procesa pago con créditos de referido."""
         try:
-            # Aquí iría la lógica real de procesamiento
-            # Por ahora, simulamos el proceso
+            current_credits = await self.payment_service.get_user_credits(user_id)
 
-            # Verificar si el usuario tiene suficiente balance
-            current_balance = await self.payment_service.get_user_balance(
-                user_id, current_user_id=user_id
-            )
-
-            if current_balance >= amount:
-                # Descontar balance
-                await self.payment_service.deduct_balance(
-                    user_id, amount, current_user_id=user_id
+            if current_credits and current_credits >= int(amount):
+                await self.payment_service.redeem_credits(
+                    user_id, int(amount), "Pago de paquete"
                 )
 
-                # Registrar transacción
                 await self._register_transaction(
-                    user_id, amount, "balance", "completed"
+                    user_id, amount, "credits", "completed"
                 )
 
                 return True
 
             return False
         except Exception as e:
-            logger.error(f"Error procesando pago con balance: {e}")
+            logger.error(f"Error procesando pago con créditos: {e}")
             return False
 
     async def _process_card_payment(self, user_id: int, amount: float) -> bool:
