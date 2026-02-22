@@ -17,6 +17,7 @@ from application.services.common.container import get_container
 from application.services.data_package_service import DataPackageService
 from application.services.payment_service import PaymentService
 from application.services.referral_service import ReferralService
+from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from telegram_bot.features.admin.handlers_admin import (
@@ -56,6 +57,10 @@ from telegram_bot.features.referral.handlers_referral import (
     get_referral_callback_handlers,
     get_referral_handlers,
 )
+from telegram_bot.features.tickets.handlers_tickets import (
+    get_ticket_callback_handlers,
+    get_ticket_handlers,
+)
 from utils.logger import logger
 
 
@@ -76,6 +81,16 @@ def _get_referral_handlers(container) -> List[BaseHandler]:
     handlers.extend(get_referral_handlers(referral_service))
     handlers.extend(get_referral_callback_handlers(referral_service))
     logger.info("✅ Handlers de referidos configurados")
+    return handlers
+
+
+def _get_ticket_handlers(container) -> List[BaseHandler]:
+    """Initialize and return ticket handlers."""
+    ticket_service = container.resolve(TicketService)
+    handlers = []
+    handlers.extend(get_ticket_handlers(ticket_service))
+    handlers.extend(get_ticket_callback_handlers(ticket_service))
+    logger.info("✅ Handlers de tickets configurados")
     return handlers
 
 
@@ -130,6 +145,7 @@ def initialize_handlers(
 
         handlers.extend(_get_admin_handlers(container))
         handlers.extend(_get_referral_handlers(container))
+        handlers.extend(_get_ticket_handlers(container))
         handlers.extend(
             _get_core_handlers(vpn_service, payment_service, data_package_service, user_profile_service)
         )
