@@ -22,25 +22,25 @@ class PaymentService:
         amount: int,
         transaction_type: str,
         description: str,
-        reference_id: str = None,
-        telegram_payment_id: str = None,
+        reference_id: Optional[str] = None,
+        telegram_payment_id: Optional[str] = None,
+        current_user_id: Optional[int] = None,
     ) -> bool:
         """Actualiza el balance del usuario y registra la transacción."""
         try:
-            user = await self.user_repo.get_by_id(telegram_id)
+            uid = current_user_id or telegram_id
+            user = await self.user_repo.get_by_id(telegram_id, uid)
             if not user:
                 raise Exception("Usuario no encontrado")
 
             old_balance = user.balance_stars
             user.balance_stars += amount
 
-            # Update total deposited if it's a deposit
             if amount > 0 and transaction_type == "deposit":
                 user.total_deposited += amount
 
-            await self.user_repo.save(user)
+            await self.user_repo.save(user, uid)
 
-            # Record transaction
             await self.transaction_repo.record_transaction(
                 user_id=telegram_id,
                 transaction_type=transaction_type,
@@ -63,22 +63,20 @@ class PaymentService:
     async def apply_referral_commission(self, telegram_id: int, amount: int) -> bool:
         """Aplica comisión de referido al usuario que refirió a este."""
         try:
-            user = await self.user_repo.get_by_id(telegram_id)
+            user = await self.user_repo.get_by_id(telegram_id, telegram_id)
             if not user or not user.referred_by:
-                return True  # No referrer, not an error
+                return True
 
-            referrer = await self.user_repo.get_by_id(user.referred_by)
+            referrer = await self.user_repo.get_by_id(user.referred_by, telegram_id)
             if not referrer:
-                return True  # Referrer not found, not an error
+                return True
 
-            commission = int(amount * 0.10)  # 10% commission
+            commission = int(amount * 0.10)
 
-            # Update referrer's balance and earnings
             referrer.balance_stars += commission
             referrer.total_referral_earnings += commission
-            await self.user_repo.save(referrer)
+            await self.user_repo.save(referrer, telegram_id)
 
-            # Record commission transaction
             await self.transaction_repo.record_transaction(
                 user_id=user.referred_by,
                 transaction_type="referral_commission",
@@ -100,7 +98,7 @@ class PaymentService:
     async def get_user_balance(self, telegram_id: int) -> Optional[int]:
         """Obtiene el balance de estrellas del usuario."""
         try:
-            user = await self.user_repo.get_by_id(telegram_id)
+            user = await self.user_repo.get_by_id(telegram_id, telegram_id)
             if not user:
                 return None
             return user.balance_stars
@@ -113,7 +111,7 @@ class PaymentService:
     ) -> bool:
         """Deduce estrellas del balance del usuario."""
         try:
-            user = await self.user_repo.get_by_id(telegram_id)
+            user = await self.user_repo.get_by_id(telegram_id, telegram_id)
             if not user:
                 raise Exception("Usuario no encontrado")
 
@@ -123,9 +121,8 @@ class PaymentService:
             old_balance = user.balance_stars
             user.balance_stars -= amount
 
-            await self.user_repo.save(user)
+            await self.user_repo.save(user, telegram_id)
 
-            # Record transaction
             await self.transaction_repo.record_transaction(
                 user_id=telegram_id,
                 transaction_type="purchase",
@@ -146,14 +143,14 @@ class PaymentService:
     async def activate_vip(self, telegram_id: int, days: int = 30) -> bool:
         """Activa estado VIP para un usuario por N días."""
         try:
-            user = await self.user_repo.get_by_id(telegram_id)
+            user = await self.user_repo.get_by_id(telegram_id, telegram_id)
             if not user:
                 raise Exception("Usuario no encontrado")
 
             user.is_vip = True
             user.vip_expires_at = datetime.now(UTC) + timedelta(days=days)
 
-            await self.user_repo.save(user)
+            await self.user_repo.save(user, telegram_id)
             logger.info(
                 f"👑 VIP activated for user {telegram_id} until {user.vip_expires_at}"
             )
@@ -165,15 +162,14 @@ class PaymentService:
     async def add_storage(self, telegram_id: int, gb: int) -> bool:
         """Agrega almacenamiento adicional al usuario (en GB)."""
         try:
-            user = await self.user_repo.get_by_id(telegram_id)
+            user = await self.user_repo.get_by_id(telegram_id, telegram_id)
             if not user:
                 raise Exception("Usuario no encontrado")
 
-            # Sumar al almacenamiento del usuario
             current_storage = getattr(user, "storage_gb", 0) or 0
             user.storage_gb = current_storage + gb
 
-            await self.user_repo.save(user)
+            await self.user_repo.save(user, telegram_id)
             logger.info(
                 f"💾 Storage added to user {telegram_id}: +{gb}GB (Total: {user.storage_gb}GB)"
             )
@@ -187,13 +183,12 @@ class PaymentService:
     ) -> bool:
         """Asigna un rol especial al usuario (TASK_MANAGER o ANNOUNCER)."""
         try:
-            user = await self.user_repo.get_by_id(telegram_id)
+            user = await self.user_repo.get_by_id(telegram_id, telegram_id)
             if not user:
                 raise Exception("Usuario no encontrado")
 
             user.role = role
 
-            # Calcular fecha de expiración si se especifican días
             if days:
                 expires_at = datetime.now(UTC) + timedelta(days=days)
                 if role == UserRole.TASK_MANAGER:
@@ -201,7 +196,7 @@ class PaymentService:
                 elif role == UserRole.ANNOUNCER:
                     user.announcer_expires_at = expires_at
 
-            await self.user_repo.save(user)
+            await self.user_repo.save(user, telegram_id)
             logger.info(f"👤 Role {role} assigned to user {telegram_id}")
             return True
         except Exception as e:
