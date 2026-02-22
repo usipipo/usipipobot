@@ -118,3 +118,25 @@ class DataPackageModel(Base):
     telegram_payment_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     user: Mapped["UserModel"] = relationship(back_populates="data_packages")
+
+
+class TransactionModel(Base):
+    """Modelo de transacciones de estrellas."""
+
+    __tablename__ = "transactions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.telegram_id", ondelete="CASCADE")
+    )
+    transaction_type: Mapped[str] = mapped_column(String, nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    balance_after: Mapped[int] = mapped_column(Integer, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=False)
+    reference_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    telegram_payment_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

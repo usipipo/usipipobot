@@ -73,8 +73,8 @@ def _get_core_handlers(
     handlers.extend(get_key_management_callback_handlers(vpn_service))
     logger.info("Key management handlers configured")
 
-    handlers.extend(get_operations_handlers(vpn_service, payment_service))
-    handlers.extend(get_operations_callback_handlers(vpn_service, payment_service))
+    handlers.extend(get_operations_handlers(vpn_service))
+    handlers.extend(get_operations_callback_handlers(vpn_service))
     logger.info("Operations handlers configured")
 
     handlers.extend(get_payments_handlers(payment_service, vpn_service))
