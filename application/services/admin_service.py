@@ -6,7 +6,7 @@ Version: 1.0.0
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from domain.entities.admin import (
     AdminKeyInfo,
@@ -257,7 +257,7 @@ class AdminService(IAdminService):
             logger.error(f"Error eliminando clave {key_id} de BD: {e}")
             return False
 
-    async def delete_user_key_complete(self, key_id: str) -> Dict[str, bool]:
+    async def delete_user_key_complete(self, key_id: str) -> Dict[str, Any]:
         """Eliminar completamente una clave (servidores + BD)."""
         try:
             key = await self.key_repository.get_key(key_id)
