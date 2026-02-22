@@ -57,3 +57,15 @@ class IUserRepository(Protocol):
     async def get_all_users(self, current_user_id: int) -> List[User]:
         """Obtiene todos los usuarios registrados."""
         ...
+
+    async def update_referral_credits(
+        self, telegram_id: int, credits_delta: int, current_user_id: int
+    ) -> bool:
+        """Actualiza los créditos de referido de un usuario."""
+        ...
+
+    async def increment_max_keys(
+        self, telegram_id: int, slots: int, current_user_id: int
+    ) -> bool:
+        """Incrementa el límite de claves de un usuario."""
+        ...

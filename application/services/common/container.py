@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from application.services.admin_service import AdminService
 from application.services.data_package_service import DataPackageService
 from application.services.payment_service import PaymentService
+from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
@@ -183,10 +184,17 @@ def _configure_application_services(container: punq.Container) -> None:
             package_repo=create_data_package_repo(), user_repo=create_user_repo()
         )
 
+    def create_referral_service() -> ReferralService:
+        return ReferralService(
+            user_repo=create_user_repo(),
+            transaction_repo=create_transaction_repo(),
+        )
+
     container.register(VpnService, factory=create_vpn_service)
     container.register(PaymentService, factory=create_payment_service)
     container.register(AdminService, factory=create_admin_service)
     container.register(DataPackageService, factory=create_data_package_service)
+    container.register(ReferralService, factory=create_referral_service)
 
 
 def _configure_handlers(container: punq.Container) -> None:
