@@ -20,11 +20,11 @@ class AdminUserInfo:
     last_name: Optional[str]
     total_keys: int
     active_keys: int
-    stars_balance: int
-    total_deposited: int
-    referral_credits: int
-    registration_date: datetime
-    last_activity: Optional[datetime]
+    stars_balance: int = 0  # Deprecated - mantener por compatibilidad
+    total_deposited: int = 0  # Ahora representa referral_credits
+    referral_credits: int = 0
+    registration_date: Optional[datetime] = None
+    last_activity: Optional[datetime] = None
 
 
 @dataclass

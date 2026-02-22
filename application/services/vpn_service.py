@@ -162,11 +162,11 @@ class VpnService:
             logger.warning(f"Intentando revocar llave inexistente: {key_id}")
             return False
 
-        # Verificar si el usuario puede eliminar (ha depositado)
+        # Verificar si el usuario puede eliminar (tiene créditos)
         user = await self.user_repo.get_by_id(key.user_id, current_user_id)
         if not user.can_delete_keys():
             raise ValueError(
-                "Debes realizar al menos un depósito para eliminar claves."
+                "Necesitas tener créditos para eliminar claves."
             )
 
         try:

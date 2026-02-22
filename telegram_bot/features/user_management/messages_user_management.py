@@ -103,7 +103,7 @@ class UserManagementMessages:
             "👑 **Plan:** {plan}\n"
             "🔑 **Llaves:** {keys_used}/{keys_total}\n"
             "📊 **Datos usados:** {data_used}\n"
-            "💰 **Balance:** {balance} estrellas\n"
+            "🎁 **Créditos:** {credits}\n"
             "🎮 **Nivel:** {level}\n"
             "🏆 **Logros:** {achievements}"
         )

@@ -86,8 +86,7 @@ def sample_user():
         full_name="Test User",
         status=UserStatus.ACTIVE,
         max_keys=2,
-        balance_stars=100,
-        total_deposited=50,
+        referral_credits=100,
     )
 
 
