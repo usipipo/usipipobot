@@ -12,7 +12,7 @@ from typing import List, Optional
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.entities.user import User, UserStatus
+from domain.entities.user import User, UserStatus, UserRole
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
 
@@ -38,6 +38,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             username=model.username,
             full_name=model.full_name,
             status=UserStatus(model.status) if model.status else UserStatus.ACTIVE,
+            role=UserRole(model.role) if model.role else UserRole.USER,
             max_keys=model.max_keys or 2,
             balance_stars=model.balance_stars or 0,
             total_deposited=model.total_deposited or 0,
@@ -46,8 +47,8 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             total_referral_earnings=model.total_referral_earnings or 0,
             is_vip=model.is_vip or False,
             vip_expires_at=vip_expires,
-            free_data_limit_bytes=getattr(model, "free_data_limit_bytes", 0) or 0,
-            free_data_used_bytes=getattr(model, "free_data_used_bytes", 0) or 0,
+            free_data_limit_bytes=model.free_data_limit_bytes or 10 * 1024**3,
+            free_data_used_bytes=model.free_data_used_bytes or 0,
         )
 
     def _entity_to_model(self, entity: User) -> UserModel:
