@@ -43,13 +43,7 @@ Simplificar la creación y gestión de conexiones VPN para usuarios no técnicos
 | Slots de Claves | Comprar claves adicionales (+1/+3/+5) | Alta |
 | Historial de transacciones | Ver movimientos de estrellas | Media |
 
-### 2.4 Gamificación
-| Funcionalidad | Descripción | Prioridad |
-|--------------|-------------|-----------|
-| Juegos Play & Earn | Ganar estrellas jugando | Media |
-| Sistema de niveles | Progresión basada en uso | Baja |
-
-### 2.5 Panel de Administración
+### 2.4 Panel de Administración
 | Funcionalidad | Descripción | Prioridad |
 |--------------|-------------|-----------|
 | Gestión de usuarios | Ver y administrar usuarios | Alta |
@@ -154,11 +148,7 @@ Menú Principal → /referir → Ver código y link → Compartir
 - [x] Sistema de créditos por referidos
 - [x] Compra de slots de claves
 
-### Fase 4: Gamificación
-- [ ] Juegos Play & Earn
-- [ ] Sistema de niveles
-
-### Fase 5: Admin Avanzado 🔶
+### Fase 4: Admin Avanzado 🔶
 - [x] Dashboard básico
 - [ ] Estadísticas en tiempo real
 - [x] Automatización de tareas (jobs de expiración, sync, cleanup)

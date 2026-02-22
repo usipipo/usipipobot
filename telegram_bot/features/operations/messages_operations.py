@@ -20,8 +20,7 @@ class OperationsMessages:
             "💰 **Centro de Operaciones**\n\n"
             "Gestiona tu cuenta y accede a servicios:\n\n"
             "💎 **Balance y Transacciones**\n"
-            "👥 **Sistema de Referidos**\n"
-            "🎮 **Juegos y Recompensas**\n\n"
+            "👥 **Sistema de Referidos**\n\n"
             "Selecciona una opción:"
         )
 
@@ -45,8 +44,7 @@ class OperationsMessages:
             "No tienes estrellas en tu cuenta.\n\n"
             "💡 *Opciones para obtener estrellas:*\n"
             "• Deposita fondos\n"
-            "• Invita amigos (referidos)\n"
-            "• Completa logros y juegos"
+            "• Invita amigos (referidos)"
         )
 
         TRANSACTION_SUCCESS = (
