@@ -21,14 +21,14 @@ class AdminKeyboards:
         """
         keyboard = [
             [
-                InlineKeyboardButton("👥 Usuarios", callback_data="show_users"),
-                InlineKeyboardButton("🔑 Llaves VPN", callback_data="show_keys"),
+                InlineKeyboardButton("👥 Usuarios", callback_data="admin_show_users"),
+                InlineKeyboardButton("🔑 Llaves VPN", callback_data="admin_show_keys"),
             ],
             [
                 InlineKeyboardButton(
-                    "📊 Estado Servidor", callback_data="server_status"
+                    "📊 Estado Servidor", callback_data="admin_server_status"
                 ),
-                InlineKeyboardButton("📋 Ver Logs", callback_data="logs"),
+                InlineKeyboardButton("📋 Ver Logs", callback_data="admin_logs"),
             ],
             [
                 InlineKeyboardButton("⚙️ Configuración", callback_data="settings"),
@@ -57,19 +57,14 @@ class AdminKeyboards:
     @staticmethod
     def back_to_user_menu() -> InlineKeyboardMarkup:
         """
-        Teclado para volver al menú de usuario.
+        Teclado para volver al menú de usuario (sin opciones de admin).
 
         Returns:
             InlineKeyboardMarkup: Teclado de retorno a usuario
         """
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver al Menú Principal", callback_data="main_menu"
-                )
-            ]
-        ]
-        return InlineKeyboardMarkup(keyboard)
+        from telegram_bot.keyboards import MainMenuKeyboard
+
+        return MainMenuKeyboard.main_menu()
 
     @staticmethod
     def user_actions(

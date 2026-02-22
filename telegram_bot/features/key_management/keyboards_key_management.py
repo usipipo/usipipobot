@@ -24,7 +24,21 @@ class KeyManagementKeyboards:
         """
         keyboard = []
 
-        # Botones de tipos de llaves (dinámicos según disponibilidad)
+        if keys_summary.get("total_count", 0) == 0:
+            keyboard.extend(
+                [
+                    [
+                        InlineKeyboardButton("➕ Crear Nueva", callback_data="create_key"),
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "🔙 Volver al Menú Principal", callback_data="main_menu"
+                        )
+                    ],
+                ]
+            )
+            return InlineKeyboardMarkup(keyboard)
+
         if keys_summary.get("outline_count", 0) > 0:
             keyboard.append(
                 [
@@ -45,7 +59,6 @@ class KeyManagementKeyboards:
                 ]
             )
 
-        # Opciones adicionales
         keyboard.extend(
             [
                 [
@@ -54,7 +67,7 @@ class KeyManagementKeyboards:
                 ],
                 [
                     InlineKeyboardButton(
-                        "🔙 Volver al Menú", callback_data="back_to_main"
+                        "🔙 Volver al Menú Principal", callback_data="main_menu"
                     )
                 ],
             ]
