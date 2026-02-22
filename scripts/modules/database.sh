@@ -67,23 +67,23 @@ create_database_and_user() {
     if [[ "${db_exists}" == "1" ]]; then
         log_warn "Database '${db_name}' already exists"
     else
-        run_sudo -u postgres psql -c "CREATE DATABASE ${db_name};"
+        run_sudo -u postgres psql -c "CREATE DATABASE ${db_name};" 2>&1 | grep -v "could not change directory" >&2 || true
         log_ok "Database '${db_name}' created"
     fi
 
     user_exists=$(run_sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='${db_user}'" 2>/dev/null || echo "")
     if [[ "${user_exists}" == "1" ]]; then
         log_warn "User '${db_user}' already exists, updating password..."
-        run_sudo -u postgres psql -c "ALTER USER ${db_user} WITH PASSWORD '${db_password}';"
+        run_sudo -u postgres psql -c "ALTER USER ${db_user} WITH PASSWORD '${db_password}';" 2>&1 | grep -v "could not change directory" >&2 || true
         log_ok "Password updated for user '${db_user}'"
     else
-        run_sudo -u postgres psql -c "CREATE USER ${db_user} WITH PASSWORD '${db_password}';"
+        run_sudo -u postgres psql -c "CREATE USER ${db_user} WITH PASSWORD '${db_password}';" 2>&1 | grep -v "could not change directory" >&2 || true
         log_ok "User '${db_user}' created"
     fi
 
-    run_sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${db_name} TO ${db_user};"
-    run_sudo -u postgres psql -d "${db_name}" -c "GRANT ALL ON SCHEMA public TO ${db_user};" 2>/dev/null || true
-    run_sudo -u postgres psql -d "${db_name}" -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${db_user};" 2>/dev/null || true
+    run_sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${db_name} TO ${db_user};" 2>&1 | grep -v "could not change directory" >&2 || true
+    run_sudo -u postgres psql -d "${db_name}" -c "GRANT ALL ON SCHEMA public TO ${db_user};" 2>&1 | grep -v "could not change directory" >&2 || true
+    run_sudo -u postgres psql -d "${db_name}" -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${db_user};" 2>&1 | grep -v "could not change directory" >&2 || true
     log_ok "Privileges granted to user '${db_user}' on database '${db_name}'"
 
     echo "${db_password}"
@@ -100,19 +100,21 @@ save_db_credentials() {
     local db_name="${4:-${DB_NAME}}"
     local db_host="${5:-${DB_HOST}}"
     local db_port="${6:-${DB_PORT}}"
-    local database_url
+    local database_url encoded_password
 
     if [[ -z "${db_password}" ]]; then
         log_err "Password is required to save credentials"
         return 1
     fi
 
-    database_url="postgresql+asyncpg://${db_user}:${db_password}@${db_host}:${db_port}/${db_name}"
+    encoded_password=$(printf '%s' "${db_password}" | jq -sRr @uri 2>/dev/null || printf '%s' "${db_password}" | sed 's/%/%25/g; s/@/%40/g; s/:/%3A/g; s/\//%2F/g; s/\?/%3F/g; s/#/%23/g; s/\[/%5B/g; s/\]/%5D/g')
+    database_url="postgresql+asyncpg://${db_user}:${encoded_password}@${db_host}:${db_port}/${db_name}"
 
     log "Saving database credentials to ${env_file}..."
     ensure_env_exists "${env_file}"
 
     env_set "${env_file}" "DATABASE_URL" "${database_url}"
+    env_set "${env_file}" "DB_PASSWORD" "${db_password}"
     env_set "${env_file}" "DB_NAME" "${db_name}"
     env_set "${env_file}" "DB_USER" "${db_user}"
     env_set "${env_file}" "DB_HOST" "${db_host}"
@@ -176,19 +178,19 @@ check_postgresql_status() {
     echo ""
 
     echo -e "${CYAN}PostgreSQL Version:${NC}"
-    run_sudo -u postgres psql -c "SELECT version();" 2>/dev/null || log_warn "Could not retrieve version"
+    PAGER= run_sudo -u postgres psql -tAc "SELECT version();" 2>&1 | grep -v "could not change directory" || log_warn "Could not retrieve version"
     echo ""
 
     echo -e "${CYAN}Databases:${NC}"
-    run_sudo -u postgres psql -c "\l" 2>/dev/null || log_warn "Could not list databases"
+    PAGER= run_sudo -u postgres psql -tAc "\l" 2>&1 | grep -v "could not change directory" | head -20 || log_warn "Could not list databases"
     echo ""
 
     echo -e "${CYAN}Users:${NC}"
-    run_sudo -u postgres psql -c "\du" 2>/dev/null || log_warn "Could not list users"
+    PAGER= run_sudo -u postgres psql -tAc "\du" 2>&1 | grep -v "could not change directory" | head -20 || log_warn "Could not list users"
 
     echo ""
     echo -e "${CYAN}Connection Test:${NC}"
-    if run_sudo -u postgres psql -c "SELECT 1;" &>/dev/null; then
+    if PAGER= run_sudo -u postgres psql -c "SELECT 1;" 2>&1 | grep -v "could not change directory" &>/dev/null; then
         log_ok "PostgreSQL is accepting connections"
     else
         log_err "PostgreSQL is not accepting connections"
