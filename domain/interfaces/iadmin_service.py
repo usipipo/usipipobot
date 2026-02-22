@@ -15,7 +15,7 @@ class IAdminService(ABC):
     """Interfaz del servicio de administración para gestión de usuarios y claves."""
 
     @abstractmethod
-    async def get_all_users(self) -> List[Dict]:
+    async def get_all_users(self, current_user_id: int) -> List[Dict]:
         """Obtener lista de todos los usuarios registrados."""
         pass
 
@@ -25,7 +25,7 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
-    async def get_all_keys(self) -> List[Dict]:
+    async def get_all_keys(self, current_user_id: int) -> List[Dict]:
         """Obtener todas las claves de todos los usuarios."""
         pass
 
@@ -55,6 +55,11 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
-    async def get_dashboard_stats(self) -> Dict:
+    async def get_dashboard_stats(self, current_user_id: int) -> Dict:
         """Genera estadísticas completas para el panel de control administrativo."""
+        pass
+
+    @abstractmethod
+    async def get_server_stats(self, current_user_id: int) -> Dict:
+        """Obtener estadísticas del servidor para el panel admin."""
         pass
