@@ -48,6 +48,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
             data_limit_bytes=model.data_limit_bytes or 10 * 1024**3,
             billing_reset_at=_normalize_datetime(model.billing_reset_at)
             or datetime.now(timezone.utc),
+            expires_at=_normalize_datetime(model.expires_at),
         )
 
     def _entity_to_model(self, entity: VpnKey) -> VpnKeyModel:
@@ -67,6 +68,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
             last_seen_at=entity.last_seen_at,
             data_limit_bytes=entity.data_limit_bytes,
             billing_reset_at=entity.billing_reset_at,
+            expires_at=entity.expires_at,
         )
 
     async def save(self, key: VpnKey, current_user_id: int) -> VpnKey:

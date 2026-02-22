@@ -130,11 +130,11 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
     async def create_user(
         self,
         user_id: int,
-        username: str = None,
-        full_name: str = None,
-        referral_code: str = None,
-        referred_by: int = None,
-        current_user_id: int = None,
+        username: Optional[str] = None,
+        full_name: Optional[str] = None,
+        referral_code: Optional[str] = None,
+        referred_by: Optional[int] = None,
+        current_user_id: Optional[int] = None,
     ) -> User:
         if referral_code is None:
             referral_code = secrets.token_hex(4).upper()

@@ -67,7 +67,7 @@ class AdminOperationResult:
     target_id: str
     message: str
     details: Optional[Dict] = None
-    timestamp: datetime = None
+    timestamp: Optional[datetime] = None
 
     def __post_init__(self):
         if self.timestamp is None:

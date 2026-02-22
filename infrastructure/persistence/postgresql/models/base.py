@@ -93,7 +93,16 @@ class VpnKeyModel(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     used_bytes: Mapped[int] = mapped_column(BigInteger, server_default="0")
-    last_used_at: Mapped[Optional[datetime]] = mapped_column(
+    last_seen_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    data_limit_bytes: Mapped[int] = mapped_column(
+        BigInteger, server_default="10737418240"
+    )
+    billing_reset_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 

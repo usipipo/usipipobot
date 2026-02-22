@@ -160,18 +160,21 @@ class PaymentService:
             return False
 
     async def add_storage(self, telegram_id: int, gb: int) -> bool:
-        """Agrega almacenamiento adicional al usuario (en GB)."""
+        """Agrega almacenamiento adicional al usuario (en GB).
+        
+        NOTE: Este método será eliminado en la refactorización del modelo de negocio v2.0.
+        El almacenamiento ahora se maneja a través de free_data_limit_bytes.
+        """
         try:
             user = await self.user_repo.get_by_id(telegram_id, telegram_id)
             if not user:
                 raise Exception("Usuario no encontrado")
 
-            current_storage = getattr(user, "storage_gb", 0) or 0
-            user.storage_gb = current_storage + gb
+            user.free_data_limit_bytes += gb * 1024**3
 
             await self.user_repo.save(user, telegram_id)
             logger.info(
-                f"💾 Storage added to user {telegram_id}: +{gb}GB (Total: {user.storage_gb}GB)"
+                f"💾 Storage added to user {telegram_id}: +{gb}GB (Total: {user.free_data_limit_bytes // 1024**3}GB)"
             )
             return True
         except Exception as e:

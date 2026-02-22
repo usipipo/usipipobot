@@ -130,11 +130,11 @@ class TestActivateVip:
 class TestAddStorage:
     @pytest.mark.asyncio
     async def test_add_storage_increases(self, payment_service, mock_user_repo, sample_user):
-        sample_user.storage_gb = 10
+        sample_user.free_data_limit_bytes = 10 * 1024**3
         mock_user_repo.get_by_id.return_value = sample_user
         mock_user_repo.save.return_value = sample_user
 
         result = await payment_service.add_storage(123456789, gb=5)
 
         assert result is True
-        assert sample_user.storage_gb == 15
+        assert sample_user.free_data_limit_bytes == 15 * 1024**3
