@@ -147,14 +147,15 @@ class VpnKeysHandler:
 
             # 4. Entrega diferenciada
             if key_type == "outline":
+                escaped_name = escape_markdown(key_name)
                 escaped_data = escape_markdown(new_key.key_data)
                 
-                caption = escape_markdown(
+                caption = (
                     VpnKeysMessages.Success.KEY_CREATED_WITH_DATA.format(
-                        type="OUTLINE", name=key_name, data_limit=new_key.data_limit_gb
+                        type="OUTLINE", name=escaped_name, data_limit=new_key.data_limit_gb
                     )
+                    + f"\n\nCopia el siguiente código en tu aplicación Outline:\n```\n{escaped_data}\n```"
                 )
-                caption += f"\n\nCopia el siguiente código en tu aplicación Outline:\n```\n{escaped_data}\n```"
 
                 with open(qr_path, "rb") as photo:
                     await update.message.reply_photo(
