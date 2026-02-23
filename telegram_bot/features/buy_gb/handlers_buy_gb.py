@@ -22,7 +22,11 @@ from application.services.data_package_service import (
     SLOT_OPTIONS,
     DataPackageService,
 )
+from config import settings
 from domain.entities.data_package import PackageType
+from telegram_bot.features.user_management.keyboards_user_management import (
+    UserManagementKeyboards,
+)
 from utils.logger import logger
 
 from .keyboards_buy_gb import BuyGbKeyboards
@@ -411,10 +415,17 @@ class BuyGbHandler:
             else:
                 message = BuyGbMessages.Data.DATA_INFO(summary)
 
+            is_admin_menu = user_id == int(settings.ADMIN_ID)
+            keyboard = UserManagementKeyboards.main_menu(is_admin=is_admin_menu)
+
             if is_callback:
-                await query.edit_message_text(text=message, parse_mode="Markdown")
+                await query.edit_message_text(
+                    text=message, reply_markup=keyboard, parse_mode="Markdown"
+                )
             else:
-                await update.message.reply_text(text=message, parse_mode="Markdown")
+                await update.message.reply_text(
+                    text=message, reply_markup=keyboard, parse_mode="Markdown"
+                )
 
         except Exception as e:
             logger.error(f"Error en data_handler: {e}")
