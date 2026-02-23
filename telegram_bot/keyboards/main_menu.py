@@ -19,7 +19,7 @@ class MainMenuKeyboard:
                 InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
             ],
             [
-                InlineKeyboardButton("📦 Comprar GB", callback_data="buy_data"),
+                InlineKeyboardButton("⚙️ Operaciones", callback_data="operations_menu"),
                 InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage"),
             ],
             [InlineKeyboardButton("❓ Ayuda", callback_data="help")],
@@ -38,7 +38,7 @@ class MainMenuKeyboard:
                     InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
                 ],
                 [
-                    InlineKeyboardButton("📦 Comprar GB", callback_data="buy_data"),
+                    InlineKeyboardButton("⚙️ Operaciones", callback_data="operations_menu"),
                     InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage"),
                 ],
                 [InlineKeyboardButton("❓ Ayuda", callback_data="help")],
