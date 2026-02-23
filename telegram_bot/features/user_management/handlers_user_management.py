@@ -18,6 +18,7 @@ from telegram.ext import (
 
 from application.services.admin_service import AdminService
 from application.services.user_profile_service import UserProfileService
+from telegram_bot.common.base_handler import BaseHandler
 
 # Local imports
 from application.services.vpn_service import VpnService
@@ -32,7 +33,7 @@ from .keyboards_user_management import UserManagementKeyboards
 from .messages_user_management import UserManagementMessages
 
 
-class UserManagementHandler:
+class UserManagementHandler(BaseHandler):
     """Handler para gestión de usuarios."""
 
     def __init__(
@@ -47,6 +48,7 @@ class UserManagementHandler:
             vpn_service: Servicio de VPN
             user_profile_service: Servicio de perfil de usuario (opcional)
         """
+        super().__init__(vpn_service, "VpnService")
         self.vpn_service = vpn_service
         self.user_profile_service = user_profile_service
         logger.info("👤 UserManagementHandler inicializado")
@@ -178,10 +180,7 @@ class UserManagementHandler:
             await handler.operations_menu(update, _context)
 
         elif callback_data == "show_usage":
-            from telegram_bot.features.user_management.handlers_user_management import (
-                UserManagementHandler,
-            )
-
+            logger.info(f"📊 Mostrando estado para usuario {user_id}")
             await self.status_handler(update, _context)
 
         elif callback_data == "help":
@@ -220,7 +219,7 @@ class UserManagementHandler:
     async def status_handler(
         self,
         update: Update,
-        _context: ContextTypes.DEFAULT_TYPE,
+        context: ContextTypes.DEFAULT_TYPE,
         admin_service: Optional[AdminService] = None,
     ):
         """
@@ -230,19 +229,15 @@ class UserManagementHandler:
         user_name = update.effective_user.username or update.effective_user.first_name
 
         try:
-            # Validar si es admin
             is_admin = str(telegram_id) == str(settings.ADMIN_ID)
 
             if is_admin and admin_service:
-                # Mostrar panel de control administrativo
                 stats = await admin_service.get_dashboard_stats(current_user_id=telegram_id)
                 text = self._format_admin_dashboard(user_name, stats)
             else:
-                # Mostrar estado de usuario regular
                 status_data = await self.vpn_service.get_user_status(telegram_id)
                 user_entity = status_data.get("user")
 
-                # Formatear fecha de unión
                 join_date = "N/A"
                 if (
                     user_entity
@@ -251,7 +246,6 @@ class UserManagementHandler:
                 ):
                     join_date = user_entity.created_at.strftime("%Y-%m-%d")
 
-                # Determinar estado
                 status_text = "Inactivo ⚠️"
                 if user_entity and (
                     getattr(user_entity, "is_active", False)
@@ -270,42 +264,26 @@ class UserManagementHandler:
                     )
                 )
 
-            # Determinar si es admin para el menú
             is_admin_menu = telegram_id == int(settings.ADMIN_ID)
-
-            # Verificar si hay mensaje para responder
-            if update.message:
-                await update.message.reply_text(
-                    text=text,
-                    reply_markup=UserManagementKeyboards.main_menu(
-                        is_admin=is_admin_menu
-                    ),
-                    parse_mode="Markdown",
-                )
-            elif update.callback_query:
-                await update.callback_query.message.edit_text(
-                    text=text,
-                    reply_markup=UserManagementKeyboards.main_menu(
-                        is_admin=is_admin_menu
-                    ),
-                    parse_mode="Markdown",
-                )
+            await self._reply_message(
+                update,
+                text=text,
+                reply_markup=UserManagementKeyboards.main_menu(is_admin=is_admin_menu),
+                parse_mode="Markdown",
+                context=context,
+            )
 
         except (AttributeError, ValueError, KeyError) as e:
             logger.error(f"❌ Error en status_handler para usuario {telegram_id}: {e}")
-            # Verificar si hay mensaje para responder
-            if update.message:
-                await update.message.reply_text(
-                    text=UserManagementMessages.Error.STATUS_FAILED,
-                    reply_markup=UserManagementKeyboards.main_menu(),
-                )
-            elif update.callback_query:
-                await update.callback_query.message.edit_text(
-                    text=UserManagementMessages.Error.STATUS_FAILED,
-                    reply_markup=UserManagementKeyboards.main_menu(),
-                )
+            await self._reply_message(
+                update,
+                text=UserManagementMessages.Error.STATUS_FAILED,
+                reply_markup=UserManagementKeyboards.main_menu(),
+                parse_mode="Markdown",
+                context=context,
+            )
 
-    async def info_handler(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
+    async def info_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
         Muestra información detallada del usuario.
         """
@@ -318,10 +296,12 @@ class UserManagementHandler:
                 )
 
                 if not profile:
-                    message = update.message or update.callback_query.message
-                    await message.reply_text(
+                    await self._reply_message(
+                        update,
                         text=UserManagementMessages.Error.INFO_FAILED,
                         reply_markup=UserManagementKeyboards.main_menu(),
+                        parse_mode="Markdown",
+                        context=context,
                     )
                     return
 
@@ -352,10 +332,12 @@ class UserManagementHandler:
                 user_entity = status_data.get("user")
 
                 if not user_entity:
-                    message = update.message or update.callback_query.message
-                    await message.reply_text(
+                    await self._reply_message(
+                        update,
                         text=UserManagementMessages.Error.INFO_FAILED,
                         reply_markup=UserManagementKeyboards.main_menu(),
+                        parse_mode="Markdown",
+                        context=context,
                     )
                     return
 
@@ -394,23 +376,25 @@ class UserManagementHandler:
                 )
 
             is_admin_menu = telegram_id == int(settings.ADMIN_ID)
-            message = update.message or update.callback_query.message
-
-            await message.reply_text(
+            await self._reply_message(
+                update,
                 text=text,
                 reply_markup=UserManagementKeyboards.main_menu(is_admin=is_admin_menu),
                 parse_mode="Markdown",
+                context=context,
             )
 
         except (AttributeError, ValueError, KeyError) as e:
             logger.error(f"❌ Error en info_handler para usuario {telegram_id}: {e}")
-            message = update.message or update.callback_query.message
-            await message.reply_text(
+            await self._reply_message(
+                update,
                 text=UserManagementMessages.Error.INFO_FAILED,
                 reply_markup=UserManagementKeyboards.main_menu(),
+                parse_mode="Markdown",
+                context=context,
             )
 
-    async def history_handler(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
+    async def history_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
         Muestra el historial de transacciones del usuario.
         """
@@ -418,10 +402,12 @@ class UserManagementHandler:
 
         try:
             if not self.user_profile_service:
-                message = update.message or update.callback_query.message
-                await message.reply_text(
+                await self._reply_message(
+                    update,
                     text="❌ Servicio de historial no disponible.",
                     reply_markup=UserManagementKeyboards.main_menu(),
+                    parse_mode="Markdown",
+                    context=context,
                 )
                 return
 
@@ -429,13 +415,13 @@ class UserManagementHandler:
                 telegram_id, limit=5
             )
 
-            message = update.message or update.callback_query.message
-
             if not transactions:
-                await message.reply_text(
+                await self._reply_message(
+                    update,
                     text=UserManagementMessages.History.NO_TRANSACTIONS,
                     reply_markup=UserManagementKeyboards.main_menu(),
                     parse_mode="Markdown",
+                    context=context,
                 )
                 return
 
@@ -460,20 +446,24 @@ class UserManagementHandler:
             text += UserManagementMessages.History.FOOTER
 
             is_admin_menu = telegram_id == int(settings.ADMIN_ID)
-            await message.reply_text(
+            await self._reply_message(
+                update,
                 text=text,
                 reply_markup=UserManagementKeyboards.main_menu(is_admin=is_admin_menu),
                 parse_mode="Markdown",
+                context=context,
             )
 
         except (AttributeError, ValueError, KeyError) as e:
             logger.error(
                 f"❌ Error en history_handler para usuario {telegram_id}: {e}"
             )
-            message = update.message or update.callback_query.message
-            await message.reply_text(
+            await self._reply_message(
+                update,
                 text="❌ Error al obtener historial.",
                 reply_markup=UserManagementKeyboards.main_menu(),
+                parse_mode="Markdown",
+                context=context,
             )
 
     def _format_admin_dashboard(self, user_name: str, stats: dict) -> str:
