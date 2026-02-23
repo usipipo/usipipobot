@@ -187,6 +187,7 @@ class DataPackageService:
             if expires_at.tzinfo is None:
                 expires_at = expires_at.replace(tzinfo=timezone.utc)
             days_remaining = max(0, (expires_at - now).days)
+            hours_remaining = max(0, ((expires_at - now).seconds // 3600))
 
             option = self._get_package_option(pkg.package_type.value)
             package_name = option.name if option else pkg.package_type.value.title()
@@ -198,6 +199,8 @@ class DataPackageService:
                     "used_gb": pkg.data_used_bytes / (1024**3),
                     "remaining_gb": pkg.remaining_bytes / (1024**3),
                     "days_remaining": days_remaining,
+                    "hours_remaining": hours_remaining,
+                    "expires_at": expires_at,
                 }
             )
 
