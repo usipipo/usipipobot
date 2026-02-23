@@ -167,15 +167,15 @@ class UserManagementHandler:
             handler = VpnKeysHandler(self.vpn_service)
             await handler.start_creation(update, _context)
 
-        elif callback_data == "buy_data":
+        elif callback_data == "buy_data" or callback_data == "operations_menu":
             from application.services.common.container import get_container
-            from application.services.payment_service import PaymentService
-            from telegram_bot.features.payments.handlers_payments import PaymentsHandler
+            from application.services.referral_service import ReferralService
+            from telegram_bot.features.operations.handlers_operations import OperationsHandler
 
             container = get_container()
-            payment_service = container.resolve(PaymentService)
-            handler = PaymentsHandler(payment_service, self.vpn_service)
-            await handler.show_payment_menu(update, _context)
+            referral_service = container.resolve(ReferralService)
+            handler = OperationsHandler(self.vpn_service, referral_service)
+            await handler.operations_menu(update, _context)
 
         elif callback_data == "show_usage":
             from telegram_bot.features.user_management.handlers_user_management import (
@@ -537,6 +537,6 @@ def get_user_callback_handlers(
         ),
         CallbackQueryHandler(
             handler.main_menu_callback,
-            pattern="^(show_keys|buy_data|show_usage|help|help_faq|help_support|admin_panel|show_history)$",
+            pattern="^(show_keys|buy_data|operations_menu|show_usage|help|help_faq|help_support|admin_panel|show_history)$",
         ),
     ]
