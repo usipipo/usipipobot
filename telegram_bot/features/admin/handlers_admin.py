@@ -584,7 +584,7 @@ class AdminHandler(BaseConversationHandler):
         key_id = query.data.split("_")[-1]
 
         try:
-            result = await self.service.delete_user_key_complete(key_id)
+            result = await self.service.toggle_key_status(key_id, active=False)
 
             if result.get("success"):
                 message = AdminMessages.Keys.KEY_SUSPENDED
@@ -602,6 +602,42 @@ class AdminHandler(BaseConversationHandler):
 
         except Exception as e:
             await self._handle_error(update, context, e, "suspend_key")
+            return ADMIN_MENU
+
+    @admin_required
+    @admin_spinner_callback
+    async def reactivate_key(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Reactiva una llave VPN suspendida."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+        admin_id = update.effective_user.id
+
+        key_id = query.data.split("_")[-1]
+
+        try:
+            result = await self.service.toggle_key_status(key_id, active=True)
+
+            if result.get("success"):
+                message = AdminMessages.Keys.KEY_REACTIVATED
+            else:
+                error = result.get("error", "Error desconocido")
+                message = AdminMessages.Error.OPERATION_FAILED.format(error=error)
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_keys(),
+                parse_mode="Markdown",
+            )
+            return VIEWING_KEYS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "reactivate_key")
             return ADMIN_MENU
 
     @admin_required
@@ -835,6 +871,7 @@ def get_admin_callback_handlers(admin_service: AdminService):
         CallbackQueryHandler(handler.keys_filter, pattern=r"^keys_filter_\w+$"),
         CallbackQueryHandler(handler.show_key_details, pattern=r"^key_details_[a-f0-9\-]+$"),
         CallbackQueryHandler(handler.suspend_key, pattern=r"^key_suspend_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.reactivate_key, pattern=r"^key_reactivate_[a-f0-9\-]+$"),
         CallbackQueryHandler(handler.confirm_delete_key, pattern=r"^key_delete_[a-f0-9\-]+$"),
         CallbackQueryHandler(handler.execute_delete_key, pattern=r"^confirm_delete_key_[a-f0-9\-]+$"),
         CallbackQueryHandler(handler.cancel_key_action, pattern=r"^cancel_delete_key$"),
@@ -884,6 +921,7 @@ def get_admin_conversation_handler(admin_service: AdminService) -> ConversationH
             VIEWING_KEY_DETAILS: [
                 CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
                 CallbackQueryHandler(handler.suspend_key, pattern=r"^key_suspend_[a-f0-9\-]+$"),
+                CallbackQueryHandler(handler.reactivate_key, pattern=r"^key_reactivate_[a-f0-9\-]+$"),
                 CallbackQueryHandler(handler.confirm_delete_key, pattern=r"^key_delete_[a-f0-9\-]+$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),

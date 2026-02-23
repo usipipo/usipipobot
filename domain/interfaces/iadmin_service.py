@@ -65,6 +65,11 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
+    async def toggle_key_status(self, key_id: str, active: bool) -> Dict:
+        """Activar o desactivar una clave VPN."""
+        pass
+
+    @abstractmethod
     async def get_server_status(self) -> Dict[str, Dict]:
         """Obtener estado de los servidores VPN."""
         pass
