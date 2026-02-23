@@ -2,144 +2,69 @@
 Mensajes para operaciones del usuario de uSipipo.
 
 Author: uSipipo Team
-Version: 2.0.0 - Feature-based architecture
+Version: 3.0.0 - Creditos + Shop
 """
 
 
 class OperationsMessages:
     """Mensajes para operaciones del usuario."""
 
-    # ============================================
-    # MENU
-    # ============================================
-
     class Menu:
-        """Mensajes del menú de operaciones."""
-
         MAIN = (
-            "💰 **Centro de Operaciones**\n\n"
-            "Gestiona tu cuenta y accede a servicios:\n\n"
-            "💎 **Balance y Transacciones**\n"
-            "👥 **Sistema de Referidos**\n\n"
-            "Selecciona una opción:"
+            "⚙️ **Operaciones**\n\n"
+            "Gestiona tu cuenta y servicios:\n\n"
+            "🎁 **Creditos** - Obtén beneficios por referir amigos\n"
+            "🛒 **Shop** - Compra paquetes y slots\n"
+            "👥 **Referidos** - Invita amigos y gana creditos\n\n"
+            "Selecciona una opcion:"
         )
 
-    # ============================================
-    # BALANCE
-    # ============================================
-
-    class Balance:
-        """Mensajes de balance."""
-
+    class Credits:
         DISPLAY = (
-            "💰 **Tu Cuenta**\n\n"
-            "👤 **Usuario:** {name}\n"
-            "🎁 **Créditos de Referido:** {credits} créditos\n"
-            "📊 **Total Gastado:** ${total_spent:.2f}\n\n"
-            "💡 Usa tus créditos para obtener datos gratis o slots extra."
+            "🎁 **Tus Creditos**\n\n"
+            "💎 **Creditos disponibles:** {credits}\n\n"
+            "💡 Los creditos se obtienen al referir amigos.\n"
+            "Usalos para obtener GB extra o slots adicionales."
         )
 
-        NO_BALANCE = (
-            "💰 **Sin Balance**\n\n"
-            "No tienes estrellas en tu cuenta.\n\n"
-            "💡 *Opciones para obtener estrellas:*\n"
-            "• Deposita fondos\n"
-            "• Invita amigos (referidos)"
+        REDEEM_DATA = (
+            "📦 **Canjear Creditos por GB**\n\n"
+            "💡 {credits_per_gb} creditos = 1 GB de navegacion\n\n"
+            "Tus creditos: {credits}\n"
+            "GB disponibles para canjear: {gb_available}"
         )
 
-        TRANSACTION_SUCCESS = (
-            "✅ **Transacción Exitosa**\n\n"
-            "Tu balance ha sido actualizado.\n\n"
-            "💰 **Nuevo Balance:** {balance} estrellas"
+        REDEEM_SLOT = (
+            "🔑 **Canjear Creditos por Slot**\n\n"
+            "💡 {credits_per_slot} creditos = 1 slot adicional\n\n"
+            "Tus creditos: {credits}\n"
+            "Puedes obtener: {slots_available} slot(s)"
         )
 
-        TRANSACTION_FAILED = (
-            "❌ **Transacción Fallida**\n\n"
-            "No pude procesar tu transacción.\n\n"
-            "Error: {error}"
+    class Shop:
+        MENU = (
+            "🛒 **Shop**\n\n"
+            "📦 **Paquetes de GB** - Compra con Telegram Stars\n"
+            "🔑 **Slots** - Mas claves VPN con Telegram Stars\n"
+            "✨ **Extras** - Canjea tus creditos de referido\n\n"
+            "Selecciona lo que deseas comprar:"
         )
-
-    # ============================================
-    # TRANSACTIONS
-    # ============================================
-
-    class Transactions:
-        """Mensajes de transacciones."""
-
-        HISTORY = (
-            "📊 **Historial de Transacciones**\n\n"
-            "Usuario: {user_id}\n"
-            "Total de transacciones: {count}\n\n"
-            "📋 *Aquí se mostrará tu historial completo*"
-        )
-
-        TRANSACTION_DETAIL = (
-            "📋 **Detalle de Transacción**\n\n"
-            "🆔 **ID:** {transaction_id}\n"
-            "📅 **Fecha:** {date}\n"
-            "💰 **Monto:** ${amount:.2f}\n"
-            "📝 **Descripción:** {description}\n"
-            "🟢 **Estado:** {status}\n\n"
-            "💡 *Esta transacción ya ha sido procesada*"
-        )
-
-        NO_TRANSACTIONS = (
-            "📭 **Sin Transacciones**\n\n"
-            "No tienes transacciones registradas.\n\n"
-            "💡 *Realiza tu primera operación para ver el historial*"
-        )
-
-    # ============================================
-    # ERRORS
-    # ============================================
 
     class Error:
-        """Mensajes de error."""
-
         SYSTEM_ERROR = (
             "❌ **Error del Sistema**\n\n"
             "No pude procesar tu solicitud.\n\n"
-            "Por favor, intenta más tarde."
+            "Por favor, intenta mas tarde."
         )
 
-        SERVICE_UNAVAILABLE = (
-            "⚠️ **Servicio No Disponible**\n\n"
-            "Esta función no está disponible temporalmente.\n\n"
-            "Por favor, intenta más tarde."
+        INSUFFICIENT_CREDITS = (
+            "💸 **Creditos Insuficientes**\n\n"
+            "No tienes suficientes creditos para esta operacion.\n\n"
+            "💡 Invita mas amigos para obtener creditos."
         )
-
-        INSUFFICIENT_BALANCE = (
-            "💸 **Balance Insuficiente**\n\n"
-            "No tienes suficientes estrellas para esta operación.\n\n"
-            "💡 *Recarga tu balance para continuar*"
-        )
-
-        INVALID_AMOUNT = (
-            "❌ **Monto Inválido**\n\n"
-            "El monto especificado no es válido.\n\n"
-            "💡 *Verifica el amounto e intenta nuevamente*"
-        )
-
-    # ============================================
-    # SUCCESS
-    # ============================================
 
     class Success:
-        """Mensajes de éxito."""
-
         OPERATION_COMPLETED = (
-            "✅ **Operación Completada**\n\n"
+            "✅ **Operacion Completada**\n\n"
             "Tu solicitud ha sido procesada exitosamente."
-        )
-
-        PAYMENT_PROCESSED = (
-            "💳 **Pago Procesado**\n\n"
-            "Tu pago ha sido procesado correctamente.\n\n"
-            "💰 **Balance Actualizado:** {balance} estrellas"
-        )
-
-        REFERRAL_LINK_SHARED = (
-            "🔗 **Enlace Compartido**\n\n"
-            "Tu enlace de referido está listo para compartir.\n\n"
-            "💡 *Cuanta más gente invites, más ganas!*"
         )

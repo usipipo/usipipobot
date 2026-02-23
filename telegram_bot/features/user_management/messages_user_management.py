@@ -37,7 +37,7 @@ class UserManagementMessages:
             "📱 *Usa el menú de abajo para:*\n"
             "• Ver tus claves VPN activas\n"
             "• Crear nuevas claves\n"
-            "• Comprar más datos\n"
+            "• Gestionar créditos y compras\n"
             "• Ver tu consumo\n\n"
             "¿Necesitas ayuda? Presiona el botón ❓"
         )
@@ -52,12 +52,12 @@ class UserManagementMessages:
             "📱 *Guía Rápida:*\n"
             "🔑 _Mis Claves VPN_ - Ver todas tus claves activas\n"
             "➕ _Nueva Clave_ - Crear una nueva clave VPN\n"
-            "📦 _Comprar GB_ - Adquirir más datos\n"
+            "⚙️ _Operaciones_ - Créditos, Shop, Referidos\n"
             "💾 _Mis Datos_ - Ver tu consumo actual\n\n"
             "💡 *Consejos:*\n"
             "• Puedes crear hasta 2 claves gratis\n"
             "• Cada clave tiene 10GB de datos\n"
-            "• Compra más GB cuando los necesites"
+            "• Usa el menú Operaciones para más opciones"
         )
 
         FAQ_TEXT = (

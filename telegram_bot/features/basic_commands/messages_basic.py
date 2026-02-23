@@ -15,6 +15,6 @@ class BasicMessages:
         "/help - Mostrar ayuda\n"
         "/keys - Ver mis claves\n"
         "/newkey - Crear nueva clave\n"
-        "/buy - Comprar GB\n"
+        "/operaciones - Menu de operaciones\n"
         "/data - Ver consumo\n"
     )
