@@ -306,18 +306,22 @@ class UserManagementHandler(BaseHandler):
                     return
 
                 join_date = profile.created_at.strftime("%Y-%m-%d")
-                status_text = "Activo ✅" if profile.status == "active" else "Inactivo ⚠️"
+                status_text = "Activo" if profile.status == "active" else "Inactivo"
+                
+                total_gb = profile.total_used_gb + profile.free_data_remaining_gb
+                data_percentage = (profile.total_used_gb / total_gb * 100) if total_gb > 0 else 0
 
                 text = (
                     UserManagementMessages.Info.HEADER
-                    + "\n\n"
-                    + UserManagementMessages.Info.USER_INFO.format(
+                    + UserManagementMessages.Info.USER_INFO(
                         name=profile.full_name or "N/A",
                         user_id=profile.user_id,
                         username=profile.username or "N/A",
                         join_date=join_date,
                         status=status_text,
                         data_used=f"{profile.total_used_gb:.2f} GB",
+                        data_total=f"{total_gb:.2f} GB",
+                        data_percentage=data_percentage,
                         free_data_remaining=f"{profile.free_data_remaining_gb:.2f} GB",
                         active_packages=profile.active_packages,
                         keys_used=profile.keys_used,
@@ -345,27 +349,28 @@ class UserManagementHandler(BaseHandler):
                 if hasattr(user_entity, "created_at") and user_entity.created_at:
                     join_date = user_entity.created_at.strftime("%Y-%m-%d")
 
-                status_text = "Inactivo ⚠️"
+                status_text = "Inactivo"
                 if getattr(user_entity, "is_active", False) or getattr(
                     user_entity, "status", None
                 ) == "active":
-                    status_text = "Activo ✅"
+                    status_text = "Activo"
 
                 keys = status_data.get("keys", [])
                 keys_used = len([k for k in keys if getattr(k, "is_active", True)])
-                data_used = f"{status_data.get('total_used_gb', 0):.2f} GB"
+                data_used_gb = status_data.get('total_used_gb', 0)
 
                 text = (
                     UserManagementMessages.Info.HEADER
-                    + "\n\n"
-                    + UserManagementMessages.Info.USER_INFO.format(
+                    + UserManagementMessages.Info.USER_INFO(
                         name=user_entity.full_name or "N/A",
                         user_id=telegram_id,
                         username=user_entity.username or "N/A",
                         join_date=join_date,
                         status=status_text,
-                        data_used=data_used,
-                        free_data_remaining="N/A",
+                        data_used=f"{data_used_gb:.2f} GB",
+                        data_total="10.00 GB",
+                        data_percentage=data_used_gb / 10 * 100 if data_used_gb else 0,
+                        free_data_remaining="10.00 GB",
                         active_packages=0,
                         keys_used=keys_used,
                         keys_total=user_entity.max_keys,
