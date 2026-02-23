@@ -278,6 +278,76 @@ class AdminService(IAdminService):
                 "error": str(e),
             }
 
+    async def toggle_key_status(self, key_id: str, active: bool = True) -> Dict[str, Any]:
+        """Activa o desactiva una llave VPN sin eliminarla."""
+        try:
+            key = await self.key_repository.get_key(key_id)
+            if not key:
+                return {
+                    "success": False,
+                    "error": "Clave no encontrada",
+                }
+
+            if active:
+                success = await self._reactivate_key_on_servers(key)
+            else:
+                success = await self._suspend_key_on_servers(key)
+
+            if success:
+                key.is_active = active
+                await self.key_repository.save(key, key.user_id or 1)
+                logger.info(f"Clave {key_id} {'reactivada' if active else 'suspendida'}")
+                return {"success": True}
+            else:
+                return {
+                    "success": False,
+                    "error": f"Error al {'reactivar' if active else 'suspender'} en servidores",
+                }
+
+        except Exception as e:
+            logger.error(f"Error al cambiar estado de clave {key_id}: {e}")
+            return {"success": False, "error": str(e)}
+
+    async def _suspend_key_on_servers(self, key) -> bool:
+        """Suspende una llave en los servidores VPN."""
+        try:
+            success = True
+            key_type = str(key.key_type).lower() if key.key_type else ""
+
+            if key_type == "wireguard":
+                result = await self.wireguard_client.disable_client(key.name or key.external_id)
+                if not result:
+                    success = False
+            elif key_type == "outline":
+                result = await self.outline_client.disable_key(key.id or key.external_id)
+                if not result:
+                    success = False
+
+            return success
+        except Exception as e:
+            logger.error(f"Error suspendiendo llave en servidores: {e}")
+            return False
+
+    async def _reactivate_key_on_servers(self, key) -> bool:
+        """Reactiva una llave en los servidores VPN."""
+        try:
+            success = True
+            key_type = str(key.key_type).lower() if key.key_type else ""
+
+            if key_type == "wireguard":
+                result = await self.wireguard_client.enable_client(key.name or key.external_id)
+                if not result:
+                    success = False
+            elif key_type == "outline":
+                result = await self.outline_client.enable_key(key.id or key.external_id)
+                if not result:
+                    success = False
+
+            return success
+        except Exception as e:
+            logger.error(f"Error reactivando llave en servidores: {e}")
+            return False
+
     async def get_server_status(self) -> Dict[str, Dict]:
         """Obtener estado de los servidores VPN."""
         try:
