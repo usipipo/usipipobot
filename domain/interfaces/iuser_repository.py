@@ -38,10 +38,6 @@ class IUserRepository(Protocol):
         """Obtiene todos los usuarios referidos por este usuario como lista de dicts."""
         ...
 
-    async def get_user(self, telegram_id: int, current_user_id: int) -> Optional[User]:
-        """Busca un usuario por su ID de Telegram (alias de get_by_id)."""
-        ...
-
     async def create_user(
         self,
         user_id: int,
