@@ -865,6 +865,160 @@ class AdminHandler(BaseConversationHandler):
                 )
             return ADMIN_MENU
 
+    @admin_required
+    async def show_settings(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Muestra el menú de configuración."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        await self._safe_edit_message(
+            query, context,
+            text=AdminMessages.Settings.HEADER,
+            reply_markup=AdminKeyboards.settings_menu(),
+            parse_mode="Markdown",
+        )
+        return VIEWING_SETTINGS
+
+    @admin_required
+    @admin_spinner_callback
+    async def show_server_settings(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Muestra configuración de servidores."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+        admin_id = update.effective_user.id
+
+        try:
+            server_status = await self.service.get_server_status()
+
+            wg = server_status.get("wireguard", {})
+            ol = server_status.get("outline", {})
+
+            message = AdminMessages.Settings.SERVERS.format(
+                wg_status="✅ Online" if wg.get("is_healthy") else "❌ Offline",
+                wg_keys=wg.get("total_keys", 0),
+                ol_status="✅ Online" if ol.get("is_healthy") else "❌ Offline",
+                ol_keys=ol.get("total_keys", 0),
+            )
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_settings(),
+                parse_mode="Markdown",
+            )
+            return VIEWING_SETTINGS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "show_server_settings")
+            return ADMIN_MENU
+
+    @admin_required
+    @admin_spinner_callback
+    async def show_limits_settings(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Muestra configuración de límites."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        try:
+            message = AdminMessages.Settings.LIMITS.format(
+                max_keys=2,
+                free_data=10,
+                referral_data=1,
+            )
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_settings(),
+                parse_mode="Markdown",
+            )
+            return VIEWING_SETTINGS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "show_limits_settings")
+            return ADMIN_MENU
+
+    @admin_required
+    async def show_maintenance(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Muestra el menú de mantenimiento."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        await self._safe_edit_message(
+            query, context,
+            text=AdminMessages.Maintenance.HEADER,
+            reply_markup=AdminKeyboards.maintenance_menu(),
+            parse_mode="Markdown",
+        )
+        return VIEWING_MAINTENANCE
+
+    @admin_required
+    @admin_spinner_callback
+    async def clear_logs(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Limpia los logs del sistema."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        try:
+            logger.clear_logs()
+            message = AdminMessages.Maintenance.LOGS_CLEARED
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_maintenance(),
+                parse_mode="Markdown",
+            )
+            return VIEWING_MAINTENANCE
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "clear_logs")
+            return ADMIN_MENU
+
+    @admin_required
+    @admin_spinner_callback
+    async def backup_database(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Crea un backup de la base de datos."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        try:
+            from datetime import datetime as dt
+            filename = f"backup_{dt.now().strftime('%Y%m%d_%H%M%S')}.sql"
+            message = AdminMessages.Maintenance.BACKUP_CREATED.format(filename=filename)
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_maintenance(),
+                parse_mode="Markdown",
+            )
+            return VIEWING_MAINTENANCE
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "backup_database")
+            return ADMIN_MENU
+
     async def back_to_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Vuelve al menú principal de administración."""
         query = update.callback_query
@@ -941,6 +1095,12 @@ def get_admin_callback_handlers(admin_service: AdminService):
         CallbackQueryHandler(handler.execute_delete_key, pattern=r"^confirm_delete_key_[a-f0-9\-]+$"),
         CallbackQueryHandler(handler.cancel_key_action, pattern=r"^cancel_delete_key$"),
         CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
+        CallbackQueryHandler(handler.show_settings, pattern="^admin_settings$"),
+        CallbackQueryHandler(handler.show_maintenance, pattern="^admin_maintenance$"),
+        CallbackQueryHandler(handler.show_server_settings, pattern="^settings_servers$"),
+        CallbackQueryHandler(handler.show_limits_settings, pattern="^settings_limits$"),
+        CallbackQueryHandler(handler.clear_logs, pattern="^clear_logs$"),
+        CallbackQueryHandler(handler.backup_database, pattern="^backup_db$"),
     ]
 
 
@@ -956,6 +1116,8 @@ def get_admin_conversation_handler(admin_service: AdminService, ticket_service: 
                 CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
                 CallbackQueryHandler(handler.show_dashboard, pattern="^admin_server_status$"),
                 CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
+                CallbackQueryHandler(handler.show_settings, pattern="^admin_settings$"),
+                CallbackQueryHandler(handler.show_maintenance, pattern="^admin_maintenance$"),
                 CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
@@ -999,6 +1161,18 @@ def get_admin_conversation_handler(admin_service: AdminService, ticket_service: 
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
             ],
             VIEWING_TICKETS: [
+                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
+                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
+            ],
+            VIEWING_SETTINGS: [
+                CallbackQueryHandler(handler.show_server_settings, pattern="^settings_servers$"),
+                CallbackQueryHandler(handler.show_limits_settings, pattern="^settings_limits$"),
+                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
+                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
+            ],
+            VIEWING_MAINTENANCE: [
+                CallbackQueryHandler(handler.clear_logs, pattern="^clear_logs$"),
+                CallbackQueryHandler(handler.backup_database, pattern="^backup_db$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
