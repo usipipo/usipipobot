@@ -2,11 +2,11 @@
 Handlers para panel administrativo de uSipipo.
 
 Author: uSipipo Team
-Version: 2.0.0 - Feature-based architecture
+Version: 3.0.0 - Complete admin management
 """
 
 from datetime import datetime
-from pathlib import Path
+from typing import List, Dict, Any, Optional
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
@@ -28,34 +28,35 @@ from utils.spinner import SpinnerManager, admin_spinner_callback, with_spinner
 from .keyboards_admin import AdminKeyboards
 from .messages_admin import AdminMessages
 
-# Estados de la conversación de administración
 ADMIN_MENU = 0
 VIEWING_USERS = 1
-VIEWING_KEYS = 2
-DELETING_KEY = 3
-CONFIRMING_DELETE = 4
+VIEWING_USER_DETAILS = 2
+VIEWING_KEYS = 3
+VIEWING_KEY_DETAILS = 4
+CONFIRMING_USER_DELETE = 5
+CONFIRMING_KEY_DELETE = 6
+VIEWING_SETTINGS = 7
+VIEWING_MAINTENANCE = 8
+
+USERS_PER_PAGE = 10
+KEYS_PER_PAGE = 10
 
 
 class AdminHandler(BaseConversationHandler):
     """Handler para funciones administrativas."""
 
     def __init__(self, admin_service: AdminService):
-        """
-        Inicializa el handler administrativo.
-
-        Args:
-            admin_service: Servicio de administración
-        """
         super().__init__(admin_service, "AdminService")
         logger.info("🔧 AdminHandler inicializado")
+
+    def _is_admin(self, user_id: int) -> bool:
+        """Verifica si el usuario es administrador."""
+        return str(user_id) == str(settings.ADMIN_ID)
 
     async def admin_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra el menú de administración."""
         user = update.effective_user
-        admin_id = user.id
-
-        # Verificar si es admin
-        if admin_id != int(settings.ADMIN_ID):
+        if not self._is_admin(user.id):
             await self._reply_message(
                 update,
                 "⚠️ Acceso denegado. Función solo para administradores.",
@@ -71,6 +72,9 @@ class AdminHandler(BaseConversationHandler):
             parse_mode="Markdown",
             context=context,
         )
+        context.user_data.pop("users_page", None)
+        context.user_data.pop("keys_page", None)
+        context.user_data.pop("keys_filter", None)
         return ADMIN_MENU
 
     @admin_required
@@ -81,32 +85,39 @@ class AdminHandler(BaseConversationHandler):
         context: ContextTypes.DEFAULT_TYPE,
         spinner_message_id: int = None,
     ):
-        """Muestra lista de usuarios."""
+        """Muestra lista de usuarios con paginación."""
         query = update.callback_query
         await self._safe_answer_query(query)
         admin_id = update.effective_user.id
 
+        page = 1
+        if context.user_data.get("users_page"):
+            page = context.user_data["users_page"]
+
         try:
-            users = await self.service.get_all_users(current_user_id=admin_id)
+            result = await self.service.get_users_paginated(
+                page=page, per_page=USERS_PER_PAGE
+            )
+            users = result.get("users", [])
+            total_pages = result.get("total_pages", 1)
+            total_users = result.get("total_users", 0)
 
             if not users:
-                message = AdminMessages.Users.NO_USERS
-            else:
-                message = AdminMessages.Users.HEADER
-                for user in users[:20]:  # Limitar a 20 usuarios
-                    status = "✅ Activo" if user.is_active else "❌ Inactivo"
-                    message += f"\n👤 {user.full_name or user.username or 'N/A'} ({user.id})\n   {status}\n"
+                await SpinnerManager.replace_spinner_with_message(
+                    update, context, spinner_message_id,
+                    text=AdminMessages.Users.NO_USERS,
+                    reply_markup=AdminKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+                return ADMIN_MENU
 
-                if len(users) > 20:
-                    message += f"\n... y {len(users) - 20} más usuarios"
+            message = AdminMessages.Users.HEADER + f"📊 Total: {total_users} usuarios\n\n"
+            keyboard = AdminKeyboards.users_list_paginated(users, page, total_pages)
 
-            # Reemplazar spinner con el mensaje final
             await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
+                update, context, spinner_message_id,
                 text=message,
-                reply_markup=AdminKeyboards.back_to_menu(),
+                reply_markup=keyboard,
                 parse_mode="Markdown",
             )
             return VIEWING_USERS
@@ -116,6 +127,252 @@ class AdminHandler(BaseConversationHandler):
             return ADMIN_MENU
 
     @admin_required
+    async def users_page(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Navega entre páginas de usuarios."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        page = int(query.data.split("_")[-1])
+        context.user_data["users_page"] = page
+
+        return await self._show_users_page(update, context, page)
+
+    async def _show_users_page(self, update: Update, context: ContextTypes.DEFAULT_TYPE, page: int):
+        """Muestra una página específica de usuarios."""
+        query = update.callback_query
+        admin_id = update.effective_user.id
+
+        try:
+            result = await self.service.get_users_paginated(
+                page=page, per_page=USERS_PER_PAGE
+            )
+            users = result.get("users", [])
+            total_pages = result.get("total_pages", 1)
+            total_users = result.get("total_users", 0)
+
+            if not users:
+                await self._safe_edit_message(
+                    query, context,
+                    text=AdminMessages.Users.NO_USERS,
+                    reply_markup=AdminKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+                return ADMIN_MENU
+
+            message = AdminMessages.Users.HEADER + f"📊 Total: {total_users} usuarios\n\n"
+            keyboard = AdminKeyboards.users_list_paginated(users, page, total_pages)
+
+            await self._safe_edit_message(
+                query, context,
+                text=message,
+                reply_markup=keyboard,
+                parse_mode="Markdown",
+            )
+            return VIEWING_USERS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "_show_users_page")
+            return ADMIN_MENU
+
+    @admin_required
+    @admin_spinner_callback
+    async def show_user_details(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Muestra detalles de un usuario específico."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+        admin_id = update.effective_user.id
+
+        user_id = int(query.data.split("_")[-1])
+
+        try:
+            user = await self.service.get_user_by_id(user_id)
+            if not user:
+                await SpinnerManager.replace_spinner_with_message(
+                    update, context, spinner_message_id,
+                    text=AdminMessages.Error.USER_NOT_FOUND,
+                    reply_markup=AdminKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+                return ADMIN_MENU
+
+            keys = await self.service.get_user_keys(user_id)
+            active_keys = [k for k in keys if k.is_active]
+
+            created_at = user.get("created_at")
+            if created_at:
+                created_at = created_at.strftime("%Y-%m-%d %H:%M") if hasattr(created_at, 'strftime') else str(created_at)[:16]
+            else:
+                created_at = "N/A"
+
+            message = AdminMessages.Users.USER_DETAILS.format(
+                user_id=user.get("user_id", user_id),
+                full_name=user.get("full_name", "N/A"),
+                username=user.get("username", "N/A"),
+                created_at=created_at,
+                status=user.get("status", "N/A").upper(),
+                balance=user.get("balance_stars", 0),
+                total_deposited=user.get("total_deposited", 0),
+                referral_credits=user.get("referral_credits", 0),
+                keys_count=len(active_keys),
+            )
+
+            is_active = user.get("status", "").lower() == "active"
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.user_actions(user_id, is_active),
+                parse_mode="Markdown",
+            )
+            context.user_data["viewing_user_id"] = user_id
+            return VIEWING_USER_DETAILS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "show_user_details")
+            return ADMIN_MENU
+
+    @admin_required
+    @admin_spinner_callback
+    async def suspend_user(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Suspende un usuario."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        user_id = int(query.data.split("_")[-1])
+
+        try:
+            result = await self.service.update_user_status(user_id, "suspended")
+
+            if result.success:
+                message = AdminMessages.Users.USER_SUSPENDED
+            else:
+                message = AdminMessages.Error.OPERATION_FAILED.format(error=result.message)
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_users(),
+                parse_mode="Markdown",
+            )
+            return VIEWING_USERS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "suspend_user")
+            return ADMIN_MENU
+
+    @admin_required
+    @admin_spinner_callback
+    async def reactivate_user(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Reactiva un usuario."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        user_id = int(query.data.split("_")[-1])
+
+        try:
+            result = await self.service.update_user_status(user_id, "active")
+
+            if result.success:
+                message = AdminMessages.Users.USER_REACTIVATED
+            else:
+                message = AdminMessages.Error.OPERATION_FAILED.format(error=result.message)
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_users(),
+                parse_mode="Markdown",
+            )
+            return VIEWING_USERS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "reactivate_user")
+            return ADMIN_MENU
+
+    @admin_required
+    async def confirm_delete_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Muestra confirmación para eliminar usuario."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        user_id = int(query.data.split("_")[-1])
+        context.user_data["delete_user_id"] = user_id
+
+        await self._safe_edit_message(
+            query, context,
+            text=AdminMessages.Users.CONFIRM_DELETE.format(user_id=user_id),
+            reply_markup=AdminKeyboards.confirmation("delete_user", user_id),
+            parse_mode="Markdown",
+        )
+        return CONFIRMING_USER_DELETE
+
+    @admin_required
+    @admin_spinner_callback
+    async def execute_delete_user(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Ejecuta la eliminación de usuario."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        user_id = int(query.data.split("_")[-1])
+        context.user_data.pop("delete_user_id", None)
+
+        try:
+            result = await self.service.delete_user(user_id)
+
+            if result.success:
+                message = AdminMessages.Users.USER_DELETED
+            else:
+                message = AdminMessages.Error.OPERATION_FAILED.format(error=result.message)
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_menu(),
+                parse_mode="Markdown",
+            )
+            return ADMIN_MENU
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "execute_delete_user")
+            return ADMIN_MENU
+
+    @admin_required
+    async def cancel_user_action(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Cancela una acción de usuario."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        context.user_data.pop("delete_user_id", None)
+
+        await self._safe_edit_message(
+            query, context,
+            text=AdminMessages.Success.OPERATION_CANCELLED,
+            reply_markup=AdminKeyboards.back_to_menu(),
+            parse_mode="Markdown",
+        )
+        return ADMIN_MENU
+
+    @admin_required
     @admin_spinner_callback
     async def show_keys(
         self,
@@ -123,36 +380,37 @@ class AdminHandler(BaseConversationHandler):
         context: ContextTypes.DEFAULT_TYPE,
         spinner_message_id: int = None,
     ):
-        """Muestra lista de llaves VPN."""
+        """Muestra lista de llaves VPN con paginación."""
         query = update.callback_query
         await self._safe_answer_query(query)
         admin_id = update.effective_user.id
 
-        if admin_id != int(settings.ADMIN_ID):
-            return None
+        page = context.user_data.get("keys_page", 1)
+        key_filter = context.user_data.get("keys_filter", "all")
 
         try:
-            keys = await self.service.get_all_keys(current_user_id=admin_id)
+            result = await self._get_filtered_keys(admin_id, page, key_filter)
+            keys = result.get("keys", [])
+            total_pages = result.get("total_pages", 1)
+            total_keys = result.get("total_keys", 0)
 
             if not keys:
-                message = AdminMessages.Keys.NO_KEYS
-            else:
-                message = AdminMessages.Keys.HEADER
-                for key in keys[:20]:
-                    status = "✅ Activa" if key.is_active else "❌ Inactiva"
-                    message += (
-                        f"\n🔑 {key.key_name or 'N/A'} ({key.user_id})\n   {status}\n"
-                    )
+                await SpinnerManager.replace_spinner_with_message(
+                    update, context, spinner_message_id,
+                    text=AdminMessages.Keys.NO_KEYS,
+                    reply_markup=AdminKeyboards.keys_filter_menu(),
+                    parse_mode="Markdown",
+                )
+                return VIEWING_KEYS
 
-                if len(keys) > 20:
-                    message += f"\n... y {len(keys) - 20} más llaves"
+            filter_text = f"🔍 Filtro: {key_filter.upper()}\n" if key_filter != "all" else ""
+            message = AdminMessages.Keys.HEADER + filter_text + f"📊 Total: {total_keys} llaves\n\n"
+            keyboard = AdminKeyboards.keys_list_paginated(keys, page, total_pages, key_filter)
 
             await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
+                update, context, spinner_message_id,
                 text=message,
-                reply_markup=AdminKeyboards.back_to_menu(),
+                reply_markup=keyboard,
                 parse_mode="Markdown",
             )
             return VIEWING_KEYS
@@ -161,76 +419,322 @@ class AdminHandler(BaseConversationHandler):
             await self._handle_error(update, context, e, "show_keys")
             return ADMIN_MENU
 
+    async def _get_filtered_keys(self, admin_id: int, page: int, key_filter: str) -> Dict:
+        """Obtiene llaves filtradas con paginación."""
+        all_keys = await self.service.get_all_keys(current_user_id=admin_id)
+
+        if key_filter != "all":
+            all_keys = [k for k in all_keys if k.get("key_type", "").lower() == key_filter.lower()]
+
+        total_keys = len(all_keys)
+        total_pages = max(1, (total_keys + KEYS_PER_PAGE - 1) // KEYS_PER_PAGE)
+        offset = (page - 1) * KEYS_PER_PAGE
+        keys = all_keys[offset:offset + KEYS_PER_PAGE]
+
+        return {
+            "keys": keys,
+            "total_pages": total_pages,
+            "total_keys": total_keys,
+        }
+
+    @admin_required
+    async def keys_page(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Navega entre páginas de llaves."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        page = int(query.data.split("_")[-1])
+        context.user_data["keys_page"] = page
+
+        return await self._show_keys_page(update, context, page)
+
+    @admin_required
+    async def keys_filter(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Filtra llaves por tipo."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        key_filter = query.data.split("_")[-1]
+        context.user_data["keys_filter"] = key_filter
+        context.user_data["keys_page"] = 1
+
+        return await self._show_keys_page(update, context, 1)
+
+    async def _show_keys_page(self, update: Update, context: ContextTypes.DEFAULT_TYPE, page: int):
+        """Muestra una página específica de llaves."""
+        query = update.callback_query
+        admin_id = update.effective_user.id
+        key_filter = context.user_data.get("keys_filter", "all")
+
+        try:
+            result = await self._get_filtered_keys(admin_id, page, key_filter)
+            keys = result.get("keys", [])
+            total_pages = result.get("total_pages", 1)
+            total_keys = result.get("total_keys", 0)
+
+            if not keys:
+                await self._safe_edit_message(
+                    query, context,
+                    text=AdminMessages.Keys.NO_KEYS,
+                    reply_markup=AdminKeyboards.keys_filter_menu(),
+                    parse_mode="Markdown",
+                )
+                return VIEWING_KEYS
+
+            filter_text = f"🔍 Filtro: {key_filter.upper()}\n" if key_filter != "all" else ""
+            message = AdminMessages.Keys.HEADER + filter_text + f"📊 Total: {total_keys} llaves\n\n"
+            keyboard = AdminKeyboards.keys_list_paginated(keys, page, total_pages, key_filter)
+
+            await self._safe_edit_message(
+                query, context,
+                text=message,
+                reply_markup=keyboard,
+                parse_mode="Markdown",
+            )
+            return VIEWING_KEYS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "_show_keys_page")
+            return ADMIN_MENU
+
     @admin_required
     @admin_spinner_callback
-    async def show_server_status(
+    async def show_key_details(
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
         spinner_message_id: int = None,
     ):
-        """Muestra estado del servidor."""
+        """Muestra detalles de una llave específica."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+        admin_id = update.effective_user.id
+
+        key_id = query.data.split("_")[-1]
+
+        try:
+            all_keys = await self.service.get_all_keys(current_user_id=admin_id)
+            key = next((k for k in all_keys if str(k.get("key_id", "")) == str(key_id)), None)
+
+            if not key:
+                await SpinnerManager.replace_spinner_with_message(
+                    update, context, spinner_message_id,
+                    text=AdminMessages.Error.KEY_NOT_FOUND,
+                    reply_markup=AdminKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+                return ADMIN_MENU
+
+            usage_stats = await self.service.get_key_usage_stats(key_id)
+            data_used_gb = round(usage_stats.get("data_used", 0) / (1024**3), 2)
+            data_limit_gb = round(key.get("data_limit", 0) / (1024**3), 2)
+
+            created_at = key.get("created_at")
+            if created_at:
+                created_at = created_at.strftime("%Y-%m-%d %H:%M") if hasattr(created_at, 'strftime') else str(created_at)[:16]
+            else:
+                created_at = "N/A"
+
+            expires_at = key.get("expires_at")
+            if expires_at:
+                expires_at = expires_at.strftime("%Y-%m-%d %H:%M") if hasattr(expires_at, 'strftime') else str(expires_at)[:16]
+            else:
+                expires_at = "Sin expiración"
+
+            message = AdminMessages.Keys.KEY_DETAILS.format(
+                key_id=str(key_id)[:8],
+                name=key.get("key_name", "N/A"),
+                user_id=key.get("user_id", "N/A"),
+                type=key.get("key_type", "N/A").upper(),
+                server=key.get("server_status", "N/A"),
+                usage=f"{data_used_gb}/{data_limit_gb}",
+                status="Activa" if key.get("is_active") else "Inactiva",
+                created_at=created_at,
+                expires_at=expires_at,
+            )
+
+            is_active = key.get("is_active", False)
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.key_actions(key_id, is_active),
+                parse_mode="Markdown",
+            )
+            context.user_data["viewing_key_id"] = key_id
+            return VIEWING_KEY_DETAILS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "show_key_details")
+            return ADMIN_MENU
+
+    @admin_required
+    @admin_spinner_callback
+    async def suspend_key(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Suspende una llave VPN."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+        admin_id = update.effective_user.id
+
+        key_id = query.data.split("_")[-1]
+
+        try:
+            result = await self.service.delete_user_key_complete(key_id)
+
+            if result.get("success"):
+                message = AdminMessages.Keys.KEY_SUSPENDED
+            else:
+                error = result.get("error", "Error desconocido")
+                message = AdminMessages.Error.OPERATION_FAILED.format(error=error)
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_keys(),
+                parse_mode="Markdown",
+            )
+            return VIEWING_KEYS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "suspend_key")
+            return ADMIN_MENU
+
+    @admin_required
+    async def confirm_delete_key(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Muestra confirmación para eliminar llave."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        key_id = query.data.split("_")[-1]
+        context.user_data["delete_key_id"] = key_id
+
+        await self._safe_edit_message(
+            query, context,
+            text=AdminMessages.Keys.CONFIRM_DELETE.format(key_id=key_id[:8]),
+            reply_markup=AdminKeyboards.confirmation("delete_key", key_id),
+            parse_mode="Markdown",
+        )
+        return CONFIRMING_KEY_DELETE
+
+    @admin_required
+    @admin_spinner_callback
+    async def execute_delete_key(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Ejecuta la eliminación de llave."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+        admin_id = update.effective_user.id
+
+        key_id = query.data.split("_")[-1]
+        context.user_data.pop("delete_key_id", None)
+
+        try:
+            result = await self.service.delete_user_key_complete(key_id)
+
+            if result.get("success"):
+                message = AdminMessages.Keys.KEY_DELETED
+            else:
+                error = result.get("error", "Error desconocido")
+                message = AdminMessages.Error.OPERATION_FAILED.format(error=error)
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=AdminKeyboards.back_to_keys(),
+                parse_mode="Markdown",
+            )
+            return VIEWING_KEYS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "execute_delete_key")
+            return ADMIN_MENU
+
+    @admin_required
+    async def cancel_key_action(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Cancela una acción de llave."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        context.user_data.pop("delete_key_id", None)
+
+        await self._safe_edit_message(
+            query, context,
+            text=AdminMessages.Success.OPERATION_CANCELLED,
+            reply_markup=AdminKeyboards.back_to_keys(),
+            parse_mode="Markdown",
+        )
+        return VIEWING_KEYS
+
+    @admin_required
+    @admin_spinner_callback
+    async def show_dashboard(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Muestra dashboard con estadísticas completas."""
         query = update.callback_query
         await self._safe_answer_query(query)
         admin_id = update.effective_user.id
 
         try:
-            stats = await self.service.get_server_stats(current_user_id=admin_id)
+            stats = await self.service.get_dashboard_stats(current_user_id=admin_id)
 
-            message = AdminMessages.Server.HEADER
-            message += f"\n📊 **Usuarios Totales:** {stats.get('total_users', 0)}"
-            message += f"\n✅ **Usuarios Activos:** {stats.get('active_users', 0)}"
-            message += f"\n🔑 **Llaves Totales:** {stats.get('total_keys', 0)}"
-            message += f"\n🟢 **Llaves Activas:** {stats.get('active_keys', 0)}"
-            message += f"\n💾 **Uso de Storage:** {stats.get('storage_usage', 'N/A')}"
-            message += f"\n📈 **CPU:** {stats.get('cpu_usage', 'N/A')}%"
-            message += f"\n🌐 **Red:** {stats.get('network_usage', 'N/A')}"
+            message = AdminMessages.Dashboard.FULL.format(
+                total_users=stats.get("total_users", 0),
+                active_users=stats.get("active_users", 0),
+                total_keys=stats.get("total_keys", 0),
+                active_keys=stats.get("active_keys", 0),
+                wireguard_keys=stats.get("wireguard_keys", 0),
+                outline_keys=stats.get("outline_keys", 0),
+                total_revenue=stats.get("total_revenue", 0),
+                new_users_today=stats.get("new_users_today", 0),
+                keys_created_today=stats.get("keys_created_today", 0),
+                server_status=stats.get("server_status_text", "N/A"),
+                generated_at=stats.get("generated_at", "N/A"),
+            )
 
-            # Reemplazar spinner con el mensaje final
             await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
+                update, context, spinner_message_id,
                 text=message,
-                reply_markup=AdminKeyboards.back_to_menu(),
+                reply_markup=AdminKeyboards.dashboard_actions(),
                 parse_mode="Markdown",
             )
             return ADMIN_MENU
 
         except Exception as e:
-            await self._handle_error(update, context, e, "show_server_status")
+            await self._handle_error(update, context, e, "show_dashboard")
             return ADMIN_MENU
 
     @with_spinner()
     async def logs_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra los logs del sistema."""
         user = update.effective_user
-        admin_id = user.id
-
-        # Verificar si es admin
-        if admin_id != int(settings.ADMIN_ID):
+        if not self._is_admin(user.id):
             await self._reply_message(
                 update, AdminMessages.Error.ACCESS_DENIED, parse_mode="Markdown", context=context
             )
             return ConversationHandler.END
 
         try:
-            # Obtener logs usando el logger
-            logs_content = logger.get_last_logs(lines=20)
+            logs_content = logger.get_last_logs(lines=30)
 
-            # Si hay error o no hay logs
-            if (
-                "Error leyendo logs:" in logs_content
-                or "El archivo de log aún no existe" in logs_content
-            ):
+            if "Error leyendo logs:" in logs_content or "El archivo de log aún no existe" in logs_content:
                 message = AdminMessages.Logs.NO_LOGS
             else:
-                # Formatear logs para mostrar
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 message = AdminMessages.Logs.LOGS_DISPLAY.format(
-                    logs_content=logs_content[
-                        -3000:
-                    ],  # Limitar para evitar mensaje muy largo
+                    logs_content=logs_content[-4000:],
                     timestamp=timestamp,
                 )
 
@@ -239,8 +743,7 @@ class AdminHandler(BaseConversationHandler):
             elif update.callback_query:
                 await self._safe_answer_query(update.callback_query)
                 await self._safe_edit_message(
-                    update.callback_query,
-                    context,
+                    update.callback_query, context,
                     text=message,
                     reply_markup=AdminKeyboards.back_to_menu(),
                     parse_mode="Markdown",
@@ -254,8 +757,7 @@ class AdminHandler(BaseConversationHandler):
             elif update.callback_query:
                 await self._safe_answer_query(update.callback_query)
                 await self._safe_edit_message(
-                    update.callback_query,
-                    context,
+                    update.callback_query, context,
                     text=error_message,
                     reply_markup=AdminKeyboards.back_to_menu(),
                     parse_mode="Markdown",
@@ -267,9 +769,14 @@ class AdminHandler(BaseConversationHandler):
         query = update.callback_query
         await self._safe_answer_query(query)
 
+        context.user_data.pop("users_page", None)
+        context.user_data.pop("keys_page", None)
+        context.user_data.pop("keys_filter", None)
+        context.user_data.pop("viewing_user_id", None)
+        context.user_data.pop("viewing_key_id", None)
+
         await self._safe_edit_message(
-            query,
-            context,
+            query, context,
             text=AdminMessages.Menu.MAIN,
             reply_markup=AdminKeyboards.main_menu(),
             parse_mode="Markdown",
@@ -278,6 +785,8 @@ class AdminHandler(BaseConversationHandler):
 
     async def end_admin(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Finaliza la sesión administrativa."""
+        context.user_data.clear()
+
         if update.message:
             await self._reply_message(
                 update,
@@ -285,10 +794,9 @@ class AdminHandler(BaseConversationHandler):
                 reply_markup=AdminKeyboards.back_to_user_menu(),
             )
         elif update.callback_query:
-            await self._handle_callback_query(update, context)
+            await self._safe_answer_query(update.callback_query)
             await self._safe_edit_message(
-                update.callback_query,
-                context,
+                update.callback_query, context,
                 text="👋 Sesión administrativa finalizada.",
                 reply_markup=AdminKeyboards.back_to_user_menu(),
             )
@@ -296,15 +804,7 @@ class AdminHandler(BaseConversationHandler):
 
 
 def get_admin_handlers(admin_service: AdminService):
-    """
-    Retorna los handlers administrativos.
-
-    Args:
-        admin_service: Servicio de administración
-
-    Returns:
-        list: Lista de handlers
-    """
+    """Retorna los handlers administrativos."""
     handler = AdminHandler(admin_service)
 
     return [
@@ -314,37 +814,35 @@ def get_admin_handlers(admin_service: AdminService):
 
 
 def get_admin_callback_handlers(admin_service: AdminService):
-    """
-    Retorna los handlers de callbacks para administración.
-
-    Args:
-        admin_service: Servicio de administración
-
-    Returns:
-        list: Lista de CallbackQueryHandler
-    """
+    """Retorna los handlers de callbacks para administración."""
     handler = AdminHandler(admin_service)
 
     return [
         CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
         CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
-        CallbackQueryHandler(handler.show_server_status, pattern="^admin_server_status$"),
+        CallbackQueryHandler(handler.show_dashboard, pattern="^admin_server_status$"),
         CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
         CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
         CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
+        CallbackQueryHandler(handler.users_page, pattern=r"^users_page_\d+$"),
+        CallbackQueryHandler(handler.show_user_details, pattern=r"^user_details_\d+$"),
+        CallbackQueryHandler(handler.suspend_user, pattern=r"^user_suspend_\d+$"),
+        CallbackQueryHandler(handler.reactivate_user, pattern=r"^user_reactivate_\d+$"),
+        CallbackQueryHandler(handler.confirm_delete_user, pattern=r"^user_delete_\d+$"),
+        CallbackQueryHandler(handler.execute_delete_user, pattern=r"^confirm_delete_user_\d+$"),
+        CallbackQueryHandler(handler.cancel_user_action, pattern=r"^cancel_delete_user$"),
+        CallbackQueryHandler(handler.keys_page, pattern=r"^keys_page_\d+$"),
+        CallbackQueryHandler(handler.keys_filter, pattern=r"^keys_filter_\w+$"),
+        CallbackQueryHandler(handler.show_key_details, pattern=r"^key_details_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.suspend_key, pattern=r"^key_suspend_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.confirm_delete_key, pattern=r"^key_delete_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.execute_delete_key, pattern=r"^confirm_delete_key_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.cancel_key_action, pattern=r"^cancel_delete_key$"),
     ]
 
 
 def get_admin_conversation_handler(admin_service: AdminService) -> ConversationHandler:
-    """
-    Retorna el ConversationHandler para administración.
-
-    Args:
-        admin_service: Servicio de administración
-
-    Returns:
-        ConversationHandler: Handler configurado
-    """
+    """Retorna el ConversationHandler para administración."""
     handler = AdminHandler(admin_service)
 
     return ConversationHandler(
@@ -353,19 +851,47 @@ def get_admin_conversation_handler(admin_service: AdminService) -> ConversationH
             ADMIN_MENU: [
                 CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
                 CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
-                CallbackQueryHandler(
-                    handler.show_server_status, pattern="^admin_server_status$"
-                ),
+                CallbackQueryHandler(handler.show_dashboard, pattern="^admin_server_status$"),
                 CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             VIEWING_USERS: [
+                CallbackQueryHandler(handler.users_page, pattern=r"^users_page_\d+$"),
+                CallbackQueryHandler(handler.show_user_details, pattern=r"^user_details_\d+$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
-            VIEWING_KEYS: [
+            VIEWING_USER_DETAILS: [
+                CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
+                CallbackQueryHandler(handler.suspend_user, pattern=r"^user_suspend_\d+$"),
+                CallbackQueryHandler(handler.reactivate_user, pattern=r"^user_reactivate_\d+$"),
+                CallbackQueryHandler(handler.confirm_delete_user, pattern=r"^user_delete_\d+$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
+            ],
+            CONFIRMING_USER_DELETE: [
+                CallbackQueryHandler(handler.execute_delete_user, pattern=r"^confirm_delete_user_\d+$"),
+                CallbackQueryHandler(handler.cancel_user_action, pattern=r"^cancel_delete_user$"),
+                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
+            ],
+            VIEWING_KEYS: [
+                CallbackQueryHandler(handler.keys_page, pattern=r"^keys_page_\d+$"),
+                CallbackQueryHandler(handler.keys_filter, pattern=r"^keys_filter_\w+$"),
+                CallbackQueryHandler(handler.show_key_details, pattern=r"^key_details_[a-f0-9\-]+$"),
+                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
+                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
+            ],
+            VIEWING_KEY_DETAILS: [
+                CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
+                CallbackQueryHandler(handler.suspend_key, pattern=r"^key_suspend_[a-f0-9\-]+$"),
+                CallbackQueryHandler(handler.confirm_delete_key, pattern=r"^key_delete_[a-f0-9\-]+$"),
+                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
+                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
+            ],
+            CONFIRMING_KEY_DELETE: [
+                CallbackQueryHandler(handler.execute_delete_key, pattern=r"^confirm_delete_key_[a-f0-9\-]+$"),
+                CallbackQueryHandler(handler.cancel_key_action, pattern=r"^cancel_delete_key$"),
+                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
             ],
         },
         fallbacks=[
