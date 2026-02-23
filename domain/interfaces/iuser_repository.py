@@ -69,11 +69,3 @@ class IUserRepository(Protocol):
     ) -> bool:
         """Incrementa el límite de claves de un usuario."""
         ...
-
-    async def update_user(self, user: "User", current_user_id: int) -> "User":
-        """Actualiza un usuario existente."""
-        ...
-
-    async def delete_user(self, telegram_id: int, current_user_id: int) -> bool:
-        """Elimina un usuario de la base de datos."""
-        ...
