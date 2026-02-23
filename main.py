@@ -2,7 +2,7 @@
 Punto de entrada principal del bot uSipipo VPN Manager.
 
 Author: uSipipo Team
-Version: 2.0.0
+Version: 2.1.0
 """
 
 import sys
