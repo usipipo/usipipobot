@@ -270,3 +270,53 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             await self.session.rollback()
             logger.error(f"Error al incrementar límite de claves: {e}")
             return False
+
+    async def update_user(self, user: User) -> User:
+        """Actualiza un usuario existente."""
+        try:
+            existing = await self.session.get(UserModel, user.telegram_id)
+            if existing:
+                existing.username = user.username
+                existing.full_name = user.full_name
+                existing.status = (
+                    user.status.value
+                    if isinstance(user.status, UserStatus)
+                    else user.status
+                )
+                existing.role = (
+                    user.role.value
+                    if isinstance(user.role, UserRole)
+                    else user.role
+                )
+                existing.max_keys = user.max_keys
+                existing.referral_code = user.referral_code
+                existing.referred_by = user.referred_by
+                existing.referral_credits = user.referral_credits
+                existing.free_data_limit_bytes = user.free_data_limit_bytes
+                existing.free_data_used_bytes = user.free_data_used_bytes
+                await self.session.commit()
+                logger.info(f"Usuario {user.telegram_id} actualizado correctamente.")
+                return user
+            else:
+                raise ValueError(f"Usuario {user.telegram_id} no encontrado")
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error al actualizar usuario: {e}")
+            raise
+
+    async def delete_user(self, telegram_id: int) -> bool:
+        """Elimina un usuario de la base de datos."""
+        try:
+            existing = await self.session.get(UserModel, telegram_id)
+            if existing:
+                await self.session.delete(existing)
+                await self.session.commit()
+                logger.info(f"Usuario {telegram_id} eliminado correctamente.")
+                return True
+            else:
+                logger.warning(f"Usuario {telegram_id} no encontrado para eliminar.")
+                return False
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error al eliminar usuario {telegram_id}: {e}")
+            raise

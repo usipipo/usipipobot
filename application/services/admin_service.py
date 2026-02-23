@@ -568,10 +568,12 @@ class AdminService(IAdminService):
                 message=f"Error: {str(e)}",
             )
 
-    async def get_users_paginated(self, page: int = 1, per_page: int = 10) -> Dict:
+    async def get_users_paginated(self, page: int = 1, per_page: int = 10, current_user_id: int = None) -> Dict:
         """Obtener usuarios paginados."""
         try:
-            all_users = await self.user_repository.get_all_users()
+            if current_user_id is None:
+                current_user_id = 1
+            all_users = await self.user_repository.get_all_users(current_user_id)
             total_users = len(all_users)
 
             # Calcular offset
