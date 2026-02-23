@@ -180,8 +180,14 @@ class UserManagementHandler(BaseHandler):
             await handler.operations_menu(update, _context)
 
         elif callback_data == "show_usage":
-            logger.info(f"📊 Mostrando estado para usuario {user_id}")
-            await self.status_handler(update, _context)
+            from application.services.common.container import get_container
+            from application.services.data_package_service import DataPackageService
+            from telegram_bot.features.buy_gb.handlers_buy_gb import BuyGbHandler
+
+            container = get_container()
+            data_package_service = container.resolve(DataPackageService)
+            handler = BuyGbHandler(data_package_service)
+            await handler.data_handler(update, _context)
 
         elif callback_data == "help":
             await query.edit_message_text(
