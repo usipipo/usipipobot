@@ -5,6 +5,26 @@ Author: uSipipo Team
 Version: 2.0.0 - Feature-based architecture
 """
 
+from datetime import datetime, timezone
+
+
+def _progress_bar(percentage: float, width: int = 20) -> str:
+    """Genera barra de progreso ASCII estilo cyberpunk."""
+    percentage = max(0, min(100, percentage))
+    filled = int(width * percentage / 100)
+    return "▓" * filled + "░" * (width - filled)
+
+
+def _format_key_slots(used: int, total: int) -> str:
+    """Genera representación visual de slots de claves."""
+    slots = []
+    for i in range(total):
+        if i < used:
+            slots.append("●")
+        else:
+            slots.append("○")
+    return "".join(slots)
+
 
 class UserManagementMessages:
     """Mensajes para gestión de usuarios."""
@@ -124,28 +144,73 @@ class UserManagementMessages:
     # ============================================
 
     class Info:
-        """Mensajes de información del usuario."""
+        """Mensajes de información del usuario - Estilo Cyberpunk."""
 
-        HEADER = "ℹ️ **Información de tu Cuenta**"
-
-        USER_INFO = (
-            "ℹ️ *Información Detallada*\n\n"
-            "👤 *Usuario:* {name}\n"
-            "🆔 *ID:* {user_id}\n"
-            "👥 *Username:* @{username}\n"
-            "📅 *Registro:* {join_date}\n"
-            "🟢 *Estado:* {status}\n\n"
-            "📊 *Datos:*\n"
-            "├─ Usados: {data_used}\n"
-            "├─ Gratuitos restantes: {free_data_remaining}\n"
-            "└─ Paquetes activos: {active_packages}\n\n"
-            "🔑 *Claves VPN:*\n"
-            "└─ Usadas: {keys_used}/{keys_total}\n\n"
-            "🎁 *Referidos:*\n"
-            "├─ Código: {referral_code}\n"
-            "├─ Invitados: {total_referrals}\n"
-            "└─ Créditos: {credits}"
+        HEADER = (
+            "╔══════════════════════════════════════════╗\n"
+            "║          👤 𝙿𝚁𝙾𝙵𝙸𝙻𝙴 𝚂𝚈𝚂𝚃𝙴𝙼           ║\n"
+            "╚══════════════════════════════════════════╝"
         )
+
+        @staticmethod
+        def USER_INFO(
+            name: str,
+            user_id: int,
+            username: str,
+            join_date: str,
+            status: str,
+            data_used: str,
+            data_total: str,
+            data_percentage: float,
+            free_data_remaining: str,
+            active_packages: int,
+            keys_used: int,
+            keys_total: int,
+            referral_code: str,
+            total_referrals: int,
+            credits: int,
+        ) -> str:
+            remaining_slots = keys_total - keys_used
+            status_icon = "⬡" if "Activo" in status else "⬢"
+            status_color = "🟢" if "Activo" in status else "🟡"
+            
+            progress = _progress_bar(data_percentage)
+            key_slots = _format_key_slots(keys_used, keys_total)
+            
+            return (
+                f"\n"
+                f"┌─ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ─┐\n"
+                f"│  👤 {name[:20]}\n"
+                f"│  🆔 ID: `{user_id}`\n"
+                f"│  👥 @{username}\n"
+                f"│  📅 REG: {join_date}\n"
+                f"│  🔰 STATUS: {status_icon} {status}\n"
+                f"└──────────────────────────────────┘\n"
+                f"\n"
+                f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+                f"┃ 📊 DATA METRICS                      ┃\n"
+                f"┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\n"
+                f"┃ {progress} {data_percentage:.0f}%{' ' * (12 - len(f'{data_percentage:.0f}%'))}┃\n"
+                f"┃ ├─ Used: {data_used} / {data_total}{' ' * (16 - len(f'{data_used} / {data_total}'))}┃\n"
+                f"┃ ├─ Free: {free_data_remaining}{' ' * (22 - len(f'{free_data_remaining}'))}┃\n"
+                f"┃ └─ Packages: {active_packages} active{' ' * (13 - len(f'{active_packages}'))}┃\n"
+                f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
+                f"\n"
+                f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+                f"┃ 🔑 KEY MATRIX                        ┃\n"
+                f"┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\n"
+                f"┃ [{key_slots}] {keys_used}/{keys_total} slots{' ' * (8 - len(f'{keys_used}/{keys_total}'))}┃\n"
+                f"┃ └─ {remaining_slots} slots available{' ' * (14 - len(f'{remaining_slots}'))}┃\n"
+                f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
+                f"\n"
+                f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+                f"┃ 🎁 REFERRAL NETWORK                  ┃\n"
+                f"┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\n"
+                f"┃ 🔗 Code: `{referral_code}`{' ' * (18 - len(f'{referral_code}'))}┃\n"
+                f"┃ 👥 Invites: {total_referrals}{' ' * (19 - len(f'{total_referrals}'))}┃\n"
+                f"┃ 💎 Credits: {credits} ⭐{' ' * (14 - len(f'{credits}'))}┃\n"
+                f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+            )
 
     # ============================================
     # HISTORY

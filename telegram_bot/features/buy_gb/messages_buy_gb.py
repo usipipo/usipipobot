@@ -5,7 +5,30 @@ Author: uSipipo Team
 Version: 1.1.0
 """
 
+from datetime import datetime, timezone
 from application.services.data_package_service import PACKAGE_OPTIONS, SLOT_OPTIONS
+
+
+def _progress_bar(percentage: float, width: int = 20) -> str:
+    """Genera barra de progreso ASCII estilo cyberpunk."""
+    percentage = max(0, min(100, percentage))
+    filled = int(width * percentage / 100)
+    return "▓" * filled + "░" * (width - filled)
+
+
+def _get_time_remaining(expires_at: datetime) -> tuple:
+    """Calcula días y horas restantes hasta expiración."""
+    if not expires_at:
+        return 0, 0
+    now = datetime.now(timezone.utc)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    delta = expires_at - now
+    if delta.total_seconds() <= 0:
+        return 0, 0
+    days = delta.days
+    hours = delta.seconds // 3600
+    return days, hours
 
 
 class BuyGbMessages:
@@ -80,62 +103,103 @@ class BuyGbMessages:
         )
 
     class Data:
-        """Mensajes para comando /data."""
+        """Mensajes para comando /data - Estilo Cyberpunk."""
 
-        HEADER = "💾 *Tu Consumo de Datos*\n"
-        SEPARATOR = "═══════════════════════\n"
+        HEADER = (
+            "╔══════════════════════════════════════════╗\n"
+            "║       💾 𝙳𝙰𝚃𝙰 𝙲𝙾𝙽𝚂𝚄𝙼𝙿𝚃𝙸𝙾𝙽 𝙼𝙰𝚃𝚁𝙸𝚇       ║\n"
+            "╚══════════════════════════════════════════╝"
+        )
 
         @staticmethod
         def format_packages_list(packages: list) -> str:
             if not packages:
                 return ""
-            lines = ["📦 *Paquetes Activos:*"]
+            lines = []
             for pkg in packages:
-                lines.append(
-                    f"   • {pkg['name']} {pkg['total_gb']:.0f}GB ({pkg['days_remaining']} días restantes)"
-                )
-                lines.append(
-                    f"     Usado: {pkg['used_gb']:.1f} GB / {pkg['total_gb']:.0f} GB"
-                )
-                lines.append(f"     Disponible: {pkg['remaining_gb']:.1f} GB")
+                percentage = (pkg['used_gb'] / pkg['total_gb'] * 100) if pkg['total_gb'] > 0 else 0
+                progress = _progress_bar(percentage)
+                days, hours = pkg.get('days_remaining', 0), pkg.get('hours_remaining', 0)
+                
+                lines.append(f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+                lines.append(f"┃ 📦 {pkg['name'][:20]}{' ' * (28 - len(pkg['name'][:20]))}┃")
+                lines.append(f"┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫")
+                lines.append(f"┃ {progress} {percentage:.0f}%{' ' * (12 - len(f'{percentage:.0f}%'))}┃")
+                lines.append(f"┃ ├─ {pkg['used_gb']:.1f} GB / {pkg['total_gb']:.0f} GB{' ' * (14 - len(f'{pkg["used_gb"]:.1f} GB / {pkg["total_gb"]:.0f} GB'))}┃")
+                lines.append(f"┃ ├─ Available: {pkg['remaining_gb']:.1f} GB{' ' * (13 - len(f'{pkg["remaining_gb"]:.1f} GB'))}┃")
+                lines.append(f"┃ └─ ⏱️ {days}d {hours}h remaining{' ' * (14 - len(f'{days}d {hours}h remaining'))}┃")
+                lines.append(f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+                lines.append("")
             return "\n".join(lines)
 
         @staticmethod
         def format_free_plan(free_plan: dict) -> str:
+            remaining = free_plan.get('remaining_gb', 0)
+            limit = free_plan.get('limit_gb', 10)
+            percentage = (remaining / limit * 100) if limit > 0 else 0
+            progress = _progress_bar(percentage)
+            
             return (
-                f"🎁 *Plan Free:*\n"
-                f"   Disponible: {free_plan['remaining_gb']:.1f} GB"
+                f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+                f"┃ 🎁 FREE TIER                          ┃\n"
+                f"┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\n"
+                f"┃ {progress} {percentage:.0f}%{' ' * (12 - len(f'{percentage:.0f}%'))}┃\n"
+                f"┃ └─ Available: {remaining:.1f} GB{' ' * (15 - len(f'{remaining:.1f} GB'))}┃\n"
+                f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
             )
 
         @staticmethod
         def DATA_INFO(summary: dict) -> str:
             lines = [BuyGbMessages.Data.HEADER]
             lines.append("")
-            lines.append(BuyGbMessages.Data.SEPARATOR)
-            lines.append("")
 
             if summary.get("packages"):
+                packages_with_time = []
+                for pkg in summary["packages"]:
+                    if 'expires_at' in pkg and pkg['expires_at']:
+                        days, hours = _get_time_remaining(pkg['expires_at'])
+                        pkg['days_remaining'] = days
+                        pkg['hours_remaining'] = hours
+                    else:
+                        pkg['days_remaining'] = pkg.get('days_remaining', 0)
+                        pkg['hours_remaining'] = pkg.get('hours_remaining', 0)
+                    packages_with_time.append(pkg)
+                
                 lines.append(
-                    BuyGbMessages.Data.format_packages_list(summary["packages"])
+                    BuyGbMessages.Data.format_packages_list(packages_with_time)
                 )
-                lines.append("")
-                lines.append(BuyGbMessages.Data.SEPARATOR)
-                lines.append("")
 
             lines.append(BuyGbMessages.Data.format_free_plan(summary["free_plan"]))
             lines.append("")
-            lines.append(BuyGbMessages.Data.SEPARATOR)
+            
+            total_used = summary.get('total_used_gb', 0)
+            total_limit = summary.get('total_limit_gb', 0)
+            remaining = summary.get('remaining_gb', 0)
+            efficiency = (total_used / total_limit * 100) if total_limit > 0 else 0
+            
+            lines.append(
+                f"╔══════════════════════════════════════════╗\n"
+                f"║  📊 TOTAL AVAILABLE: {remaining:.1f} GB{' ' * (16 - len(f'{remaining:.1f} GB'))}║\n"
+                f"║  ⚡ Efficiency: {efficiency:.0f}%{' ' * (21 - len(f'{efficiency:.0f}%'))}║\n"
+                f"╚══════════════════════════════════════════╝"
+            )
             lines.append("")
-            lines.append(f"📊 *TOTAL DISPONIBLE:* {summary['remaining_gb']:.1f} GB")
-            lines.append("")
-            lines.append("💡 El consumo usa primero los paquetes comprados")
+            lines.append("💡 _Data priority: Packages → Free Tier_")
 
             return "\n".join(lines)
 
         NO_DATA = (
-            "💾 *Mis Datos*\n\n"
-            "No tienes paquetes de datos activos.\n\n"
-            "Usa /buy para adquirir más datos."
+            "╔══════════════════════════════════════════╗\n"
+            "║       💾 𝙳𝙰𝚃𝙰 𝙲𝙾𝙽𝚂𝚄𝙼𝙿𝚃𝙸𝙾𝙽 𝙼𝙰𝚃𝚁𝙸𝚇       ║\n"
+            "╚══════════════════════════════════════════╝\n"
+            "\n"
+            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+            "┃ ⚠️ NO ACTIVE PACKAGES                ┃\n"
+            "┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\n"
+            "┃ You don't have any data packages.    ┃\n"
+            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
+            "\n"
+            "💡 Use `/buy` to acquire more data."
         )
 
     class Slots:
