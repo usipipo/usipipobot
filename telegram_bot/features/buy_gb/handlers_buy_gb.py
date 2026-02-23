@@ -393,6 +393,11 @@ class BuyGbHandler:
         user_id = update.effective_user.id
         logger.info(f"💾 /data ejecutado por usuario {user_id}")
 
+        is_callback = update.callback_query is not None
+        if is_callback:
+            query = update.callback_query
+            await query.answer()
+
         try:
             summary = await self.data_package_service.get_user_data_summary(
                 user_id=user_id, current_user_id=user_id
@@ -406,13 +411,18 @@ class BuyGbHandler:
             else:
                 message = BuyGbMessages.Data.DATA_INFO(summary)
 
-            await update.message.reply_text(text=message, parse_mode="Markdown")
+            if is_callback:
+                await query.edit_message_text(text=message, parse_mode="Markdown")
+            else:
+                await update.message.reply_text(text=message, parse_mode="Markdown")
 
         except Exception as e:
             logger.error(f"Error en data_handler: {e}")
-            await update.message.reply_text(
-                text=BuyGbMessages.Error.SYSTEM_ERROR, parse_mode="Markdown"
-            )
+            error_msg = BuyGbMessages.Error.SYSTEM_ERROR
+            if is_callback:
+                await query.edit_message_text(text=error_msg, parse_mode="Markdown")
+            else:
+                await update.message.reply_text(text=error_msg, parse_mode="Markdown")
 
 
 def get_buy_gb_handlers(data_package_service: DataPackageService):
