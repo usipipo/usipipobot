@@ -194,20 +194,42 @@ class BaseHandler(ABC):
             )
 
     async def _reply_message(
-        self, update: Update, text: str, reply_markup=None, parse_mode="Markdown"
+        self,
+        update: Update,
+        text: str,
+        reply_markup=None,
+        parse_mode="Markdown",
+        context: ContextTypes.DEFAULT_TYPE = None,
     ):
         """
         Reply to message with keyboard.
+        Handles both regular messages and callback queries.
 
         Args:
             update: Update instance
             text: Message text
             reply_markup: Keyboard markup
             parse_mode: Parse mode for message
+            context: Application context (required for callback query fallback)
         """
-        await update.message.reply_text(
-            text=text, reply_markup=reply_markup, parse_mode=parse_mode
-        )
+        if update.message:
+            await update.message.reply_text(
+                text=text, reply_markup=reply_markup, parse_mode=parse_mode
+            )
+        elif update.callback_query:
+            await self._safe_answer_query(update.callback_query)
+            if context:
+                await self._safe_edit_message(
+                    update.callback_query,
+                    context,
+                    text=text,
+                    reply_markup=reply_markup,
+                    parse_mode=parse_mode,
+                )
+            else:
+                await update.callback_query.message.edit_text(
+                    text=text, reply_markup=reply_markup, parse_mode=parse_mode
+                )
 
 
 class BaseConversationHandler(BaseHandler):
