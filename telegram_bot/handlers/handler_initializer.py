@@ -22,6 +22,7 @@ from application.services.vpn_service import VpnService
 from telegram_bot.features.admin.handlers_admin import (
     get_admin_callback_handlers,
     get_admin_handlers,
+    get_admin_conversation_handler,
 )
 from telegram_bot.features.basic_commands.handlers_basic import (
     get_basic_callback_handlers,
@@ -63,9 +64,11 @@ from utils.logger import logger
 def _get_admin_handlers(container) -> List[BaseHandler]:
     """Initialize and return admin handlers."""
     admin_service = container.resolve(AdminService)
+    ticket_service = container.resolve(TicketService)
     handlers = []
     handlers.extend(get_admin_handlers(admin_service))
     handlers.extend(get_admin_callback_handlers(admin_service))
+    handlers.append(get_admin_conversation_handler(admin_service, ticket_service))
     logger.info("✅ Handlers de administracion configurados")
     return handlers
 

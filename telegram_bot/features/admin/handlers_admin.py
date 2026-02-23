@@ -19,6 +19,7 @@ from telegram.ext import (
 )
 
 from application.services.admin_service import AdminService
+from application.services.ticket_service import TicketService
 from config import settings
 from telegram_bot.common.base_handler import BaseConversationHandler
 from telegram_bot.common.decorators import admin_required
@@ -37,16 +38,19 @@ CONFIRMING_USER_DELETE = 5
 CONFIRMING_KEY_DELETE = 6
 VIEWING_SETTINGS = 7
 VIEWING_MAINTENANCE = 8
+VIEWING_TICKETS = 9
 
 USERS_PER_PAGE = 10
 KEYS_PER_PAGE = 10
+TICKETS_PER_PAGE = 10
 
 
 class AdminHandler(BaseConversationHandler):
     """Handler para funciones administrativas."""
 
-    def __init__(self, admin_service: AdminService):
+    def __init__(self, admin_service: AdminService, ticket_service: TicketService = None):
         super().__init__(admin_service, "AdminService")
+        self.ticket_service = ticket_service
         logger.info("🔧 AdminHandler inicializado")
 
     def _is_admin(self, user_id: int) -> bool:
@@ -752,6 +756,67 @@ class AdminHandler(BaseConversationHandler):
             await self._handle_error(update, context, e, "show_dashboard")
             return ADMIN_MENU
 
+    @admin_required
+    @admin_spinner_callback
+    async def show_tickets(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int = None,
+    ):
+        """Muestra lista de tickets para administración."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+        admin_id = update.effective_user.id
+
+        if not self.ticket_service:
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text="❌ **Servicio de tickets no disponible**",
+                reply_markup=AdminKeyboards.back_to_menu(),
+                parse_mode="Markdown",
+            )
+            return ADMIN_MENU
+
+        try:
+            tickets = await self.ticket_service.get_all_open_tickets(admin_id)
+
+            if not tickets:
+                await SpinnerManager.replace_spinner_with_message(
+                    update, context, spinner_message_id,
+                    text="📭 **No hay tickets pendientes**\n\nTodos los tickets han sido resueltos.",
+                    reply_markup=AdminKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+                return ADMIN_MENU
+
+            message = "🎫 **Tickets Pendientes**\n\n"
+            keyboard = []
+
+            for ticket in tickets[:TICKETS_PER_PAGE]:
+                status_emoji = ticket.status_emoji
+                subject = ticket.subject[:30] + "..." if len(ticket.subject) > 30 else ticket.subject
+                keyboard.append([
+                    InlineKeyboardButton(
+                        f"{status_emoji} [{ticket.user_id}] {subject}",
+                        callback_data=f"admin_view_ticket_{ticket.id}"
+                    )
+                ])
+
+            keyboard.append([InlineKeyboardButton("🔙 Menú Admin", callback_data="admin")])
+
+            await SpinnerManager.replace_spinner_with_message(
+                update, context, spinner_message_id,
+                text=message,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode="Markdown",
+            )
+            return VIEWING_TICKETS
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "show_tickets")
+            return ADMIN_MENU
+
     @with_spinner()
     async def logs_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra los logs del sistema."""
@@ -875,12 +940,13 @@ def get_admin_callback_handlers(admin_service: AdminService):
         CallbackQueryHandler(handler.confirm_delete_key, pattern=r"^key_delete_[a-f0-9\-]+$"),
         CallbackQueryHandler(handler.execute_delete_key, pattern=r"^confirm_delete_key_[a-f0-9\-]+$"),
         CallbackQueryHandler(handler.cancel_key_action, pattern=r"^cancel_delete_key$"),
+        CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
     ]
 
 
-def get_admin_conversation_handler(admin_service: AdminService) -> ConversationHandler:
+def get_admin_conversation_handler(admin_service: AdminService, ticket_service: TicketService = None) -> ConversationHandler:
     """Retorna el ConversationHandler para administración."""
-    handler = AdminHandler(admin_service)
+    handler = AdminHandler(admin_service, ticket_service)
 
     return ConversationHandler(
         entry_points=[CommandHandler("admin", handler.admin_menu)],
@@ -889,6 +955,7 @@ def get_admin_conversation_handler(admin_service: AdminService) -> ConversationH
                 CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
                 CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
                 CallbackQueryHandler(handler.show_dashboard, pattern="^admin_server_status$"),
+                CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
                 CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
@@ -930,6 +997,10 @@ def get_admin_conversation_handler(admin_service: AdminService) -> ConversationH
                 CallbackQueryHandler(handler.execute_delete_key, pattern=r"^confirm_delete_key_[a-f0-9\-]+$"),
                 CallbackQueryHandler(handler.cancel_key_action, pattern=r"^cancel_delete_key$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
+            ],
+            VIEWING_TICKETS: [
+                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
+                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
         },
         fallbacks=[
