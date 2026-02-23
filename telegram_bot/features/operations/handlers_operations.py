@@ -85,6 +85,46 @@ class OperationsHandler:
             text=message, reply_markup=keyboard, parse_mode="Markdown"
         )
 
+    async def redeem_credits_for_data(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Canjear creditos por datos - redirige a referral handler."""
+        from telegram_bot.features.referral.handlers_referral import ReferralHandler
+
+        query = update.callback_query
+        await query.answer()
+
+        referral_handler = ReferralHandler(self.referral_service)
+        await referral_handler.confirm_redeem_data(update, context)
+
+    async def redeem_credits_for_slot(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Canjear creditos por slot - redirige a referral handler."""
+        from telegram_bot.features.referral.handlers_referral import ReferralHandler
+
+        query = update.callback_query
+        await query.answer()
+
+        referral_handler = ReferralHandler(self.referral_service)
+        await referral_handler.confirm_redeem_slot(update, context)
+
+    async def show_buy_slots_menu(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Mostrar menu de compra de slots con Telegram Stars."""
+        from telegram_bot.features.buy_gb.handlers_buy_gb import BuyGbHandler
+        from application.services.common.container import get_container
+        from application.services.data_package_service import DataPackageService
+
+        query = update.callback_query
+        await query.answer()
+
+        container = get_container()
+        data_package_service = container.resolve(DataPackageService)
+        buy_handler = BuyGbHandler(data_package_service)
+        await buy_handler.show_slots_menu(update, context)
+
     async def back_to_main_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
@@ -124,4 +164,7 @@ def get_operations_callback_handlers(vpn_service: VpnService, referral_service: 
         CallbackQueryHandler(handler.show_credits, pattern="^credits_menu$"),
         CallbackQueryHandler(handler.show_shop, pattern="^shop_menu$"),
         CallbackQueryHandler(handler.back_to_main_menu, pattern="^main_menu$"),
+        CallbackQueryHandler(handler.redeem_credits_for_data, pattern="^credits_redeem_data$"),
+        CallbackQueryHandler(handler.redeem_credits_for_slot, pattern="^credits_redeem_slot$"),
+        CallbackQueryHandler(handler.show_buy_slots_menu, pattern="^buy_slots_menu$"),
     ]
