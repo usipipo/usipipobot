@@ -2,16 +2,17 @@
 Handlers para el sistema de tickets de soporte.
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 1.1.0 - Converted to ConversationHandler to avoid conflicts with VPN key creation
 """
 
 import uuid
 from typing import Optional
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     CallbackQueryHandler,
     CommandHandler,
+    ConversationHandler,
     ContextTypes,
     MessageHandler,
     filters,
@@ -24,6 +25,8 @@ from utils.logger import logger
 
 from .keyboards_tickets import TicketKeyboards
 from .messages_tickets import TicketMessages
+
+AWAITING_TICKET_MESSAGE, AWAITING_ADMIN_RESPONSE = range(2)
 
 
 class TicketHandler:
@@ -42,15 +45,11 @@ class TicketHandler:
             reply_markup=TicketKeyboards.back_to_support(),
             parse_mode="Markdown",
         )
-        _context.user_data["awaiting_ticket"] = True
+        return AWAITING_TICKET_MESSAGE
 
     async def handle_ticket_message(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
-        if not context.user_data.get("awaiting_ticket"):
-            return
-
-        context.user_data["awaiting_ticket"] = False
         user_id = update.effective_user.id
         message_text = update.message.text
 
@@ -81,6 +80,21 @@ class TicketHandler:
                 text=TicketMessages.Error.CREATE_FAILED,
                 parse_mode="MarkdownV2",
             )
+
+        return ConversationHandler.END
+
+    async def cancel_ticket_creation(
+        self, update: Update, _context: ContextTypes.DEFAULT_TYPE
+    ):
+        query = update.callback_query
+        if query:
+            await query.answer()
+            await query.edit_message_text(
+                text="❌ Creación de ticket cancelada.",
+                reply_markup=TicketKeyboards.back_to_support(),
+                parse_mode="Markdown",
+            )
+        return ConversationHandler.END
 
     async def list_my_tickets(
         self, update: Update, _context: ContextTypes.DEFAULT_TYPE
@@ -283,7 +297,7 @@ class TicketHandler:
         ticket_id = uuid.UUID(query.data.split("_")[-1])
 
         if str(admin_id) != str(settings.ADMIN_ID):
-            return
+            return ConversationHandler.END
 
         context.user_data["responding_to_ticket"] = str(ticket_id)
 
@@ -293,20 +307,21 @@ class TicketHandler:
             ),
             parse_mode="MarkdownV2",
         )
+        return AWAITING_ADMIN_RESPONSE
 
     async def handle_admin_response(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         ticket_id_str = context.user_data.get("responding_to_ticket")
         if not ticket_id_str:
-            return
+            return ConversationHandler.END
 
         context.user_data["responding_to_ticket"] = None
         admin_id = update.effective_user.id
         response_text = update.message.text
 
         if str(admin_id) != str(settings.ADMIN_ID):
-            return
+            return ConversationHandler.END
 
         try:
             ticket_id = uuid.UUID(ticket_id_str)
@@ -328,22 +343,65 @@ class TicketHandler:
         except Exception as e:
             logger.error(f"❌ Error responding to ticket: {e}")
 
+        return ConversationHandler.END
+
+    async def cancel_admin_response(
+        self, update: Update, _context: ContextTypes.DEFAULT_TYPE
+    ):
+        query = update.callback_query
+        if query:
+            await query.answer()
+            await query.edit_message_text(
+                text="❌ Respuesta cancelada.",
+                reply_markup=TicketKeyboards.back_to_support(),
+                parse_mode="Markdown",
+            )
+        return ConversationHandler.END
+
 
 def get_ticket_handlers(ticket_service: TicketService):
     handler = TicketHandler(ticket_service)
 
-    return [
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handler.handle_ticket_message),
-    ]
+    user_conversation = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(handler.create_ticket_prompt, pattern="^create_ticket$"),
+        ],
+        states={
+            AWAITING_TICKET_MESSAGE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handler.handle_ticket_message),
+                CallbackQueryHandler(handler.cancel_ticket_creation, pattern="^help_support$"),
+            ],
+        },
+        fallbacks=[CommandHandler("cancel", handler.cancel_ticket_creation)],
+        per_message=False,
+        per_chat=True,
+        per_user=True,
+        allow_reentry=False,
+    )
+
+    admin_conversation = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(handler.admin_respond_prompt, pattern=r"^ticket_respond_[a-f0-9\-]+$"),
+        ],
+        states={
+            AWAITING_ADMIN_RESPONSE: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handler.handle_admin_response),
+            ],
+        },
+        fallbacks=[CommandHandler("cancel", handler.cancel_admin_response)],
+        per_message=False,
+        per_chat=True,
+        per_user=True,
+        allow_reentry=False,
+    )
+
+    return [user_conversation, admin_conversation]
 
 
 def get_ticket_callback_handlers(ticket_service: TicketService):
     handler = TicketHandler(ticket_service)
 
     return [
-        CallbackQueryHandler(
-            handler.create_ticket_prompt, pattern="^create_ticket$"
-        ),
         CallbackQueryHandler(
             handler.list_my_tickets, pattern="^list_my_tickets$"
         ),
@@ -355,8 +413,5 @@ def get_ticket_callback_handlers(ticket_service: TicketService):
         ),
         CallbackQueryHandler(
             handler.admin_view_ticket, pattern=r"^admin_view_ticket_[a-f0-9\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.admin_respond_prompt, pattern=r"^ticket_respond_[a-f0-9\-]+$"
         ),
     ]
