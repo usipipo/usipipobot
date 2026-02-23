@@ -34,3 +34,58 @@ class UserManagementKeyboards:
                 admin_id=int(settings.ADMIN_ID), current_user_id=int(settings.ADMIN_ID)
             )
         return MainMenuKeyboard.main_menu()
+
+    @staticmethod
+    def profile_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
+        """
+        Teclado del menú de perfil con botón de historial.
+        
+        Args:
+            is_admin: Si es True, incluye opciones de administrador
+            
+        Returns:
+            InlineKeyboardMarkup: Teclado del menú de perfil
+        """
+        keyboard = [
+            [
+                InlineKeyboardButton("📜 Historial", callback_data="show_history"),
+                InlineKeyboardButton("📊 Estado", callback_data="status"),
+            ],
+            [
+                InlineKeyboardButton("🏠 Menú Principal", callback_data="main_menu"),
+            ],
+        ]
+        
+        if is_admin:
+            keyboard.append([
+                InlineKeyboardButton("🔧 Admin Panel", callback_data="admin_panel"),
+            ])
+        
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def help_menu() -> InlineKeyboardMarkup:
+        keyboard = [
+            [
+                InlineKeyboardButton("📚 FAQ", callback_data="help_faq"),
+                InlineKeyboardButton("🎫 Soporte", callback_data="help_support"),
+            ],
+            [InlineKeyboardButton("🏠 Menú Principal", callback_data="main_menu")],
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def support_menu() -> InlineKeyboardMarkup:
+        keyboard = [
+            [InlineKeyboardButton("🎫 Crear Ticket", callback_data="create_ticket")],
+            [InlineKeyboardButton("📋 Mis Tickets", callback_data="list_my_tickets")],
+            [InlineKeyboardButton("🔙 Volver", callback_data="help")],
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def back_to_help() -> InlineKeyboardMarkup:
+        keyboard = [
+            [InlineKeyboardButton("🔙 Volver a Ayuda", callback_data="help")],
+        ]
+        return InlineKeyboardMarkup(keyboard)

@@ -19,6 +19,13 @@ class PackageOption:
     duration_days: int = 35
 
 
+@dataclass
+class SlotOption:
+    name: str
+    slots: int
+    stars: int
+
+
 PACKAGE_OPTIONS: List[PackageOption] = [
     PackageOption(
         name="Básico",
@@ -50,6 +57,12 @@ PACKAGE_OPTIONS: List[PackageOption] = [
     ),
 ]
 
+SLOT_OPTIONS: List[SlotOption] = [
+    SlotOption(name="+1 Clave", slots=1, stars=25),
+    SlotOption(name="+3 Claves", slots=3, stars=60),
+    SlotOption(name="+5 Claves", slots=5, stars=90),
+]
+
 
 class DataPackageService:
     def __init__(
@@ -61,6 +74,9 @@ class DataPackageService:
     def get_available_packages(self) -> List[PackageOption]:
         return PACKAGE_OPTIONS.copy()
 
+    def get_available_slots(self) -> List[SlotOption]:
+        return SLOT_OPTIONS.copy()
+
     def _get_package_option(self, package_type: str) -> Optional[PackageOption]:
         try:
             pkg_type = PackageType(package_type.lower())
@@ -70,6 +86,12 @@ class DataPackageService:
             return None
         except ValueError:
             return None
+
+    def _get_slot_option(self, slots: int) -> Optional[SlotOption]:
+        for option in SLOT_OPTIONS:
+            if option.slots == slots:
+                return option
+        return None
 
     async def purchase_package(
         self,
@@ -105,6 +127,36 @@ class DataPackageService:
         saved_package = await self.package_repo.save(new_package, current_user_id)
         logger.info(f"📦 Paquete {option.name} comprado para usuario {user_id}")
         return saved_package
+
+    async def purchase_key_slots(
+        self,
+        user_id: int,
+        slots: int,
+        telegram_payment_id: str,
+        current_user_id: int,
+    ) -> Dict[str, Any]:
+        option = self._get_slot_option(slots)
+        if not option:
+            raise ValueError(f"Cantidad de slots invalida: {slots}")
+
+        user = await self.user_repo.get_by_id(user_id, current_user_id)
+        if not user:
+            raise ValueError(f"Usuario no encontrado: {user_id}")
+
+        success = await self.user_repo.increment_max_keys(
+            user_id, slots, current_user_id
+        )
+
+        if not success:
+            raise ValueError(f"Error al incrementar slots para usuario {user_id}")
+
+        logger.info(f"🔑 +{slots} slots comprados para usuario {user_id}")
+
+        return {
+            "slots_added": slots,
+            "new_max_keys": user.max_keys + slots,
+            "stars_paid": option.stars,
+        }
 
     async def get_user_packages(
         self, user_id: int, current_user_id: int

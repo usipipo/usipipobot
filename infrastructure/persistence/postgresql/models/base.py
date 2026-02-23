@@ -41,6 +41,15 @@ class UserModel(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+    
+    status: Mapped[Optional[str]] = mapped_column(String, server_default="active")
+    role: Mapped[Optional[str]] = mapped_column(String, server_default="user")
+    max_keys: Mapped[int] = mapped_column(Integer, server_default="2")
+    
+    referral_code: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    referred_by: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    referral_credits: Mapped[int] = mapped_column(Integer, server_default="0")
+    
     free_data_limit_bytes: Mapped[int] = mapped_column(
         BigInteger, server_default="10737418240"
     )
@@ -76,7 +85,16 @@ class VpnKeyModel(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     used_bytes: Mapped[int] = mapped_column(BigInteger, server_default="0")
-    last_used_at: Mapped[Optional[datetime]] = mapped_column(
+    last_seen_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    data_limit_bytes: Mapped[int] = mapped_column(
+        BigInteger, server_default="10737418240"
+    )
+    billing_reset_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    expires_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
@@ -118,3 +136,25 @@ class DataPackageModel(Base):
     telegram_payment_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     user: Mapped["UserModel"] = relationship(back_populates="data_packages")
+
+
+class TransactionModel(Base):
+    """Modelo de transacciones de estrellas."""
+
+    __tablename__ = "transactions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.telegram_id", ondelete="CASCADE")
+    )
+    transaction_type: Mapped[str] = mapped_column(String, nullable=False)
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    balance_after: Mapped[int] = mapped_column(Integer, nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=False)
+    reference_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    telegram_payment_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

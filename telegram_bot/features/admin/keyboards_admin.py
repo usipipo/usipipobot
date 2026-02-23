@@ -21,14 +21,14 @@ class AdminKeyboards:
         """
         keyboard = [
             [
-                InlineKeyboardButton("👥 Usuarios", callback_data="show_users"),
-                InlineKeyboardButton("🔑 Llaves VPN", callback_data="show_keys"),
+                InlineKeyboardButton("👥 Usuarios", callback_data="admin_show_users"),
+                InlineKeyboardButton("🔑 Llaves VPN", callback_data="admin_show_keys"),
             ],
             [
                 InlineKeyboardButton(
-                    "📊 Estado Servidor", callback_data="server_status"
+                    "📊 Estado Servidor", callback_data="admin_server_status"
                 ),
-                InlineKeyboardButton("📋 Ver Logs", callback_data="logs"),
+                InlineKeyboardButton("🎫 Tickets", callback_data="admin_tickets"),
             ],
             [
                 InlineKeyboardButton("⚙️ Configuración", callback_data="settings"),
@@ -57,23 +57,18 @@ class AdminKeyboards:
     @staticmethod
     def back_to_user_menu() -> InlineKeyboardMarkup:
         """
-        Teclado para volver al menú de usuario.
+        Teclado para volver al menú de usuario (sin opciones de admin).
 
         Returns:
             InlineKeyboardMarkup: Teclado de retorno a usuario
         """
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver al Menú Principal", callback_data="main_menu"
-                )
-            ]
-        ]
-        return InlineKeyboardMarkup(keyboard)
+        from telegram_bot.keyboards import MainMenuKeyboard
+
+        return MainMenuKeyboard.main_menu()
 
     @staticmethod
     def user_actions(
-        user_id: int, is_active: bool, is_vip: bool
+        user_id: int, is_active: bool
     ) -> InlineKeyboardMarkup:
         """
         Teclado de acciones para un usuario específico.
@@ -81,14 +76,12 @@ class AdminKeyboards:
         Args:
             user_id: ID del usuario
             is_active: Si el usuario está activo
-            is_vip: Si el usuario es VIP
 
         Returns:
             InlineKeyboardMarkup: Teclado de acciones
         """
         keyboard = []
 
-        # Acciones básicas
         keyboard.append(
             [
                 InlineKeyboardButton(
@@ -97,7 +90,6 @@ class AdminKeyboards:
             ]
         )
 
-        # Acciones de estado
         if is_active:
             keyboard.append(
                 [
@@ -115,25 +107,6 @@ class AdminKeyboards:
                 ]
             )
 
-        # Acciones VIP
-        if not is_vip:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "👑 Dar VIP", callback_data=f"user_grant_vip_{user_id}"
-                    )
-                ]
-            )
-        else:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "🚫 Quitar VIP", callback_data=f"user_revoke_vip_{user_id}"
-                    )
-                ]
-            )
-
-        # Acciones peligrosas
         keyboard.append(
             [
                 InlineKeyboardButton(

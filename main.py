@@ -11,7 +11,7 @@ from telegram.ext import ApplicationBuilder
 
 from application.services.common.container import get_service
 from application.services.data_package_service import DataPackageService
-from application.services.payment_service import PaymentService
+from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
 from config import settings
 from infrastructure.jobs.key_cleanup_job import key_cleanup_job
@@ -40,7 +40,7 @@ def main():
 
     try:
         vpn_service = get_service(VpnService)
-        payment_service = get_service(PaymentService)
+        referral_service = get_service(ReferralService)
         data_package_service = get_service(DataPackageService)
         logger.info("✅ Contenedor de dependencias configurado correctamente.")
     except Exception as e:
@@ -55,15 +55,15 @@ def main():
         """Callback ejecutado después de inicializar la aplicación."""
         await startup()
 
-    async def post_shutdown_callback(app):
-        """Callback ejecutado después de cerrar la aplicación."""
+    async def post_stop_callback(app):
+        """Callback ejecutado después de detener la aplicación."""
         await shutdown()
 
     application = (
         ApplicationBuilder()
         .token(settings.TELEGRAM_TOKEN)
         .post_init(post_init_callback)
-        .post_shutdown(post_shutdown_callback)
+        .post_stop(post_stop_callback)
         .build()
     )
 
@@ -87,7 +87,7 @@ def main():
     )
     logger.info("⏰ Job de expiración de paquetes programado.")
 
-    handlers = initialize_handlers(vpn_service, payment_service)
+    handlers = initialize_handlers(vpn_service, referral_service)
     for handler in handlers:
         application.add_handler(handler)
 

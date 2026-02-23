@@ -2,7 +2,7 @@
 Entidades de administración para el bot uSipipo.
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 2.0.0
 """
 
 from dataclasses import dataclass
@@ -18,13 +18,13 @@ class AdminUserInfo:
     username: Optional[str]
     first_name: str
     last_name: Optional[str]
-    is_vip: bool
-    vip_expiry: Optional[datetime]
     total_keys: int
     active_keys: int
-    stars_balance: int
-    registration_date: datetime
-    last_activity: Optional[datetime]
+    stars_balance: int = 0  # Deprecated - mantener por compatibilidad
+    total_deposited: int = 0  # Ahora representa referral_credits
+    referral_credits: int = 0
+    registration_date: Optional[datetime] = None
+    last_activity: Optional[datetime] = None
 
 
 @dataclass
@@ -34,7 +34,7 @@ class AdminKeyInfo:
     key_id: str
     user_id: int
     user_name: str
-    key_type: str  # 'wireguard' o 'outline'
+    key_type: str
     key_name: str
     access_url: Optional[str]
     created_at: datetime
@@ -42,20 +42,20 @@ class AdminKeyInfo:
     data_limit: int
     data_used: int
     is_active: bool
-    server_status: str  # 'active', 'inactive', 'error'
+    server_status: str
 
 
 @dataclass
 class ServerStatus:
     """Estado del servidor VPN."""
 
-    server_type: str  # 'wireguard' o 'outline'
+    server_type: str
     is_healthy: bool
     total_keys: int
     active_keys: int
     version: Optional[str]
     uptime: Optional[str]
-    error_message: Optional[str]
+    error_message: Optional[str] = None
 
 
 @dataclass
@@ -67,7 +67,7 @@ class AdminOperationResult:
     target_id: str
     message: str
     details: Optional[Dict] = None
-    timestamp: datetime = None
+    timestamp: Optional[datetime] = None
 
     def __post_init__(self):
         if self.timestamp is None:

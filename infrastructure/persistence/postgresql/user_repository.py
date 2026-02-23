@@ -12,7 +12,7 @@ from typing import List, Optional
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.entities.user import User, UserStatus
+from domain.entities.user import User, UserStatus, UserRole
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
 
@@ -29,25 +29,18 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
         super().__init__(session)
 
     def _model_to_entity(self, model: UserModel) -> User:
-        vip_expires = model.vip_expires_at
-        if vip_expires is not None and vip_expires.tzinfo is None:
-            vip_expires = vip_expires.replace(tzinfo=timezone.utc)
-
         return User(
             telegram_id=model.telegram_id,
             username=model.username,
             full_name=model.full_name,
             status=UserStatus(model.status) if model.status else UserStatus.ACTIVE,
+            role=UserRole(model.role) if model.role else UserRole.USER,
             max_keys=model.max_keys or 2,
-            balance_stars=model.balance_stars or 0,
-            total_deposited=model.total_deposited or 0,
             referral_code=model.referral_code,
             referred_by=model.referred_by,
-            total_referral_earnings=model.total_referral_earnings or 0,
-            is_vip=model.is_vip or False,
-            vip_expires_at=vip_expires,
-            free_data_limit_bytes=getattr(model, "free_data_limit_bytes", 0) or 0,
-            free_data_used_bytes=getattr(model, "free_data_used_bytes", 0) or 0,
+            referral_credits=model.referral_credits or 0,
+            free_data_limit_bytes=model.free_data_limit_bytes or 10 * 1024**3,
+            free_data_used_bytes=model.free_data_used_bytes or 0,
         )
 
     def _entity_to_model(self, entity: User) -> UserModel:
@@ -60,14 +53,15 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 if isinstance(entity.status, UserStatus)
                 else entity.status
             ),
+            role=(
+                entity.role.value
+                if isinstance(entity.role, UserRole)
+                else entity.role
+            ),
             max_keys=entity.max_keys,
-            balance_stars=entity.balance_stars,
-            total_deposited=entity.total_deposited,
             referral_code=entity.referral_code,
             referred_by=entity.referred_by,
-            total_referral_earnings=entity.total_referral_earnings,
-            is_vip=entity.is_vip,
-            vip_expires_at=entity.vip_expires_at,
+            referral_credits=entity.referral_credits,
             free_data_limit_bytes=entity.free_data_limit_bytes,
             free_data_used_bytes=entity.free_data_used_bytes,
         )
@@ -98,23 +92,17 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                     if isinstance(user.status, UserStatus)
                     else user.status
                 )
+                existing.role = (
+                    user.role.value
+                    if isinstance(user.role, UserRole)
+                    else user.role
+                )
                 existing.max_keys = user.max_keys
-                existing.balance_stars = user.balance_stars
-                existing.total_deposited = user.total_deposited
                 existing.referral_code = user.referral_code
                 existing.referred_by = user.referred_by
-                existing.total_referral_earnings = user.total_referral_earnings
-                existing.is_vip = user.is_vip
-                if user.vip_expires_at is None:
-                    existing.vip_expires_at = None
-                elif user.vip_expires_at.tzinfo is None:
-                    existing.vip_expires_at = user.vip_expires_at.replace(
-                        tzinfo=timezone.utc
-                    )
-                else:
-                    existing.vip_expires_at = user.vip_expires_at.astimezone(
-                        timezone.utc
-                    )
+                existing.referral_credits = user.referral_credits
+                existing.free_data_limit_bytes = user.free_data_limit_bytes
+                existing.free_data_used_bytes = user.free_data_used_bytes
             else:
                 model = self._entity_to_model(user)
                 self.session.add(model)
@@ -129,11 +117,11 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
     async def create_user(
         self,
         user_id: int,
-        username: str = None,
-        full_name: str = None,
-        referral_code: str = None,
-        referred_by: int = None,
-        current_user_id: int = None,
+        username: Optional[str] = None,
+        full_name: Optional[str] = None,
+        referral_code: Optional[str] = None,
+        referred_by: Optional[int] = None,
+        current_user_id: Optional[int] = None,
     ) -> User:
         if referral_code is None:
             referral_code = secrets.token_hex(4).upper()
@@ -172,24 +160,6 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
         except Exception as e:
             logger.error(f"Error al buscar por referral_code {referral_code}: {e}")
             return None
-
-    async def update_balance(
-        self, telegram_id: int, new_balance: int, current_user_id: int
-    ) -> bool:
-        await self._set_current_user(current_user_id)
-        try:
-            query = (
-                update(UserModel)
-                .where(UserModel.telegram_id == telegram_id)
-                .values(balance_stars=new_balance)
-            )
-            await self.session.execute(query)
-            await self.session.commit()
-            return True
-        except Exception as e:
-            await self.session.rollback()
-            logger.error(f"Error al actualizar balance: {e}")
-            return False
 
     async def get_referrals(self, referrer_id: int, current_user_id: int) -> List[dict]:
         await self._set_current_user(current_user_id)
@@ -256,4 +226,50 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
         except Exception as e:
             await self.session.rollback()
             logger.error(f"Error al actualizar uso de datos gratuitos: {e}")
+            return False
+
+    async def update_referral_credits(
+        self, telegram_id: int, credits_delta: int, current_user_id: int
+    ) -> bool:
+        """Actualiza los créditos de referido de un usuario."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = (
+                update(UserModel)
+                .where(UserModel.telegram_id == telegram_id)
+                .values(
+                    referral_credits=UserModel.referral_credits + credits_delta
+                )
+            )
+            await self.session.execute(query)
+            await self.session.commit()
+            logger.debug(
+                f"Créditos actualizados para usuario {telegram_id}: {credits_delta:+d}"
+            )
+            return True
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error al actualizar créditos de referido: {e}")
+            return False
+
+    async def increment_max_keys(
+        self, telegram_id: int, slots: int, current_user_id: int
+    ) -> bool:
+        """Incrementa el límite de claves de un usuario."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = (
+                update(UserModel)
+                .where(UserModel.telegram_id == telegram_id)
+                .values(max_keys=UserModel.max_keys + slots)
+            )
+            await self.session.execute(query)
+            await self.session.commit()
+            logger.debug(
+                f"Límite de claves incrementado para usuario {telegram_id}: +{slots}"
+            )
+            return True
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error al incrementar límite de claves: {e}")
             return False

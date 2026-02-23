@@ -1,4 +1,4 @@
-from typing import List, Optional, Protocol
+from typing import Any, Dict, List, Optional, Protocol
 
 from domain.entities.user import User
 
@@ -34,14 +34,8 @@ class IUserRepository(Protocol):
         """Obtiene la lista de usuarios referidos por un usuario."""
         ...
 
-    async def get_referrals(self, referrer_id: int, current_user_id: int) -> List[User]:
-        """Obtiene todos los usuarios referidos por este usuario."""
-        ...
-
-    async def update_balance(
-        self, telegram_id: int, new_balance: int, current_user_id: int
-    ) -> bool:
-        """Actualiza el balance de estrellas del usuario."""
+    async def get_referrals(self, referrer_id: int, current_user_id: int) -> List[Dict[str, Any]]:
+        """Obtiene todos los usuarios referidos por este usuario como lista de dicts."""
         ...
 
     async def get_user(self, telegram_id: int, current_user_id: int) -> Optional[User]:
@@ -51,15 +45,27 @@ class IUserRepository(Protocol):
     async def create_user(
         self,
         user_id: int,
-        username: str = None,
-        full_name: str = None,
-        referral_code: str = None,
-        referred_by: int = None,
-        current_user_id: int = None,
+        username: Optional[str] = None,
+        full_name: Optional[str] = None,
+        referral_code: Optional[str] = None,
+        referred_by: Optional[int] = None,
+        current_user_id: Optional[int] = None,
     ) -> User:
         """Crea un nuevo usuario."""
         ...
 
     async def get_all_users(self, current_user_id: int) -> List[User]:
         """Obtiene todos los usuarios registrados."""
+        ...
+
+    async def update_referral_credits(
+        self, telegram_id: int, credits_delta: int, current_user_id: int
+    ) -> bool:
+        """Actualiza los créditos de referido de un usuario."""
+        ...
+
+    async def increment_max_keys(
+        self, telegram_id: int, slots: int, current_user_id: int
+    ) -> bool:
+        """Incrementa el límite de claves de un usuario."""
         ...

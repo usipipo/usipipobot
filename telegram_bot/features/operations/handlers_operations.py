@@ -2,7 +2,7 @@
 Handlers para operaciones del usuario de uSipipo.
 
 Author: uSipipo Team
-Version: 2.0.0 - Feature-based architecture
+Version: 3.0.0 - Creditos + Shop
 """
 
 from telegram import Update
@@ -14,11 +14,9 @@ from telegram.ext import (
     filters,
 )
 
+from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
 from config import settings
-from telegram_bot.features.user_management.keyboards_user_management import (
-    UserManagementKeyboards,
-)
 from utils.logger import logger
 
 from .keyboards_operations import OperationsKeyboards
@@ -28,97 +26,113 @@ from .messages_operations import OperationsMessages
 class OperationsHandler:
     """Handler para operaciones del usuario."""
 
-    def __init__(self, vpn_service: VpnService):
-        """
-        Inicializa el handler de operaciones.
-
-        Args:
-            vpn_service: Servicio de VPN
-        """
+    def __init__(self, vpn_service: VpnService, referral_service: ReferralService):
         self.vpn_service = vpn_service
-        logger.info("💰 OperationsHandler inicializado")
+        self.referral_service = referral_service
+        logger.info("⚙️ OperationsHandler inicializado")
 
     async def operations_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """
-        Muestra el menú principal de operaciones.
-        """
-        await update.message.reply_text(
-            text=OperationsMessages.Menu.MAIN,
-            reply_markup=OperationsKeyboards.operations_menu(),
-            parse_mode="Markdown",
-        )
-
-    async def mi_balance(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """
-        Muestra el balance del usuario.
-        """
         user_id = update.effective_user.id
 
         try:
-            user_status = await self.vpn_service.get_user_status(
-                user_id, current_user_id=user_id
-            )
-            user = user_status["user"]
+            stats = await self.referral_service.get_referral_stats(user_id, user_id)
+            credits = stats.referral_credits
 
-            # Verificar si el atributo total_spent existe, de lo contrario usar 0
-            total_spent = getattr(user, "total_spent", 0)
+            message = OperationsMessages.Menu.MAIN
+            keyboard = OperationsKeyboards.operations_menu(credits=credits)
 
-            text = OperationsMessages.Balance.DISPLAY.format(
-                name=user.full_name or user.username or f"Usuario {user.telegram_id}",
-                balance=user.balance_stars,
-                total_deposited=user.total_deposited,
-                total_spent=total_spent,
-                referral_earnings=user.total_referral_earnings,
-            )
-
-            # Manejar tanto mensaje como callback
             if update.message:
                 await update.message.reply_text(
-                    text=text,
-                    reply_markup=OperationsKeyboards.operations_menu(),
-                    parse_mode="Markdown",
+                    text=message, reply_markup=keyboard, parse_mode="Markdown"
                 )
             elif update.callback_query:
                 await update.callback_query.answer()
                 await update.callback_query.edit_message_text(
-                    text=text,
-                    reply_markup=OperationsKeyboards.operations_menu(),
-                    parse_mode="Markdown",
+                    text=message, reply_markup=keyboard, parse_mode="Markdown"
                 )
-
         except Exception as e:
-            logger.error(f"Error en mi_balance: {e}")
-            error_text = OperationsMessages.Error.SYSTEM_ERROR
+            logger.error(f"Error en operations_menu: {e}")
+            await self._send_error(update, OperationsMessages.Error.SYSTEM_ERROR)
 
-            if update.message:
-                await update.message.reply_text(
-                    text=error_text,
-                    reply_markup=OperationsKeyboards.operations_menu(),
-                    parse_mode="Markdown",
-                )
-            elif update.callback_query:
-                await update.callback_query.answer()
-                await update.callback_query.edit_message_text(
-                    text=error_text,
-                    reply_markup=OperationsKeyboards.operations_menu(),
-                    parse_mode="Markdown",
-                )
-
-    async def back_to_main_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
-        """
-        Maneja el botón 'Volver' para volver al menú principal.
-        """
+    async def show_credits(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
 
-        user = update.effective_user
-        is_admin = user.id == int(settings.ADMIN_ID)
+        user_id = update.effective_user.id
 
-        # Import common messages for consistency
-        from telegram_bot.common.keyboards import CommonKeyboards  # noqa: E402
-        from telegram_bot.common.messages import CommonMessages  # noqa: E402
+        try:
+            stats = await self.referral_service.get_referral_stats(user_id, user_id)
+            message = OperationsMessages.Credits.DISPLAY.format(credits=stats.referral_credits)
+            keyboard = OperationsKeyboards.credits_menu(stats.referral_credits)
+
+            await query.edit_message_text(
+                text=message, reply_markup=keyboard, parse_mode="Markdown"
+            )
+        except Exception as e:
+            logger.error(f"Error en show_credits: {e}")
+            await query.edit_message_text(
+                text=OperationsMessages.Error.SYSTEM_ERROR, parse_mode="Markdown"
+            )
+
+    async def show_shop(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+
+        message = OperationsMessages.Shop.MENU
+        keyboard = OperationsKeyboards.shop_menu()
+
+        await query.edit_message_text(
+            text=message, reply_markup=keyboard, parse_mode="Markdown"
+        )
+
+    async def redeem_credits_for_data(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Canjear creditos por datos - redirige a referral handler."""
+        from telegram_bot.features.referral.handlers_referral import ReferralHandler
+
+        query = update.callback_query
+        await query.answer()
+
+        referral_handler = ReferralHandler(self.referral_service)
+        await referral_handler.confirm_redeem_data(update, context)
+
+    async def redeem_credits_for_slot(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Canjear creditos por slot - redirige a referral handler."""
+        from telegram_bot.features.referral.handlers_referral import ReferralHandler
+
+        query = update.callback_query
+        await query.answer()
+
+        referral_handler = ReferralHandler(self.referral_service)
+        await referral_handler.confirm_redeem_slot(update, context)
+
+    async def show_buy_slots_menu(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Mostrar menu de compra de slots con Telegram Stars."""
+        from telegram_bot.features.buy_gb.handlers_buy_gb import BuyGbHandler
+        from application.services.common.container import get_container
+        from application.services.data_package_service import DataPackageService
+
+        query = update.callback_query
+        await query.answer()
+
+        container = get_container()
+        data_package_service = container.resolve(DataPackageService)
+        buy_handler = BuyGbHandler(data_package_service)
+        await buy_handler.show_slots_menu(update, context)
+
+    async def back_to_main_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        query = update.callback_query
+        await query.answer()
+
+        from telegram_bot.common.keyboards import CommonKeyboards
+        from telegram_bot.common.messages import CommonMessages
+
+        is_admin = update.effective_user.id == int(settings.ADMIN_ID)
 
         await query.edit_message_text(
             text=CommonMessages.Menu.WELCOME_BACK,
@@ -126,90 +140,31 @@ class OperationsHandler:
             parse_mode="Markdown",
         )
 
-    async def operations_menu_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
-        """
-        Maneja el callback para volver al menú de operaciones.
-        """
-        query = update.callback_query
-        await query.answer()
-
-        await query.edit_message_text(
-            text=OperationsMessages.Menu.MAIN,
-            reply_markup=OperationsKeyboards.operations_menu(),
-            parse_mode="Markdown",
-        )
-
-    async def show_transactions(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
-        """
-        Muestra el historial de transacciones.
-        """
-        user_id = update.effective_user.id
-
-        try:
-            # Aquí iría la lógica para obtener el historial de transacciones
-            # Por ahora mostramos un mensaje placeholder
-
-            text = OperationsMessages.Transactions.HISTORY.format(
-                user_id=user_id, count=0  # Placeholder
-            )
-
-            await update.message.reply_text(
-                text=text,
-                reply_markup=OperationsKeyboards.operations_menu(),
-                parse_mode="Markdown",
-            )
-
-        except Exception as e:
-            logger.error(f"Error en show_transactions: {e}")
-            await update.message.reply_text(
-                text=OperationsMessages.Error.SYSTEM_ERROR,
-                reply_markup=OperationsKeyboards.operations_menu(),
-                parse_mode="Markdown",
-            )
+    async def _send_error(self, update: Update, message: str):
+        if update.message:
+            await update.message.reply_text(text=message, parse_mode="Markdown")
+        elif update.callback_query:
+            await update.callback_query.edit_message_text(text=message, parse_mode="Markdown")
 
 
-def get_operations_handlers(vpn_service: VpnService):
-    """
-    Retorna los handlers de operaciones.
-
-    Args:
-        vpn_service: Servicio de VPN
-
-    Returns:
-        list: Lista de handlers
-    """
-    handler = OperationsHandler(vpn_service)
+def get_operations_handlers(vpn_service: VpnService, referral_service: ReferralService):
+    handler = OperationsHandler(vpn_service, referral_service)
 
     return [
-        MessageHandler(filters.Regex("^💰 Operaciones$"), handler.operations_menu),
-        MessageHandler(filters.Regex("^💰 Mi Balance$"), handler.mi_balance),
-        CommandHandler("balance", handler.mi_balance),
-        MessageHandler(filters.Regex("^🔙 Atrás$"), handler.back_to_main_menu),
+        MessageHandler(filters.Regex("^⚙️ Operaciones$"), handler.operations_menu),
+        CommandHandler("operaciones", handler.operations_menu),
     ]
 
 
-def get_operations_callback_handlers(vpn_service: VpnService):
-    """
-    Retorna los handlers de callbacks para operaciones.
-
-    Args:
-        vpn_service: Servicio de VPN
-
-    Returns:
-        list: Lista de CallbackQueryHandler
-    """
-    handler = OperationsHandler(vpn_service)
+def get_operations_callback_handlers(vpn_service: VpnService, referral_service: ReferralService):
+    handler = OperationsHandler(vpn_service, referral_service)
 
     return [
-        CallbackQueryHandler(
-            handler.operations_menu_callback, pattern="^operations_menu$"
-        ),
-        CallbackQueryHandler(handler.operations_menu_callback, pattern="^operations$"),
+        CallbackQueryHandler(handler.operations_menu, pattern="^operations_menu$"),
+        CallbackQueryHandler(handler.show_credits, pattern="^credits_menu$"),
+        CallbackQueryHandler(handler.show_shop, pattern="^shop_menu$"),
         CallbackQueryHandler(handler.back_to_main_menu, pattern="^main_menu$"),
-        CallbackQueryHandler(handler.mi_balance, pattern="^balance$"),
-        CallbackQueryHandler(handler.show_transactions, pattern="^transactions$"),
+        CallbackQueryHandler(handler.redeem_credits_for_data, pattern="^credits_redeem_data$"),
+        CallbackQueryHandler(handler.redeem_credits_for_slot, pattern="^credits_redeem_slot$"),
+        CallbackQueryHandler(handler.show_buy_slots_menu, pattern="^buy_slots_menu$"),
     ]

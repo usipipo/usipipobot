@@ -80,14 +80,17 @@ project-root/
 ### 3.1 Domain Layer - Entidades
 
 **User**
-- id: UUID
 - telegram_id: int
 - username: Optional[str]
-- first_name: str
-- is_vip: bool
-- balance: int (Stars)
-- gb_limit: int
-- gb_used: int
+- full_name: Optional[str]
+- status: UserStatus (ACTIVE, SUSPENDED, BLOCKED)
+- role: UserRole (USER, ADMIN)
+- max_keys: int (default: 2)
+- referral_code: Optional[str]
+- referred_by: Optional[int]
+- referral_credits: int
+- free_data_limit_bytes: int (10GB default)
+- free_data_used_bytes: int
 
 **Key**
 - id: UUID
@@ -119,14 +122,19 @@ project-root/
 **PaymentService**
 - create_invoice(user_id, package_id) -> Invoice
 - process_payment(payment_data) -> bool
-- get_user_balance(user_id) -> int
-- add_stars(user_id, amount, reason)
+- purchase_key_slots(user_id, slots) -> bool
 
 **UserService**
 - register_user(telegram_data) -> User
 - get_user(telegram_id) -> User
 - update_user(user_id, data)
-- add_referral(referrer_id, referred_id)
+- register_referral(new_user_id, referral_code) -> dict
+
+**ReferralService**
+- register_referral(new_user_id, referral_code) -> dict
+- get_referral_stats(user_id) -> dict
+- redeem_credits_for_data(user_id, credits) -> dict
+- redeem_credits_for_slot(user_id) -> dict
 
 ### 3.3 Infrastructure Layer
 
@@ -364,4 +372,4 @@ tenacity==9.1.2
 
 ---
 
-*Documento versión 1.0 - Fecha: 2026-02-18*
+*Documento versión 2.0 - Fecha: 2026-02-22*

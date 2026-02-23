@@ -15,7 +15,9 @@ from telegram.ext import BaseHandler
 from application.services.admin_service import AdminService
 from application.services.common.container import get_container
 from application.services.data_package_service import DataPackageService
-from application.services.payment_service import PaymentService
+from application.services.referral_service import ReferralService
+from application.services.ticket_service import TicketService
+from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from telegram_bot.features.admin.handlers_admin import (
     get_admin_callback_handlers,
@@ -38,10 +40,7 @@ from telegram_bot.features.operations.handlers_operations import (
     get_operations_callback_handlers,
     get_operations_handlers,
 )
-from telegram_bot.features.payments.handlers_payments import (
-    get_payments_callback_handlers,
-    get_payments_handlers,
-)
+
 from telegram_bot.features.user_management.handlers_user_management import (
     get_user_callback_handlers,
     get_user_management_handlers,
@@ -49,6 +48,14 @@ from telegram_bot.features.user_management.handlers_user_management import (
 from telegram_bot.features.vpn_keys.handlers_vpn_keys import (
     get_vpn_keys_callback_handlers,
     get_vpn_keys_handlers,
+)
+from telegram_bot.features.referral.handlers_referral import (
+    get_referral_callback_handlers,
+    get_referral_handlers,
+)
+from telegram_bot.features.tickets.handlers_tickets import (
+    get_ticket_callback_handlers,
+    get_ticket_handlers,
 )
 from utils.logger import logger
 
@@ -59,12 +66,32 @@ def _get_admin_handlers(container) -> List[BaseHandler]:
     handlers = []
     handlers.extend(get_admin_handlers(admin_service))
     handlers.extend(get_admin_callback_handlers(admin_service))
-    logger.info("✅ Handlers de administración configurados")
+    logger.info("✅ Handlers de administracion configurados")
+    return handlers
+
+
+def _get_referral_handlers(container) -> List[BaseHandler]:
+    """Initialize and return referral handlers."""
+    referral_service = container.resolve(ReferralService)
+    handlers = []
+    handlers.extend(get_referral_handlers(referral_service))
+    handlers.extend(get_referral_callback_handlers(referral_service))
+    logger.info("✅ Handlers de referidos configurados")
+    return handlers
+
+
+def _get_ticket_handlers(container) -> List[BaseHandler]:
+    """Initialize and return ticket handlers."""
+    ticket_service = container.resolve(TicketService)
+    handlers = []
+    handlers.extend(get_ticket_handlers(ticket_service))
+    handlers.extend(get_ticket_callback_handlers(ticket_service))
+    logger.info("✅ Handlers de tickets configurados")
     return handlers
 
 
 def _get_core_handlers(
-    vpn_service, payment_service, data_package_service
+    vpn_service, referral_service, data_package_service, user_profile_service
 ) -> List[BaseHandler]:
     """Initialize and return core feature handlers."""
     handlers = []
@@ -73,16 +100,12 @@ def _get_core_handlers(
     handlers.extend(get_key_management_callback_handlers(vpn_service))
     logger.info("Key management handlers configured")
 
-    handlers.extend(get_operations_handlers(vpn_service, payment_service))
-    handlers.extend(get_operations_callback_handlers(vpn_service, payment_service))
+    handlers.extend(get_operations_handlers(vpn_service, referral_service))
+    handlers.extend(get_operations_callback_handlers(vpn_service, referral_service))
     logger.info("Operations handlers configured")
 
-    handlers.extend(get_payments_handlers(payment_service, vpn_service))
-    handlers.extend(get_payments_callback_handlers(payment_service, vpn_service))
-    logger.info("Payments handlers configured")
-
-    handlers.extend(get_user_management_handlers(vpn_service))
-    handlers.extend(get_user_callback_handlers(vpn_service))
+    handlers.extend(get_user_management_handlers(vpn_service, user_profile_service))
+    handlers.extend(get_user_callback_handlers(vpn_service, user_profile_service))
     logger.info("User management handlers configured")
 
     handlers.extend(get_vpn_keys_handlers(vpn_service))
@@ -102,7 +125,7 @@ def _get_core_handlers(
 
 
 def initialize_handlers(
-    vpn_service: VpnService, payment_service: PaymentService
+    vpn_service: VpnService, referral_service: ReferralService
 ) -> List[BaseHandler]:
     logger.info("Initializing bot handlers...")
     handlers = []
@@ -110,10 +133,13 @@ def initialize_handlers(
     try:
         container = get_container()
         data_package_service = container.resolve(DataPackageService)
+        user_profile_service = container.resolve(UserProfileService)
 
         handlers.extend(_get_admin_handlers(container))
+        handlers.extend(_get_referral_handlers(container))
+        handlers.extend(_get_ticket_handlers(container))
         handlers.extend(
-            _get_core_handlers(vpn_service, payment_service, data_package_service)
+            _get_core_handlers(vpn_service, referral_service, data_package_service, user_profile_service)
         )
 
         logger.info(f"Total handlers configured: {len(handlers)}")

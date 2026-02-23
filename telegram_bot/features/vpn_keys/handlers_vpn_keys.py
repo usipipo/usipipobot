@@ -25,6 +25,7 @@ from config import settings
 from utils.logger import logger
 from utils.qr_generator import QrGenerator
 from utils.spinner import vpn_spinner
+from utils.telegram_utils import escape_markdown
 
 from .keyboards_vpn_keys import VpnKeysKeyboards
 from .messages_vpn_keys import VpnKeysMessages
@@ -146,37 +147,15 @@ class VpnKeysHandler:
 
             # 4. Entrega diferenciada
             if key_type == "outline":
-                escaped_data = (
-                    new_key.key_data.replace("_", "\\_")
-                    .replace("*", "\\*")
-                    .replace("[", "\\[")
-                    .replace("]", "\\]")
-                    .replace("(", "\\(")
-                    .replace(")", "\\)")
-                    .replace("~", "\\~")
-                    .replace("`", "\\`")
-                    .replace(">", "\\>")
-                    .replace("#", "\\#")
-                    .replace("+", "\\+")
-                    .replace("-", "\\-")
-                    .replace("=", "\\=")
-                    .replace("|", "\\|")
-                    .replace("{", "\\{")
-                    .replace("}", "\\}")
-                    .replace(".", "\\.")
-                    .replace("!", "\\!")
-                )
-
+                escaped_name = escape_markdown(key_name)
+                escaped_data = escape_markdown(new_key.key_data)
+                
                 caption = (
                     VpnKeysMessages.Success.KEY_CREATED_WITH_DATA.format(
-                        type="OUTLINE", name=key_name, data_limit=new_key.data_limit_gb
+                        type="OUTLINE", name=escaped_name, data_limit=new_key.data_limit_gb
                     )
-                    .replace("*", "\\*")
-                    .replace("_", "\\_")
-                    .replace("[", "\\[")
-                    .replace("]", "\\]")
+                    + f"\n\nCopia el siguiente código en tu aplicación Outline:\n```\n{escaped_data}\n```"
                 )
-                caption += f"\n\nCopia el siguiente código en tu aplicación Outline:\n```\n{escaped_data}\n```"
 
                 with open(qr_path, "rb") as photo:
                     await update.message.reply_photo(
@@ -317,10 +296,9 @@ def get_vpn_keys_callback_handlers(vpn_service: VpnService):
 
     Returns:
         list: Lista de CallbackQueryHandler
+
+    Note:
+        El callback 'create_key' ya está manejado por el ConversationHandler
+        en get_vpn_keys_handler(), por lo que no se duplica aquí.
     """
-    return [
-        CallbackQueryHandler(
-            lambda u, c: VpnKeysHandler(vpn_service).start_creation(u, c),
-            pattern="^create_key$",
-        ),
-    ]
+    return []

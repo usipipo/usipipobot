@@ -200,23 +200,35 @@ class Settings(BaseSettings):
         description="Límite de datos por clave en GB para el plan gratuito",
     )
 
-    VIP_PLAN_MAX_KEYS: int = Field(
-        default=10, ge=1, description="Máximo de llaves para el plan VIP"
-    )
-
-    VIP_PLAN_DATA_LIMIT_GB: int = Field(
-        default=50, ge=1, description="Límite de datos por clave en GB para el plan VIP"
-    )
-
-    VIP_PLAN_COST_STARS: int = Field(
-        default=10, ge=1, description="Costo en Telegram Stars por mes de VIP"
-    )
-
     REFERRAL_COMMISSION_PERCENT: int = Field(
         default=10,
         ge=0,
         le=100,
         description="Porcentaje de comisión por referidos (0-100)",
+    )
+
+    REFERRAL_CREDITS_PER_REFERRAL: int = Field(
+        default=100,
+        ge=0,
+        description="Créditos otorgados por cada referido exitoso",
+    )
+
+    REFERRAL_BONUS_NEW_USER: int = Field(
+        default=50,
+        ge=0,
+        description="Créditos de bienvenida para nuevo usuario referido",
+    )
+
+    REFERRAL_CREDITS_PER_GB: int = Field(
+        default=100,
+        ge=1,
+        description="Créditos necesarios para canjear 1 GB de datos",
+    )
+
+    REFERRAL_CREDITS_PER_SLOT: int = Field(
+        default=500,
+        ge=1,
+        description="Créditos necesarios para canjear +1 slot de clave",
     )
 
     KEY_CLEANUP_DAYS: int = Field(

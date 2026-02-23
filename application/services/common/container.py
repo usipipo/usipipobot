@@ -15,10 +15,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.services.admin_service import AdminService
 from application.services.data_package_service import DataPackageService
-from application.services.payment_service import PaymentService
+from application.services.referral_service import ReferralService
+from application.services.ticket_service import TicketService
+from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
+from domain.interfaces.iticket_repository import ITicketRepository
+from domain.interfaces.itransaction_repository import ITransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
@@ -27,15 +31,19 @@ from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
 )
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
+from infrastructure.persistence.postgresql.ticket_repository import PostgresTicketRepository
+from infrastructure.persistence.postgresql.transaction_repository import (
+    PostgresTransactionRepository,
+)
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from telegram_bot.features.admin import get_admin_callback_handlers, get_admin_handlers
 from telegram_bot.features.key_management import (
     get_key_management_callback_handlers,
     get_key_management_handlers,
 )
-from telegram_bot.features.payments import (
-    get_payments_callback_handlers,
-    get_payments_handlers,
+from telegram_bot.features.tickets import (
+    get_ticket_callback_handlers,
+    get_ticket_handlers,
 )
 from telegram_bot.features.vpn_keys import (
     get_vpn_keys_callback_handlers,
@@ -123,9 +131,19 @@ def _configure_repositories(container: punq.Container) -> None:
         session = session_factory()
         return PostgresDataPackageRepository(session)
 
+    def create_transaction_repo() -> PostgresTransactionRepository:
+        session = session_factory()
+        return PostgresTransactionRepository(session)
+
+    def create_ticket_repo() -> PostgresTicketRepository:
+        session = session_factory()
+        return PostgresTicketRepository(session)
+
     container.register(IUserRepository, factory=create_user_repo)
     container.register(IKeyRepository, factory=create_key_repo)
     container.register(IDataPackageRepository, factory=create_data_package_repo)
+    container.register(ITransactionRepository, factory=create_transaction_repo)
+    container.register(ITicketRepository, factory=create_ticket_repo)
 
 
 def _configure_application_services(container: punq.Container) -> None:
@@ -144,6 +162,10 @@ def _configure_application_services(container: punq.Container) -> None:
         session = session_factory()
         return PostgresDataPackageRepository(session)
 
+    def create_transaction_repo() -> PostgresTransactionRepository:
+        session = session_factory()
+        return PostgresTransactionRepository(session)
+
     def create_vpn_service() -> VpnService:
         return VpnService(
             user_repo=create_user_repo(),
@@ -152,14 +174,11 @@ def _configure_application_services(container: punq.Container) -> None:
             wireguard_client=container.resolve(WireGuardClient),
         )
 
-    def create_payment_service() -> PaymentService:
-        return PaymentService(user_repo=create_user_repo(), key_repo=create_key_repo())
-
     def create_admin_service() -> AdminService:
         return AdminService(
             key_repository=create_key_repo(),
             user_repository=create_user_repo(),
-            payment_repository=create_key_repo(),
+            payment_repository=create_transaction_repo(),
         )
 
     def create_data_package_service() -> DataPackageService:
@@ -167,10 +186,33 @@ def _configure_application_services(container: punq.Container) -> None:
             package_repo=create_data_package_repo(), user_repo=create_user_repo()
         )
 
+    def create_referral_service() -> ReferralService:
+        return ReferralService(
+            user_repo=create_user_repo(),
+            transaction_repo=create_transaction_repo(),
+        )
+
+    def create_user_profile_service() -> UserProfileService:
+        return UserProfileService(
+            transaction_repo=create_transaction_repo(),
+            data_package_service=container.resolve(DataPackageService),
+            referral_service=container.resolve(ReferralService),
+            vpn_service=container.resolve(VpnService),
+        )
+
+    def create_ticket_repo_inner() -> PostgresTicketRepository:
+        session = session_factory()
+        return PostgresTicketRepository(session)
+
+    def create_ticket_service() -> TicketService:
+        return TicketService(ticket_repo=create_ticket_repo_inner())
+
     container.register(VpnService, factory=create_vpn_service)
-    container.register(PaymentService, factory=create_payment_service)
     container.register(AdminService, factory=create_admin_service)
     container.register(DataPackageService, factory=create_data_package_service)
+    container.register(ReferralService, factory=create_referral_service)
+    container.register(UserProfileService, factory=create_user_profile_service)
+    container.register(TicketService, factory=create_ticket_service)
 
 
 def _configure_handlers(container: punq.Container) -> None:
@@ -182,12 +224,6 @@ def _configure_handlers(container: punq.Container) -> None:
     def create_key_submenu_handlers() -> object:
         return get_key_management_handlers(container.resolve(VpnService))
 
-    def create_payment_handlers_list() -> list:
-        return get_payments_handlers(
-            payment_service=container.resolve(PaymentService),
-            vpn_service=container.resolve(VpnService),
-        )
-
     def create_admin_handlers() -> list:
         handlers = get_admin_handlers(container.resolve(AdminService))
         return handlers if isinstance(handlers, list) else [handlers]
@@ -195,20 +231,15 @@ def _configure_handlers(container: punq.Container) -> None:
     def create_inline_callback_handlers_list() -> list:
         handlers = []
         handlers.extend(get_admin_callback_handlers(container.resolve(AdminService)))
-        handlers.extend(
-            get_payments_callback_handlers(
-                container.resolve(PaymentService), container.resolve(VpnService)
-            )
-        )
         handlers.extend(get_vpn_keys_callback_handlers(container.resolve(VpnService)))
         handlers.extend(
             get_key_management_callback_handlers(container.resolve(VpnService))
         )
+        handlers.extend(get_ticket_callback_handlers(container.resolve(TicketService)))
         return handlers
 
     container.register("creation_handlers", factory=create_creation_handlers)
     container.register("key_submenu_handlers", factory=create_key_submenu_handlers)
-    container.register("payment_handlers", factory=create_payment_handlers_list)
     container.register("admin_handlers", factory=create_admin_handlers)
     container.register(
         "inline_callback_handlers", factory=create_inline_callback_handlers_list

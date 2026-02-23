@@ -1,7 +1,8 @@
-# Esquema de Base de Datos v3.0
+# Esquema de Base de Datos v4.0
 
-> **Fecha:** 2026-02-19
-> **Issue:** #73
+> **Fecha:** 2026-02-22
+> **Issue:** #127
+> **Actualizado para:** Modelo de Negocio v2.0
 
 ## Resumen de Cambios
 
@@ -31,12 +32,16 @@
 | telegram_id | BigInteger | PK | ID de Telegram del usuario |
 | username | String | NULL | Nombre de usuario de Telegram |
 | full_name | String | NULL | Nombre completo del usuario |
-| language_code | String | NULL | Código de idioma |
-| is_active | Boolean | true | Estado activo del usuario |
-| created_at | DateTime(TZ) | now() | Fecha de creación |
-| updated_at | DateTime(TZ) | now() | Fecha de última actualización |
+| status | String | 'active' | Estado: active, suspended, blocked |
+| role | String | 'user' | Rol: user, admin |
+| max_keys | Integer | 2 | Límite de claves VPN |
+| referral_code | String | NULL | Código único de referido |
+| referred_by | BigInteger | NULL | Telegram ID del referidor |
+| referral_credits | Integer | 0 | Créditos ganados por referidos |
 | free_data_limit_bytes | BigInteger | 10737418240 (10GB) | Límite de datos gratuitos |
 | free_data_used_bytes | BigInteger | 0 | Datos gratuitos consumidos |
+| created_at | DateTime(TZ) | now() | Fecha de creación |
+| updated_at | DateTime(TZ) | now() | Fecha de última actualización |
 
 ### vpn_keys
 
@@ -73,15 +78,29 @@
 ### package_type_enum
 | Valor | Descripción |
 |-------|-------------|
-| basic | Paquete básico de datos |
-| premium | Paquete premium con mayor capacidad |
-| unlimited | Paquete sin límite de datos |
+| basic | 10 GB por 50 Stars |
+| standard | 25 GB por 65 Stars |
+| advanced | 50 GB por 85 Stars |
+| premium | 100 GB por 110 Stars |
 
 ### key_type_enum
 | Valor | Descripción |
 |-------|-------------|
 | wireguard | Clave VPN WireGuard |
 | outline | Clave VPN Outline (Shadowsocks) |
+
+### user_status_enum
+| Valor | Descripción |
+|-------|-------------|
+| active | Usuario activo |
+| suspended | Usuario suspendido |
+| blocked | Usuario bloqueado |
+
+### user_role_enum
+| Valor | Descripción |
+|-------|-------------|
+| user | Usuario regular (máx 2 claves) |
+| admin | Administrador (claves ilimitadas) |
 
 ## Migraciones
 
@@ -94,19 +113,23 @@
 ## Diagrama ER
 
 ```
-┌─────────────────────────────────┐
-│             users               │
-├─────────────────────────────────┤
-│ PK telegram_id    BigInteger    │
-│    username       String        │
-│    full_name      String        │
-│    language_code  String        │
-│    is_active      Boolean       │
-│    created_at     DateTime(TZ)  │
-│    updated_at     DateTime(TZ)  │
-│    free_data_limit_bytes  BigInt│
-│    free_data_used_bytes   BigInt│
-└───────────────┬─────────────────┘
+┌─────────────────────────────────────┐
+│               users                 │
+├─────────────────────────────────────┤
+│ PK telegram_id      BigInteger      │
+│    username         String          │
+│    full_name        String          │
+│    status           String          │
+│    role             String          │
+│    max_keys         Integer         │
+│    referral_code    String          │
+│    referred_by      BigInteger      │
+│    referral_credits Integer         │
+│    free_data_limit_bytes  BigInt    │
+│    free_data_used_bytes   BigInt    │
+│    created_at       DateTime(TZ)    │
+│    updated_at       DateTime(TZ)    │
+└───────────────┬─────────────────────┘
                 │
                 │ 1:N
         ┌───────┴───────┐
@@ -155,3 +178,12 @@ Leyenda:
 3. **Paquetes de Datos**: Los usuarios pueden comprar paquetes adicionales que se almacenan en `data_packages` con fecha de expiración.
 
 4. **Tipos de VPN**: El sistema soporta dos tipos de VPN: WireGuard y Outline, diferenciados por el enum `key_type_enum`.
+
+5. **Sistema de Créditos**: Los usuarios ganan créditos por referidos (100 créditos por referido). Pueden canjear:
+   - 100 créditos = 1 GB extra
+   - 500 créditos = +1 slot de clave
+
+6. **Límite de Claves**: Por defecto 2 claves por usuario. Se pueden comprar slots adicionales con Stars:
+   - +1 clave = 25 Stars
+   - +3 claves = 60 Stars
+   - +5 claves = 90 Stars
