@@ -2,7 +2,7 @@
 Interfaz del servicio de administración para el bot uSipipo.
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 2.0.0
 """
 
 from abc import ABC, abstractmethod
@@ -20,6 +20,16 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
+    async def get_users_paginated(self, page: int, per_page: int, current_user_id: int) -> Dict:
+        """Obtener usuarios paginados."""
+        pass
+
+    @abstractmethod
+    async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
+        """Obtener información detallada de un usuario."""
+        pass
+
+    @abstractmethod
     async def get_user_keys(self, user_id: int) -> List[Key]:
         """Obtener todas las claves de un usuario específico."""
         pass
@@ -27,6 +37,16 @@ class IAdminService(ABC):
     @abstractmethod
     async def get_all_keys(self, current_user_id: int) -> List[Dict]:
         """Obtener todas las claves de todos los usuarios."""
+        pass
+
+    @abstractmethod
+    async def update_user_status(self, user_id: int, status: str) -> Dict:
+        """Actualizar estado del usuario."""
+        pass
+
+    @abstractmethod
+    async def delete_user(self, user_id: int) -> Dict:
+        """Eliminar un usuario y sus claves asociadas."""
         pass
 
     @abstractmethod
