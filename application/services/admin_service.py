@@ -396,7 +396,7 @@ class AdminService(IAdminService):
     async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
         """Obtener información detallada de un usuario."""
         try:
-            user = await self.user_repository.get_user(user_id)
+            user = await self.user_repository.get_by_id(user_id, user_id)
             if not user:
                 return None
 
@@ -426,7 +426,7 @@ class AdminService(IAdminService):
     ) -> AdminOperationResult:
         """Actualizar estado del usuario (ACTIVE, SUSPENDED, BLOCKED)."""
         try:
-            user = await self.user_repository.get_user(user_id)
+            user = await self.user_repository.get_by_id(user_id, user_id)
             if not user:
                 return AdminOperationResult(
                     success=False,
@@ -470,7 +470,7 @@ class AdminService(IAdminService):
     ) -> AdminOperationResult:
         """Asignar rol a un usuario."""
         try:
-            user = await self.user_repository.get_user(user_id)
+            user = await self.user_repository.get_by_id(user_id, user_id)
             if not user:
                 return AdminOperationResult(
                     success=False,
@@ -523,7 +523,7 @@ class AdminService(IAdminService):
     async def delete_user(self, user_id: int) -> AdminOperationResult:
         """Eliminar un usuario y sus claves asociadas."""
         try:
-            user = await self.user_repository.get_user(user_id)
+            user = await self.user_repository.get_by_id(user_id, user_id)
             if not user:
                 return AdminOperationResult(
                     success=False,

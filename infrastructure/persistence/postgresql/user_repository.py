@@ -77,9 +77,6 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             logger.error(f"Error al obtener usuario {telegram_id}: {e}")
             return None
 
-    async def get_user(self, telegram_id: int, current_user_id: int) -> Optional[User]:
-        return await self.get_by_id(telegram_id, current_user_id)
-
     async def save(self, user: User, current_user_id: int) -> User:
         await self._set_current_user(current_user_id)
         try:
