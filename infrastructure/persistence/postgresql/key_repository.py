@@ -121,6 +121,10 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
     async def get_by_user(self, telegram_id: int, current_user_id: int) -> List[VpnKey]:
         return await self.get_by_user_id(telegram_id, current_user_id)
 
+    async def get_user_keys(self, telegram_id: int) -> List[VpnKey]:
+        """Alias para get_by_user sin current_user_id."""
+        return await self.get_by_user_id(telegram_id, telegram_id)
+
     async def get_all_active(self, current_user_id: int) -> List[VpnKey]:
         await self._set_current_user(current_user_id)
         try:
@@ -233,3 +237,38 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
         except Exception as e:
             logger.error(f"Error al obtener llaves para reset: {e}")
             return []
+
+    async def get_key(self, key_id: str) -> Optional[VpnKey]:
+        """Obtener una llave por ID string (sin current_user_id)."""
+        try:
+            import uuid as uuid_module
+            try:
+                key_uuid = uuid_module.UUID(key_id)
+            except ValueError:
+                return None
+            model = await self.session.get(VpnKeyModel, key_uuid)
+            return self._model_to_entity(model) if model else None
+        except Exception as e:
+            logger.error(f"Error al obtener llave {key_id}: {e}")
+            return None
+
+    async def delete_key(self, key_id: str) -> bool:
+        """Eliminar una llave por ID string (soft delete)."""
+        try:
+            import uuid as uuid_module
+            try:
+                key_uuid = uuid_module.UUID(key_id)
+            except ValueError:
+                return False
+            query = (
+                update(VpnKeyModel)
+                .where(VpnKeyModel.id == key_uuid)
+                .values(is_active=False)
+            )
+            await self.session.execute(query)
+            await self.session.commit()
+            return True
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error al eliminar llave {key_id}: {e}")
+            return False
