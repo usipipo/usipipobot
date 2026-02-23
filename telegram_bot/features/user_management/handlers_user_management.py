@@ -235,7 +235,7 @@ class UserManagementHandler(BaseHandler):
                 stats = await admin_service.get_dashboard_stats(current_user_id=telegram_id)
                 text = self._format_admin_dashboard(user_name, stats)
             else:
-                status_data = await self.vpn_service.get_user_status(telegram_id)
+                status_data = await self.vpn_service.get_user_status(telegram_id, telegram_id)
                 user_entity = status_data.get("user")
 
                 join_date = "N/A"
@@ -328,7 +328,7 @@ class UserManagementHandler(BaseHandler):
                     )
                 )
             else:
-                status_data = await self.vpn_service.get_user_status(telegram_id)
+                status_data = await self.vpn_service.get_user_status(telegram_id, telegram_id)
                 user_entity = status_data.get("user")
 
                 if not user_entity:
