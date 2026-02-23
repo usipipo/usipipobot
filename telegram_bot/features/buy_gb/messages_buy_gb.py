@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from application.services.data_package_service import PACKAGE_OPTIONS, SLOT_OPTIONS
 
 
-def _progress_bar(percentage: float, width: int = 20) -> str:
+def _progress_bar(percentage: float, width: int = 10) -> str:
     """Genera barra de progreso ASCII estilo cyberpunk."""
     percentage = max(0, min(100, percentage))
     filled = int(width * percentage / 100)
@@ -103,13 +103,9 @@ class BuyGbMessages:
         )
 
     class Data:
-        """Mensajes para comando /data - Estilo Cyberpunk."""
+        """Mensajes para comando /data - Estilo Cyberpunk Mobile-First."""
 
-        HEADER = (
-            "╔══════════════════════════════════════════╗\n"
-            "║       💾 𝙳𝙰𝚃𝙰 𝙲𝙾𝙽𝚂𝚄𝙼𝙿𝚃𝙸𝙾𝙽 𝙼𝙰𝚃𝚁𝙸𝚇       ║\n"
-            "╚══════════════════════════════════════════╝"
-        )
+        HEADER = "💾 𝙳𝙰𝚃𝙰 𝙲𝙾𝙽𝚂𝚄𝙼𝙿𝚃𝙸𝙾𝙽"
 
         @staticmethod
         def format_packages_list(packages: list) -> str:
@@ -121,14 +117,13 @@ class BuyGbMessages:
                 progress = _progress_bar(percentage)
                 days, hours = pkg.get('days_remaining', 0), pkg.get('hours_remaining', 0)
                 
-                lines.append(f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
-                lines.append(f"┃ 📦 {pkg['name'][:20]}{' ' * (28 - len(pkg['name'][:20]))}┃")
-                lines.append(f"┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫")
-                lines.append(f"┃ {progress} {percentage:.0f}%{' ' * (12 - len(f'{percentage:.0f}%'))}┃")
-                lines.append(f"┃ ├─ {pkg['used_gb']:.1f} GB / {pkg['total_gb']:.0f} GB{' ' * (14 - len(f'{pkg["used_gb"]:.1f} GB / {pkg["total_gb"]:.0f} GB'))}┃")
-                lines.append(f"┃ ├─ Available: {pkg['remaining_gb']:.1f} GB{' ' * (13 - len(f'{pkg["remaining_gb"]:.1f} GB'))}┃")
-                lines.append(f"┃ └─ ⏱️ {days}d {hours}h remaining{' ' * (14 - len(f'{days}d {hours}h remaining'))}┃")
-                lines.append(f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
+                lines.append(f"┌──────────────────────────┐")
+                lines.append(f"│ 📦 {pkg['name'][:18]:<18} │")
+                lines.append(f"├──────────────────────────┤")
+                lines.append(f"│ `{progress}` {percentage:.0f}%{' ' * (6 - len(f'{percentage:.0f}%'))}│")
+                lines.append(f"│ ├ {pkg['used_gb']:.1f}/{pkg['total_gb']:.0f} GB{' ' * (12 - len(f'{pkg["used_gb"]:.1f}/{pkg["total_gb"]:.0f} GB'))}│")
+                lines.append(f"│ └ ⏱️ {days}d {hours}h{' ' * (13 - len(f'{days}d {hours}h'))}│")
+                lines.append(f"└──────────────────────────┘")
                 lines.append("")
             return "\n".join(lines)
 
@@ -140,12 +135,12 @@ class BuyGbMessages:
             progress = _progress_bar(percentage)
             
             return (
-                f"┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-                f"┃ 🎁 FREE TIER                          ┃\n"
-                f"┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\n"
-                f"┃ {progress} {percentage:.0f}%{' ' * (12 - len(f'{percentage:.0f}%'))}┃\n"
-                f"┃ └─ Available: {remaining:.1f} GB{' ' * (15 - len(f'{remaining:.1f} GB'))}┃\n"
-                f"┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+                f"┌──────────────────────────┐\n"
+                f"│ 🎁 FREE TIER             │\n"
+                f"├──────────────────────────┤\n"
+                f"│ `{progress}` {percentage:.0f}%{' ' * (6 - len(f'{percentage:.0f}%'))}│\n"
+                f"│ └ {remaining:.1f} GB{' ' * (16 - len(f'{remaining:.1f} GB'))}│\n"
+                f"└──────────────────────────┘"
             )
 
         @staticmethod
@@ -175,31 +170,17 @@ class BuyGbMessages:
             total_used = summary.get('total_used_gb', 0)
             total_limit = summary.get('total_limit_gb', 0)
             remaining = summary.get('remaining_gb', 0)
-            efficiency = (total_used / total_limit * 100) if total_limit > 0 else 0
             
-            lines.append(
-                f"╔══════════════════════════════════════════╗\n"
-                f"║  📊 TOTAL AVAILABLE: {remaining:.1f} GB{' ' * (16 - len(f'{remaining:.1f} GB'))}║\n"
-                f"║  ⚡ Efficiency: {efficiency:.0f}%{' ' * (21 - len(f'{efficiency:.0f}%'))}║\n"
-                f"╚══════════════════════════════════════════╝"
-            )
+            lines.append(f"📊 *TOTAL:* `{remaining:.1f} GB`")
             lines.append("")
-            lines.append("💡 _Data priority: Packages → Free Tier_")
+            lines.append("_💡 Packages → Free Tier_")
 
             return "\n".join(lines)
 
         NO_DATA = (
-            "╔══════════════════════════════════════════╗\n"
-            "║       💾 𝙳𝙰𝚃𝙰 𝙲𝙾𝙽𝚂𝚄𝙼𝙿𝚃𝙸𝙾𝙽 𝙼𝙰𝚃𝚁𝙸𝚇       ║\n"
-            "╚══════════════════════════════════════════╝\n"
-            "\n"
-            "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
-            "┃ ⚠️ NO ACTIVE PACKAGES                ┃\n"
-            "┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\n"
-            "┃ You don't have any data packages.    ┃\n"
-            "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
-            "\n"
-            "💡 Use `/buy` to acquire more data."
+            "💾 *DATA CONSUMPTION*\n\n"
+            "⚠️ No active packages\n\n"
+            "Use `/buy` to acquire more data."
         )
 
     class Slots:
