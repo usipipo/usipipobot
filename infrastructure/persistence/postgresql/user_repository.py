@@ -273,22 +273,3 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             await self.session.rollback()
             logger.error(f"Error al incrementar límite de claves: {e}")
             return False
-
-    async def update_user(self, user: User, current_user_id: int) -> User:
-        """Actualiza un usuario existente."""
-        return await self.save(user, current_user_id)
-
-    async def delete_user(self, telegram_id: int, current_user_id: int) -> bool:
-        """Elimina un usuario de la base de datos."""
-        await self._set_current_user(current_user_id)
-        try:
-            from sqlalchemy import delete
-            query = delete(UserModel).where(UserModel.telegram_id == telegram_id)
-            await self.session.execute(query)
-            await self.session.commit()
-            logger.info(f"Usuario {telegram_id} eliminado correctamente.")
-            return True
-        except Exception as e:
-            await self.session.rollback()
-            logger.error(f"Error al eliminar usuario {telegram_id}: {e}")
-            return False
