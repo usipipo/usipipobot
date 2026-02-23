@@ -60,6 +60,7 @@ class AdminHandler(BaseConversationHandler):
                 update,
                 "⚠️ Acceso denegado. Función solo para administradores.",
                 parse_mode="Markdown",
+                context=context,
             )
             return ConversationHandler.END
 
@@ -68,6 +69,7 @@ class AdminHandler(BaseConversationHandler):
             text=AdminMessages.Menu.MAIN,
             reply_markup=AdminKeyboards.main_menu(),
             parse_mode="Markdown",
+            context=context,
         )
         return ADMIN_MENU
 
@@ -208,7 +210,7 @@ class AdminHandler(BaseConversationHandler):
         # Verificar si es admin
         if admin_id != int(settings.ADMIN_ID):
             await self._reply_message(
-                update, AdminMessages.Error.ACCESS_DENIED, parse_mode="Markdown"
+                update, AdminMessages.Error.ACCESS_DENIED, parse_mode="Markdown", context=context
             )
             return ConversationHandler.END
 
