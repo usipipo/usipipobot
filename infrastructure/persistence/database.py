@@ -144,10 +144,7 @@ def get_engine() -> AsyncEngine:
         _engine = create_async_engine(
             database_url,
             echo=False,
-            pool_size=settings.DB_POOL_SIZE,
-            max_overflow=10,
-            pool_timeout=settings.DB_TIMEOUT,
-            pool_pre_ping=True,
+            poolclass=NullPool,  # Evita problemas con múltiples event loops
         )
 
         logger.info("🔌 Engine SQLAlchemy async creado exitosamente")

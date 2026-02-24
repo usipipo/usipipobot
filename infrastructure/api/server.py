@@ -17,7 +17,6 @@ from utils.logger import logger
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🔌 Initializing API server...")
-    await init_database()
     
     from application.services.webhook_security_service import WebhookSecurityService
     from application.services.crypto_payment_service import CryptoPaymentService
@@ -47,7 +46,6 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("🔌 Shutting down API server...")
-    await close_database()
     logger.info("✅ API server stopped")
 
 
