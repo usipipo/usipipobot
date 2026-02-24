@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
@@ -91,6 +91,13 @@ def create_app() -> FastAPI:
     @app.get("/health")
     async def health_check():
         return {"status": "healthy", "service": "usipipo-api"}
+
+    @app.get("/favicon.ico")
+    async def favicon():
+        favicon_path = Path(__file__).parent.parent.parent / "miniapp" / "static" / "favicon.svg"
+        if favicon_path.exists():
+            return FileResponse(favicon_path, media_type="image/svg+xml")
+        return JSONResponse(status_code=404, content={"detail": "Not found"})
 
     return app
 
