@@ -1,0 +1,25 @@
+# Caddyfile para uSipipo VPN Bot
+# Reemplazar 'usipipo' con tu dominio DuckDNS
+
+usipipo.duckdns.org {
+    # Reverse proxy a la API FastAPI
+    reverse_proxy localhost:8000
+    
+    # Compresion gzip
+    encode gzip zstd
+    
+    # Headers de seguridad
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+    
+    # Logs
+    log {
+        output file /var/log/caddy/usipipo.log
+        format json
+    }
+}

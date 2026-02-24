@@ -21,7 +21,7 @@ Adjunto los datos solicitados para el registro de mi cuenta:
 ```json
 {
     "name": "uSipipo VPN",
-    "webhook_url": "https://YOUR_NGROK_SUBDOMAIN.loca.lt/api/v1/webhooks/tron-dealer",
+    "webhook_url": "https://usipipo.duckdns.org/api/v1/webhooks/tron-dealer",
     "webhook_secret": "GENERAR_CON_OPENSSL_RAND_HEX_32",
     "sweep_wallet": "0xYOUR_WALLET_ADDRESS_HERE"
 }
@@ -39,7 +39,7 @@ El endpoint está implementado con las siguientes capas de seguridad:
 
 ### Información adicional
 
-- **Webhook URL**: Usaré ngrok para exponer el servidor localmente
+- **Webhook URL**: Usar DuckDNS + Caddy para exponer el servidor con HTTPS
 - **Proyecto**: uSipipo VPN es un bot de Telegram para gestión de VPN con pagos integrados
 - **Uso**: Integrar pagos en cripto como alternativa a Telegram Stars
 
@@ -55,7 +55,7 @@ uSipipo Team
 | Campo | Valor |
 |-------|-------|
 | **name** | uSipipo VPN |
-| **webhook_url** | `https://YOUR_NGROK_SUBDOMAIN.loca.lt/api/v1/webhooks/tron-dealer` |
+| **webhook_url** | `https://usipipo.duckdns.org/api/v1/webhooks/tron-dealer` |
 | **webhook_secret** | `GENERAR_CON_OPENSSL_RAND_HEX_32` |
 | **sweep_wallet** | `0xYOUR_WALLET_ADDRESS_HERE` |
 
@@ -64,12 +64,15 @@ uSipipo Team
 ## Para iniciar el webhook
 
 ```bash
-# 1. Agregar NGROK_AUTH_TOKEN al .env (obtener en ngrok.com)
+# 1. Configurar DuckDNS + Caddy (ver scripts/setup-duckdns-caddy.sh)
+export DUCKDNS_DOMAIN=usipipo
+export DUCKDNS_TOKEN=tu_token
+./scripts/setup-duckdns-caddy.sh
 
 # 2. Iniciar el bot (incluye API server en puerto 8000)
 python main.py
 
-# El bot iniciará automáticamente el túnel ngrok si NGROK_AUTH_TOKEN está configurado
+# El bot actualizará automáticamente la IP de DuckDNS al iniciar
 ```
 
 ---
@@ -106,8 +109,9 @@ python main.py
 TRON_DEALER_API_KEY=              # Se completará al recibir api_key
 TRON_DEALER_WEBHOOK_SECRET=GENERAR_CON_OPENSSL_RAND_HEX_32
 TRON_DEALER_SWEEP_WALLET=0xYOUR_WALLET_ADDRESS_HERE
-NGROK_AUTH_TOKEN=                 # Tu token de ngrok.com
-NGROK_SUBDOMAIN=usipipo-vpn
+DUCKDNS_DOMAIN=usipipo
+DUCKDNS_TOKEN=tu_duckdns_token_aqui
+PUBLIC_URL=https://usipipo.duckdns.org
 ```
 
 ---

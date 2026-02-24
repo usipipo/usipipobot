@@ -302,16 +302,21 @@ class Settings(BaseSettings):
     )
 
     # =========================================================================
-    # NGROK TUNNEL
+    # DYNAMIC DNS (DuckDNS)
     # =========================================================================
-    NGROK_AUTH_TOKEN: Optional[str] = Field(
+    DUCKDNS_DOMAIN: Optional[str] = Field(
         default=None,
-        description="Auth token de ngrok (from ngrok.com)"
+        description="Dominio de DuckDNS (sin .duckdns.org)"
     )
 
-    NGROK_SUBDOMAIN: Optional[str] = Field(
+    DUCKDNS_TOKEN: Optional[str] = Field(
         default=None,
-        description="Subdominio personalizado de ngrok"
+        description="Token de autenticacion de DuckDNS"
+    )
+
+    PUBLIC_URL: Optional[str] = Field(
+        default=None,
+        description="URL publica del servidor (https://dominio.duckdns.org)"
     )
 
     # =========================================================================
@@ -415,6 +420,13 @@ class Settings(BaseSettings):
     def outline_enabled(self) -> bool:
         return bool(self.OUTLINE_API_URL)
 
+    @property
+    def webhook_url(self) -> str:
+        """URL del webhook de Tron Dealer."""
+        if self.PUBLIC_URL:
+            return f"{self.PUBLIC_URL}/api/v1/webhooks/tron-dealer"
+        return f"http://localhost:{self.API_PORT}/api/v1/webhooks/tron-dealer"
+
     def get_vpn_protocols(self) -> List[str]:
         protocols = []
         if self.wireguard_enabled:
@@ -434,7 +446,7 @@ class Settings(BaseSettings):
             "SENTRY_DSN",
             "TRON_DEALER_WEBHOOK_SECRET",
             "TRON_DEALER_API_KEY",
-            "NGROK_AUTH_TOKEN",
+            "DUCKDNS_TOKEN",
         ]
         for key in sensitive_keys:
             if key in data:
