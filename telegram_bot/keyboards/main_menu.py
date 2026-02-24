@@ -18,14 +18,12 @@ class MainMenuKeyboard:
         if miniapp_url:
             keyboard.append([
                 InlineKeyboardButton("📱 Mini App", web_app=WebAppInfo(url=miniapp_url)),
-                InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
-                InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
             ])
-        else:
-            keyboard.append([
-                InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
-                InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
-            ])
+        
+        keyboard.append([
+            InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
+            InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
+        ])
         
         keyboard.extend([
             [
@@ -48,14 +46,12 @@ class MainMenuKeyboard:
             if miniapp_url:
                 keyboard.append([
                     InlineKeyboardButton("📱 Mini App", web_app=WebAppInfo(url=miniapp_url)),
-                    InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
-                    InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
                 ])
-            else:
-                keyboard.append([
-                    InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
-                    InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
-                ])
+            
+            keyboard.append([
+                InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
+                InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
+            ])
             
             keyboard.extend([
                 [
