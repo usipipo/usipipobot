@@ -22,7 +22,7 @@ Adjunto los datos solicitados para el registro de mi cuenta:
 {
     "name": "uSipipo VPN",
     "webhook_url": "https://YOUR_NGROK_SUBDOMAIN.loca.lt/api/v1/webhooks/tron-dealer",
-    "webhook_secret": "REMOVED_SECRET",
+    "webhook_secret": "GENERAR_CON_OPENSSL_RAND_HEX_32",
     "sweep_wallet": "0xYOUR_WALLET_ADDRESS_HERE"
 }
 ```
@@ -56,7 +56,7 @@ uSipipo Team
 |-------|-------|
 | **name** | uSipipo VPN |
 | **webhook_url** | `https://YOUR_NGROK_SUBDOMAIN.loca.lt/api/v1/webhooks/tron-dealer` |
-| **webhook_secret** | `REMOVED_SECRET` |
+| **webhook_secret** | `GENERAR_CON_OPENSSL_RAND_HEX_32` |
 | **sweep_wallet** | `0xYOUR_WALLET_ADDRESS_HERE` |
 
 ---
@@ -104,7 +104,7 @@ python main.py
 ```bash
 # .env
 TRON_DEALER_API_KEY=              # Se completará al recibir api_key
-TRON_DEALER_WEBHOOK_SECRET=REMOVED_SECRET
+TRON_DEALER_WEBHOOK_SECRET=GENERAR_CON_OPENSSL_RAND_HEX_32
 TRON_DEALER_SWEEP_WALLET=0xYOUR_WALLET_ADDRESS_HERE
 NGROK_AUTH_TOKEN=                 # Tu token de ngrok.com
 NGROK_SUBDOMAIN=usipipo-vpn

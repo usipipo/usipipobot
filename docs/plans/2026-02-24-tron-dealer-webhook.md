@@ -1288,7 +1288,7 @@ Agregar al final de la clase Settings:
     )
 
     TRON_DEALER_WEBHOOK_SECRET: str = Field(
-        default="REMOVED_SECRET",
+        default="GENERAR_CON_OPENSSL_RAND_HEX_32",
         description="Secret para verificar firmas HMAC de webhooks"
     )
 
@@ -1486,7 +1486,7 @@ git commit -m "test: add webhook security and payment service tests"
 # TRON DEALER API
 # =============================================================================
 TRON_DEALER_API_KEY=td_your_api_key_here
-TRON_DEALER_WEBHOOK_SECRET=REMOVED_SECRET
+TRON_DEALER_WEBHOOK_SECRET=GENERAR_CON_OPENSSL_RAND_HEX_32
 TRON_DEALER_SWEEP_WALLET=0xYOUR_WALLET_ADDRESS_HERE
 
 # =============================================================================
