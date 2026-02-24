@@ -12,7 +12,7 @@ class CryptoPaymentService:
     def __init__(
         self,
         crypto_repo: ICryptoTransactionRepository,
-        user_repo: IUserRepository
+        user_repo: Optional[IUserRepository] = None
     ):
         self.crypto_repo = crypto_repo
         self.user_repo = user_repo
