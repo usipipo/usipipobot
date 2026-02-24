@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - uSipipo VPN{% endblock %}
+
+{% block content %}
+<div class="glitch-title" style="margin-bottom: 20px;">VPN Dashboard</div>
+
+<div class="terminal-output">
+    Bienvenido, {{ user.first_name }}. Estado del sistema: OPERATIVO
+</div>
+
+<div class="metric-grid">
+    <div class="metric-card">
+        <div class="metric-value">{{ keys_count }}</div>
+        <div class="metric-label">Claves Activas</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ total_used_gb }}<span style="font-size: 12px;">GB</span></div>
+        <div class="metric-label">Usado</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-value">{{ remaining_gb }}<span style="font-size: 12px;">GB</span></div>
+        <div class="metric-label">Disponible</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title">Consumo de Datos</div>
+    <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ usage_percent }}%;"></div>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary);">
+        <span>{{ total_used_gb }} GB usado</span>
+        <span>{{ total_limit_gb }} GB total</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Mis Claves VPN</span>
+        <span style="color: var(--text-muted);">{{ keys_count }}/{{ max_keys }}</span>
+    </div>
+    
+    {% if keys %}
+    <div class="key-list">
+        {% for key in keys %}
+        <div class="key-item">
+            <div class="key-icon {{ key.key_type.value }}">
+                {% if key.key_type.value == 'outline' %}⚡{% else %}🛡️{% endif %}
+            </div>
+            <div class="key-content">
+                <div class="key-name">{{ key.name }}</div>
+                <div class="key-meta">
+                    {{ key.key_type.value|upper }} • 
+                    <span class="badge badge-active">Activa</span>
+                </div>
+            </div>
+            <div class="key-usage">
+                <div class="key-usage-value">{{ "%.1f"|format(key.used_gb) }} GB</div>
+                <div class="key-usage-label">de {{ "%.0f"|format(key.data_limit_gb) }} GB</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 30px; color: var(--text-secondary);">
+        <div style="font-size: 40px; margin-bottom: 12px;">🔑</div>
+        <p>No tienes claves VPN activas</p>
+        <a href="/miniapp/keys/create" class="btn btn-primary" style="margin-top: 16px;">Crear Primera Clave</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-title">Acciones Rápidas</div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+        <a href="/miniapp/keys/create" class="btn btn-primary btn-full">
+            ➕ Nueva Clave VPN
+        </a>
+        <a href="/miniapp/purchase" class="btn btn-secondary btn-full">
+            💎 Comprar Datos
+        </a>
+    </div>
+</div>
+
+{% if can_create is defined and can_create %}
+<a href="/miniapp/keys/create" class="fab" title="Nueva Clave">+</a>
+{% endif %}
+{% endblock %}

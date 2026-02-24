@@ -1,9 +1,11 @@
 import asyncio
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Optional
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 
 from config import settings
@@ -11,6 +13,7 @@ from infrastructure.api.middleware import SecurityHeadersMiddleware, RateLimitMi
 from infrastructure.api.webhooks import tron_dealer_router
 from infrastructure.api.webhooks.tron_dealer import set_services
 from infrastructure.persistence.database import get_session_context, init_database, close_database
+from miniapp import router as miniapp_router
 from utils.logger import logger
 
 
@@ -71,6 +74,11 @@ def create_app() -> FastAPI:
     app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.API_RATE_LIMIT)
 
     app.include_router(tron_dealer_router, prefix="/api/v1/webhooks")
+    app.include_router(miniapp_router)
+
+    miniapp_static_dir = Path(__file__).parent.parent.parent / "miniapp" / "static"
+    if miniapp_static_dir.exists():
+        app.mount("/miniapp/static", StaticFiles(directory=str(miniapp_static_dir)), name="miniapp-static")
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):

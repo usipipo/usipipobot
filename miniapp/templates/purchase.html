@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Comprar Datos - uSipipo VPN{% endblock %}
+
+{% block content %}
+<div class="glitch-title" style="margin-bottom: 20px;">Tienda</div>
+
+<div class="terminal-output">
+    Selecciona un paquete de datos para continuar...
+</div>
+
+<div class="packages-grid" style="margin-top: 20px;">
+    {% for package in packages %}
+    <div class="package-card {% if package.id == 'standard' %}featured{% endif %}">
+        {% if package.id == 'standard' %}
+        <div style="position: absolute; top: 12px; right: 12px;">
+            <span class="badge badge-active">POPULAR</span>
+        </div>
+        {% endif %}
+        
+        <div class="package-name">{{ package.name }}</div>
+        <div class="package-data">{{ package.data_gb }} GB</div>
+        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+            {{ package.description }}
+        </div>
+        
+        <div class="package-price">
+            ⭐ {{ package.price_stars }}
+        </div>
+        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 16px;">
+            Telegram Stars
+        </div>
+        
+        <button class="btn {% if package.id == 'standard' %}btn-primary{% else %}btn-secondary{% endif %} btn-full" 
+                onclick="purchasePackage('{{ package.id }}', {{ package.price_stars }})">
+            Comprar Ahora
+        </button>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="card" style="margin-top: 20px;">
+    <div class="card-title">ℹ️ Información</div>
+    <div style="font-size: 12px; color: var(--text-secondary);">
+        <p style="margin-bottom: 8px;">• Los paquetes se activan inmediatamente después del pago</p>
+        <p style="margin-bottom: 8px;">• Los datos no expiran mientras tengas claves activas</p>
+        <p>• Pago seguro con Telegram Stars</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function purchasePackage(packageId, priceStars) {
+    const confirmed = await new Promise((resolve) => {
+        Telegram.WebApp.showConfirm(`¿Comprar paquete por ${priceStars} Stars?`, resolve);
+    });
+    
+    if (!confirmed) return;
+    
+    Telegram.WebApp.showAlert('🔄 Redirigiendo al bot para completar el pago...');
+    
+    setTimeout(() => {
+        Telegram.WebApp.openTelegramLink('https://t.me/{{ bot_username }}?start=buy_' + packageId);
+    }, 500);
+}
+</script>
+{% endblock %}

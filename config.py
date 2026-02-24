@@ -105,6 +105,16 @@ class Settings(BaseSettings):
         description="URL del webhook de Telegram (opcional)",
     )
 
+    MINIAPP_URL: Optional[str] = Field(
+        default=None,
+        description="URL base de la Mini App (ej: https://app.usipipo.com)",
+    )
+
+    MINIAPP_ENABLED: bool = Field(
+        default=True,
+        description="Habilitar Mini App Web",
+    )
+
     # =========================================================================
     # BASE DE DATOS
     # =========================================================================
