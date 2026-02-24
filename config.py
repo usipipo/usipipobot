@@ -273,6 +273,37 @@ class Settings(BaseSettings):
     )
 
     # =========================================================================
+    # TRON DEALER API (Crypto Payments)
+    # =========================================================================
+    TRON_DEALER_API_KEY: Optional[str] = Field(
+        default=None,
+        description="API key de Tron Dealer (prefijo td_)"
+    )
+
+    TRON_DEALER_WEBHOOK_SECRET: str = Field(
+        default="REMOVED_SECRET",
+        description="Secret para verificar firmas HMAC de webhooks"
+    )
+
+    TRON_DEALER_SWEEP_WALLET: Optional[str] = Field(
+        default=None,
+        description="Wallet BSC donde recibir los fondos"
+    )
+
+    # =========================================================================
+    # NGROK TUNNEL
+    # =========================================================================
+    NGROK_AUTH_TOKEN: Optional[str] = Field(
+        default=None,
+        description="Auth token de ngrok (from ngrok.com)"
+    )
+
+    NGROK_SUBDOMAIN: Optional[str] = Field(
+        default=None,
+        description="Subdominio personalizado de ngrok"
+    )
+
+    # =========================================================================
     # CONFIGURACIÓN DE PYDANTIC
     # =========================================================================
     model_config = SettingsConfigDict(
