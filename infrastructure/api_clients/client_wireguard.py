@@ -3,8 +3,9 @@ import ipaddress
 import os
 import re
 import uuid
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from config import settings
 from utils.logger import logger
@@ -22,6 +23,11 @@ class WireGuardClient:
         self.clients_dir = self.base_path / "clients"
         self.default_quota = 10 * 1024 * 1024 * 1024
         self._permissions_checked = False
+        
+        # Cache for get_usage results to prevent race conditions
+        self._usage_cache: Optional[Tuple[List[Dict], datetime]] = None
+        self._cache_ttl = timedelta(seconds=10)  # Cache for 10 seconds
+        self._cache_lock = asyncio.Lock()
 
         os.makedirs(self.clients_dir, exist_ok=True)
 
@@ -252,23 +258,37 @@ PersistentKeepalive = 15
             return {"transfer_total": 0}
 
     async def get_usage(self) -> List[Dict]:
-        try:
-            output = await self._run_cmd(f"wg show {self.interface} dump")
-            lines = output.split("\n")[1:]
+        """Get WireGuard usage metrics with caching to prevent race conditions."""
+        async with self._cache_lock:
+            # Check cache
+            if self._usage_cache is not None:
+                cached_data, cached_time = self._usage_cache
+                if datetime.now() - cached_time < self._cache_ttl:
+                    logger.debug("Returning cached WireGuard usage metrics")
+                    return cached_data
+            
+            # Cache miss or expired - fetch fresh data
+            try:
+                output = await self._run_cmd(f"wg show {self.interface} dump")
+                lines = output.split("\n")[1:]
 
-            usage = []
-            for line in lines:
-                cols = line.split("\t")
-                if len(cols) >= 7:
-                    usage.append(
-                        {
-                            "public_key": cols[0],
-                            "rx": int(cols[5]),
-                            "tx": int(cols[6]),
-                            "total": int(cols[5]) + int(cols[6]),
-                        }
-                    )
-            return usage
-        except Exception as e:
-            logger.error(f"Error obteniendo métricas WG: {e}")
-            return []
+                usage = []
+                for line in lines:
+                    cols = line.split("\t")
+                    if len(cols) >= 7:
+                        usage.append(
+                            {
+                                "public_key": cols[0],
+                                "rx": int(cols[5]),
+                                "tx": int(cols[6]),
+                                "total": int(cols[5]) + int(cols[6]),
+                            }
+                        )
+                
+                # Update cache
+                self._usage_cache = (usage, datetime.now())
+                return usage
+            except Exception as e:
+                error_msg = str(e) if str(e) else repr(e) or "Unknown error (empty exception)"
+                logger.error(f"Error obteniendo métricas WG: {error_msg}", exc_info=True)
+                return []
