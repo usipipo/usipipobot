@@ -41,6 +41,23 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
+@router.get("/entry", response_class=HTMLResponse)
+async def miniapp_entry(request: Request):
+    """
+    Página de entrada pública para la Mini App.
+    
+    Esta página se carga sin autenticación para obtener initData
+    del SDK de Telegram y redirigir al dashboard autenticado.
+    """
+    return templates.TemplateResponse(
+        "entry.html",
+        {
+            "request": request,
+            "bot_username": settings.BOT_USERNAME,
+        },
+    )
+
+
 class MiniAppContext:
     """Contexto de autenticación para Mini App."""
 
