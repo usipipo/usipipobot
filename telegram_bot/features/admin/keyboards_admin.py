@@ -199,7 +199,7 @@ class AdminKeyboards:
                 [
                     InlineKeyboardButton(
                         f"{status_icon} {key_type_icon} {key_name}",
-                        callback_data=f"key_details_{key.get('key_id')}",
+                        callback_data=f"admin_key_details_{key.get('key_id')}",
                     )
                 ]
             )
@@ -241,7 +241,7 @@ class AdminKeyboards:
             keyboard.append(
                 [
                     InlineKeyboardButton(
-                        "⏸️ Suspender", callback_data=f"key_suspend_{key_id}"
+                        "⏸️ Suspender", callback_data=f"admin_key_suspend_{key_id}"
                     ),
                 ]
             )
@@ -249,7 +249,7 @@ class AdminKeyboards:
             keyboard.append(
                 [
                     InlineKeyboardButton(
-                        "✅ Reactivar", callback_data=f"key_reactivate_{key_id}"
+                        "✅ Reactivar", callback_data=f"admin_key_reactivate_{key_id}"
                     ),
                 ]
             )
@@ -257,7 +257,7 @@ class AdminKeyboards:
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    "🗑️ Eliminar Llave", callback_data=f"key_delete_{key_id}"
+                    "🗑️ Eliminar Llave", callback_data=f"admin_key_delete_{key_id}"
                 )
             ]
         )

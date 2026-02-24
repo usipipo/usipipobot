@@ -1228,14 +1228,14 @@ def get_admin_callback_handlers(admin_service: AdminService):
         CallbackQueryHandler(handler.keys_page, pattern=r"^keys_page_\d+$"),
         CallbackQueryHandler(handler.keys_filter, pattern=r"^keys_filter_\w+$"),
         CallbackQueryHandler(
-            handler.show_key_details, pattern=r"^key_details_[a-f0-9\-]+$"
+            handler.show_key_details, pattern=r"^admin_key_details_[a-f0-9\-]+$"
         ),
-        CallbackQueryHandler(handler.suspend_key, pattern=r"^key_suspend_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.suspend_key, pattern=r"^admin_key_suspend_[a-f0-9\-]+$"),
         CallbackQueryHandler(
-            handler.reactivate_key, pattern=r"^key_reactivate_[a-f0-9\-]+$"
+            handler.reactivate_key, pattern=r"^admin_key_reactivate_[a-f0-9\-]+$"
         ),
         CallbackQueryHandler(
-            handler.confirm_delete_key, pattern=r"^key_delete_[a-f0-9\-]+$"
+            handler.confirm_delete_key, pattern=r"^admin_key_delete_[a-f0-9\-]+$"
         ),
         CallbackQueryHandler(
             handler.execute_delete_key, pattern=r"^confirm_delete_key_[a-f0-9\-]+$"
@@ -1311,7 +1311,7 @@ def get_admin_conversation_handler(
                 CallbackQueryHandler(handler.keys_page, pattern=r"^keys_page_\d+$"),
                 CallbackQueryHandler(handler.keys_filter, pattern=r"^keys_filter_\w+$"),
                 CallbackQueryHandler(
-                    handler.show_key_details, pattern=r"^key_details_[a-f0-9\-]+$"
+                    handler.show_key_details, pattern=r"^admin_key_details_[a-f0-9\-]+$"
                 ),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
@@ -1319,13 +1319,13 @@ def get_admin_conversation_handler(
             VIEWING_KEY_DETAILS: [
                 CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
                 CallbackQueryHandler(
-                    handler.suspend_key, pattern=r"^key_suspend_[a-f0-9\-]+$"
+                    handler.suspend_key, pattern=r"^admin_key_suspend_[a-f0-9\-]+$"
                 ),
                 CallbackQueryHandler(
-                    handler.reactivate_key, pattern=r"^key_reactivate_[a-f0-9\-]+$"
+                    handler.reactivate_key, pattern=r"^admin_key_reactivate_[a-f0-9\-]+$"
                 ),
                 CallbackQueryHandler(
-                    handler.confirm_delete_key, pattern=r"^key_delete_[a-f0-9\-]+$"
+                    handler.confirm_delete_key, pattern=r"^admin_key_delete_[a-f0-9\-]+$"
                 ),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
