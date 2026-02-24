@@ -65,7 +65,7 @@ class WebhookTokenModel(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
     used_at = Column(DateTime(timezone=True), nullable=True)
-    metadata = Column(JSON, default=dict)
+    extra_data = Column(JSON, default=dict)
 
     @classmethod
     def from_entity(cls, entity) -> "WebhookTokenModel":
@@ -76,7 +76,7 @@ class WebhookTokenModel(Base):
             created_at=entity.created_at,
             expires_at=entity.expires_at,
             used_at=entity.used_at,
-            metadata=entity.metadata
+            extra_data=entity.extra_data
         )
 
     def to_entity(self):
@@ -88,5 +88,5 @@ class WebhookTokenModel(Base):
             created_at=self.created_at,
             expires_at=self.expires_at,
             used_at=self.used_at,
-            metadata=self.metadata or {}
+            extra_data=self.extra_data or {}
         )
