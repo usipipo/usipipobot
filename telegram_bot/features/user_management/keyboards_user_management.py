@@ -25,15 +25,19 @@ class UserManagementKeyboards:
         Returns:
             InlineKeyboardMarkup: Teclado del menú principal
         """
+        from telegram_bot.common.keyboards import get_miniapp_url
         from telegram_bot.keyboards import MainMenuKeyboard
 
+        miniapp_url = get_miniapp_url()
         if is_admin:
             from config import settings
 
             return MainMenuKeyboard.main_menu_with_admin(
-                admin_id=int(settings.ADMIN_ID), current_user_id=int(settings.ADMIN_ID)
+                admin_id=int(settings.ADMIN_ID), 
+                current_user_id=int(settings.ADMIN_ID),
+                miniapp_url=miniapp_url
             )
-        return MainMenuKeyboard.main_menu()
+        return MainMenuKeyboard.main_menu(miniapp_url=miniapp_url)
 
     @staticmethod
     def profile_menu(is_admin: bool = False) -> InlineKeyboardMarkup:

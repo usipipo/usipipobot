@@ -1,8 +1,8 @@
 """
-Common decorators for handlers.
+Decoradores comunes para handlers de Telegram.
 
 Author: uSipipo Team
-Version: 1.0.0 - Common Components
+Version: 1.1.0 - Added Mini App support
 """
 
 from functools import wraps
@@ -10,6 +10,9 @@ from functools import wraps
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from config import settings
+from telegram_bot.common.keyboards import get_miniapp_url
+from telegram_bot.keyboards import MainMenuKeyboard
 from utils.logger import logger
 from utils.spinner import (
     database_spinner,
@@ -82,17 +85,18 @@ def admin_required(func):
             logger.warning(
                 f"Access denied for user {user.id} attempting admin action: {func.__name__}"
             )
+            miniapp_url = get_miniapp_url()
             if update.callback_query:
                 await update.callback_query.answer()
                 await update.callback_query.edit_message_text(
                     text=CommonMessages.Error.ACCESS_DENIED,
-                    reply_markup=MainMenuKeyboard.main_menu(),
+                    reply_markup=MainMenuKeyboard.main_menu(miniapp_url=miniapp_url),
                     parse_mode="Markdown",
                 )
             elif update.message:
                 await update.message.reply_text(
                     text=CommonMessages.Error.ACCESS_DENIED,
-                    reply_markup=MainMenuKeyboard.main_menu(),
+                    reply_markup=MainMenuKeyboard.main_menu(miniapp_url=miniapp_url),
                     parse_mode="Markdown",
                 )
             return None
