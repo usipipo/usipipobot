@@ -126,23 +126,13 @@ class KeyManagementKeyboards:
         """
         keyboard = []
 
-        # Acciones principales
-        main_actions = [
-            InlineKeyboardButton(
-                "📊 Estadísticas", callback_data=f"key_stats_{key_id}"
-            ),
-            InlineKeyboardButton(
-                "📋 Configuración", callback_data=f"key_config_{key_id}"
-            ),
-        ]
-        keyboard.append(main_actions)
-
-        # Acción de descarga/enlace según protocolo
+        # 1. Acción principal (Descarga/Enlace) - Prominente
         if key_type.lower() == "wireguard":
             keyboard.append(
                 [
                     InlineKeyboardButton(
-                        "📥 Descargar .conf", callback_data=f"key_download_wg_{key_id}"
+                        "📥 Descargar Configuración .conf",
+                        callback_data=f"key_download_wg_{key_id}",
                     )
                 ]
             )
@@ -150,39 +140,51 @@ class KeyManagementKeyboards:
             keyboard.append(
                 [
                     InlineKeyboardButton(
-                        "🔗 Obtener Enlace", callback_data=f"key_get_link_{key_id}"
+                        "🔗 Obtener Clave de Acceso",
+                        callback_data=f"key_get_link_{key_id}",
                     )
                 ]
             )
 
-        # Acciones de estado
+        # 2. Información y Ajustes - Fila secundaria
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "📊 Estadísticas", callback_data=f"key_stats_{key_id}"
+                ),
+                InlineKeyboardButton(
+                    "⚙️ Ajustes", callback_data=f"key_config_{key_id}"
+                ),
+            ]
+        )
+
+        # 3. Acciones de Gestión (Estado y Nombre)
+        management_row = []
         if is_active:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "⏸️ Suspender", callback_data=f"key_suspend_{key_id}"
-                    ),
-                    InlineKeyboardButton(
-                        "✏️ Renombrar", callback_data=f"key_rename_{key_id}"
-                    ),
-                ]
+            management_row.append(
+                InlineKeyboardButton(
+                    "⏸️ Suspender", callback_data=f"key_suspend_{key_id}"
+                )
             )
         else:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "✅ Reactivar", callback_data=f"key_reactivate_{key_id}"
-                    )
-                ]
+            management_row.append(
+                InlineKeyboardButton(
+                    "✅ Reactivar", callback_data=f"key_reactivate_{key_id}"
+                )
             )
 
-        # Acciones peligrosas
+        management_row.append(
+            InlineKeyboardButton("✏️ Renombrar", callback_data=f"key_rename_{key_id}")
+        )
+        keyboard.append(management_row)
+
+        # 4. Acciones Críticas y Navegación
         keyboard.append(
-            [InlineKeyboardButton("🗑️ Eliminar", callback_data=f"key_delete_{key_id}")]
+            [InlineKeyboardButton("🗑️ Eliminar Llave", callback_data=f"key_delete_{key_id}")]
         )
 
         keyboard.append(
-            [InlineKeyboardButton("🔙 Volver", callback_data="back_to_keys")]
+            [InlineKeyboardButton("🔙 Volver a la lista", callback_data="back_to_keys")]
         )
 
         return InlineKeyboardMarkup(keyboard)
