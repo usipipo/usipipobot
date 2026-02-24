@@ -46,6 +46,11 @@ jobs:
       - name: Run tests with coverage
         env:
           DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/usipipo_test
+          SECRET_KEY: test-secret-key-for-ci-testing-min-32-chars!!
+          TELEGRAM_TOKEN: "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+          ADMIN_ID: "123456789"
+          SERVER_IP: "192.168.1.1"
+          SERVER_IPV4: "192.168.1.1"
           PYTHONPATH: .
         run: |
           pytest -v --cov=. --cov-report=xml --cov-report=term-missing
@@ -83,6 +88,12 @@ jobs:
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,.venv,env
 
       - name: Install dependencies for type checking
+        env:
+          SECRET_KEY: test-secret-key-for-ci-testing-min-32-chars!!
+          TELEGRAM_TOKEN: "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+          ADMIN_ID: "123456789"
+          SERVER_IP: "192.168.1.1"
+          SERVER_IPV4: "192.168.1.1"
         run: |
           pip install -r requirements.txt
 
