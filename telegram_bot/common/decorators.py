@@ -74,6 +74,10 @@ def admin_required(func):
         from telegram_bot.keyboards import MainMenuKeyboard
 
         user = update.effective_user
+        if user is None:
+            logger.warning(f"No user in update for admin action: {func.__name__}")
+            return None
+        
         if user.id != int(settings.ADMIN_ID):
             logger.warning(
                 f"Access denied for user {user.id} attempting admin action: {func.__name__}"
@@ -98,7 +102,7 @@ def admin_required(func):
     return wrapper
 
 
-def require_user_data(key: str, error_message: str = None):
+def require_user_data(key: str, error_message: str | None = None):
     """
     Decorator to require specific user data in context.
 
@@ -112,9 +116,10 @@ def require_user_data(key: str, error_message: str = None):
         async def wrapper(
             self, update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
         ):
-            if key not in context.user_data:
+            if context.user_data is None or key not in context.user_data:
                 message = error_message or CommonMessages.Error.VALIDATION_ERROR
-                await update.message.reply_text(text=message, parse_mode="Markdown")
+                if update.message:
+                    await update.message.reply_text(text=message, parse_mode="Markdown")
                 return None
 
             return await func(self, update, context, *args, **kwargs)
@@ -138,14 +143,14 @@ def with_conversation_state(state_key: str, state_value: bool = True):
         async def wrapper(
             self, update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
         ):
-            # Set state before function
+            if context.user_data is None:
+                context.user_data = {}
             context.user_data[state_key] = state_value
 
             try:
                 result = await func(self, update, context, *args, **kwargs)
                 return result
             except Exception as e:
-                # Clear state on error
                 context.user_data[state_key] = False
                 raise e
 

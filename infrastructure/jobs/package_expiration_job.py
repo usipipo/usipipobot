@@ -5,6 +5,8 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
+from typing import cast, Any, Dict
+
 from telegram.ext import ContextTypes
 
 from application.services.data_package_service import DataPackageService
@@ -12,13 +14,18 @@ from config import settings
 from utils.logger import logger
 
 
-async def expire_packages_job(context: ContextTypes.DEFAULT_TYPE):
+async def expire_packages_job(context: ContextTypes.DEFAULT_TYPE) -> None:
     """
     Job programado que desactiva paquetes expirados.
 
     Debe ser configurado para ejecutarse diariamente.
     """
-    data_package_service: DataPackageService = context.job.data["data_package_service"]
+    if context.job is None or context.job.data is None:
+        logger.error("❌ Job data no disponible")
+        return
+
+    data = cast(Dict[str, Any], context.job.data)
+    data_package_service: DataPackageService = data["data_package_service"]
 
     try:
         logger.info("📦 Iniciando job de expiración de paquetes...")

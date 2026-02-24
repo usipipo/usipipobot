@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from config import settings
 from domain.entities.user import User, UserRole
-from domain.entities.vpn_key import VpnKey
+from domain.entities.vpn_key import KeyType, VpnKey
 from domain.interfaces.ikey_repository import IKeyRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
@@ -62,9 +62,9 @@ class VpnService:
         data_limit_bytes = self._get_user_data_limit(user)
 
         new_key = VpnKey(
-            id=uuid.uuid4(),
+            id=str(uuid.uuid4()),
             user_id=telegram_id,
-            key_type=key_type.lower(),
+            key_type=KeyType(key_type.lower()),
             name=key_name,
             key_data=access_data,
             external_id=external_id,
@@ -105,10 +105,10 @@ class VpnService:
         key = await self.key_repo.get_by_id(
             key_id, settings.ADMIN_ID
         )  # Use admin to get the key
-        if key:
+        if key and key.user_id is not None:
             await self.key_repo.update_usage(key_id, used_bytes, key.user_id)
         else:
-            # Fallback to admin if key not found
+            # Fallback to admin if key not found or no user_id
             await self.key_repo.update_usage(key_id, used_bytes, settings.ADMIN_ID)
 
     def _get_user_data_limit(self, user: User) -> int:
@@ -145,7 +145,9 @@ class VpnService:
     async def check_and_reset_billing_cycle(self, key: VpnKey) -> bool:
         """Verifica si el ciclo de facturación debe resetearse y lo hace si es necesario."""
         if key.needs_reset():
-            await self.key_repo.reset_data_usage(key.id, key.user_id)
+            if key.id is None or key.user_id is None:
+                return False
+            await self.key_repo.reset_data_usage(uuid.UUID(key.id), key.user_id)
             return True
         return False
 
@@ -163,15 +165,18 @@ class VpnService:
             return False
 
         # Verificar si el usuario puede eliminar (tiene créditos)
-        user = await self.user_repo.get_by_id(key.user_id, current_user_id)
-        if not user.can_delete_keys():
+        key_user_id = key.user_id
+        if key_user_id is None:
+            raise ValueError("La llave no tiene usuario asignado.")
+        user = await self.user_repo.get_by_id(key_user_id, current_user_id)
+        if not user or not user.can_delete_keys():
             raise ValueError("Necesitas tener créditos para eliminar claves.")
 
         try:
             # 1. Eliminar de la infraestructura real
-            if key.key_type == "outline":
+            if key.key_type == KeyType.OUTLINE:
                 await self.outline_client.delete_key(key.external_id)
-            if key.key_type == "wireguard":
+            if key.key_type == KeyType.WIREGUARD:
                 await self.wireguard_client.delete_client(key.external_id)
 
             # 2. Marcar como inactiva en Repositorio (Soft Delete)

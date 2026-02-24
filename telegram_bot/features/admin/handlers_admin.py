@@ -49,7 +49,7 @@ class AdminHandler(BaseConversationHandler):
     """Handler para funciones administrativas."""
 
     def __init__(
-        self, admin_service: AdminService, ticket_service: TicketService = None
+        self, admin_service: AdminService, ticket_service: TicketService | None = None
     ):
         super().__init__(admin_service, "AdminService")
         self.ticket_service = ticket_service
@@ -62,6 +62,9 @@ class AdminHandler(BaseConversationHandler):
     async def admin_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra el menú de administración."""
         user = update.effective_user
+        if user is None:
+            return ConversationHandler.END
+        
         if not self._is_admin(user.id):
             await self._reply_message(
                 update,
@@ -78,9 +81,10 @@ class AdminHandler(BaseConversationHandler):
             parse_mode="Markdown",
             context=context,
         )
-        context.user_data.pop("users_page", None)
-        context.user_data.pop("keys_page", None)
-        context.user_data.pop("keys_filter", None)
+        if context.user_data is not None:
+            context.user_data.pop("users_page", None)
+            context.user_data.pop("keys_page", None)
+            context.user_data.pop("keys_filter", None)
         return ADMIN_MENU
 
     @admin_required
@@ -89,15 +93,19 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Muestra lista de usuarios con paginación."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
+        
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
 
         page = 1
-        if context.user_data.get("users_page"):
+        if context.user_data is not None and context.user_data.get("users_page"):
             page = context.user_data["users_page"]
 
         try:
@@ -144,8 +152,11 @@ class AdminHandler(BaseConversationHandler):
         query = update.callback_query
         await self._safe_answer_query(query)
 
+        if query is None or query.data is None:
+            return ADMIN_MENU
         page = int(query.data.split("_")[-1])
-        context.user_data["users_page"] = page
+        if context.user_data is not None:
+            context.user_data["users_page"] = page
 
         return await self._show_users_page(update, context, page)
 
@@ -154,7 +165,10 @@ class AdminHandler(BaseConversationHandler):
     ):
         """Muestra una página específica de usuarios."""
         query = update.callback_query
-        admin_id = update.effective_user.id
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
 
         try:
             result = await self.service.get_users_paginated(
@@ -198,13 +212,19 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Muestra detalles de un usuario específico."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
 
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
+
+        if query is None or query.data is None:
+            return ADMIN_MENU
         user_id = int(query.data.split("_")[-1])
 
         try:
@@ -255,7 +275,8 @@ class AdminHandler(BaseConversationHandler):
                 reply_markup=AdminKeyboards.user_actions(user_id, is_active),
                 parse_mode="Markdown",
             )
-            context.user_data["viewing_user_id"] = user_id
+            if context.user_data is not None:
+                context.user_data["viewing_user_id"] = user_id
             return VIEWING_USER_DETAILS
 
         except Exception as e:
@@ -268,12 +289,14 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Suspende un usuario."""
         query = update.callback_query
         await self._safe_answer_query(query)
 
+        if query is None or query.data is None:
+            return ADMIN_MENU
         user_id = int(query.data.split("_")[-1])
 
         try:
@@ -306,12 +329,14 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Reactiva un usuario."""
         query = update.callback_query
         await self._safe_answer_query(query)
 
+        if query is None or query.data is None:
+            return ADMIN_MENU
         user_id = int(query.data.split("_")[-1])
 
         try:
@@ -346,8 +371,11 @@ class AdminHandler(BaseConversationHandler):
         query = update.callback_query
         await self._safe_answer_query(query)
 
+        if query is None or query.data is None:
+            return ADMIN_MENU
         user_id = int(query.data.split("_")[-1])
-        context.user_data["delete_user_id"] = user_id
+        if context.user_data is not None:
+            context.user_data["delete_user_id"] = user_id
 
         await self._safe_edit_message(
             query,
@@ -364,14 +392,17 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Ejecuta la eliminación de usuario."""
         query = update.callback_query
         await self._safe_answer_query(query)
 
+        if query is None or query.data is None:
+            return ADMIN_MENU
         user_id = int(query.data.split("_")[-1])
-        context.user_data.pop("delete_user_id", None)
+        if context.user_data is not None:
+            context.user_data.pop("delete_user_id", None)
 
         try:
             result = await self.service.delete_user(user_id)
@@ -405,7 +436,8 @@ class AdminHandler(BaseConversationHandler):
         query = update.callback_query
         await self._safe_answer_query(query)
 
-        context.user_data.pop("delete_user_id", None)
+        if context.user_data is not None:
+            context.user_data.pop("delete_user_id", None)
 
         await self._safe_edit_message(
             query,
@@ -422,15 +454,19 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Muestra lista de llaves VPN con paginación."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
 
-        page = context.user_data.get("keys_page", 1)
-        key_filter = context.user_data.get("keys_filter", "all")
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
+
+        page = context.user_data.get("keys_page", 1) if context.user_data else 1
+        key_filter = context.user_data.get("keys_filter", "all") if context.user_data else "all"
 
         try:
             result = await self._get_filtered_keys(admin_id, page, key_filter)
@@ -505,8 +541,11 @@ class AdminHandler(BaseConversationHandler):
         query = update.callback_query
         await self._safe_answer_query(query)
 
+        if query is None or query.data is None:
+            return ADMIN_MENU
         page = int(query.data.split("_")[-1])
-        context.user_data["keys_page"] = page
+        if context.user_data is not None:
+            context.user_data["keys_page"] = page
 
         return await self._show_keys_page(update, context, page)
 
@@ -516,9 +555,12 @@ class AdminHandler(BaseConversationHandler):
         query = update.callback_query
         await self._safe_answer_query(query)
 
+        if query is None or query.data is None:
+            return ADMIN_MENU
         key_filter = query.data.split("_")[-1]
-        context.user_data["keys_filter"] = key_filter
-        context.user_data["keys_page"] = 1
+        if context.user_data is not None:
+            context.user_data["keys_filter"] = key_filter
+            context.user_data["keys_page"] = 1
 
         return await self._show_keys_page(update, context, 1)
 
@@ -527,8 +569,12 @@ class AdminHandler(BaseConversationHandler):
     ):
         """Muestra una página específica de llaves."""
         query = update.callback_query
-        admin_id = update.effective_user.id
-        key_filter = context.user_data.get("keys_filter", "all")
+
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
+        key_filter = context.user_data.get("keys_filter", "all") if context.user_data else "all"
 
         try:
             result = await self._get_filtered_keys(admin_id, page, key_filter)
@@ -577,13 +623,19 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Muestra detalles de una llave específica."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
 
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
+
+        if query is None or query.data is None:
+            return ADMIN_MENU
         key_id = query.data.split("_")[-1]
 
         try:
@@ -649,7 +701,8 @@ class AdminHandler(BaseConversationHandler):
                 reply_markup=AdminKeyboards.key_actions(key_id, is_active),
                 parse_mode="Markdown",
             )
-            context.user_data["viewing_key_id"] = key_id
+            if context.user_data is not None:
+                context.user_data["viewing_key_id"] = key_id
             return VIEWING_KEY_DETAILS
 
         except Exception as e:
@@ -662,13 +715,19 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Suspende una llave VPN."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
 
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
+
+        if query is None or query.data is None:
+            return ADMIN_MENU
         key_id = query.data.split("_")[-1]
 
         try:
@@ -700,13 +759,19 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Reactiva una llave VPN suspendida."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
 
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
+
+        if query is None or query.data is None:
+            return ADMIN_MENU
         key_id = query.data.split("_")[-1]
 
         try:
@@ -740,8 +805,11 @@ class AdminHandler(BaseConversationHandler):
         query = update.callback_query
         await self._safe_answer_query(query)
 
+        if query is None or query.data is None:
+            return ADMIN_MENU
         key_id = query.data.split("_")[-1]
-        context.user_data["delete_key_id"] = key_id
+        if context.user_data is not None:
+            context.user_data["delete_key_id"] = key_id
 
         await self._safe_edit_message(
             query,
@@ -758,15 +826,22 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Ejecuta la eliminación de llave."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
 
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
+
+        if query is None or query.data is None:
+            return ADMIN_MENU
         key_id = query.data.split("_")[-1]
-        context.user_data.pop("delete_key_id", None)
+        if context.user_data is not None:
+            context.user_data.pop("delete_key_id", None)
 
         try:
             result = await self.service.delete_user_key_complete(key_id)
@@ -799,7 +874,8 @@ class AdminHandler(BaseConversationHandler):
         query = update.callback_query
         await self._safe_answer_query(query)
 
-        context.user_data.pop("delete_key_id", None)
+        if context.user_data is not None:
+            context.user_data.pop("delete_key_id", None)
 
         await self._safe_edit_message(
             query,
@@ -816,12 +892,16 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Muestra dashboard con estadísticas completas."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
+
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
 
         try:
             stats = await self.service.get_dashboard_stats(current_user_id=admin_id)
@@ -860,12 +940,16 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Muestra lista de tickets para administración."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
+
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
 
         if not self.ticket_service:
             await SpinnerManager.replace_spinner_with_message(
@@ -933,7 +1017,7 @@ class AdminHandler(BaseConversationHandler):
     async def logs_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra los logs del sistema."""
         user = update.effective_user
-        if not self._is_admin(user.id):
+        if user is None or not self._is_admin(user.id):
             await self._reply_message(
                 update,
                 AdminMessages.Error.ACCESS_DENIED,
@@ -1006,12 +1090,16 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Muestra configuración de servidores."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        admin_id = update.effective_user.id
+
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
 
         try:
             server_status = await self.service.get_server_status()
@@ -1046,7 +1134,7 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Muestra configuración de límites."""
         query = update.callback_query
@@ -1096,7 +1184,7 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Limpia los logs del sistema."""
         query = update.callback_query
@@ -1126,7 +1214,7 @@ class AdminHandler(BaseConversationHandler):
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int = None,
+        spinner_message_id: int | None = None,
     ):
         """Crea un backup de la base de datos."""
         query = update.callback_query
@@ -1157,11 +1245,12 @@ class AdminHandler(BaseConversationHandler):
         query = update.callback_query
         await self._safe_answer_query(query)
 
-        context.user_data.pop("users_page", None)
-        context.user_data.pop("keys_page", None)
-        context.user_data.pop("keys_filter", None)
-        context.user_data.pop("viewing_user_id", None)
-        context.user_data.pop("viewing_key_id", None)
+        if context.user_data is not None:
+            context.user_data.pop("users_page", None)
+            context.user_data.pop("keys_page", None)
+            context.user_data.pop("keys_filter", None)
+            context.user_data.pop("viewing_user_id", None)
+            context.user_data.pop("viewing_key_id", None)
 
         await self._safe_edit_message(
             query,
@@ -1174,7 +1263,8 @@ class AdminHandler(BaseConversationHandler):
 
     async def end_admin(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Finaliza la sesión administrativa."""
-        context.user_data.clear()
+        if context.user_data is not None:
+            context.user_data.clear()
 
         if update.message:
             await self._reply_message(
@@ -1254,7 +1344,7 @@ def get_admin_callback_handlers(admin_service: AdminService):
 
 
 def get_admin_conversation_handler(
-    admin_service: AdminService, ticket_service: TicketService = None
+    admin_service: AdminService, ticket_service: TicketService | None = None
 ) -> ConversationHandler:
     """Retorna el ConversationHandler para administración."""
     handler = AdminHandler(admin_service, ticket_service)

@@ -19,10 +19,8 @@ from telegram.ext import (
 from application.services.admin_service import AdminService
 from application.services.user_profile_service import UserProfileService
 
-# Local imports
 from application.services.vpn_service import VpnService
 
-# First party imports
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
 from telegram_bot.keyboards import MainMenuKeyboard
@@ -61,9 +59,13 @@ class UserManagementHandler(BaseHandler):
         Acepta parametro start con codigo de referido:
         /start REFERRAL_CODE
         """
-        logger.info(f"start_handler iniciado para usuario {update.effective_user.id}")
+        if not update.effective_user:
+            return
+        if not update.message:
+            return
 
         user = update.effective_user
+        logger.info(f"start_handler iniciado para usuario {user.id}")
 
         try:
             existing_user = await self.vpn_service.user_repo.get_by_id(user.id, user.id)
@@ -145,6 +147,11 @@ class UserManagementHandler(BaseHandler):
         """
         Maneja los callbacks del menú principal.
         """
+        if not update.callback_query:
+            return
+        if not update.effective_user:
+            return
+
         query = update.callback_query
         await query.answer()
 
@@ -156,14 +163,14 @@ class UserManagementHandler(BaseHandler):
                 KeyManagementHandler,
             )
 
-            handler = KeyManagementHandler(self.vpn_service)
-            await handler.show_key_submenu(update, _context)
+            key_mgmt_handler = KeyManagementHandler(self.vpn_service)
+            await key_mgmt_handler.show_key_submenu(update, _context)
 
         elif callback_data == "create_key":
             from telegram_bot.features.vpn_keys.handlers_vpn_keys import VpnKeysHandler
 
-            handler = VpnKeysHandler(self.vpn_service)
-            await handler.start_creation(update, _context)
+            vpn_keys_handler = VpnKeysHandler(self.vpn_service)
+            await vpn_keys_handler.start_creation(update, _context)
 
         elif callback_data == "buy_data" or callback_data == "operations_menu":
             from application.services.common.container import get_container
@@ -174,8 +181,8 @@ class UserManagementHandler(BaseHandler):
 
             container = get_container()
             referral_service = container.resolve(ReferralService)
-            handler = OperationsHandler(self.vpn_service, referral_service)
-            await handler.operations_menu(update, _context)
+            ops_handler = OperationsHandler(self.vpn_service, referral_service)
+            await ops_handler.operations_menu(update, _context)
 
         elif callback_data == "show_usage":
             from application.services.common.container import get_container
@@ -184,8 +191,8 @@ class UserManagementHandler(BaseHandler):
 
             container = get_container()
             data_package_service = container.resolve(DataPackageService)
-            handler = BuyGbHandler(data_package_service)
-            await handler.data_handler(update, _context)
+            buy_gb_handler = BuyGbHandler(data_package_service)
+            await buy_gb_handler.data_handler(update, _context)
 
         elif callback_data == "help":
             await query.edit_message_text(
@@ -214,8 +221,8 @@ class UserManagementHandler(BaseHandler):
 
             container = get_container()
             admin_service = container.resolve(AdminService)
-            handler = AdminHandler(admin_service)
-            await handler.admin_menu(update, _context)
+            admin_handler = AdminHandler(admin_service)
+            await admin_handler.admin_menu(update, _context)
 
         elif callback_data == "show_history":
             await self.history_handler(update, _context)
@@ -229,6 +236,9 @@ class UserManagementHandler(BaseHandler):
         """
         Muestra el estado del usuario o panel administrativo.
         """
+        if not update.effective_user:
+            return
+
         telegram_id = update.effective_user.id
         user_name = update.effective_user.username or update.effective_user.first_name
 
@@ -295,6 +305,9 @@ class UserManagementHandler(BaseHandler):
         """
         Muestra información detallada del usuario.
         """
+        if not update.effective_user:
+            return
+
         telegram_id = update.effective_user.id
 
         try:
@@ -416,6 +429,9 @@ class UserManagementHandler(BaseHandler):
         """
         Muestra el historial de transacciones del usuario.
         """
+        if not update.effective_user:
+            return
+
         telegram_id = update.effective_user.id
 
         try:

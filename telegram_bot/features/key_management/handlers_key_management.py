@@ -49,7 +49,11 @@ class KeyManagementHandler(BaseHandler):
         query = update.callback_query
 
         if query is None:
+            if update.effective_user is None:
+                return
             user_id = update.effective_user.id
+            if update.message is None:
+                return
             try:
                 user_status = await self.vpn_service.get_user_status(
                     user_id, current_user_id=user_id
@@ -81,11 +85,14 @@ class KeyManagementHandler(BaseHandler):
 
             except Exception as e:
                 logger.error(f"Error mostrando submenú de llaves: {e}")
-                await update.message.reply_text(
-                    text=KeyManagementMessages.Error.SYSTEM_ERROR, parse_mode="Markdown"
-                )
+                if update.message is not None:
+                    await update.message.reply_text(
+                        text=KeyManagementMessages.Error.SYSTEM_ERROR, parse_mode="Markdown"
+                    )
         else:
             await self._safe_answer_query(query)
+            if update.effective_user is None:
+                return
             user_id = update.effective_user.id
 
             try:
@@ -136,10 +143,14 @@ class KeyManagementHandler(BaseHandler):
         Muestra llaves filtradas por tipo.
         """
         query = update.callback_query
+        if query is None or query.data is None:
+            return
         await self._safe_answer_query(query)
 
         # Extraer tipo del callback_data
         key_type = query.data.replace("keys_", "")
+        if update.effective_user is None:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -194,10 +205,14 @@ class KeyManagementHandler(BaseHandler):
         Muestra detalles de una llave específica.
         """
         query = update.callback_query
+        if query is None or query.data is None:
+            return
         await self._safe_answer_query(query)
 
         # Extraer key_id del callback_data
         key_id = query.data.split("_")[-1]
+        if update.effective_user is None:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -259,8 +274,12 @@ class KeyManagementHandler(BaseHandler):
         Muestra estadísticas detalladas de las llaves.
         """
         query = update.callback_query
+        if query is None:
+            return
         await self._safe_answer_query(query)
 
+        if update.effective_user is None:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -322,12 +341,17 @@ class KeyManagementHandler(BaseHandler):
         Maneja acciones específicas sobre llaves (suspender, reactivar, eliminar, etc.).
         """
         query = update.callback_query
+        if query is None or query.data is None:
+            return
         await self._safe_answer_query(query)
 
         parts = query.data.split("_")
         action = parts[1] if len(parts) > 1 else ""
         key_id = parts[2] if len(parts) > 2 else ""
+        if update.effective_user is None:
+            return
         user_id = update.effective_user.id
+        keyboard = None
 
         try:
             key = await self.vpn_service.get_key_by_id(key_id, current_user_id=user_id)
@@ -377,7 +401,8 @@ class KeyManagementHandler(BaseHandler):
 
                 elif action == "rename":
                     # Iniciar flujo de renombrado
-                    context.user_data["rename_key_id"] = key_id
+                    if context.user_data is not None:
+                        context.user_data["rename_key_id"] = key_id
                     message = "✏️ **Renombrar Llave**\n\nPor favor, escribe el nuevo nombre para tu llave:"
                     keyboard = KeyManagementKeyboards.cancel_rename()
                     await self._safe_edit_message(
@@ -393,10 +418,12 @@ class KeyManagementHandler(BaseHandler):
                     message = KeyManagementMessages.Error.INVALID_ACTION
                     keyboard = KeyManagementKeyboards.back_to_submenu()
 
-                if "keyboard" not in locals():
-                    keyboard = KeyManagementKeyboards.key_actions(
-                        key_id, key.is_active, key.key_type
-                    )
+            if keyboard is None and key is not None:
+                keyboard = KeyManagementKeyboards.key_actions(
+                    key_id, key.is_active, key.key_type
+                )
+            elif keyboard is None:
+                keyboard = KeyManagementKeyboards.back_to_submenu()
 
             await self._safe_edit_message(
                 query,
@@ -421,9 +448,13 @@ class KeyManagementHandler(BaseHandler):
         Muestra la configuración de una llave específica.
         """
         query = update.callback_query
+        if query is None or query.data is None:
+            return
         await self._safe_answer_query(query)
 
         key_id = query.data.split("_")[-1]
+        if update.effective_user is None:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -468,9 +499,13 @@ class KeyManagementHandler(BaseHandler):
         Envía el archivo .conf de una llave WireGuard al usuario.
         """
         query = update.callback_query
+        if query is None or query.data is None:
+            return
         await self._safe_answer_query(query)
 
         key_id = query.data.split("_")[-1]
+        if update.effective_user is None:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -492,6 +527,8 @@ class KeyManagementHandler(BaseHandler):
             bio = io.BytesIO(config_str.encode("utf-8"))
             bio.name = f"{key_name}.conf"
 
+            if update.effective_chat is None:
+                return
             await context.bot.send_document(
                 chat_id=update.effective_chat.id,
                 document=bio,
@@ -517,9 +554,13 @@ class KeyManagementHandler(BaseHandler):
         Muestra el enlace de acceso ss:// para una llave Outline.
         """
         query = update.callback_query
+        if query is None or query.data is None:
+            return
         await self._safe_answer_query(query)
 
         key_id = query.data.split("_")[-1]
+        if update.effective_user is None:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -566,9 +607,13 @@ class KeyManagementHandler(BaseHandler):
     ):
         """Vuelve al menú principal."""
         query = update.callback_query
+        if query is None:
+            return
         await self._safe_answer_query(query)
 
         user = update.effective_user
+        if user is None:
+            return
         is_admin = user.id == int(settings.ADMIN_ID)
 
         from telegram_bot.common.keyboards import CommonKeyboards
@@ -591,9 +636,11 @@ class KeyManagementHandler(BaseHandler):
         Cancela el proceso de renombrado.
         """
         query = update.callback_query
+        if query is None:
+            return
         await self._safe_answer_query(query)
 
-        if "rename_key_id" in context.user_data:
+        if context.user_data is not None and "rename_key_id" in context.user_data:
             del context.user_data["rename_key_id"]
 
         await self.show_key_submenu(update, context)
@@ -604,11 +651,17 @@ class KeyManagementHandler(BaseHandler):
         """
         Procesa el mensaje de texto con el nuevo nombre para la llave.
         """
+        if context.user_data is None:
+            return
         key_id = context.user_data.get("rename_key_id")
         if not key_id:
             return
 
+        if update.message is None or update.message.text is None:
+            return
         new_name = update.message.text.strip()
+        if update.effective_user is None:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -637,11 +690,12 @@ class KeyManagementHandler(BaseHandler):
 
         except Exception as e:
             logger.error(f"Error procesando renombrado: {e}")
-            await update.message.reply_text(
-                text=KeyManagementMessages.Error.SYSTEM_ERROR,
-                reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
-            )
+            if update.message is not None:
+                await update.message.reply_text(
+                    text=KeyManagementMessages.Error.SYSTEM_ERROR,
+                    reply_markup=KeyManagementKeyboards.back_to_submenu(),
+                    parse_mode="Markdown",
+                )
 
 
 def get_key_management_handlers(vpn_service: VpnService):
