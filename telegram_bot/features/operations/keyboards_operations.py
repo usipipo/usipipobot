@@ -31,9 +31,10 @@ class OperationsKeyboards:
 
     @staticmethod
     def back_to_main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
+        from telegram_bot.common.keyboards import get_miniapp_url
         from telegram_bot.keyboards import MainMenuKeyboard
 
-        return MainMenuKeyboard.main_menu()
+        return MainMenuKeyboard.main_menu(miniapp_url=get_miniapp_url())
 
     @staticmethod
     def credits_menu(credits: int) -> InlineKeyboardMarkup:

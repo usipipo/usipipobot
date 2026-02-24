@@ -23,6 +23,7 @@ from application.services.vpn_service import VpnService
 
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
+from telegram_bot.common.keyboards import get_miniapp_url
 from telegram_bot.keyboards import MainMenuKeyboard
 from utils.logger import logger
 from utils.spinner import registration_spinner
@@ -92,11 +93,14 @@ class UserManagementHandler(BaseHandler):
                 logger.info(f"Usuario existente: {user.id} - {user.first_name}")
 
             is_admin = user.id == int(settings.ADMIN_ID)
+            miniapp_url = get_miniapp_url()
 
             await update.message.reply_text(
                 text=welcome_message,
                 reply_markup=MainMenuKeyboard.main_menu_with_admin(
-                    admin_id=int(settings.ADMIN_ID), current_user_id=user.id
+                    admin_id=int(settings.ADMIN_ID), 
+                    current_user_id=user.id,
+                    miniapp_url=miniapp_url
                 ),
                 parse_mode="Markdown",
             )
@@ -105,7 +109,7 @@ class UserManagementHandler(BaseHandler):
             logger.error(f"Error en start_handler para usuario {user.id}: {e}")
             await update.message.reply_text(
                 text=UserManagementMessages.Error.REGISTRATION_FAILED,
-                reply_markup=MainMenuKeyboard.main_menu(),
+                reply_markup=MainMenuKeyboard.main_menu(miniapp_url=get_miniapp_url()),
             )
 
     async def _process_referral(self, new_user_id: int, referral_code: str):

@@ -2,10 +2,24 @@
 Common keyboards shared across all features.
 
 Author: uSipipo Team
-Version: 1.0.0 - Common Components
+Version: 1.1.0 - Added Mini App support
 """
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+
+
+def get_miniapp_url() -> str | None:
+    """
+    Get Mini App URL if enabled.
+    
+    Returns:
+        Mini App entry URL if enabled and configured, None otherwise.
+    """
+    from config import settings
+    
+    if settings.MINIAPP_ENABLED and settings.MINIAPP_URL:
+        return f"{settings.MINIAPP_URL.rstrip('/')}/miniapp/entry"
+    return None
 
 
 class CommonKeyboards:
@@ -259,23 +273,28 @@ class CommonKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
+    def main_menu(is_admin: bool = False, miniapp_url: str | None = None) -> InlineKeyboardMarkup:
         """
         Main menu keyboard.
 
         NOTE: Para el menú principal simplificado, usar:
         from telegram_bot.keyboards import MainMenuKeyboard
-        MainMenuKeyboard.main_menu()
+        MainMenuKeyboard.main_menu(miniapp_url)
         """
         from telegram_bot.keyboards import MainMenuKeyboard
+
+        if miniapp_url is None:
+            miniapp_url = get_miniapp_url()
 
         if is_admin:
             from config import settings
 
             return MainMenuKeyboard.main_menu_with_admin(
-                admin_id=int(settings.ADMIN_ID), current_user_id=int(settings.ADMIN_ID)
+                admin_id=int(settings.ADMIN_ID), 
+                current_user_id=int(settings.ADMIN_ID),
+                miniapp_url=miniapp_url
             )
-        return MainMenuKeyboard.main_menu()
+        return MainMenuKeyboard.main_menu(miniapp_url)
 
     @staticmethod
     def empty_state(

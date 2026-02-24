@@ -20,6 +20,7 @@ from telegram.ext import (
 
 from application.services.ticket_service import TicketService
 from config import settings
+from telegram_bot.common.keyboards import get_miniapp_url
 from telegram_bot.keyboards import MainMenuKeyboard
 from utils.logger import logger
 
@@ -78,7 +79,7 @@ class TicketHandler:
                     ticket_id=str(ticket.id)[:8],
                     subject=subject,
                 ),
-                reply_markup=MainMenuKeyboard.main_menu(),
+                reply_markup=MainMenuKeyboard.main_menu(miniapp_url=get_miniapp_url()),
                 parse_mode="MarkdownV2",
             )
 
