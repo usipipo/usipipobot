@@ -6,7 +6,7 @@ Version: 1.0.0 - Common Components
 """
 
 from abc import ABC
-from typing import Optional
+from typing import Any, Optional
 
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
@@ -21,7 +21,7 @@ from .messages import CommonMessages
 class BaseHandler(ABC):
     """Base class for all feature handlers with common functionality."""
 
-    def __init__(self, service=None, service_name: str = "Service"):
+    def __init__(self, service: Any = None, service_name: str = "Service"):
         """
         Initialize base handler.
 
@@ -29,7 +29,7 @@ class BaseHandler(ABC):
             service: Service instance for the handler
             service_name: Name of the service for logging
         """
-        self.service = service
+        self.service: Any = service
         self.service_name = service_name
         handler_class = self.__class__.__name__
         logger.info(f"🔧 {handler_class} inicializado con {service_name}")
@@ -128,7 +128,7 @@ class BaseHandler(ABC):
                 reply_markup=self._get_back_keyboard(),
                 parse_mode="Markdown",
             )
-        else:
+        elif update.message:
             await update.message.reply_text(text=error_message, parse_mode="Markdown")
 
     def _get_back_keyboard(self):
@@ -199,7 +199,7 @@ class BaseHandler(ABC):
         text: str,
         reply_markup=None,
         parse_mode="Markdown",
-        context: ContextTypes.DEFAULT_TYPE = None,
+        context: ContextTypes.DEFAULT_TYPE | None = None,
     ):
         """
         Reply to message with keyboard.
@@ -227,9 +227,11 @@ class BaseHandler(ABC):
                     parse_mode=parse_mode,
                 )
             else:
-                await update.callback_query.message.edit_text(
-                    text=text, reply_markup=reply_markup, parse_mode=parse_mode
-                )
+                msg = update.callback_query.message
+                if msg is not None and callable(getattr(msg, "edit_text", None)):
+                    await msg.edit_text(  # type: ignore[attr-defined]
+                        text=text, reply_markup=reply_markup, parse_mode=parse_mode
+                    )
 
 
 class BaseConversationHandler(BaseHandler):

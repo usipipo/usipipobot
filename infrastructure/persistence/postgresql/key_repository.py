@@ -34,12 +34,12 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
 
     def _model_to_entity(self, model: VpnKeyModel) -> VpnKey:
         return VpnKey(
-            id=model.id,
+            id=str(model.id),
             user_id=model.user_id,
             key_type=KeyType(model.key_type) if model.key_type else KeyType.OUTLINE,
             name=model.name,
             key_data=model.key_data,
-            external_id=model.external_id,
+            external_id=model.external_id or "",
             created_at=_normalize_datetime(model.created_at)
             or datetime.now(timezone.utc),
             is_active=model.is_active,
@@ -94,7 +94,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
                 else:
                     self.session.add(self._entity_to_model(key))
             else:
-                key.id = uuid.uuid4()
+                key.id = str(uuid.uuid4())
                 self.session.add(self._entity_to_model(key))
             await self.session.commit()
             logger.debug(f"Llave {key.id} guardada correctamente.")

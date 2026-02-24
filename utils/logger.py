@@ -54,7 +54,7 @@ except Exception:
             # no-op for proxy
             return
 
-    _loguru_logger = _StdLoggerProxy()
+    _loguru_logger = _StdLoggerProxy()  # type: ignore[assignment,no-redef]
 
 
 class Logger:
@@ -372,6 +372,35 @@ class Logger:
                 return "".join(all_lines[-lines:])
         except Exception as e:
             return f"❌ Error leyendo logs: {str(e)}"
+
+    def clear_logs(self) -> bool:
+        """
+        Limpia el archivo de log.
+
+        Returns:
+            bool: True si se limpió correctamente, False si hubo error
+        """
+        log_file_path = self.log_file_path
+        if not log_file_path:
+            try:
+                from config import settings
+
+                log_file_path = settings.LOG_FILE_PATH
+            except Exception:
+                return False
+
+        log_file = Path(log_file_path)
+        if not log_file.exists():
+            return True
+
+        try:
+            with open(log_file, "w", encoding="utf-8") as f:
+                f.write("")
+            self.info("🧹 Logs limpiados por administrador")
+            return True
+        except Exception as e:
+            self.error(f"Error limpiando logs: {str(e)}")
+            return False
 
 
 # Instancia global del logger unificado

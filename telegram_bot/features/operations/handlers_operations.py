@@ -32,6 +32,8 @@ class OperationsHandler:
         logger.info("⚙️ OperationsHandler inicializado")
 
     async def operations_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -55,6 +57,8 @@ class OperationsHandler:
             await self._send_error(update, OperationsMessages.Error.SYSTEM_ERROR)
 
     async def show_credits(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not update.callback_query or not update.effective_user:
+            return
         query = update.callback_query
         await query.answer()
 
@@ -77,6 +81,8 @@ class OperationsHandler:
             )
 
     async def show_shop(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if not update.callback_query:
+            return
         query = update.callback_query
         await query.answer()
 
@@ -91,6 +97,8 @@ class OperationsHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Canjear creditos por datos - redirige a referral handler."""
+        if not update.callback_query:
+            return
         from telegram_bot.features.referral.handlers_referral import ReferralHandler
 
         query = update.callback_query
@@ -103,6 +111,8 @@ class OperationsHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Canjear creditos por slot - redirige a referral handler."""
+        if not update.callback_query:
+            return
         from telegram_bot.features.referral.handlers_referral import ReferralHandler
 
         query = update.callback_query
@@ -115,6 +125,8 @@ class OperationsHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Mostrar menu de compra de slots con Telegram Stars."""
+        if not update.callback_query:
+            return
         from application.services.common.container import get_container
         from application.services.data_package_service import DataPackageService
         from telegram_bot.features.buy_gb.handlers_buy_gb import BuyGbHandler
@@ -130,6 +142,8 @@ class OperationsHandler:
     async def back_to_main_menu(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
+        if not update.callback_query or not update.effective_user:
+            return
         query = update.callback_query
         await query.answer()
 

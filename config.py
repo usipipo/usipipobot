@@ -437,7 +437,7 @@ def get_settings() -> Settings:
 
 
 try:
-    settings = Settings()
+    settings = Settings()  # type: ignore[call-arg]
 
     from utils.logger import logger
 

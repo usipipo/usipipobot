@@ -52,6 +52,8 @@ class VpnKeysHandler:
 
     async def start_creation(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Inicia el flujo de creación preguntando el tipo de VPN."""
+        if not update.effective_user:
+            return ConversationHandler.END
         telegram_id = update.effective_user.id
         is_admin = telegram_id == int(settings.ADMIN_ID)
 
@@ -64,14 +66,14 @@ class VpnKeysHandler:
             error_message = VpnKeysMessages.Error.KEY_LIMIT_REACHED.format(
                 max_keys=user.max_keys
             )
-            if hasattr(update, "callback_query") and update.callback_query:
+            if update.callback_query:
                 await update.callback_query.answer()
                 await update.callback_query.edit_message_text(
                     text=error_message,
                     reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
                     parse_mode="Markdown",
                 )
-            else:
+            elif update.message:
                 await update.message.reply_text(
                     text=error_message,
                     reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
@@ -79,14 +81,14 @@ class VpnKeysHandler:
                 )
             return ConversationHandler.END
 
-        if hasattr(update, "callback_query") and update.callback_query:
+        if update.callback_query:
             await update.callback_query.answer()
             await update.callback_query.edit_message_text(
                 text=VpnKeysMessages.SELECT_TYPE,
                 reply_markup=VpnKeysKeyboards.vpn_types(),
                 parse_mode="Markdown",
             )
-        else:
+        elif update.message:
             await update.message.reply_text(
                 text=VpnKeysMessages.SELECT_TYPE,
                 reply_markup=VpnKeysKeyboards.vpn_types(),
@@ -106,13 +108,14 @@ class VpnKeysHandler:
     async def type_selected(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Maneja la selección del protocolo y pide el nombre de la llave."""
         query = update.callback_query
+        if not query or not query.data:
+            return ConversationHandler.END
         await query.answer()
 
-        # Extraer tipo de los callback_data (type_outline o type_wireguard)
         key_type = "outline" if "outline" in query.data else "wireguard"
-        context.user_data["tmp_key_type"] = key_type
+        if context.user_data is not None:
+            context.user_data["tmp_key_type"] = key_type
 
-        # Crear teclado con botón de cancelar
         cancel_keyboard = VpnKeysKeyboards.cancel_creation()
 
         await query.edit_message_text(
@@ -125,27 +128,27 @@ class VpnKeysHandler:
     @vpn_spinner
     async def name_received(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Finaliza la creación, genera archivos/QR y entrega al usuario."""
+        if not update.effective_user or not update.message or not update.message.text:
+            return ConversationHandler.END
         key_name = update.message.text
-        key_type = context.user_data.get("tmp_key_type")
+        tmp_key_type = context.user_data.get("tmp_key_type") if context.user_data else None
+        if not tmp_key_type:
+            return ConversationHandler.END
+        key_type: str = tmp_key_type
         telegram_id = update.effective_user.id
 
         try:
-            # 1. Crear llave mediante el Servicio de Aplicación
             new_key = await self.vpn_service.create_key(
                 telegram_id, key_type, key_name, current_user_id=telegram_id
             )
 
-            # 2. Preparar ID de archivo único
             safe_name = "".join(x for x in key_name if x.isalnum())
             file_id = f"{telegram_id}_{safe_name}"
 
-            # 3. Verificar si el usuario es admin
             is_admin = telegram_id == int(settings.ADMIN_ID)
 
-            # 3. Generar Código QR
             qr_path = QrGenerator.generate_vpn_qr(new_key.key_data, file_id)
 
-            # 4. Entrega diferenciada
             if key_type == "outline":
                 escaped_name = escape_markdown(key_name)
                 escaped_data = escape_markdown(new_key.key_data)
@@ -206,6 +209,8 @@ class VpnKeysHandler:
 
     async def cancel_creation(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Cancela la conversación desde comando /cancel."""
+        if not update.effective_user or not update.message:
+            return ConversationHandler.END
         telegram_id = update.effective_user.id
         is_admin = telegram_id == int(settings.ADMIN_ID)
         await update.message.reply_text(
@@ -219,11 +224,15 @@ class VpnKeysHandler:
     ):
         """Cancela la conversación desde botón de cancelar."""
         query = update.callback_query
+        if not query:
+            return ConversationHandler.END
         await query.answer()
 
-        # Limpiar datos temporales
-        context.user_data.pop("tmp_key_type", None)
+        if context.user_data is not None:
+            context.user_data.pop("tmp_key_type", None)
 
+        if not update.effective_user:
+            return ConversationHandler.END
         telegram_id = update.effective_user.id
         is_admin = telegram_id == int(settings.ADMIN_ID)
 
