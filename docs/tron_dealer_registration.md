@@ -1,8 +1,10 @@
 # Respuesta a Tron Dealer / QvaPay - Solicitud de API
 
-## Correo de Respuesta
+## ✅ WEBHOOK IMPLEMENTADO Y FUNCIONAL
 
 ---
+
+## Correo de Respuesta
 
 **Para:** soporte@qvapay.com (o el correo de Erich de Tron Dealer)
 
@@ -12,7 +14,9 @@
 
 Hola Erich,
 
-Gracias por la información detallada sobre la API de Tron Dealer. Adjunto los datos solicitados para el registro de mi cuenta:
+Gracias por la información detallada sobre la API de Tron Dealer. He implementado el webhook endpoint en mi servidor y está listo para recibir notificaciones.
+
+Adjunto los datos solicitados para el registro de mi cuenta:
 
 ```json
 {
@@ -23,23 +27,26 @@ Gracias por la información detallada sobre la API de Tron Dealer. Adjunto los d
 }
 ```
 
-### Notas adicionales:
+### Sobre el webhook
 
-1. **Webhook URL**: Actualmente estoy usando Localtunnel para exponer mi servidor. Una vez que tenga mi api_key, procederé a configurar el endpoint en mi aplicación.
+El endpoint está implementado con las siguientes capas de seguridad:
 
-2. **Proyecto**: uSipipo VPN es un bot de Telegram para gestión de VPN (WireGuard + Outline) con sistema de pagos. Planeamos integrar pagos en cripto mediante tu API como alternativa a Telegram Stars.
+1. **Verificación HMAC** - Valida firma de los webhooks entrantes
+2. **Protección contra replay attacks** - Nonce tracking con expiración
+3. **Validación de timestamp** - Rechaza requests con drift > 5 minutos
+4. **Rate limiting** - 60 requests/min por IP
+5. **Security headers** - HSTS, X-Frame-Options, X-Content-Type-Options
 
-3. **Uso previsto**:
-   - Generar wallets de depósito para usuarios que quieran pagar con USDT/BNB
-   - Recibir notificaciones de pago en tiempo real
-   - Asignar automáticamente los fondos a las cuentas de usuario
+### Información adicional
+
+- **Webhook URL**: Usaré ngrok para exponer el servidor localmente
+- **Proyecto**: uSipipo VPN es un bot de Telegram para gestión de VPN con pagos integrados
+- **Uso**: Integrar pagos en cripto como alternativa a Telegram Stars
 
 Quedo atento a la confirmación del registro y la recepción de mi api_key.
 
-Gracias por tu tiempo.
-
-Saludos,
-[ tu nombre / uSipipo Team ]
+Gracias,
+uSipipo Team
 
 ---
 
@@ -54,120 +61,54 @@ Saludos,
 
 ---
 
-## Próximos Pasos (Después de recibir api_key)
-
-### 1. Configurar Túnel con Localtunnel
+## Para iniciar el webhook
 
 ```bash
-# Instalar localtunnel
-npm install -g localtunnel
+# 1. Agregar NGROK_AUTH_TOKEN al .env (obtener en ngrok.com)
 
-# Crear túnel (en el servidor)
-lt --port 8000 --subdomain usipipo-vpn
+# 2. Iniciar el bot (incluye API server en puerto 8000)
+python main.py
+
+# El bot iniciará automáticamente el túnel ngrok si NGROK_AUTH_TOKEN está configurado
 ```
 
-**Alternativa con ngrok:**
-```bash
-# Instalar ngrok
-sudo apt install ngrok
+---
 
-# Autenticar (requiere cuenta gratuita en ngrok.com)
-ngrok config add-authtoken TU_TOKEN
+## Tests de Seguridad Pasados
 
-# Crear túnel
-ngrok http 8000
+```
+✅ Health check OK
+✅ HMAC signature verification OK
+✅ Invalid signature rechazado (401)
+✅ Invalid payload rechazado (422)
+✅ SQL Injection bloqueado
+✅ XSS bloqueado
+✅ Rate limiting funcionando
+✅ Security headers presentes
 ```
 
-### 2. Crear Endpoint de Webhook
+---
 
-Crear archivo: `infrastructure/api/webhook_tron_dealer.py`
+## Endpoints disponibles
 
-```python
-from fastapi import APIRouter, Request, HTTPException, Header
-import hmac
-import hashlib
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/v1/webhooks/tron-dealer` | Recibe webhooks de Tron Dealer |
+| GET | `/api/v1/webhooks/tron-dealer/health` | Health check del webhook |
+| GET | `/health` | Health check general de la API |
 
-router = APIRouter()
+---
 
-WEBHOOK_SECRET = "REMOVED_SECRET"
-
-@router.post("/api/v1/webhooks/tron-dealer")
-async def handle_tron_dealer_webhook(
-    request: Request,
-    signature: str = Header(None, alias="X-TronDealer-Signature")
-):
-    """
-    Recibe notificaciones de depósito de Tron Dealer.
-    """
-    payload = await request.body()
-    
-    # Verificar firma HMAC
-    if signature:
-        expected_sig = hmac.new(
-            WEBHOOK_SECRET.encode(),
-            payload,
-            hashlib.sha256
-        ).hexdigest()
-        
-        if not hmac.compare_digest(signature, expected_sig):
-            raise HTTPException(401, "Invalid signature")
-    
-    data = await request.json()
-    
-    # Procesar depósito
-    # - Identificar usuario por wallet_address
-    # - Acreditar monto en su cuenta
-    # - Notificar vía Telegram
-    
-    return {"status": "ok"}
-```
-
-### 3. Integrar con el Sistema de Pagos
-
-Modificar `application/services/payment_service.py` para incluir métodos:
-
-```python
-async def create_deposit_wallet(self, user_id: int) -> str:
-    """Crea wallet de depósito para el usuario via Tron Dealer API."""
-    pass
-
-async def get_wallet_balance(self, wallet_address: str) -> float:
-    """Consulta balance de una wallet."""
-    pass
-```
-
-### 4. Variables de Entorno a Agregar
-
-Agregar al `.env`:
+## Variables de entorno configuradas
 
 ```bash
-# Tron Dealer API
-TRON_DEALER_API_KEY=td_tu_api_key_aqui
+# .env
+TRON_DEALER_API_KEY=              # Se completará al recibir api_key
 TRON_DEALER_WEBHOOK_SECRET=REMOVED_SECRET
+TRON_DEALER_SWEEP_WALLET=0xYOUR_WALLET_ADDRESS_HERE
+NGROK_AUTH_TOKEN=                 # Tu token de ngrok.com
+NGROK_SUBDOMAIN=usipipo-vpn
 ```
-
----
-
-## Seguridad
-
-### Medidas implementadas:
-
-1. **Webhook Secret**: Verificación HMAC para validar que las notificaciones vienen de Tron Dealer
-2. **HTTPS**: Localtunnel/ngrok proveen HTTPS automáticamente
-3. **Wallet Principal**: Los fondos se redirigen automáticamente a la sweep_wallet
-
-### Recomendaciones:
-
-1. **Rate Limiting**: Implementar límite de requests al webhook
-2. **IP Whitelist**: Si Tron Dealer provee IPs, filtrar por ellas
-3. **Logging**: Registrar todos los webhooks recibidos para auditoría
-
----
-
-## Costos
-
-- **Actualmente**: Sin comisiones (hasta 1ro de marzo 2026)
-- **Desde 1ro de marzo**: 0.4% por transacción ("pay as you go")
 
 ---
 
@@ -181,19 +122,11 @@ TRON_DEALER_WEBHOOK_SECRET=REMOVED_SECRET
 
 ---
 
-## Resumen para Enviar
+## Costos
 
-Copia y pega este JSON en tu respuesta al correo:
-
-```json
-{
-    "name": "uSipipo VPN",
-    "webhook_url": "https://YOUR_NGROK_SUBDOMAIN.loca.lt/api/v1/webhooks/tron-dealer",
-    "webhook_secret": "REMOVED_SECRET",
-    "sweep_wallet": "0xYOUR_WALLET_ADDRESS_HERE"
-}
-```
+- **Actualmente**: Sin comisiones (hasta 1ro de marzo 2026)
+- **Desde 1ro de marzo**: 0.4% por transacción ("pay as you go")
 
 ---
 
-*Documento generado: 2026-02-24*
+*Documento actualizado: 2026-02-24 - Webhook implementado y probado*
