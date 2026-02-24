@@ -9,9 +9,12 @@ Version: 2.0.0
 """
 
 from functools import lru_cache
+from typing import TypeVar
 
 import punq
 from sqlalchemy.ext.asyncio import AsyncSession
+
+T = TypeVar('T')
 
 from application.services.admin_service import AdminService
 from application.services.data_package_service import DataPackageService
@@ -248,7 +251,7 @@ def _configure_handlers(container: punq.Container) -> None:
     )
 
 
-def get_service(service_class):
+def get_service(service_class: type[T]) -> T:
     """
     Helper para obtener un servicio del contenedor.
 

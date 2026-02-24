@@ -7,8 +7,9 @@ Version: 2.1.0
 
 import sys
 import threading
+from typing import Any
 
-from telegram.ext import ApplicationBuilder
+from telegram.ext import Application, ApplicationBuilder
 
 from application.services.common.container import get_service
 from application.services.data_package_service import DataPackageService
@@ -56,15 +57,6 @@ def main():
     """Función principal del bot."""
     logger.info("🚀 Iniciando uSipipo VPN Manager Bot...")
 
-    try:
-        vpn_service = get_service(VpnService)
-        referral_service = get_service(ReferralService)
-        data_package_service = get_service(DataPackageService)
-        logger.info("✅ Contenedor de dependencias configurado correctamente.")
-    except Exception as e:
-        logger.critical(f"❌ Error al inicializar el contenedor: {e}")
-        sys.exit(1)
-
     if not settings.TELEGRAM_TOKEN:
         logger.error("❌ No se encontró el TELEGRAM_TOKEN en el archivo .env")
         sys.exit(1)
@@ -73,8 +65,17 @@ def main():
     api_thread.start()
     logger.info(f"🌐 API server iniciado en {settings.API_HOST}:{settings.API_PORT}")
 
-    async def post_init_callback(app):
+    async def post_init_callback(app: Application) -> None:
         """Callback ejecutado después de inicializar la aplicación."""
+        try:
+            vpn_service = get_service(VpnService)
+            referral_service = get_service(ReferralService)
+            data_package_service = get_service(DataPackageService)
+            logger.info("✅ Contenedor de dependencias configurado correctamente.")
+        except Exception as e:
+            logger.critical(f"❌ Error al inicializar el contenedor: {e}")
+            sys.exit(1)
+        
         await startup()
 
         if settings.NGROK_AUTH_TOKEN:
@@ -90,7 +91,36 @@ def main():
             except Exception as e:
                 logger.warning(f"⚠️  No se pudo iniciar ngrok: {e}")
 
-    async def post_stop_callback(app):
+        job_queue = app.job_queue
+        if job_queue is None:
+            logger.error("❌ Job queue no disponible")
+            return
+
+        job_queue.run_repeating(
+            sync_vpn_usage_job, interval=1800, first=60, data={"vpn_service": vpn_service}
+        )
+        logger.info("⏰ Job de cuota programado.")
+
+        job_queue.run_repeating(
+            key_cleanup_job, interval=3600, first=30, data={"vpn_service": vpn_service}
+        )
+        logger.info("⏰ Job de limpieza de llaves programado.")
+
+        job_queue.run_repeating(
+            expire_packages_job,
+            interval=86400,
+            first=10,
+            data={"data_package_service": data_package_service},
+        )
+        logger.info("⏰ Job de expiración de paquetes programado.")
+
+        handlers = initialize_handlers(vpn_service, referral_service)
+        for handler in handlers:
+            app.add_handler(handler)
+
+        logger.info("🤖 Bot en línea y escuchando mensajes...")
+
+    async def post_stop_callback(app: Application) -> None:
         """Callback ejecutado después de detener la aplicación."""
         await shutdown()
 
@@ -102,31 +132,6 @@ def main():
         .build()
     )
 
-    job_queue = application.job_queue
-
-    job_queue.run_repeating(
-        sync_vpn_usage_job, interval=1800, first=60, data={"vpn_service": vpn_service}
-    )
-    logger.info("⏰ Job de cuota programado.")
-
-    job_queue.run_repeating(
-        key_cleanup_job, interval=3600, first=30, data={"vpn_service": vpn_service}
-    )
-    logger.info("⏰ Job de limpieza de llaves programado.")
-
-    job_queue.run_repeating(
-        expire_packages_job,
-        interval=86400,
-        first=10,
-        data={"data_package_service": data_package_service},
-    )
-    logger.info("⏰ Job de expiración de paquetes programado.")
-
-    handlers = initialize_handlers(vpn_service, referral_service)
-    for handler in handlers:
-        application.add_handler(handler)
-
-    logger.info("🤖 Bot en línea y escuchando mensajes...")
     application.run_polling()
 
 
