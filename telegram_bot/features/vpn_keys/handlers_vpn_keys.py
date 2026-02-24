@@ -149,10 +149,12 @@ class VpnKeysHandler:
             if key_type == "outline":
                 escaped_name = escape_markdown(key_name)
                 escaped_data = escape_markdown(new_key.key_data)
-                
+
                 caption = (
                     VpnKeysMessages.Success.KEY_CREATED_WITH_DATA.format(
-                        type="OUTLINE", name=escaped_name, data_limit=new_key.data_limit_gb
+                        type="OUTLINE",
+                        name=escaped_name,
+                        data_limit=new_key.data_limit_gb,
                     )
                     + f"\n\nCopia el siguiente código en tu aplicación Outline:\n```\n{escaped_data}\n```"
                 )

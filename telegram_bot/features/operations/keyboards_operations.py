@@ -15,7 +15,9 @@ class OperationsKeyboards:
     def operations_menu(credits: int = 0) -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton(f"🎁 Creditos ({credits})", callback_data="credits_menu"),
+                InlineKeyboardButton(
+                    f"🎁 Creditos ({credits})", callback_data="credits_menu"
+                ),
             ],
             [
                 InlineKeyboardButton("🛒 Shop", callback_data="shop_menu"),
@@ -37,8 +39,12 @@ class OperationsKeyboards:
     def credits_menu(credits: int) -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton("✨ Canjear por GB", callback_data="credits_redeem_data"),
-                InlineKeyboardButton("🔑 Canjear por Slot", callback_data="credits_redeem_slot"),
+                InlineKeyboardButton(
+                    "✨ Canjear por GB", callback_data="credits_redeem_data"
+                ),
+                InlineKeyboardButton(
+                    "🔑 Canjear por Slot", callback_data="credits_redeem_slot"
+                ),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
         ]
@@ -51,10 +57,14 @@ class OperationsKeyboards:
                 InlineKeyboardButton("📦 Paquetes de GB", callback_data="buy_gb_menu"),
             ],
             [
-                InlineKeyboardButton("🔑 Slots Adicionales", callback_data="buy_slots_menu"),
+                InlineKeyboardButton(
+                    "🔑 Slots Adicionales", callback_data="buy_slots_menu"
+                ),
             ],
             [
-                InlineKeyboardButton("✨ Extras con Creditos", callback_data="credits_menu"),
+                InlineKeyboardButton(
+                    "✨ Extras con Creditos", callback_data="credits_menu"
+                ),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
         ]

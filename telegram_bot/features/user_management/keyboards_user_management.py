@@ -39,10 +39,10 @@ class UserManagementKeyboards:
     def profile_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
         """
         Teclado del menú de perfil con botón de historial.
-        
+
         Args:
             is_admin: Si es True, incluye opciones de administrador
-            
+
         Returns:
             InlineKeyboardMarkup: Teclado del menú de perfil
         """
@@ -55,12 +55,14 @@ class UserManagementKeyboards:
                 InlineKeyboardButton("🏠 Menú Principal", callback_data="main_menu"),
             ],
         ]
-        
+
         if is_admin:
-            keyboard.append([
-                InlineKeyboardButton("🔧 Admin Panel", callback_data="admin_panel"),
-            ])
-        
+            keyboard.append(
+                [
+                    InlineKeyboardButton("🔧 Admin Panel", callback_data="admin_panel"),
+                ]
+            )
+
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod

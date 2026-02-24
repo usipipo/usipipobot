@@ -53,10 +53,18 @@ class AdminService(IAdminService):
             total_keys = len(all_keys)
             active_keys = sum(1 for k in all_keys if k.is_active)
             wireguard_keys = sum(
-                1 for k in all_keys if hasattr(k.key_type, 'value') and k.key_type.value.lower() == "wireguard" or str(k.key_type).lower() == "wireguard"
+                1
+                for k in all_keys
+                if hasattr(k.key_type, "value")
+                and k.key_type.value.lower() == "wireguard"
+                or str(k.key_type).lower() == "wireguard"
             )
             outline_keys = sum(
-                1 for k in all_keys if hasattr(k.key_type, 'value') and k.key_type.value.lower() == "outline" or str(k.key_type).lower() == "outline"
+                1
+                for k in all_keys
+                if hasattr(k.key_type, "value")
+                and k.key_type.value.lower() == "outline"
+                or str(k.key_type).lower() == "outline"
             )
 
             wireguard_pct = round(
@@ -82,7 +90,9 @@ class AdminService(IAdminService):
 
             total_revenue = await self._calculate_total_revenue()
             new_users_today = await self._calculate_new_users_today(current_user_id)
-            keys_created_today = await self._calculate_keys_created_today(current_user_id)
+            keys_created_today = await self._calculate_keys_created_today(
+                current_user_id
+            )
 
             return {
                 "total_users": total_users,
@@ -115,7 +125,9 @@ class AdminService(IAdminService):
 
             user_list = []
             for user in users:
-                user_keys = await self.key_repository.get_by_user(user.telegram_id, current_user_id)
+                user_keys = await self.key_repository.get_by_user(
+                    user.telegram_id, current_user_id
+                )
                 active_keys = [k for k in user_keys if k.is_active]
 
                 balance = await self.payment_repository.get_balance(user.telegram_id)
@@ -156,7 +168,9 @@ class AdminService(IAdminService):
 
             key_list = []
             for key in all_keys:
-                user = await self.user_repository.get_by_id(key.user_id, current_user_id)
+                user = await self.user_repository.get_by_id(
+                    key.user_id, current_user_id
+                )
                 user_name = (
                     f"{user.first_name} {user.last_name or ''}" if user else "Unknown"
                 )
@@ -167,7 +181,11 @@ class AdminService(IAdminService):
                     key_id=str(key.id),
                     user_id=key.user_id,
                     user_name=user_name,
-                    key_type=key.key_type.value if hasattr(key.key_type, 'value') else str(key.key_type),
+                    key_type=(
+                        key.key_type.value
+                        if hasattr(key.key_type, "value")
+                        else str(key.key_type)
+                    ),
                     key_name=key.name,
                     access_url=key.key_data,
                     created_at=key.created_at,
@@ -278,7 +296,9 @@ class AdminService(IAdminService):
                 "error": str(e),
             }
 
-    async def toggle_key_status(self, key_id: str, active: bool = True) -> Dict[str, Any]:
+    async def toggle_key_status(
+        self, key_id: str, active: bool = True
+    ) -> Dict[str, Any]:
         """Activa o desactiva una llave VPN sin eliminarla."""
         try:
             key = await self.key_repository.get_key(key_id)
@@ -296,7 +316,9 @@ class AdminService(IAdminService):
             if success:
                 key.is_active = active
                 await self.key_repository.save(key, key.user_id or 1)
-                logger.info(f"Clave {key_id} {'reactivada' if active else 'suspendida'}")
+                logger.info(
+                    f"Clave {key_id} {'reactivada' if active else 'suspendida'}"
+                )
                 return {"success": True}
             else:
                 return {
@@ -315,11 +337,15 @@ class AdminService(IAdminService):
             key_type = str(key.key_type).lower() if key.key_type else ""
 
             if key_type == "wireguard":
-                result = await self.wireguard_client.disable_client(key.name or key.external_id)
+                result = await self.wireguard_client.disable_client(
+                    key.name or key.external_id
+                )
                 if not result:
                     success = False
             elif key_type == "outline":
-                result = await self.outline_client.disable_key(key.id or key.external_id)
+                result = await self.outline_client.disable_key(
+                    key.id or key.external_id
+                )
                 if not result:
                     success = False
 
@@ -335,7 +361,9 @@ class AdminService(IAdminService):
             key_type = str(key.key_type).lower() if key.key_type else ""
 
             if key_type == "wireguard":
-                result = await self.wireguard_client.enable_client(key.name or key.external_id)
+                result = await self.wireguard_client.enable_client(
+                    key.name or key.external_id
+                )
                 if not result:
                     success = False
             elif key_type == "outline":
@@ -638,7 +666,9 @@ class AdminService(IAdminService):
                 message=f"Error: {str(e)}",
             )
 
-    async def get_users_paginated(self, page: int = 1, per_page: int = 10, current_user_id: int = None) -> Dict:
+    async def get_users_paginated(
+        self, page: int = 1, per_page: int = 10, current_user_id: int = None
+    ) -> Dict:
         """Obtener usuarios paginados."""
         try:
             if current_user_id is None:
@@ -648,7 +678,7 @@ class AdminService(IAdminService):
 
             # Calcular offset
             offset = (page - 1) * per_page
-            paginated_users = all_users[offset:offset + per_page]
+            paginated_users = all_users[offset : offset + per_page]
 
             user_list = []
             for user in paginated_users:
@@ -799,4 +829,3 @@ class AdminService(IAdminService):
                 "cpu_usage": "N/A",
                 "network_usage": "N/A",
             }
-

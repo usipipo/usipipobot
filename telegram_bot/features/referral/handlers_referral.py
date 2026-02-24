@@ -36,14 +36,14 @@ class ReferralHandler:
 
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
-            
+
             message = ReferralMessages.Menu.referral_info(
                 code=stats.referral_code,
                 credits=stats.referral_credits,
                 total_referrals=stats.total_referrals,
                 bot_username=settings.BOT_USERNAME,
             )
-            
+
             keyboard = ReferralKeyboards.main_menu(stats.referral_credits)
 
             if query:
@@ -63,7 +63,7 @@ class ReferralHandler:
         except Exception as e:
             logger.error(f"Error en show_referral_menu: {e}")
             error_msg = ReferralMessages.Error.SYSTEM_ERROR
-            
+
             if query:
                 await query.answer()
                 await query.edit_message_text(text=error_msg, parse_mode="Markdown")
@@ -76,12 +76,12 @@ class ReferralHandler:
         """Muestra el menu de canje de creditos."""
         query = update.callback_query
         await query.answer()
-        
+
         user_id = update.effective_user.id
 
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
-            
+
             message = ReferralMessages.Redeem.OPTIONS
             keyboard = ReferralKeyboards.redeem_menu(stats.referral_credits)
 
@@ -104,19 +104,19 @@ class ReferralHandler:
         """Muestra confirmacion para canjear creditos por datos."""
         query = update.callback_query
         await query.answer()
-        
+
         user_id = update.effective_user.id
 
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
-            
+
             if stats.referral_credits < settings.REFERRAL_CREDITS_PER_GB:
                 message = ReferralMessages.Redeem.INSUFFICIENT_CREDITS
                 keyboard = ReferralKeyboards.redeem_menu(stats.referral_credits)
             else:
                 gb = stats.referral_credits // settings.REFERRAL_CREDITS_PER_GB
                 credits_to_spend = gb * settings.REFERRAL_CREDITS_PER_GB
-                
+
                 message = ReferralMessages.Redeem.confirm_data(
                     credits=credits_to_spend,
                     gb=gb,
@@ -125,7 +125,7 @@ class ReferralHandler:
                     credits=credits_to_spend,
                     gb=gb,
                 )
-                
+
                 context.user_data["redeem_gb"] = gb
                 context.user_data["redeem_credits"] = credits_to_spend
 
@@ -148,12 +148,12 @@ class ReferralHandler:
         """Muestra confirmacion para canjear creditos por slot."""
         query = update.callback_query
         await query.answer()
-        
+
         user_id = update.effective_user.id
 
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
-            
+
             if stats.referral_credits < settings.REFERRAL_CREDITS_PER_SLOT:
                 message = ReferralMessages.Redeem.insufficient_for_slot(
                     required=settings.REFERRAL_CREDITS_PER_SLOT,
@@ -187,11 +187,13 @@ class ReferralHandler:
         """Ejecuta el canje de creditos por datos."""
         query = update.callback_query
         await query.answer()
-        
+
         user_id = update.effective_user.id
-        
+
         gb = context.user_data.get("redeem_gb", 1)
-        credits = context.user_data.get("redeem_credits", settings.REFERRAL_CREDITS_PER_GB)
+        credits = context.user_data.get(
+            "redeem_credits", settings.REFERRAL_CREDITS_PER_GB
+        )
 
         try:
             result = await self.referral_service.redeem_credits_for_data(
@@ -206,7 +208,7 @@ class ReferralHandler:
                     remaining=result.get("remaining_credits", 0),
                 )
                 keyboard = ReferralKeyboards.success_back()
-                
+
                 context.user_data.pop("redeem_gb", None)
                 context.user_data.pop("redeem_credits", None)
             else:
@@ -232,7 +234,7 @@ class ReferralHandler:
         """Ejecuta el canje de creditos por slot."""
         query = update.callback_query
         await query.answer()
-        
+
         user_id = update.effective_user.id
 
         try:
@@ -250,7 +252,9 @@ class ReferralHandler:
                 error = result.get("error", "unknown")
                 if error == "insufficient_credits":
                     message = ReferralMessages.Redeem.insufficient_for_slot(
-                        required=result.get("required", settings.REFERRAL_CREDITS_PER_SLOT),
+                        required=result.get(
+                            "required", settings.REFERRAL_CREDITS_PER_SLOT
+                        ),
                         current=result.get("current", 0),
                     )
                 else:
@@ -287,9 +291,19 @@ def get_referral_callback_handlers(referral_service: ReferralService):
     return [
         CallbackQueryHandler(handler.show_referral_menu, pattern="^referral_menu$"),
         CallbackQueryHandler(handler.show_referral_menu, pattern="^referral_refresh$"),
-        CallbackQueryHandler(handler.show_redeem_menu, pattern="^referral_redeem_menu$"),
-        CallbackQueryHandler(handler.confirm_redeem_data, pattern="^referral_redeem_data$"),
-        CallbackQueryHandler(handler.confirm_redeem_slot, pattern="^referral_redeem_slot$"),
-        CallbackQueryHandler(handler.execute_redeem_data, pattern="^referral_confirm_data$"),
-        CallbackQueryHandler(handler.execute_redeem_slot, pattern="^referral_confirm_slot$"),
+        CallbackQueryHandler(
+            handler.show_redeem_menu, pattern="^referral_redeem_menu$"
+        ),
+        CallbackQueryHandler(
+            handler.confirm_redeem_data, pattern="^referral_redeem_data$"
+        ),
+        CallbackQueryHandler(
+            handler.confirm_redeem_slot, pattern="^referral_redeem_slot$"
+        ),
+        CallbackQueryHandler(
+            handler.execute_redeem_data, pattern="^referral_confirm_data$"
+        ),
+        CallbackQueryHandler(
+            handler.execute_redeem_slot, pattern="^referral_confirm_slot$"
+        ),
     ]

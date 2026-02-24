@@ -50,8 +50,12 @@ class AdminMessages:
             "**Esta acción no se puede deshacer.**"
         )
 
-        USER_SUSPENDED = "⏸️ **Usuario Suspendido**\n\nEl usuario ha sido suspendido exitosamente."
-        USER_REACTIVATED = "✅ **Usuario Reactivado**\n\nEl usuario ha sido reactivado exitosamente."
+        USER_SUSPENDED = (
+            "⏸️ **Usuario Suspendido**\n\nEl usuario ha sido suspendido exitosamente."
+        )
+        USER_REACTIVATED = (
+            "✅ **Usuario Reactivado**\n\nEl usuario ha sido reactivado exitosamente."
+        )
         USER_DELETED = "🗑️ **Usuario Eliminado**\n\nEl usuario y todos sus datos han sido eliminados."
 
     class Keys:
@@ -80,9 +84,15 @@ class AdminMessages:
             "**Esta acción no se puede deshacer.**"
         )
 
-        KEY_DELETED = "🗑️ **Llave Eliminada**\n\nLa llave VPN ha sido eliminada exitosamente."
-        KEY_SUSPENDED = "⏸️ **Llave Suspendida**\n\nLa llave ha sido suspendida temporalmente."
-        KEY_REACTIVATED = "✅ **Llave Reactivada**\n\nLa llave ha sido reactivada exitosamente."
+        KEY_DELETED = (
+            "🗑️ **Llave Eliminada**\n\nLa llave VPN ha sido eliminada exitosamente."
+        )
+        KEY_SUSPENDED = (
+            "⏸️ **Llave Suspendida**\n\nLa llave ha sido suspendida temporalmente."
+        )
+        KEY_REACTIVATED = (
+            "✅ **Llave Reactivada**\n\nLa llave ha sido reactivada exitosamente."
+        )
 
     class Dashboard:
         """Mensajes del dashboard."""
@@ -109,12 +119,18 @@ class AdminMessages:
 
         HEADER = "📊 **Estado del Servidor**\n\n"
 
-        SYSTEM_HEALTHY = "✅ **Sistema Saludable**\n\nTodos los servicios funcionando correctamente."
+        SYSTEM_HEALTHY = (
+            "✅ **Sistema Saludable**\n\nTodos los servicios funcionando correctamente."
+        )
         SYSTEM_WARNING = "⚠️ **Advertencia del Sistema**\n\nSe detectaron problemas que requieren atención."
         SYSTEM_CRITICAL = "🚨 **Estado Crítico**\n\nSe requieren acciones inmediatas."
 
-        RESTART_SUCCESS = "🔄 **Servicio Reiniciado**\n\nEl servicio se ha reiniciado exitosamente."
-        MAINTENANCE_MODE = "🔧 **Modo Mantenimiento**\n\nEl sistema está en modo mantenimiento."
+        RESTART_SUCCESS = (
+            "🔄 **Servicio Reiniciado**\n\nEl servicio se ha reiniciado exitosamente."
+        )
+        MAINTENANCE_MODE = (
+            "🔧 **Modo Mantenimiento**\n\nEl sistema está en modo mantenimiento."
+        )
 
     class Settings:
         """Mensajes de configuración."""
@@ -180,8 +196,12 @@ class AdminMessages:
     class Success:
         """Mensajes de éxito."""
 
-        OPERATION_COMPLETED = "✅ **Operación Completada**\n\nLa acción se ha realizado exitosamente."
-        OPERATION_CANCELLED = "❌ **Operación Cancelada**\n\nLa acción ha sido cancelada."
+        OPERATION_COMPLETED = (
+            "✅ **Operación Completada**\n\nLa acción se ha realizado exitosamente."
+        )
+        OPERATION_CANCELLED = (
+            "❌ **Operación Cancelada**\n\nLa acción ha sido cancelada."
+        )
 
         CHANGES_SAVED = "💾 **Cambios Guardados**\n\nLa configuración ha sido actualizada correctamente."
 

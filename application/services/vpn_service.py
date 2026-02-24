@@ -165,9 +165,7 @@ class VpnService:
         # Verificar si el usuario puede eliminar (tiene créditos)
         user = await self.user_repo.get_by_id(key.user_id, current_user_id)
         if not user.can_delete_keys():
-            raise ValueError(
-                "Necesitas tener créditos para eliminar claves."
-            )
+            raise ValueError("Necesitas tener créditos para eliminar claves.")
 
         try:
             # 1. Eliminar de la infraestructura real

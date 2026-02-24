@@ -5,8 +5,8 @@ Revises: 009_remove_balance_fields
 Create Date: 2026-02-22
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = '010_add_tickets_table'

@@ -6,6 +6,7 @@ Version: 2.1.0 - Modernized Key Management
 """
 
 import io
+
 from telegram import Update
 from telegram.ext import (
     CallbackQueryHandler,
@@ -18,8 +19,8 @@ from telegram.ext import (
 from application.services.vpn_service import VpnService
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
-from utils.telegram_utils import format_percentage
 from utils.logger import logger
+from utils.telegram_utils import format_percentage
 
 from .keyboards_key_management import KeyManagementKeyboards
 from .messages_key_management import KeyManagementMessages
@@ -509,7 +510,9 @@ class KeyManagementHandler(BaseHandler):
                 parse_mode="Markdown",
             )
 
-    async def get_outline_link(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def get_outline_link(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
         """
         Muestra el enlace de acceso ss:// para una llave Outline.
         """
@@ -621,7 +624,9 @@ class KeyManagementHandler(BaseHandler):
                     new_name=new_name
                 )
             else:
-                message = "❌ No se pudo renombrar la llave. Por favor, intenta de nuevo."
+                message = (
+                    "❌ No se pudo renombrar la llave. Por favor, intenta de nuevo."
+                )
 
             # Volver a los detalles de la llave
             await update.message.reply_text(
@@ -669,7 +674,9 @@ def get_key_management_callback_handlers(vpn_service: VpnService):
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_qr_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_change_server_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_extend_"),
-        CallbackQueryHandler(handler.download_wireguard_config, pattern="^key_download_wg_"),
+        CallbackQueryHandler(
+            handler.download_wireguard_config, pattern="^key_download_wg_"
+        ),
         CallbackQueryHandler(handler.get_outline_link, pattern="^key_get_link_"),
         CallbackQueryHandler(handler.cancel_rename, pattern="^cancel_rename$"),
     ]

@@ -1,12 +1,17 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import uuid
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 class TicketKeyboards:
     @staticmethod
     def ticket_actions(ticket_id: uuid.UUID) -> InlineKeyboardMarkup:
         keyboard = [
-            [InlineKeyboardButton("✅ Responder", callback_data=f"ticket_respond_{ticket_id}")],
+            [
+                InlineKeyboardButton(
+                    "✅ Responder", callback_data=f"ticket_respond_{ticket_id}"
+                )
+            ],
             [InlineKeyboardButton("🔙 Volver", callback_data="admin_tickets")],
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -14,7 +19,11 @@ class TicketKeyboards:
     @staticmethod
     def user_ticket_actions(ticket_id: uuid.UUID) -> InlineKeyboardMarkup:
         keyboard = [
-            [InlineKeyboardButton("🔙 Volver a Mis Tickets", callback_data="list_my_tickets")],
+            [
+                InlineKeyboardButton(
+                    "🔙 Volver a Mis Tickets", callback_data="list_my_tickets"
+                )
+            ],
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -26,12 +35,21 @@ class TicketKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def ticket_list_item(ticket_id: uuid.UUID, subject: str, status: str) -> InlineKeyboardMarkup:
-        status_emoji = {"open": "🟡", "in_progress": "🔵", "resolved": "🟢", "closed": "⚫"}.get(status, "⚪")
+    def ticket_list_item(
+        ticket_id: uuid.UUID, subject: str, status: str
+    ) -> InlineKeyboardMarkup:
+        status_emoji = {
+            "open": "🟡",
+            "in_progress": "🔵",
+            "resolved": "🟢",
+            "closed": "⚫",
+        }.get(status, "⚪")
         keyboard = [
-            [InlineKeyboardButton(
-                f"{status_emoji} {subject[:30]}...",
-                callback_data=f"view_ticket_{ticket_id}"
-            )],
+            [
+                InlineKeyboardButton(
+                    f"{status_emoji} {subject[:30]}...",
+                    callback_data=f"view_ticket_{ticket_id}",
+                )
+            ],
         ]
         return InlineKeyboardMarkup(keyboard)

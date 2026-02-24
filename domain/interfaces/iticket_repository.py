@@ -1,6 +1,6 @@
+import uuid
 from abc import ABC, abstractmethod
 from typing import List, Optional
-import uuid
 
 from domain.entities.ticket import Ticket
 
@@ -11,7 +11,9 @@ class ITicketRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_id(self, ticket_id: uuid.UUID, current_user_id: int) -> Optional[Ticket]:
+    async def get_by_id(
+        self, ticket_id: uuid.UUID, current_user_id: int
+    ) -> Optional[Ticket]:
         pass
 
     @abstractmethod

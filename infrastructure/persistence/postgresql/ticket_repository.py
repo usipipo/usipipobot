@@ -1,9 +1,10 @@
-from typing import List, Optional
 import uuid
+from typing import List, Optional
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.entities.ticket import Ticket, TicketStatus, TicketPriority
+from domain.entities.ticket import Ticket, TicketPriority, TicketStatus
 from domain.interfaces.iticket_repository import ITicketRepository
 from infrastructure.persistence.postgresql.models.ticket import TicketModel
 
@@ -33,7 +34,9 @@ class PostgresTicketRepository(ITicketRepository):
             updated_at=model.updated_at,
         )
 
-    async def get_by_id(self, ticket_id: uuid.UUID, current_user_id: int) -> Optional[Ticket]:
+    async def get_by_id(
+        self, ticket_id: uuid.UUID, current_user_id: int
+    ) -> Optional[Ticket]:
         result = await self.session.execute(
             select(TicketModel).where(TicketModel.id == ticket_id)
         )

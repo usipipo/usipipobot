@@ -242,6 +242,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
         """Obtener una llave por ID string (sin current_user_id)."""
         try:
             import uuid as uuid_module
+
             try:
                 key_uuid = uuid_module.UUID(key_id)
             except ValueError:
@@ -256,6 +257,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
         """Eliminar una llave por ID string (soft delete)."""
         try:
             import uuid as uuid_module
+
             try:
                 key_uuid = uuid_module.UUID(key_id)
             except ValueError:

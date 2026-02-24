@@ -41,15 +41,15 @@ class UserModel(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-    
+
     status: Mapped[Optional[str]] = mapped_column(String, server_default="active")
     role: Mapped[Optional[str]] = mapped_column(String, server_default="user")
     max_keys: Mapped[int] = mapped_column(Integer, server_default="2")
-    
+
     referral_code: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     referred_by: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     referral_credits: Mapped[int] = mapped_column(Integer, server_default="0")
-    
+
     free_data_limit_bytes: Mapped[int] = mapped_column(
         BigInteger, server_default="10737418240"
     )
