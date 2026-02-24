@@ -281,8 +281,9 @@ class Settings(BaseSettings):
     )
 
     TRON_DEALER_WEBHOOK_SECRET: str = Field(
-        default="usipipo_td_webhook_2024_Kj9mNp2xQr5vWy8z",
-        description="Secret para verificar firmas HMAC de webhooks"
+        ...,
+        min_length=32,
+        description="Secret para verificar firmas HMAC de webhooks (generar con openssl rand -hex 32)"
     )
 
     TRON_DEALER_SWEEP_WALLET: Optional[str] = Field(
@@ -421,6 +422,9 @@ class Settings(BaseSettings):
             "DATABASE_URL",
             "OUTLINE_API_URL",
             "SENTRY_DSN",
+            "TRON_DEALER_WEBHOOK_SECRET",
+            "TRON_DEALER_API_KEY",
+            "NGROK_AUTH_TOKEN",
         ]
         for key in sensitive_keys:
             if key in data:
