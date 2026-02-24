@@ -73,7 +73,7 @@ class WebhookSecurityService:
             token_hash=nonce_hash,
             purpose="replay_protection",
             expires_at=datetime.now(timezone.utc) + timedelta(hours=self.NONCE_EXPIRY_HOURS),
-            metadata={"nonce": nonce}
+            extra_data={"nonce": nonce}
         )
 
         await self.token_repo.save(token)
