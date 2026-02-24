@@ -377,15 +377,41 @@
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
             border: none;
             color: var(--bg-void);
-            font-size: 24px;
+            font-size: 28px;
+            font-weight: 700;
             cursor: pointer;
-            box-shadow: var(--glow-cyan);
-            transition: transform 0.3s ease;
+            box-shadow: 
+                0 0 20px rgba(0, 240, 255, 0.5),
+                0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 99;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
         }
 
         .fab:hover {
-            transform: scale(1.1);
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 
+                0 0 30px rgba(0, 240, 255, 0.8),
+                0 0 60px rgba(255, 0, 170, 0.4),
+                0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+            box-shadow: 
+                0 0 15px rgba(0, 240, 255, 0.6),
+                0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .fab:focus {
+            outline: none;
+            box-shadow: 
+                0 0 0 3px var(--bg-void),
+                0 0 0 5px var(--neon-cyan),
+                0 0 30px rgba(0, 240, 255, 0.8);
         }
 
         .terminal-output {
