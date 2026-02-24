@@ -669,7 +669,7 @@ class AdminService(IAdminService):
             )
 
     async def get_users_paginated(
-        self, page: int = 1, per_page: int = 10, current_user_id: int = None
+        self, page: int = 1, per_page: int = 10, current_user_id: int | None = None
     ) -> Dict:
         """Obtener usuarios paginados."""
         try:

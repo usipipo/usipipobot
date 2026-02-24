@@ -36,12 +36,13 @@ def format_bytes(bytes_count: int) -> str:
 
     units = ["B", "KB", "MB", "GB", "TB"]
     unit_index = 0
+    value = float(bytes_count)
 
-    while bytes_count >= 1024 and unit_index < len(units) - 1:
-        bytes_count /= 1024.0
+    while value >= 1024 and unit_index < len(units) - 1:
+        value /= 1024.0
         unit_index += 1
 
-    return f"{bytes_count:.1f} {units[unit_index]}"
+    return f"{value:.1f} {units[unit_index]}"
 
 
 def format_datetime(dt: datetime, include_time: bool = True) -> str:
@@ -125,9 +126,9 @@ def format_percentage(value: float, total: float) -> str:
         str: Formatted percentage with progress bar
     """
     if total == 0:
-        percentage = 0
+        percentage = 0.0
     else:
-        percentage = min(100, (value / total) * 100)
+        percentage = min(100.0, (value / total) * 100)
 
     # Create progress bar
     bar_length = 10
@@ -137,7 +138,7 @@ def format_percentage(value: float, total: float) -> str:
     return f"{bar} {percentage:.1f}%"
 
 
-def sanitize_text(text: str, max_length: int = None) -> str:
+def sanitize_text(text: str, max_length: int | None = None) -> str:
     """
     Sanitize text for Telegram messages.
 
@@ -550,8 +551,11 @@ class TelegramUtils:
         if query is None:
             logger.error("Error: query es None")
             try:
+                chat_id = update.effective_chat.id if update.effective_chat else None
+                if chat_id is None:
+                    return False
                 await context.bot.send_message(
-                    chat_id=update.effective_chat.id,
+                    chat_id=chat_id,
                     text=CommonMessages.Error.SYSTEM_ERROR,
                     reply_markup=CommonKeyboards.back_to_main_menu(),
                 )

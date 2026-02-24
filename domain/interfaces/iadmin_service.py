@@ -8,6 +8,7 @@ Version: 2.0.0
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 
+from domain.entities.admin import AdminOperationResult
 from domain.entities.vpn_key import VpnKey as Key
 
 
@@ -42,12 +43,12 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
-    async def update_user_status(self, user_id: int, status: str) -> Dict:
+    async def update_user_status(self, user_id: int, status: str) -> AdminOperationResult:
         """Actualizar estado del usuario."""
         pass
 
     @abstractmethod
-    async def delete_user(self, user_id: int) -> Dict:
+    async def delete_user(self, user_id: int) -> AdminOperationResult:
         """Eliminar un usuario y sus claves asociadas."""
         pass
 

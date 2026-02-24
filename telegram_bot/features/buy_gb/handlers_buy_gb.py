@@ -45,6 +45,8 @@ class BuyGbHandler:
         if query:
             await query.answer()
 
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -58,7 +60,7 @@ class BuyGbHandler:
                 await query.edit_message_text(
                     text=message, reply_markup=keyboard, parse_mode="Markdown"
                 )
-            else:
+            elif update.message:
                 await update.message.reply_text(
                     text=message, reply_markup=keyboard, parse_mode="Markdown"
                 )
@@ -73,7 +75,7 @@ class BuyGbHandler:
                     reply_markup=BuyGbKeyboards.back_to_packages(),
                     parse_mode="Markdown",
                 )
-            else:
+            elif update.message:
                 await update.message.reply_text(
                     text=error_message,
                     reply_markup=BuyGbKeyboards.back_to_packages(),
@@ -82,8 +84,12 @@ class BuyGbHandler:
 
     async def buy_package(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
+        if not query or not query.data:
+            return
         await query.answer()
 
+        if not update.effective_user or not update.effective_chat:
+            return
         user_id = update.effective_user.id
         package_type_str = query.data.split("_")[-1]
 
@@ -134,6 +140,8 @@ class BuyGbHandler:
 
     async def show_slots_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
+        if not query:
+            return
         await query.answer()
 
         try:
@@ -154,8 +162,12 @@ class BuyGbHandler:
 
     async def buy_slots(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
+        if not query or not query.data:
+            return
         await query.answer()
 
+        if not update.effective_user or not update.effective_chat:
+            return
         user_id = update.effective_user.id
         slots_str = query.data.split("_")[-1]
         slots = int(slots_str)
@@ -205,6 +217,8 @@ class BuyGbHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         query = update.pre_checkout_query
+        if not query:
+            return
 
         try:
             payload = query.invoice_payload
@@ -267,7 +281,11 @@ class BuyGbHandler:
     async def successful_payment(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
+        if not update.message or not update.message.successful_payment:
+            return
         payment = update.message.successful_payment
 
         try:
@@ -291,11 +309,12 @@ class BuyGbHandler:
                     stars=result["stars_paid"],
                 )
 
-                await update.message.reply_text(
-                    text=success_message,
-                    reply_markup=BuyGbKeyboards.slots_success(),
-                    parse_mode="Markdown",
-                )
+                if update.message:
+                    await update.message.reply_text(
+                        text=success_message,
+                        reply_markup=BuyGbKeyboards.slots_success(),
+                        parse_mode="Markdown",
+                    )
 
                 logger.info(
                     f"🔑 Slots comprados exitosamente: +{slots} para usuario {user_id}"
@@ -304,9 +323,10 @@ class BuyGbHandler:
 
             if len(parts) != 4:
                 logger.error(f"Payload invalido: {payload}")
-                await update.message.reply_text(
-                    text=BuyGbMessages.Error.PAYMENT_FAILED, parse_mode="Markdown"
-                )
+                if update.message:
+                    await update.message.reply_text(
+                        text=BuyGbMessages.Error.PAYMENT_FAILED, parse_mode="Markdown"
+                    )
                 return
 
             package_type_str = parts[2]
@@ -342,11 +362,12 @@ class BuyGbHandler:
                 expires_at=expires_at,
             )
 
-            await update.message.reply_text(
-                text=success_message,
-                reply_markup=BuyGbKeyboards.payment_success(),
-                parse_mode="Markdown",
-            )
+            if update.message:
+                await update.message.reply_text(
+                    text=success_message,
+                    reply_markup=BuyGbKeyboards.payment_success(),
+                    parse_mode="Markdown",
+                )
 
             logger.info(
                 f"📦 Paquete comprado exitosamente: {package_type_str} para usuario {user_id}"
@@ -354,16 +375,21 @@ class BuyGbHandler:
 
         except Exception as e:
             logger.error(f"Error en successful_payment: {e}")
-            await update.message.reply_text(
-                text=BuyGbMessages.Error.PAYMENT_FAILED, parse_mode="Markdown"
-            )
+            if update.message:
+                await update.message.reply_text(
+                    text=BuyGbMessages.Error.PAYMENT_FAILED, parse_mode="Markdown"
+                )
 
     async def view_data_summary(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         query = update.callback_query
+        if not query:
+            return
         await query.answer()
 
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -394,12 +420,14 @@ class BuyGbHandler:
 
     async def data_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra el consumo de datos del usuario."""
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
         logger.info(f"💾 /data ejecutado por usuario {user_id}")
 
-        is_callback = update.callback_query is not None
-        if is_callback:
-            query = update.callback_query
+        query = update.callback_query
+        is_callback = query is not None
+        if is_callback and query:
             await query.answer()
 
         try:
@@ -418,11 +446,11 @@ class BuyGbHandler:
             is_admin_menu = user_id == int(settings.ADMIN_ID)
             keyboard = UserManagementKeyboards.main_menu(is_admin=is_admin_menu)
 
-            if is_callback:
+            if is_callback and query:
                 await query.edit_message_text(
                     text=message, reply_markup=keyboard, parse_mode="Markdown"
                 )
-            else:
+            elif update.message:
                 await update.message.reply_text(
                     text=message, reply_markup=keyboard, parse_mode="Markdown"
                 )
@@ -430,9 +458,9 @@ class BuyGbHandler:
         except Exception as e:
             logger.error(f"Error en data_handler: {e}")
             error_msg = BuyGbMessages.Error.SYSTEM_ERROR
-            if is_callback:
+            if is_callback and query:
                 await query.edit_message_text(text=error_msg, parse_mode="Markdown")
-            else:
+            elif update.message:
                 await update.message.reply_text(text=error_msg, parse_mode="Markdown")
 
 

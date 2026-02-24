@@ -1,5 +1,6 @@
 import time
 from collections import defaultdict
+from typing import Dict, List
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from utils.logger import logger
@@ -9,7 +10,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, requests_per_minute: int = 60):
         super().__init__(app)
         self.requests_per_minute = requests_per_minute
-        self.requests = defaultdict(list)
+        self.requests: Dict[str, List[float]] = defaultdict(list)
 
     def _cleanup_old_requests(self, ip: str):
         current_time = time.time()

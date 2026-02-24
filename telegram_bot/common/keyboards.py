@@ -41,7 +41,7 @@ class CommonKeyboards:
 
     @staticmethod
     def confirmation_actions(
-        target_id: int = None, action_prefix: str = "confirm"
+        target_id: int | None = None, action_prefix: str = "confirm"
     ) -> InlineKeyboardMarkup:
         """
         Standard confirmation keyboard.
@@ -156,8 +156,8 @@ class CommonKeyboards:
     def action_buttons(
         primary_text: str,
         primary_callback: str,
-        secondary_text: str = None,
-        secondary_callback: str = None,
+        secondary_text: str | None = None,
+        secondary_callback: str | None = None,
     ) -> InlineKeyboardMarkup:
         """
         Keyboard with primary and optional secondary action buttons.

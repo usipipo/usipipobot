@@ -38,6 +38,8 @@ class TicketHandler:
         self, update: Update, _context: ContextTypes.DEFAULT_TYPE
     ):
         query = update.callback_query
+        if not query:
+            return ConversationHandler.END
         await query.answer()
 
         await query.edit_message_text(
@@ -50,8 +52,16 @@ class TicketHandler:
     async def handle_ticket_message(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
+        if not update.effective_user:
+            return ConversationHandler.END
         user_id = update.effective_user.id
+
+        if not update.message:
+            return ConversationHandler.END
         message_text = update.message.text
+
+        if not message_text:
+            return ConversationHandler.END
 
         try:
             subject = message_text[:50] + ("..." if len(message_text) > 50 else "")
@@ -76,10 +86,11 @@ class TicketHandler:
 
         except Exception as e:
             logger.error(f"❌ Error creating ticket: {e}")
-            await update.message.reply_text(
-                text=TicketMessages.Error.CREATE_FAILED,
-                parse_mode="MarkdownV2",
-            )
+            if update.message:
+                await update.message.reply_text(
+                    text=TicketMessages.Error.CREATE_FAILED,
+                    parse_mode="MarkdownV2",
+                )
 
         return ConversationHandler.END
 
@@ -100,8 +111,12 @@ class TicketHandler:
         self, update: Update, _context: ContextTypes.DEFAULT_TYPE
     ):
         query = update.callback_query
+        if not query:
+            return
         await query.answer()
 
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
 
         try:
@@ -134,8 +149,6 @@ class TicketHandler:
                 [InlineKeyboardButton("🔙 Volver", callback_data="help_support")]
             )
 
-            from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
             await query.edit_message_text(
                 text=text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -147,9 +160,16 @@ class TicketHandler:
 
     async def view_ticket(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
+        if not query:
+            return
         await query.answer()
 
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
+
+        if not query.data:
+            return
         ticket_id = uuid.UUID(query.data.split("_")[-1])
 
         try:
@@ -196,8 +216,12 @@ class TicketHandler:
         self, update: Update, _context: ContextTypes.DEFAULT_TYPE
     ):
         query = update.callback_query
+        if not query:
+            return
         await query.answer()
 
+        if not update.effective_user:
+            return
         admin_id = update.effective_user.id
 
         if str(admin_id) != str(settings.ADMIN_ID):
@@ -236,8 +260,6 @@ class TicketHandler:
                 [InlineKeyboardButton("🏠 Menú Principal", callback_data="main_menu")]
             )
 
-            from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-
             await query.edit_message_text(
                 text=text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -251,9 +273,16 @@ class TicketHandler:
         self, update: Update, _context: ContextTypes.DEFAULT_TYPE
     ):
         query = update.callback_query
+        if not query:
+            return
         await query.answer()
 
+        if not update.effective_user:
+            return
         admin_id = update.effective_user.id
+
+        if not query.data:
+            return
         ticket_id = uuid.UUID(query.data.split("_")[-1])
 
         if str(admin_id) != str(settings.ADMIN_ID):
@@ -307,14 +336,23 @@ class TicketHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         query = update.callback_query
+        if not query:
+            return ConversationHandler.END
         await query.answer()
 
+        if not update.effective_user:
+            return ConversationHandler.END
         admin_id = update.effective_user.id
+
+        if not query.data:
+            return ConversationHandler.END
         ticket_id = uuid.UUID(query.data.split("_")[-1])
 
         if str(admin_id) != str(settings.ADMIN_ID):
             return ConversationHandler.END
 
+        if not context.user_data:
+            return ConversationHandler.END
         context.user_data["responding_to_ticket"] = str(ticket_id)
 
         await query.edit_message_text(
@@ -328,13 +366,24 @@ class TicketHandler:
     async def handle_admin_response(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
+        if not context.user_data:
+            return ConversationHandler.END
         ticket_id_str = context.user_data.get("responding_to_ticket")
         if not ticket_id_str:
             return ConversationHandler.END
 
         context.user_data["responding_to_ticket"] = None
+
+        if not update.effective_user:
+            return ConversationHandler.END
         admin_id = update.effective_user.id
+
+        if not update.message:
+            return ConversationHandler.END
         response_text = update.message.text
+
+        if not response_text:
+            return ConversationHandler.END
 
         if str(admin_id) != str(settings.ADMIN_ID):
             return ConversationHandler.END

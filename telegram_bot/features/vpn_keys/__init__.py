@@ -15,6 +15,8 @@ import sys
 spec = importlib.util.spec_from_file_location(
     "handlers_vpn_keys", "telegram_bot/features/vpn_keys/handlers_vpn_keys.py"
 )
+if spec is None or spec.loader is None:
+    raise ImportError("Could not find module: handlers_vpn_keys")
 module = importlib.util.module_from_spec(spec)
 module.__package__ = "telegram_bot.features.vpn_keys"
 sys.modules["handlers_vpn_keys"] = module

@@ -10,9 +10,9 @@ import asyncio
 import random
 import time
 from functools import wraps
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, cast
 
-from telegram import Update
+from telegram import Message, Update
 from telegram.ext import ContextTypes
 
 from utils.logger import logger
@@ -69,7 +69,7 @@ class SpinnerManager:
     async def replace_spinner_with_message(
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int,
+        spinner_message_id: int | None,
         text: str,
         reply_markup=None,
         parse_mode: str = "Markdown",
@@ -86,7 +86,10 @@ class SpinnerManager:
             parse_mode: Modo de parseo
         """
         try:
-            chat_id = update.effective_chat.id
+            chat = update.effective_chat
+            if chat is None:
+                return
+            chat_id = chat.id
 
             # Primero eliminar el spinner
             if spinner_message_id:
@@ -167,7 +170,19 @@ class SpinnerManager:
                 # Para callbacks, responder al callback query y enviar nuevo mensaje
                 await update.callback_query.answer()
                 # Enviar nuevo mensaje temporal para el spinner
-                spinner_message = await update.callback_query.message.reply_text(
+                callback_message = update.callback_query.message
+                if callback_message is None:
+                    logger.error(
+                        "❌ No se puede enviar spinner: callback_query.message no disponible"
+                    )
+                    return -1
+                if not isinstance(callback_message, Message):
+                    logger.error(
+                        "❌ No se puede enviar spinner: callback_query.message es MaybeInaccessibleMessage"
+                    )
+                    return -1
+                msg = cast(Message, callback_message)
+                spinner_message = await msg.reply_text(
                     text=message_text, parse_mode="Markdown"
                 )
             elif update.message:
@@ -179,7 +194,7 @@ class SpinnerManager:
                 logger.error(
                     "❌ No se puede enviar spinner: ni update.message ni update.callback_query disponibles"
                 )
-                return None
+                return -1
 
             logger.info(
                 f"✅ Spinner enviado: {message_text} (ID: {spinner_message.message_id})"
@@ -189,7 +204,7 @@ class SpinnerManager:
         except Exception as e:
             logger.error(f"❌ Error enviando spinner: {e}")
             logger.error(f"Tipo de excepción: {type(e).__name__}")
-            return None
+            return -1
 
     @staticmethod
     async def update_spinner_message(
@@ -292,7 +307,10 @@ def with_spinner(
             if not update:
                 return await func(*args, **kwargs)
 
-            chat_id = update.effective_chat.id
+            chat = update.effective_chat
+            if chat is None:
+                return await func(*args, **kwargs)
+            chat_id = chat.id
             spinner_message_id = None
             start_time = None
 
@@ -307,8 +325,6 @@ def with_spinner(
                 logger.info(f"🌀 Spinner enviado con ID: {spinner_message_id}")
 
                 if show_duration:
-                    import time
-
                     start_time = time.time()
 
                 # Ejecutar la función original
@@ -419,7 +435,10 @@ def with_animated_spinner(
             if not update:
                 return await func(*args, **kwargs)
 
-            chat_id = update.effective_chat.id
+            chat = update.effective_chat
+            if chat is None:
+                return await func(*args, **kwargs)
+            chat_id = chat.id
             spinner_message_id = None
             animation_task = None
 
@@ -532,7 +551,10 @@ def shop_spinner_callback(func: Callable) -> Callable:
         if not update or not update.callback_query:
             return await with_spinner("loading")(func)(self, *args, **kwargs)
 
-        chat_id = update.effective_chat.id
+        chat = update.effective_chat
+        if chat is None:
+            return await with_spinner("loading")(func)(self, *args, **kwargs)
+        chat_id = chat.id
         spinner_message_id = None
 
         try:
@@ -607,7 +629,10 @@ def admin_spinner_callback(func: Callable) -> Callable:
         if not update or not update.callback_query:
             return await with_spinner("loading")(func)(self, *args, **kwargs)
 
-        chat_id = update.effective_chat.id
+        chat = update.effective_chat
+        if chat is None:
+            return await with_spinner("loading")(func)(self, *args, **kwargs)
+        chat_id = chat.id
         spinner_message_id = None
 
         try:
@@ -682,7 +707,10 @@ def database_spinner_callback(func: Callable) -> Callable:
         if not update or not update.callback_query:
             return await database_spinner(func)(self, *args, **kwargs)
 
-        chat_id = update.effective_chat.id
+        chat = update.effective_chat
+        if chat is None:
+            return await database_spinner(func)(self, *args, **kwargs)
+        chat_id = chat.id
         spinner_message_id = None
 
         try:
