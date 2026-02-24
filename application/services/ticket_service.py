@@ -1,7 +1,7 @@
-from typing import List, Optional
 import uuid
+from typing import List, Optional
 
-from domain.entities.ticket import Ticket, TicketStatus, TicketPriority
+from domain.entities.ticket import Ticket, TicketPriority, TicketStatus
 from domain.interfaces.iticket_repository import ITicketRepository
 from utils.logger import logger
 
@@ -28,10 +28,14 @@ class TicketService:
         logger.info(f"Ticket {saved.id} created by user {user_id}")
         return saved
 
-    async def get_user_tickets(self, user_id: int, current_user_id: int) -> List[Ticket]:
+    async def get_user_tickets(
+        self, user_id: int, current_user_id: int
+    ) -> List[Ticket]:
         return await self.ticket_repo.get_by_user(user_id, current_user_id)
 
-    async def get_ticket(self, ticket_id: uuid.UUID, current_user_id: int) -> Optional[Ticket]:
+    async def get_ticket(
+        self, ticket_id: uuid.UUID, current_user_id: int
+    ) -> Optional[Ticket]:
         return await self.ticket_repo.get_by_id(ticket_id, current_user_id)
 
     async def get_all_open_tickets(self, current_user_id: int) -> List[Ticket]:

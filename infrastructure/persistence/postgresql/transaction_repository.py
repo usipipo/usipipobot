@@ -56,9 +56,7 @@ class PostgresTransactionRepository(BasePostgresRepository, ITransactionReposito
             logger.error(f"Error al registrar transacción: {e}")
             raise
 
-    async def get_user_transactions(
-        self, user_id: int, limit: int = 10
-    ) -> List[dict]:
+    async def get_user_transactions(self, user_id: int, limit: int = 10) -> List[dict]:
         try:
             query = (
                 select(TransactionModel)

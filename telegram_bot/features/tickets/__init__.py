@@ -1,4 +1,8 @@
-from .handlers_tickets import TicketHandler, get_ticket_handlers, get_ticket_callback_handlers
+from .handlers_tickets import (
+    TicketHandler,
+    get_ticket_callback_handlers,
+    get_ticket_handlers,
+)
 
 __all__ = [
     "TicketHandler",

@@ -132,9 +132,7 @@ class BuyGbHandler:
                 parse_mode="Markdown",
             )
 
-    async def show_slots_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_slots_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
 
@@ -191,7 +189,9 @@ class BuyGbHandler:
                 prices=[LabeledPrice(f"+{slots} Claves", slot_option.stars)],
             )
 
-            logger.info(f"🔑 Invoice enviado: {slot_option.name} para usuario {user_id}")
+            logger.info(
+                f"🔑 Invoice enviado: {slot_option.name} para usuario {user_id}"
+            )
 
         except Exception as e:
             logger.error(f"Error en buy_slots: {e}")

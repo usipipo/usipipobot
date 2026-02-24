@@ -168,10 +168,10 @@ class UserManagementMessages:
         ) -> str:
             remaining_slots = keys_total - keys_used
             status_icon = "⬡" if "Activo" in status else "⬢"
-            
+
             progress = _progress_bar(data_percentage)
             key_slots = _format_key_slots(keys_used, keys_total)
-            
+
             return (
                 f"┌──────────────────────────┐\n"
                 f"│ 👤 {name[:18]:<18} │\n"
@@ -211,8 +211,7 @@ class UserManagementMessages:
         )
 
         TRANSACTION_ITEM = (
-            "{number}\\. `{date}` \\- {description}\n"
-            "   {amount} | {status}"
+            "{number}\\. `{date}` \\- {description}\n" "   {amount} | {status}"
         )
 
         FOOTER = "\n\n📄 _Ver más_ | 🏠 _Menú principal_"

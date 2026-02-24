@@ -18,13 +18,13 @@ from telegram.ext import (
 
 from application.services.admin_service import AdminService
 from application.services.user_profile_service import UserProfileService
-from telegram_bot.common.base_handler import BaseHandler
 
 # Local imports
 from application.services.vpn_service import VpnService
 
 # First party imports
 from config import settings
+from telegram_bot.common.base_handler import BaseHandler
 from telegram_bot.keyboards import MainMenuKeyboard
 from utils.logger import logger
 from utils.spinner import registration_spinner
@@ -57,13 +57,11 @@ class UserManagementHandler(BaseHandler):
     async def start_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
         Maneja el comando /start y el registro de usuarios.
-        
+
         Acepta parametro start con codigo de referido:
         /start REFERRAL_CODE
         """
-        logger.info(
-            f"start_handler iniciado para usuario {update.effective_user.id}"
-        )
+        logger.info(f"start_handler iniciado para usuario {update.effective_user.id}")
 
         user = update.effective_user
 
@@ -84,9 +82,7 @@ class UserManagementHandler(BaseHandler):
                     referral_code = context.args[0]
                     await self._process_referral(user.id, referral_code)
 
-                logger.info(
-                    f"Nuevo usuario registrado: {user.id} - {user.first_name}"
-                )
+                logger.info(f"Nuevo usuario registrado: {user.id} - {user.first_name}")
             else:
                 welcome_message = (
                     UserManagementMessages.Welcome.RETURNING_USER_SIMPLIFIED
@@ -113,7 +109,7 @@ class UserManagementHandler(BaseHandler):
     async def _process_referral(self, new_user_id: int, referral_code: str):
         """
         Procesa el codigo de referido para un nuevo usuario.
-        
+
         Args:
             new_user_id: ID del nuevo usuario
             referral_code: Codigo de referido
@@ -172,7 +168,9 @@ class UserManagementHandler(BaseHandler):
         elif callback_data == "buy_data" or callback_data == "operations_menu":
             from application.services.common.container import get_container
             from application.services.referral_service import ReferralService
-            from telegram_bot.features.operations.handlers_operations import OperationsHandler
+            from telegram_bot.features.operations.handlers_operations import (
+                OperationsHandler,
+            )
 
             container = get_container()
             referral_service = container.resolve(ReferralService)
@@ -238,10 +236,14 @@ class UserManagementHandler(BaseHandler):
             is_admin = str(telegram_id) == str(settings.ADMIN_ID)
 
             if is_admin and admin_service:
-                stats = await admin_service.get_dashboard_stats(current_user_id=telegram_id)
+                stats = await admin_service.get_dashboard_stats(
+                    current_user_id=telegram_id
+                )
                 text = self._format_admin_dashboard(user_name, stats)
             else:
-                status_data = await self.vpn_service.get_user_status(telegram_id, telegram_id)
+                status_data = await self.vpn_service.get_user_status(
+                    telegram_id, telegram_id
+                )
                 user_entity = status_data.get("user")
 
                 join_date = "N/A"
@@ -313,9 +315,11 @@ class UserManagementHandler(BaseHandler):
 
                 join_date = profile.created_at.strftime("%Y-%m-%d")
                 status_text = "Activo" if profile.status == "active" else "Inactivo"
-                
+
                 total_gb = profile.total_used_gb + profile.free_data_remaining_gb
-                data_percentage = (profile.total_used_gb / total_gb * 100) if total_gb > 0 else 0
+                data_percentage = (
+                    (profile.total_used_gb / total_gb * 100) if total_gb > 0 else 0
+                )
 
                 text = (
                     UserManagementMessages.Info.HEADER
@@ -338,7 +342,9 @@ class UserManagementHandler(BaseHandler):
                     )
                 )
             else:
-                status_data = await self.vpn_service.get_user_status(telegram_id, telegram_id)
+                status_data = await self.vpn_service.get_user_status(
+                    telegram_id, telegram_id
+                )
                 user_entity = status_data.get("user")
 
                 if not user_entity:
@@ -356,14 +362,15 @@ class UserManagementHandler(BaseHandler):
                     join_date = user_entity.created_at.strftime("%Y-%m-%d")
 
                 status_text = "Inactivo"
-                if getattr(user_entity, "is_active", False) or getattr(
-                    user_entity, "status", None
-                ) == "active":
+                if (
+                    getattr(user_entity, "is_active", False)
+                    or getattr(user_entity, "status", None) == "active"
+                ):
                     status_text = "Activo"
 
                 keys = status_data.get("keys", [])
                 keys_used = len([k for k in keys if getattr(k, "is_active", True)])
-                data_used_gb = status_data.get('total_used_gb', 0)
+                data_used_gb = status_data.get("total_used_gb", 0)
 
                 text = (
                     UserManagementMessages.Info.HEADER
@@ -466,9 +473,7 @@ class UserManagementHandler(BaseHandler):
             )
 
         except (AttributeError, ValueError, KeyError) as e:
-            logger.error(
-                f"❌ Error en history_handler para usuario {telegram_id}: {e}"
-            )
+            logger.error(f"❌ Error en history_handler para usuario {telegram_id}: {e}")
             await self._reply_message(
                 update,
                 text="❌ Error al obtener historial.",

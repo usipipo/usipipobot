@@ -20,7 +20,9 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
-    async def get_users_paginated(self, page: int, per_page: int, current_user_id: int) -> Dict:
+    async def get_users_paginated(
+        self, page: int, per_page: int, current_user_id: int
+    ) -> Dict:
         """Obtener usuarios paginados."""
         pass
 

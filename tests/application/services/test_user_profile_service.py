@@ -1,10 +1,14 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock
 
-from application.services.user_profile_service import UserProfileService, UserProfileSummary
+import pytest
+
 from application.services.referral_service import ReferralStats
-from domain.entities.user import User, UserStatus, UserRole
+from application.services.user_profile_service import (
+    UserProfileService,
+    UserProfileSummary,
+)
+from domain.entities.user import User, UserRole, UserStatus
 
 
 class TestGetUserProfileSummary:

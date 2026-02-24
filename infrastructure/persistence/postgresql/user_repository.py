@@ -12,7 +12,7 @@ from typing import List, Optional
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.entities.user import User, UserStatus, UserRole
+from domain.entities.user import User, UserRole, UserStatus
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
 
@@ -54,9 +54,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 else entity.status
             ),
             role=(
-                entity.role.value
-                if isinstance(entity.role, UserRole)
-                else entity.role
+                entity.role.value if isinstance(entity.role, UserRole) else entity.role
             ),
             max_keys=entity.max_keys,
             referral_code=entity.referral_code,
@@ -90,9 +88,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                     else user.status
                 )
                 existing.role = (
-                    user.role.value
-                    if isinstance(user.role, UserRole)
-                    else user.role
+                    user.role.value if isinstance(user.role, UserRole) else user.role
                 )
                 existing.max_keys = user.max_keys
                 existing.referral_code = user.referral_code
@@ -234,9 +230,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             query = (
                 update(UserModel)
                 .where(UserModel.telegram_id == telegram_id)
-                .values(
-                    referral_credits=UserModel.referral_credits + credits_delta
-                )
+                .values(referral_credits=UserModel.referral_credits + credits_delta)
             )
             await self.session.execute(query)
             await self.session.commit()
@@ -284,9 +278,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                     else user.status
                 )
                 existing.role = (
-                    user.role.value
-                    if isinstance(user.role, UserRole)
-                    else user.role
+                    user.role.value if isinstance(user.role, UserRole) else user.role
                 )
                 existing.max_keys = user.max_keys
                 existing.referral_code = user.referral_code

@@ -6,6 +6,7 @@ Version: 1.1.0
 """
 
 from datetime import datetime, timezone
+
 from application.services.data_package_service import PACKAGE_OPTIONS, SLOT_OPTIONS
 
 
@@ -113,27 +114,39 @@ class BuyGbMessages:
                 return ""
             lines = []
             for pkg in packages:
-                percentage = (pkg['used_gb'] / pkg['total_gb'] * 100) if pkg['total_gb'] > 0 else 0
+                percentage = (
+                    (pkg["used_gb"] / pkg["total_gb"] * 100)
+                    if pkg["total_gb"] > 0
+                    else 0
+                )
                 progress = _progress_bar(percentage)
-                days, hours = pkg.get('days_remaining', 0), pkg.get('hours_remaining', 0)
-                
+                days, hours = pkg.get("days_remaining", 0), pkg.get(
+                    "hours_remaining", 0
+                )
+
                 lines.append(f"┌──────────────────────────┐")
                 lines.append(f"│ 📦 {pkg['name'][:18]:<18} │")
                 lines.append(f"├──────────────────────────┤")
-                lines.append(f"│ `{progress}` {percentage:.0f}%{' ' * (6 - len(f'{percentage:.0f}%'))}│")
-                lines.append(f"│ ├ {pkg['used_gb']:.1f}/{pkg['total_gb']:.0f} GB{' ' * (12 - len(f'{pkg["used_gb"]:.1f}/{pkg["total_gb"]:.0f} GB'))}│")
-                lines.append(f"│ └ ⏱️ {days}d {hours}h{' ' * (13 - len(f'{days}d {hours}h'))}│")
+                lines.append(
+                    f"│ `{progress}` {percentage:.0f}%{' ' * (6 - len(f'{percentage:.0f}%'))}│"
+                )
+                lines.append(
+                    f"│ ├ {pkg['used_gb']:.1f}/{pkg['total_gb']:.0f} GB{' ' * (12 - len(f'{pkg["used_gb"]:.1f}/{pkg["total_gb"]:.0f} GB'))}│"
+                )
+                lines.append(
+                    f"│ └ ⏱️ {days}d {hours}h{' ' * (13 - len(f'{days}d {hours}h'))}│"
+                )
                 lines.append(f"└──────────────────────────┘")
                 lines.append("")
             return "\n".join(lines)
 
         @staticmethod
         def format_free_plan(free_plan: dict) -> str:
-            remaining = free_plan.get('remaining_gb', 0)
-            limit = free_plan.get('limit_gb', 10)
+            remaining = free_plan.get("remaining_gb", 0)
+            limit = free_plan.get("limit_gb", 10)
             percentage = (remaining / limit * 100) if limit > 0 else 0
             progress = _progress_bar(percentage)
-            
+
             return (
                 f"┌──────────────────────────┐\n"
                 f"│ 🎁 FREE TIER             │\n"
@@ -151,26 +164,26 @@ class BuyGbMessages:
             if summary.get("packages"):
                 packages_with_time = []
                 for pkg in summary["packages"]:
-                    if 'expires_at' in pkg and pkg['expires_at']:
-                        days, hours = _get_time_remaining(pkg['expires_at'])
-                        pkg['days_remaining'] = days
-                        pkg['hours_remaining'] = hours
+                    if "expires_at" in pkg and pkg["expires_at"]:
+                        days, hours = _get_time_remaining(pkg["expires_at"])
+                        pkg["days_remaining"] = days
+                        pkg["hours_remaining"] = hours
                     else:
-                        pkg['days_remaining'] = pkg.get('days_remaining', 0)
-                        pkg['hours_remaining'] = pkg.get('hours_remaining', 0)
+                        pkg["days_remaining"] = pkg.get("days_remaining", 0)
+                        pkg["hours_remaining"] = pkg.get("hours_remaining", 0)
                     packages_with_time.append(pkg)
-                
+
                 lines.append(
                     BuyGbMessages.Data.format_packages_list(packages_with_time)
                 )
 
             lines.append(BuyGbMessages.Data.format_free_plan(summary["free_plan"]))
             lines.append("")
-            
-            total_used = summary.get('total_used_gb', 0)
-            total_limit = summary.get('total_limit_gb', 0)
-            remaining = summary.get('remaining_gb', 0)
-            
+
+            total_used = summary.get("total_used_gb", 0)
+            total_limit = summary.get("total_limit_gb", 0)
+            remaining = summary.get("remaining_gb", 0)
+
             lines.append(f"📊 *TOTAL:* `{remaining:.1f} GB`")
             lines.append("")
             lines.append("_💡 Packages → Free Tier_")

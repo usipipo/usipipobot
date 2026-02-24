@@ -6,6 +6,7 @@ Version: 2.0.0 - Feature-based architecture
 """
 
 from typing import Optional
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
@@ -29,7 +30,9 @@ class KeyManagementKeyboards:
             keyboard.extend(
                 [
                     [
-                        InlineKeyboardButton("➕ Crear Nueva", callback_data="create_key"),
+                        InlineKeyboardButton(
+                            "➕ Crear Nueva", callback_data="create_key"
+                        ),
                     ],
                     [
                         InlineKeyboardButton(
@@ -180,7 +183,11 @@ class KeyManagementKeyboards:
 
         # 4. Acciones Críticas y Navegación
         keyboard.append(
-            [InlineKeyboardButton("🗑️ Eliminar Llave", callback_data=f"key_delete_{key_id}")]
+            [
+                InlineKeyboardButton(
+                    "🗑️ Eliminar Llave", callback_data=f"key_delete_{key_id}"
+                )
+            ]
         )
 
         keyboard.append(
@@ -198,11 +205,7 @@ class KeyManagementKeyboards:
             InlineKeyboardMarkup: Teclado de retorno
         """
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver a la Lista", callback_data="back_to_keys"
-                )
-            ]
+            [InlineKeyboardButton("🔙 Volver a la Lista", callback_data="back_to_keys")]
         ]
         return InlineKeyboardMarkup(keyboard)
 
