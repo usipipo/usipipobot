@@ -9,7 +9,8 @@ import uvicorn
 from config import settings
 from infrastructure.api.middleware import SecurityHeadersMiddleware, RateLimitMiddleware
 from infrastructure.api.webhooks import tron_dealer_router
-from infrastructure.persistence.database import init_database, close_database
+from infrastructure.api.webhooks.tron_dealer import set_services
+from infrastructure.persistence.database import get_session_context, init_database, close_database
 from utils.logger import logger
 
 
@@ -17,6 +18,30 @@ from utils.logger import logger
 async def lifespan(app: FastAPI):
     logger.info("🔌 Initializing API server...")
     await init_database()
+    
+    from application.services.webhook_security_service import WebhookSecurityService
+    from application.services.crypto_payment_service import CryptoPaymentService
+    from infrastructure.persistence.postgresql.crypto_transaction_repository import (
+        PostgresCryptoTransactionRepository,
+        PostgresWebhookTokenRepository
+    )
+    
+    async with get_session_context() as session:
+        token_repo = PostgresWebhookTokenRepository(session)
+        crypto_repo = PostgresCryptoTransactionRepository(session)
+        
+        security_service = WebhookSecurityService(
+            webhook_secret=settings.TRON_DEALER_WEBHOOK_SECRET,
+            token_repo=token_repo
+        )
+        
+        payment_service = CryptoPaymentService(
+            crypto_repo=crypto_repo,
+            user_repo=None
+        )
+        
+        set_services(security_service, payment_service)
+    
     logger.info("✅ API server started")
 
     yield
