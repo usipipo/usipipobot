@@ -2,10 +2,11 @@
 Punto de entrada principal del bot uSipipo VPN Manager.
 
 Author: uSipipo Team
-Version: 2.0.0
+Version: 2.1.0
 """
 
 import sys
+import threading
 
 from telegram.ext import ApplicationBuilder
 
@@ -26,12 +27,29 @@ async def startup():
     """Inicialización de la aplicación."""
     logger.info("🔌 Inicializando conexión a base de datos...")
     await init_database()
+    logger.info("✅ Base de datos inicializada.")
 
 
 async def shutdown():
     """Limpieza al cerrar la aplicación."""
     logger.info("🔌 Cerrando conexión a base de datos...")
     await close_database()
+
+
+def run_api_server():
+    """Ejecuta el servidor API en un hilo separado."""
+    import asyncio
+    from infrastructure.api.server import create_app
+    import uvicorn
+
+    app = create_app()
+    uvicorn.run(
+        app,
+        host=settings.API_HOST,
+        port=settings.API_PORT,
+        log_level="info",
+        access_log=True
+    )
 
 
 def main():
@@ -51,9 +69,26 @@ def main():
         logger.error("❌ No se encontró el TELEGRAM_TOKEN en el archivo .env")
         sys.exit(1)
 
+    api_thread = threading.Thread(target=run_api_server, daemon=True)
+    api_thread.start()
+    logger.info(f"🌐 API server iniciado en {settings.API_HOST}:{settings.API_PORT}")
+
     async def post_init_callback(app):
         """Callback ejecutado después de inicializar la aplicación."""
         await startup()
+
+        if settings.NGROK_AUTH_TOKEN:
+            try:
+                from infrastructure.tunnel.ngrok_service import NgrokService
+                ngrok_service = NgrokService(
+                    auth_token=settings.NGROK_AUTH_TOKEN,
+                    subdomain=settings.NGROK_SUBDOMAIN
+                )
+                public_url = ngrok_service.start(settings.API_PORT)
+                logger.info(f"🌐 Ngrok tunnel activo: {public_url}")
+                logger.info(f"📡 Webhook URL: {public_url}/api/v1/webhooks/tron-dealer")
+            except Exception as e:
+                logger.warning(f"⚠️  No se pudo iniciar ngrok: {e}")
 
     async def post_stop_callback(app):
         """Callback ejecutado después de detener la aplicación."""
