@@ -88,6 +88,7 @@ def main():
                 await duckdns.update_ip()
                 logger.info(f"🌐 DuckDNS configurado: {duckdns.get_public_url()}")
                 logger.info(f"📡 Webhook URL: {settings.webhook_url}")
+                await duckdns.close()
             except Exception as e:
                 logger.warning(f"⚠️ No se pudo actualizar DuckDNS: {e}")
 
