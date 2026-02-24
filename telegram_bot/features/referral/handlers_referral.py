@@ -31,6 +31,8 @@ class ReferralHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Muestra el menu principal de referidos."""
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
         query = update.callback_query
 
@@ -53,7 +55,7 @@ class ReferralHandler:
                     reply_markup=keyboard,
                     parse_mode="Markdown",
                 )
-            else:
+            elif update.message:
                 await update.message.reply_text(
                     text=message,
                     reply_markup=keyboard,
@@ -67,17 +69,20 @@ class ReferralHandler:
             if query:
                 await query.answer()
                 await query.edit_message_text(text=error_msg, parse_mode="Markdown")
-            else:
+            elif update.message:
                 await update.message.reply_text(text=error_msg, parse_mode="Markdown")
 
     async def show_redeem_menu(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Muestra el menu de canje de creditos."""
-        query = update.callback_query
-        await query.answer()
-
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
+        query = update.callback_query
+        if not query:
+            return
+        await query.answer()
 
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
@@ -102,10 +107,13 @@ class ReferralHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Muestra confirmacion para canjear creditos por datos."""
-        query = update.callback_query
-        await query.answer()
-
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
+        query = update.callback_query
+        if not query:
+            return
+        await query.answer()
 
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
@@ -126,8 +134,9 @@ class ReferralHandler:
                     gb=gb,
                 )
 
-                context.user_data["redeem_gb"] = gb
-                context.user_data["redeem_credits"] = credits_to_spend
+                if context.user_data:
+                    context.user_data["redeem_gb"] = gb
+                    context.user_data["redeem_credits"] = credits_to_spend
 
             await query.edit_message_text(
                 text=message,
@@ -146,10 +155,13 @@ class ReferralHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Muestra confirmacion para canjear creditos por slot."""
-        query = update.callback_query
-        await query.answer()
-
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
+        query = update.callback_query
+        if not query:
+            return
+        await query.answer()
 
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
@@ -185,14 +197,19 @@ class ReferralHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Ejecuta el canje de creditos por datos."""
+        if not update.effective_user:
+            return
+        user_id = update.effective_user.id
         query = update.callback_query
+        if not query:
+            return
         await query.answer()
 
-        user_id = update.effective_user.id
-
-        gb = context.user_data.get("redeem_gb", 1)
-        credits = context.user_data.get(
-            "redeem_credits", settings.REFERRAL_CREDITS_PER_GB
+        gb = context.user_data.get("redeem_gb", 1) if context.user_data else 1
+        credits = (
+            context.user_data.get("redeem_credits", settings.REFERRAL_CREDITS_PER_GB)
+            if context.user_data
+            else settings.REFERRAL_CREDITS_PER_GB
         )
 
         try:
@@ -204,13 +221,14 @@ class ReferralHandler:
 
             if result.get("success"):
                 message = ReferralMessages.Success.data_redeemed(
-                    gb=result.get("gb_added", gb),
-                    remaining=result.get("remaining_credits", 0),
+                    gb=result.get("gb_added") or gb,
+                    remaining=result.get("remaining_credits") or 0,
                 )
                 keyboard = ReferralKeyboards.success_back()
 
-                context.user_data.pop("redeem_gb", None)
-                context.user_data.pop("redeem_credits", None)
+                if context.user_data:
+                    context.user_data.pop("redeem_gb", None)
+                    context.user_data.pop("redeem_credits", None)
             else:
                 message = ReferralMessages.Error.INSUFFICIENT_CREDITS
                 keyboard = ReferralKeyboards.redeem_menu(0)
@@ -232,10 +250,13 @@ class ReferralHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Ejecuta el canje de creditos por slot."""
-        query = update.callback_query
-        await query.answer()
-
+        if not update.effective_user:
+            return
         user_id = update.effective_user.id
+        query = update.callback_query
+        if not query:
+            return
+        await query.answer()
 
         try:
             result = await self.referral_service.redeem_credits_for_slot(

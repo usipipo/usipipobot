@@ -15,6 +15,8 @@ import sys
 spec = importlib.util.spec_from_file_location(
     "handlers_admin", "telegram_bot/features/admin/handlers_admin.py"
 )
+if spec is None or spec.loader is None:
+    raise ImportError("Could not find module: handlers_admin")
 module = importlib.util.module_from_spec(spec)
 module.__package__ = "telegram_bot.features.admin"
 sys.modules["handlers_admin"] = module
