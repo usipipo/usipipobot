@@ -132,11 +132,15 @@ class AdminService(IAdminService):
 
                 balance = await self.payment_repository.get_balance(user.telegram_id)
 
+                name_parts = (user.full_name or "").split(" ", 1)
+                first_name = name_parts[0] if name_parts and name_parts[0] else "Unknown"
+                last_name = name_parts[1] if len(name_parts) > 1 else None
+
                 user_info = AdminUserInfo(
                     user_id=user.telegram_id,
                     username=user.username,
-                    first_name=user.first_name,
-                    last_name=user.last_name,
+                    first_name=first_name,
+                    last_name=last_name,
                     total_keys=len(user_keys),
                     active_keys=len(active_keys),
                     stars_balance=balance.stars if balance else 0,
@@ -171,9 +175,7 @@ class AdminService(IAdminService):
                 user = await self.user_repository.get_by_id(
                     key.user_id, current_user_id
                 )
-                user_name = (
-                    f"{user.first_name} {user.last_name or ''}" if user else "Unknown"
-                )
+                user_name = user.full_name or "Unknown" if user else "Unknown"
 
                 usage_stats = await self.get_key_usage_stats(str(key.id))
 
