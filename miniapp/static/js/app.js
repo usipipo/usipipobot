@@ -161,7 +161,7 @@
         appendInitDataToLinks();
         appendInitDataToForms();
 
-        document.querySelectorAll('.btn, .nav-item').forEach(el => {
+        document.querySelectorAll('.btn, .nav-item, .fab').forEach(el => {
             el.addEventListener('click', () => hapticFeedback('selection'));
         });
 
