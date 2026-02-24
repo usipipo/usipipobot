@@ -5,6 +5,7 @@ Author: uSipipo Team
 Version: 2.0.0 - Feature-based architecture
 """
 
+from typing import Optional
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
@@ -109,13 +110,16 @@ class KeyManagementKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def key_actions(key_id: str, is_active: bool) -> InlineKeyboardMarkup:
+    def key_actions(
+        key_id: str, is_active: bool, key_type: str = "wireguard"
+    ) -> InlineKeyboardMarkup:
         """
         Teclado de acciones para una llave específica.
 
         Args:
             key_id: ID de la llave
             is_active: Si la llave está activa
+            key_type: Tipo de llave (wireguard, outline)
 
         Returns:
             InlineKeyboardMarkup: Teclado de acciones
@@ -123,16 +127,33 @@ class KeyManagementKeyboards:
         keyboard = []
 
         # Acciones principales
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "📊 Estadísticas", callback_data=f"key_stats_{key_id}"
-                ),
-                InlineKeyboardButton(
-                    "📋 Configuración", callback_data=f"key_config_{key_id}"
-                ),
-            ]
-        )
+        main_actions = [
+            InlineKeyboardButton(
+                "📊 Estadísticas", callback_data=f"key_stats_{key_id}"
+            ),
+            InlineKeyboardButton(
+                "📋 Configuración", callback_data=f"key_config_{key_id}"
+            ),
+        ]
+        keyboard.append(main_actions)
+
+        # Acción de descarga/enlace según protocolo
+        if key_type.lower() == "wireguard":
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "📥 Descargar .conf", callback_data=f"key_download_wg_{key_id}"
+                    )
+                ]
+            )
+        elif key_type.lower() == "outline":
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "🔗 Obtener Enlace", callback_data=f"key_get_link_{key_id}"
+                    )
+                ]
+            )
 
         # Acciones de estado
         if is_active:
@@ -272,7 +293,7 @@ class KeyManagementKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def statistics_options(key_id: str = None) -> InlineKeyboardMarkup:
+    def statistics_options(key_id: Optional[str] = None) -> InlineKeyboardMarkup:
         """
         Teclado de opciones de estadísticas.
 
