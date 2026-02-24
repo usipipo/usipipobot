@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Claves - uSipipo VPN{% endblock %}
+
+{% block content %}
+<div class="glitch-title" style="margin-bottom: 20px;">Mis Claves VPN</div>
+
+<div class="terminal-output">
+    Total de claves: {{ keys|length }} | Límite: {{ max_keys }}
+</div>
+
+{% if not can_create %}
+<div class="error-message">
+    ⚠️ Has alcanzado el límite de {{ max_keys }} claves. Elimina una clave o compra más slots.
+</div>
+{% endif %}
+
+{% if keys %}
+<div class="key-list" style="margin-top: 20px;">
+    {% for key in keys %}
+    <div class="card" style="margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div class="key-icon {{ key.key_type.value }}">
+                {% if key.key_type.value == 'outline' %}⚡{% else %}🛡️{% endif %}
+            </div>
+            <div style="flex: 1;">
+                <div class="key-name">{{ key.name }}</div>
+                <div class="key-meta">
+                    {{ key.key_type.value|upper }} • 
+                    {% if key.is_active %}
+                    <span class="badge badge-active">Activa</span>
+                    {% else %}
+                    <span class="badge badge-inactive">Inactiva</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin: 12px 0;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+                <span>Consumo</span>
+                <span>{{ "%.2f"|format(key.used_gb) }} / {{ "%.0f"|format(key.data_limit_gb) }} GB</span>
+            </div>
+            <div class="progress-bar">
+                {% set usage_percent = (key.used_bytes / key.data_limit_bytes * 100) if key.data_limit_bytes > 0 else 0 %}
+                <div class="progress-fill" style="width: {{ [usage_percent, 100]|min }}%;"></div>
+            </div>
+        </div>
+        
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+            Creada: {{ key.created_at.strftime('%d/%m/%Y') if key.created_at else 'N/A' }}
+            {% if key.last_seen_at %}
+            | Última actividad: {{ key.last_seen_at.strftime('%d/%m/%Y %H:%M') }}
+            {% endif %}
+        </div>
+        
+        <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px;" onclick="copyKey('{{ key.key_data[:50] }}...')">
+                📋 Copiar
+            </button>
+            <button class="btn btn-danger" style="flex: 1; padding: 8px 12px; font-size: 12px;" onclick="deleteKey('{{ key.id }}')">
+                🗑️ Eliminar
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 40px;">
+    <div style="font-size: 60px; margin-bottom: 16px;">🔐</div>
+    <h3 style="color: var(--text-primary); margin-bottom: 8px;">Sin claves VPN</h3>
+    <p style="color: var(--text-secondary); margin-bottom: 20px;">Crea tu primera clave para comenzar a navegar de forma segura</p>
+    <a href="/miniapp/keys/create" class="btn btn-primary">Crear Primera Clave</a>
+</div>
+{% endif %}
+
+{% if can_create %}
+<a href="/miniapp/keys/create" class="fab" title="Nueva Clave">+</a>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyKey(keyData) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(keyData);
+        Telegram.WebApp.showAlert('Clave copiada al portapapeles');
+    } else {
+        Telegram.WebApp.showAlert('No se pudo copiar la clave');
+    }
+}
+
+async function deleteKey(keyId) {
+    const confirmed = await new Promise((resolve) => {
+        Telegram.WebApp.showConfirm('¿Estás seguro de eliminar esta clave?', resolve);
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+        const response = await fetch('/miniapp/api/keys/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key_id: keyId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            Telegram.WebApp.showAlert('Clave eliminada correctamente');
+            location.reload();
+        } else {
+            Telegram.WebApp.showAlert('Error: ' + (result.error || 'No se pudo eliminar'));
+        }
+    } catch (error) {
+        Telegram.WebApp.showAlert('Error de conexión');
+    }
+}
+</script>
+{% endblock %}
