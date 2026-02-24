@@ -130,9 +130,8 @@ class BuyGbMessages:
                 lines.append(
                     f"│ `{progress}` {percentage:.0f}%{' ' * (6 - len(f'{percentage:.0f}%'))}│"
                 )
-                lines.append(
-                    f"│ ├ {pkg['used_gb']:.1f}/{pkg['total_gb']:.0f} GB{' ' * (12 - len(f'{pkg["used_gb"]:.1f}/{pkg["total_gb"]:.0f} GB'))}│"
-                )
+                gb_text = f"{pkg['used_gb']:.1f}/{pkg['total_gb']:.0f} GB"
+                lines.append(f"│ ├ {gb_text}{' ' * (12 - len(gb_text))}│")
                 lines.append(
                     f"│ └ ⏱️ {days}d {hours}h{' ' * (13 - len(f'{days}d {hours}h'))}│"
                 )
