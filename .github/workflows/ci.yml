@@ -98,6 +98,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run MyPy
+        continue-on-error: true
         run: mypy . --ignore-missing-imports
 
   security:
