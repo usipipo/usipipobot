@@ -62,7 +62,9 @@ class OperationsHandler:
 
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
-            message = OperationsMessages.Credits.DISPLAY.format(credits=stats.referral_credits)
+            message = OperationsMessages.Credits.DISPLAY.format(
+                credits=stats.referral_credits
+            )
             keyboard = OperationsKeyboards.credits_menu(stats.referral_credits)
 
             await query.edit_message_text(
@@ -113,9 +115,9 @@ class OperationsHandler:
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
         """Mostrar menu de compra de slots con Telegram Stars."""
-        from telegram_bot.features.buy_gb.handlers_buy_gb import BuyGbHandler
         from application.services.common.container import get_container
         from application.services.data_package_service import DataPackageService
+        from telegram_bot.features.buy_gb.handlers_buy_gb import BuyGbHandler
 
         query = update.callback_query
         await query.answer()
@@ -125,7 +127,9 @@ class OperationsHandler:
         buy_handler = BuyGbHandler(data_package_service)
         await buy_handler.show_slots_menu(update, context)
 
-    async def back_to_main_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def back_to_main_menu(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
         query = update.callback_query
         await query.answer()
 
@@ -144,7 +148,9 @@ class OperationsHandler:
         if update.message:
             await update.message.reply_text(text=message, parse_mode="Markdown")
         elif update.callback_query:
-            await update.callback_query.edit_message_text(text=message, parse_mode="Markdown")
+            await update.callback_query.edit_message_text(
+                text=message, parse_mode="Markdown"
+            )
 
 
 def get_operations_handlers(vpn_service: VpnService, referral_service: ReferralService):
@@ -156,7 +162,9 @@ def get_operations_handlers(vpn_service: VpnService, referral_service: ReferralS
     ]
 
 
-def get_operations_callback_handlers(vpn_service: VpnService, referral_service: ReferralService):
+def get_operations_callback_handlers(
+    vpn_service: VpnService, referral_service: ReferralService
+):
     handler = OperationsHandler(vpn_service, referral_service)
 
     return [
@@ -164,7 +172,11 @@ def get_operations_callback_handlers(vpn_service: VpnService, referral_service: 
         CallbackQueryHandler(handler.show_credits, pattern="^credits_menu$"),
         CallbackQueryHandler(handler.show_shop, pattern="^shop_menu$"),
         CallbackQueryHandler(handler.back_to_main_menu, pattern="^main_menu$"),
-        CallbackQueryHandler(handler.redeem_credits_for_data, pattern="^credits_redeem_data$"),
-        CallbackQueryHandler(handler.redeem_credits_for_slot, pattern="^credits_redeem_slot$"),
+        CallbackQueryHandler(
+            handler.redeem_credits_for_data, pattern="^credits_redeem_data$"
+        ),
+        CallbackQueryHandler(
+            handler.redeem_credits_for_slot, pattern="^credits_redeem_slot$"
+        ),
         CallbackQueryHandler(handler.show_buy_slots_menu, pattern="^buy_slots_menu$"),
     ]

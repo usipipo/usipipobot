@@ -12,8 +12,8 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
     CallbackQueryHandler,
     CommandHandler,
-    ConversationHandler,
     ContextTypes,
+    ConversationHandler,
     MessageHandler,
     filters,
 )
@@ -55,7 +55,7 @@ class TicketHandler:
 
         try:
             subject = message_text[:50] + ("..." if len(message_text) > 50 else "")
-            
+
             ticket = await self.ticket_service.create_ticket(
                 user_id=user_id,
                 subject=subject,
@@ -121,18 +121,21 @@ class TicketHandler:
             for ticket in tickets[:5]:
                 status_emoji = ticket.status_emoji
                 subject = ticket.subject[:25]
-                keyboard.append([
-                    InlineKeyboardButton(
-                        f"{status_emoji} {subject}",
-                        callback_data=f"view_ticket_{ticket.id}"
-                    )
-                ])
+                keyboard.append(
+                    [
+                        InlineKeyboardButton(
+                            f"{status_emoji} {subject}",
+                            callback_data=f"view_ticket_{ticket.id}",
+                        )
+                    ]
+                )
 
-            keyboard.append([
-                InlineKeyboardButton("🔙 Volver", callback_data="help_support")
-            ])
+            keyboard.append(
+                [InlineKeyboardButton("🔙 Volver", callback_data="help_support")]
+            )
 
             from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
             await query.edit_message_text(
                 text=text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -161,7 +164,11 @@ class TicketHandler:
 
             response_section = ""
             if ticket.response:
-                resolved_at = ticket.resolved_at.strftime("%Y-%m-%d %H:%M") if ticket.resolved_at else "N/A"
+                resolved_at = (
+                    ticket.resolved_at.strftime("%Y-%m-%d %H:%M")
+                    if ticket.resolved_at
+                    else "N/A"
+                )
                 response_section = TicketMessages.User.RESPONSE_SECTION.format(
                     response=ticket.response,
                     resolved_at=resolved_at,
@@ -216,18 +223,21 @@ class TicketHandler:
             for ticket in tickets[:10]:
                 status_emoji = ticket.status_emoji
                 subject = ticket.subject[:25]
-                keyboard.append([
-                    InlineKeyboardButton(
-                        f"{status_emoji} [{ticket.user_id}] {subject}",
-                        callback_data=f"admin_view_ticket_{ticket.id}"
-                    )
-                ])
+                keyboard.append(
+                    [
+                        InlineKeyboardButton(
+                            f"{status_emoji} [{ticket.user_id}] {subject}",
+                            callback_data=f"admin_view_ticket_{ticket.id}",
+                        )
+                    ]
+                )
 
-            keyboard.append([
-                InlineKeyboardButton("🏠 Menú Principal", callback_data="main_menu")
-            ])
+            keyboard.append(
+                [InlineKeyboardButton("🏠 Menú Principal", callback_data="main_menu")]
+            )
 
             from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
             await query.edit_message_text(
                 text=text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -265,8 +275,14 @@ class TicketHandler:
 
             response_section = ""
             if ticket.response:
-                resolved_at = ticket.resolved_at.strftime("%Y-%m-%d %H:%M") if ticket.resolved_at else "N/A"
-                response_section = f"\n✅ *Respuesta:* {ticket.response}\n_Respondido: {resolved_at}_"
+                resolved_at = (
+                    ticket.resolved_at.strftime("%Y-%m-%d %H:%M")
+                    if ticket.resolved_at
+                    else "N/A"
+                )
+                response_section = (
+                    f"\n✅ *Respuesta:* {ticket.response}\n_Respondido: {resolved_at}_"
+                )
 
             text = TicketMessages.Admin.TICKET_DETAIL.format(
                 ticket_id=str(ticket.id)[:8],
@@ -325,7 +341,7 @@ class TicketHandler:
 
         try:
             ticket_id = uuid.UUID(ticket_id_str)
-            
+
             await self.ticket_service.respond_to_ticket(
                 ticket_id=ticket_id,
                 response=response_text,
@@ -364,12 +380,18 @@ def get_ticket_handlers(ticket_service: TicketService):
 
     user_conversation = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(handler.create_ticket_prompt, pattern="^create_ticket$"),
+            CallbackQueryHandler(
+                handler.create_ticket_prompt, pattern="^create_ticket$"
+            ),
         ],
         states={
             AWAITING_TICKET_MESSAGE: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handler.handle_ticket_message),
-                CallbackQueryHandler(handler.cancel_ticket_creation, pattern="^help_support$"),
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, handler.handle_ticket_message
+                ),
+                CallbackQueryHandler(
+                    handler.cancel_ticket_creation, pattern="^help_support$"
+                ),
             ],
         },
         fallbacks=[CommandHandler("cancel", handler.cancel_ticket_creation)],
@@ -381,11 +403,15 @@ def get_ticket_handlers(ticket_service: TicketService):
 
     admin_conversation = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(handler.admin_respond_prompt, pattern=r"^ticket_respond_[a-f0-9\-]+$"),
+            CallbackQueryHandler(
+                handler.admin_respond_prompt, pattern=r"^ticket_respond_[a-f0-9\-]+$"
+            ),
         ],
         states={
             AWAITING_ADMIN_RESPONSE: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handler.handle_admin_response),
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, handler.handle_admin_response
+                ),
             ],
         },
         fallbacks=[CommandHandler("cancel", handler.cancel_admin_response)],
@@ -402,15 +428,9 @@ def get_ticket_callback_handlers(ticket_service: TicketService):
     handler = TicketHandler(ticket_service)
 
     return [
-        CallbackQueryHandler(
-            handler.list_my_tickets, pattern="^list_my_tickets$"
-        ),
-        CallbackQueryHandler(
-            handler.view_ticket, pattern=r"^view_ticket_[a-f0-9\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.admin_list_tickets, pattern="^admin_tickets$"
-        ),
+        CallbackQueryHandler(handler.list_my_tickets, pattern="^list_my_tickets$"),
+        CallbackQueryHandler(handler.view_ticket, pattern=r"^view_ticket_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.admin_list_tickets, pattern="^admin_tickets$"),
         CallbackQueryHandler(
             handler.admin_view_ticket, pattern=r"^admin_view_ticket_[a-f0-9\-]+$"
         ),

@@ -34,11 +34,15 @@ class MainMenuKeyboard:
             keyboard = [
                 [InlineKeyboardButton("🔧 Admin", callback_data="admin_panel")],
                 [
-                    InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
+                    InlineKeyboardButton(
+                        "🔑 Mis Claves VPN", callback_data="show_keys"
+                    ),
                     InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
                 ],
                 [
-                    InlineKeyboardButton("⚙️ Operaciones", callback_data="operations_menu"),
+                    InlineKeyboardButton(
+                        "⚙️ Operaciones", callback_data="operations_menu"
+                    ),
                     InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage"),
                 ],
                 [InlineKeyboardButton("❓ Ayuda", callback_data="help")],

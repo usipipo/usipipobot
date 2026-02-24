@@ -265,6 +265,7 @@ async def close_database() -> None:
         try:
             await _engine.dispose()
             import asyncio
+
             await asyncio.sleep(0.1)
         except Exception as e:
             logger.warning(f"Error durante dispose del engine: {e}")

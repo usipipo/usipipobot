@@ -40,10 +40,7 @@ class TicketMessages:
     class Admin:
         LIST_HEADER = "🔧 *Tickets Pendientes*\n\n"
 
-        NO_PENDING = (
-            "🔧 *Tickets Pendientes*\n\n"
-            "No hay tickets pendientes\\."
-        )
+        NO_PENDING = "🔧 *Tickets Pendientes*\n\n" "No hay tickets pendientes\\."
 
         TICKET_DETAIL = (
             "🎫 *Ticket \\#{ticket_id}*\n\n"

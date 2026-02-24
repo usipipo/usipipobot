@@ -31,7 +31,9 @@ from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
 )
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
-from infrastructure.persistence.postgresql.ticket_repository import PostgresTicketRepository
+from infrastructure.persistence.postgresql.ticket_repository import (
+    PostgresTicketRepository,
+)
 from infrastructure.persistence.postgresql.transaction_repository import (
     PostgresTransactionRepository,
 )

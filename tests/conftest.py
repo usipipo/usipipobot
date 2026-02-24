@@ -1,16 +1,17 @@
 import sys
-from pathlib import Path
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock
 import uuid
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 import pytest
-from domain.entities.user import User, UserStatus, UserRole
-from domain.entities.vpn_key import VpnKey, KeyType
+
 from domain.entities.data_package import DataPackage, PackageType
+from domain.entities.user import User, UserRole, UserStatus
+from domain.entities.vpn_key import KeyType, VpnKey
 
 
 @pytest.fixture
@@ -53,13 +54,17 @@ def mock_transaction_repo():
 def mock_outline_client():
     """Mock OutlineClient."""
     client = AsyncMock()
-    client.create_key = AsyncMock(return_value={
-        "id": "outline-key-123",
-        "access_url": "ss://test@server:1234#TestKey",
-    })
+    client.create_key = AsyncMock(
+        return_value={
+            "id": "outline-key-123",
+            "access_url": "ss://test@server:1234#TestKey",
+        }
+    )
     client.delete_key = AsyncMock(return_value=True)
     client.get_metrics = AsyncMock(return_value={"outline-key-123": 1024})
-    client.get_server_info = AsyncMock(return_value={"is_healthy": True, "total_keys": 5})
+    client.get_server_info = AsyncMock(
+        return_value={"is_healthy": True, "total_keys": 5}
+    )
     return client
 
 
@@ -67,10 +72,12 @@ def mock_outline_client():
 def mock_wireguard_client():
     """Mock WireGuardClient."""
     client = AsyncMock()
-    client.create_peer = AsyncMock(return_value={
-        "client_name": "wg-client-123",
-        "config": "[Interface]\nPrivateKey = xxx\nAddress = 10.0.0.2/24\n",
-    })
+    client.create_peer = AsyncMock(
+        return_value={
+            "client_name": "wg-client-123",
+            "config": "[Interface]\nPrivateKey = xxx\nAddress = 10.0.0.2/24\n",
+        }
+    )
     client.delete_client = AsyncMock(return_value=True)
     client.get_peer_metrics = AsyncMock(return_value={"transfer_total": 2048})
     client.get_usage = AsyncMock(return_value=[{"total": 1024}])

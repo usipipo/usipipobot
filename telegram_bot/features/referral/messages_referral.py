@@ -13,9 +13,11 @@ class ReferralMessages:
 
     class Menu:
         HEADER = "🎁 *Sistema de Referidos*"
-        
+
         @staticmethod
-        def referral_info(code: str, credits: int, total_referrals: int, bot_username: str) -> str:
+        def referral_info(
+            code: str, credits: int, total_referrals: int, bot_username: str
+        ) -> str:
             return f"""
 {ReferralMessages.Menu.HEADER}
 
@@ -36,7 +38,7 @@ class ReferralMessages:
 
     class Redeem:
         HEADER = "💳 *Canjear Creditos*"
-        
+
         OPTIONS = f"""
 {HEADER}
 
@@ -47,13 +49,13 @@ class ReferralMessages:
 
 📊 Selecciona que quieres canjear:
 """
-        
+
         INSUFFICIENT_CREDITS = """
 ❌ *Creditos insuficientes*
 
 No tienes suficientes creditos para este canje.
 """
-        
+
         @staticmethod
         def insufficient_for_slot(required: int, current: int) -> str:
             return f"""
@@ -62,7 +64,7 @@ No tienes suficientes creditos para este canje.
 Necesitas *{required} creditos* para +1 slot.
 Tienes *{current} creditos*.
 """
-        
+
         @staticmethod
         def confirm_data(credits: int, gb: int) -> str:
             return f"""
@@ -72,7 +74,7 @@ Vas a canjear *{credits} creditos* por *{gb} GB* de datos extra.
 
 Continuar?
 """
-        
+
         @staticmethod
         def confirm_slot(credits: int) -> str:
             return f"""
@@ -92,7 +94,7 @@ Continuar?
 📦 Has recibido *{gb} GB* de datos extra.
 💰 Creditos restantes: *{remaining}*
 """
-        
+
         @staticmethod
         def slot_redeemed(remaining: int) -> str:
             return f"""
@@ -112,7 +114,7 @@ Continuar?
         @staticmethod
         def credits_required_for_gb() -> int:
             return settings.REFERRAL_CREDITS_PER_GB
-        
+
         @staticmethod
         def credits_required_for_slot() -> int:
             return settings.REFERRAL_CREDITS_PER_SLOT

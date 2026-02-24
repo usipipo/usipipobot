@@ -83,9 +83,7 @@ class Settings(BaseSettings):
         description="Lista de IDs de usuarios autorizados",
     )
 
-    ADMIN_ID: int = Field(
-        ..., description="ID de Telegram del administrador principal"
-    )
+    ADMIN_ID: int = Field(..., description="ID de Telegram del administrador principal")
 
     ADMIN_EMAIL: Optional[str] = Field(
         default=None, description="Email del administrador (opcional)"

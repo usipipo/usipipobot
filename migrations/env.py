@@ -1,17 +1,19 @@
+import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool, create_engine
-import asyncio
+from sqlalchemy import create_engine, engine_from_config, pool
 
 from config import settings
 from infrastructure.persistence.postgresql.models.base import Base
 
 config = context.config
 
+
 def get_sync_url(async_url: str) -> str:
     """Convert asyncpg URL to psycopg2 sync URL for Alembic migrations."""
     return async_url.replace("+asyncpg", "")
+
 
 sync_url = get_sync_url(settings.DATABASE_URL)
 config.set_main_option("sqlalchemy.url", sync_url)

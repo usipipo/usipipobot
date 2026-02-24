@@ -5,8 +5,9 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
-import pytest
 from unittest.mock import AsyncMock
+
+import pytest
 
 from application.services.referral_service import ReferralService, ReferralStats
 from domain.entities.user import User
@@ -65,9 +66,7 @@ class TestRegisterReferral:
         mock_transaction_repo.record_transaction.assert_called()
 
     @pytest.mark.asyncio
-    async def test_register_referral_invalid_code(
-        self, service, mock_user_repo
-    ):
+    async def test_register_referral_invalid_code(self, service, mock_user_repo):
         mock_user_repo.get_by_referral_code.return_value = None
 
         result = await service.register_referral(456, "INVALID", 123)
@@ -76,9 +75,7 @@ class TestRegisterReferral:
         assert result["error"] == "invalid_code"
 
     @pytest.mark.asyncio
-    async def test_register_referral_self_referral(
-        self, service, mock_user_repo
-    ):
+    async def test_register_referral_self_referral(self, service, mock_user_repo):
         referrer = User(
             telegram_id=123,
             referral_code="ABC123",
@@ -91,9 +88,7 @@ class TestRegisterReferral:
         assert result["error"] == "self_referral"
 
     @pytest.mark.asyncio
-    async def test_register_referral_already_referred(
-        self, service, mock_user_repo
-    ):
+    async def test_register_referral_already_referred(self, service, mock_user_repo):
         referrer = User(
             telegram_id=123,
             referral_code="ABC123",
@@ -135,9 +130,7 @@ class TestGetReferralStats:
         return AsyncMock()
 
     @pytest.mark.asyncio
-    async def test_get_referral_stats_success(
-        self, service, mock_user_repo
-    ):
+    async def test_get_referral_stats_success(self, service, mock_user_repo):
         user = User(
             telegram_id=123,
             referral_code="ABC123",
@@ -153,9 +146,7 @@ class TestGetReferralStats:
         assert stats.total_referrals == 0
 
     @pytest.mark.asyncio
-    async def test_get_referral_stats_user_not_found(
-        self, service, mock_user_repo
-    ):
+    async def test_get_referral_stats_user_not_found(self, service, mock_user_repo):
         mock_user_repo.get_by_id.return_value = None
 
         with pytest.raises(ValueError, match="Usuario no encontrado"):
@@ -204,9 +195,7 @@ class TestRedeemCreditsForData:
         assert result["credits_spent"] == 200
 
     @pytest.mark.asyncio
-    async def test_redeem_credits_insufficient(
-        self, service, mock_user_repo
-    ):
+    async def test_redeem_credits_insufficient(self, service, mock_user_repo):
         user = User(
             telegram_id=123,
             referral_credits=50,
@@ -261,9 +250,7 @@ class TestRedeemCreditsForSlot:
         assert result["credits_spent"] == 500
 
     @pytest.mark.asyncio
-    async def test_redeem_credits_for_slot_insufficient(
-        self, service, mock_user_repo
-    ):
+    async def test_redeem_credits_for_slot_insufficient(self, service, mock_user_repo):
         user = User(
             telegram_id=123,
             referral_credits=100,

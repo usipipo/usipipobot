@@ -75,7 +75,9 @@ def admin_required(func):
 
         user = update.effective_user
         if user.id != int(settings.ADMIN_ID):
-            logger.warning(f"Access denied for user {user.id} attempting admin action: {func.__name__}")
+            logger.warning(
+                f"Access denied for user {user.id} attempting admin action: {func.__name__}"
+            )
             if update.callback_query:
                 await update.callback_query.answer()
                 await update.callback_query.edit_message_text(

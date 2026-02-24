@@ -21,8 +21,8 @@ from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from telegram_bot.features.admin.handlers_admin import (
     get_admin_callback_handlers,
-    get_admin_handlers,
     get_admin_conversation_handler,
+    get_admin_handlers,
 )
 from telegram_bot.features.basic_commands.handlers_basic import (
     get_basic_callback_handlers,
@@ -41,15 +41,6 @@ from telegram_bot.features.operations.handlers_operations import (
     get_operations_callback_handlers,
     get_operations_handlers,
 )
-
-from telegram_bot.features.user_management.handlers_user_management import (
-    get_user_callback_handlers,
-    get_user_management_handlers,
-)
-from telegram_bot.features.vpn_keys.handlers_vpn_keys import (
-    get_vpn_keys_callback_handlers,
-    get_vpn_keys_handlers,
-)
 from telegram_bot.features.referral.handlers_referral import (
     get_referral_callback_handlers,
     get_referral_handlers,
@@ -57,6 +48,14 @@ from telegram_bot.features.referral.handlers_referral import (
 from telegram_bot.features.tickets.handlers_tickets import (
     get_ticket_callback_handlers,
     get_ticket_handlers,
+)
+from telegram_bot.features.user_management.handlers_user_management import (
+    get_user_callback_handlers,
+    get_user_management_handlers,
+)
+from telegram_bot.features.vpn_keys.handlers_vpn_keys import (
+    get_vpn_keys_callback_handlers,
+    get_vpn_keys_handlers,
 )
 from utils.logger import logger
 
@@ -142,7 +141,12 @@ def initialize_handlers(
         handlers.extend(_get_referral_handlers(container))
         handlers.extend(_get_ticket_handlers(container))
         handlers.extend(
-            _get_core_handlers(vpn_service, referral_service, data_package_service, user_profile_service)
+            _get_core_handlers(
+                vpn_service,
+                referral_service,
+                data_package_service,
+                user_profile_service,
+            )
         )
 
         logger.info(f"Total handlers configured: {len(handlers)}")
