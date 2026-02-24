@@ -200,7 +200,24 @@ class KeyManagementKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "🔙 Volver a Gestión de Llaves", callback_data="back_to_keys"
+                    "🔙 Volver a la Lista", callback_data="back_to_keys"
+                )
+            ]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def cancel_rename() -> InlineKeyboardMarkup:
+        """
+        Teclado para cancelar el renombrado.
+
+        Returns:
+            InlineKeyboardMarkup: Teclado de cancelación
+        """
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "❌ Cancelar Renombrado", callback_data="cancel_rename"
                 )
             ]
         ]

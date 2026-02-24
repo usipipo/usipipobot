@@ -374,6 +374,20 @@ class KeyManagementHandler(BaseHandler):
                     await self.show_key_statistics(update, context)
                     return
 
+                elif action == "rename":
+                    # Iniciar flujo de renombrado
+                    context.user_data["rename_key_id"] = key_id
+                    message = "✏️ **Renombrar Llave**\n\nPor favor, escribe el nuevo nombre para tu llave:"
+                    keyboard = KeyManagementKeyboards.cancel_rename()
+                    await self._safe_edit_message(
+                        query,
+                        context,
+                        text=message,
+                        reply_markup=keyboard,
+                        parse_mode="Markdown",
+                    )
+                    return
+
                 else:
                     message = KeyManagementMessages.Error.INVALID_ACTION
                     keyboard = KeyManagementKeyboards.back_to_submenu()
@@ -569,6 +583,61 @@ class KeyManagementHandler(BaseHandler):
         """Vuelve al submenú de gestión de llaves."""
         await self.show_key_submenu(update, context)
 
+    async def cancel_rename(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """
+        Cancela el proceso de renombrado.
+        """
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        if "rename_key_id" in context.user_data:
+            del context.user_data["rename_key_id"]
+
+        await self.show_key_submenu(update, context)
+
+    async def process_rename_key(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """
+        Procesa el mensaje de texto con el nuevo nombre para la llave.
+        """
+        key_id = context.user_data.get("rename_key_id")
+        if not key_id:
+            return
+
+        new_name = update.message.text.strip()
+        user_id = update.effective_user.id
+
+        try:
+            # Limpiar estado
+            del context.user_data["rename_key_id"]
+
+            success = await self.vpn_service.rename_key(
+                key_id, new_name, current_user_id=user_id
+            )
+
+            if success:
+                message = KeyManagementMessages.Actions.KEY_RENAMED.format(
+                    new_name=new_name
+                )
+            else:
+                message = "❌ No se pudo renombrar la llave. Por favor, intenta de nuevo."
+
+            # Volver a los detalles de la llave
+            await update.message.reply_text(
+                text=message,
+                reply_markup=KeyManagementKeyboards.back_to_submenu(),
+                parse_mode="Markdown",
+            )
+
+        except Exception as e:
+            logger.error(f"Error procesando renombrado: {e}")
+            await update.message.reply_text(
+                text=KeyManagementMessages.Error.SYSTEM_ERROR,
+                reply_markup=KeyManagementKeyboards.back_to_submenu(),
+                parse_mode="Markdown",
+            )
+
 
 def get_key_management_handlers(vpn_service: VpnService):
     """Retorna los handlers de gestión de llaves."""
@@ -576,6 +645,7 @@ def get_key_management_handlers(vpn_service: VpnService):
     return [
         MessageHandler(filters.Regex("^🛡️ Mis Llaves$"), handler.show_key_submenu),
         CommandHandler("keys", handler.show_key_submenu),
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handler.process_rename_key),
     ]
 
 
@@ -601,4 +671,5 @@ def get_key_management_callback_handlers(vpn_service: VpnService):
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_extend_"),
         CallbackQueryHandler(handler.download_wireguard_config, pattern="^key_download_wg_"),
         CallbackQueryHandler(handler.get_outline_link, pattern="^key_get_link_"),
+        CallbackQueryHandler(handler.cancel_rename, pattern="^cancel_rename$"),
     ]
