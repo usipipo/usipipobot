@@ -18,6 +18,7 @@ from telegram.ext import (
 from application.services.vpn_service import VpnService
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
+from utils.telegram_utils import format_percentage
 from utils.logger import logger
 
 from .keyboards_key_management import KeyManagementKeyboards
@@ -212,17 +213,17 @@ class KeyManagementHandler(BaseHandler):
                     else 0
                 )
 
+                usage_bar = format_percentage(key.used_gb, key.data_limit_gb)
+
                 message = KeyManagementMessages.KEY_DETAILS.format(
                     name=key.name,
                     type=key.key_type.upper(),
                     server=key.server or "N/A",
+                    usage_bar=usage_bar,
                     usage=key.used_gb,
                     limit=key.data_limit_gb,
                     percentage=usage_percentage,
                     status=status,
-                    created=(
-                        key.created_at.strftime("%d/%m/%Y") if key.created_at else "N/A"
-                    ),
                     expires=(
                         key.expires_at.strftime("%d/%m/%Y") if key.expires_at else "N/A"
                     ),

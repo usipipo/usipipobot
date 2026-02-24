@@ -51,14 +51,17 @@ class KeyManagementMessages:
     # ============================================
 
     KEY_DETAILS = (
-        "🔑 **Detalles de la Llave**\n\n"
-        "📛 **Nombre:** {name}\n"
-        "📡 **Protocolo:** {type}\n"
-        "🖥️ **Servidor:** {server}\n"
-        "📊 **Uso:** {usage} / {limit} GB ({percentage:.1f}%)\n"
+        "💎 **{name}**\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
+        "📡 **Protocolo:** `{type}`\n"
+        "🖥️ **Servidor:** `{server}`\n"
+        "📊 **Consumo de Datos:**\n"
+        "{usage_bar}\n"
+        "   `{usage:.2f} / {limit:.2f} GB ({percentage:.1f}%)`\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
         "🟢 **Estado:** {status}\n"
-        "📅 **Creada:** {created}\n"
-        "⏰ **Expira:** {expires}\n\n"
+        "📅 **Expiración:** {expires}\n"
+        "━━━━━━━━━━━━━━━━━━━━\n"
         "Selecciona una acción:"
     )
 
