@@ -44,7 +44,7 @@ class WebhookToken:
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     used_at: Optional[datetime] = None
-    metadata: dict = field(default_factory=dict)
+    extra_data: dict = field(default_factory=dict)
 
     @property
     def is_expired(self) -> bool:
