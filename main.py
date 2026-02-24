@@ -81,11 +81,12 @@ def main():
         if settings.NGROK_AUTH_TOKEN:
             try:
                 from infrastructure.tunnel.ngrok_service import NgrokService
+                NgrokService.kill_all_tunnels()
                 ngrok_service = NgrokService(
                     auth_token=settings.NGROK_AUTH_TOKEN,
                     subdomain=settings.NGROK_SUBDOMAIN
                 )
-                public_url = ngrok_service.start(settings.API_PORT)
+                public_url = ngrok_service.start(settings.API_PORT, kill_existing=False)
                 logger.info(f"🌐 Ngrok tunnel activo: {public_url}")
                 logger.info(f"📡 Webhook URL: {public_url}/api/v1/webhooks/tron-dealer")
             except Exception as e:
