@@ -78,19 +78,18 @@ def main():
         
         await startup()
 
-        if settings.NGROK_AUTH_TOKEN:
+        if settings.DUCKDNS_DOMAIN and settings.DUCKDNS_TOKEN:
             try:
-                from infrastructure.tunnel.ngrok_service import NgrokService
-                NgrokService.kill_all_tunnels()
-                ngrok_service = NgrokService(
-                    auth_token=settings.NGROK_AUTH_TOKEN,
-                    subdomain=settings.NGROK_SUBDOMAIN
+                from infrastructure.dns.duckdns_service import DuckDNSService
+                duckdns = DuckDNSService(
+                    domain=settings.DUCKDNS_DOMAIN,
+                    token=settings.DUCKDNS_TOKEN
                 )
-                public_url = ngrok_service.start(settings.API_PORT, kill_existing=False)
-                logger.info(f"🌐 Ngrok tunnel activo: {public_url}")
-                logger.info(f"📡 Webhook URL: {public_url}/api/v1/webhooks/tron-dealer")
+                await duckdns.update_ip()
+                logger.info(f"🌐 DuckDNS configurado: {duckdns.get_public_url()}")
+                logger.info(f"📡 Webhook URL: {settings.webhook_url}")
             except Exception as e:
-                logger.warning(f"⚠️  No se pudo iniciar ngrok: {e}")
+                logger.warning(f"⚠️ No se pudo actualizar DuckDNS: {e}")
 
         job_queue = app.job_queue
         if job_queue is None:
