@@ -97,3 +97,9 @@ dump.rdb
 
 # Worktrees
 .worktrees/
+
+# =============================================================================
+# PLANES Y DOCUMENTACIÓN INTERNA
+# =============================================================================
+# Excluir todos los planes del repositorio - no publicar en GitHub
+docs/plans/
