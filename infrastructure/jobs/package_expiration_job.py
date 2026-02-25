@@ -5,7 +5,7 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
-from typing import cast, Any, Dict
+from typing import Any, Dict, cast
 
 from telegram.ext import ContextTypes
 

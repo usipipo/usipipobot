@@ -1,17 +1,18 @@
+import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
-import uuid
-from sqlalchemy import select, delete
+
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities.crypto_transaction import CryptoTransaction, WebhookToken
 from domain.interfaces.icrypto_transaction_repository import (
     ICryptoTransactionRepository,
-    IWebhookTokenRepository
+    IWebhookTokenRepository,
 )
 from infrastructure.persistence.postgresql.models.crypto_transaction import (
     CryptoTransactionModel,
-    WebhookTokenModel
+    WebhookTokenModel,
 )
 
 
@@ -35,7 +36,9 @@ class PostgresCryptoTransactionRepository(ICryptoTransactionRepository):
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
 
-    async def get_by_user(self, user_id: int, limit: int = 50) -> List[CryptoTransaction]:
+    async def get_by_user(
+        self, user_id: int, limit: int = 50
+    ) -> List[CryptoTransaction]:
         result = await self.session.execute(
             select(CryptoTransactionModel)
             .where(CryptoTransactionModel.user_id == user_id)
@@ -69,9 +72,7 @@ class PostgresWebhookTokenRepository(IWebhookTokenRepository):
 
     async def get_by_hash(self, token_hash: str) -> Optional[WebhookToken]:
         result = await self.session.execute(
-            select(WebhookTokenModel).where(
-                WebhookTokenModel.token_hash == token_hash
-            )
+            select(WebhookTokenModel).where(WebhookTokenModel.token_hash == token_hash)
         )
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None

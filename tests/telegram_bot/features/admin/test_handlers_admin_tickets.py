@@ -3,6 +3,7 @@ Tests para el flujo de tickets del panel administrativo.
 
 Author: uSipipo Team
 """
+
 import uuid
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -11,15 +12,14 @@ import pytest
 
 from application.services.admin_service import AdminService
 from application.services.ticket_service import TicketService
-from domain.entities.ticket import Ticket, TicketStatus, TicketPriority
+from domain.entities.ticket import Ticket, TicketPriority, TicketStatus
 from telegram_bot.features.admin.handlers_admin import (
     ADMIN_MENU,
-    VIEWING_TICKETS,
-    VIEWING_TICKET_DETAILS,
     AWAITING_TICKET_RESPONSE,
+    VIEWING_TICKET_DETAILS,
+    VIEWING_TICKETS,
     AdminHandler,
 )
-
 
 ADMIN_ID = 123456789
 
@@ -27,7 +27,9 @@ ADMIN_ID = 123456789
 @pytest.fixture
 def admin_service():
     service = MagicMock(spec=AdminService)
-    service.get_users_paginated = AsyncMock(return_value={"users": [], "total_pages": 1, "total_users": 0})
+    service.get_users_paginated = AsyncMock(
+        return_value={"users": [], "total_pages": 1, "total_users": 0}
+    )
     service.get_user_by_id = AsyncMock(return_value=None)
     service.get_all_keys = AsyncMock(return_value=[])
     service.get_dashboard_stats = AsyncMock(return_value={})
@@ -94,7 +96,9 @@ class TestAdminTicketFlow:
         ticket_service.get_all_open_tickets.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_show_tickets_with_tickets(self, handler, ticket_service, sample_ticket, mock_settings):
+    async def test_show_tickets_with_tickets(
+        self, handler, ticket_service, sample_ticket, mock_settings
+    ):
         """show_tickets debe mostrar lista de tickets pendientes."""
         ticket_service.get_all_open_tickets = AsyncMock(return_value=[sample_ticket])
 
@@ -115,7 +119,9 @@ class TestAdminTicketFlow:
         ticket_service.get_all_open_tickets.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_admin_view_ticket(self, handler, ticket_service, sample_ticket, mock_settings):
+    async def test_admin_view_ticket(
+        self, handler, ticket_service, sample_ticket, mock_settings
+    ):
         """admin_view_ticket debe mostrar detalles del ticket."""
         ticket_service.get_ticket = AsyncMock(return_value=sample_ticket)
 
@@ -130,14 +136,18 @@ class TestAdminTicketFlow:
         context = MagicMock()
         context.user_data = {}
 
-        result = await handler.admin_view_ticket(update, context, spinner_message_id=None)
+        result = await handler.admin_view_ticket(
+            update, context, spinner_message_id=None
+        )
 
         assert result == VIEWING_TICKET_DETAILS
         ticket_service.get_ticket.assert_called_once()
         assert context.user_data.get("viewing_ticket_id") == str(sample_ticket.id)
 
     @pytest.mark.asyncio
-    async def test_admin_view_ticket_not_found(self, handler, ticket_service, mock_settings):
+    async def test_admin_view_ticket_not_found(
+        self, handler, ticket_service, mock_settings
+    ):
         """admin_view_ticket debe manejar ticket no encontrado."""
         ticket_service.get_ticket = AsyncMock(return_value=None)
 
@@ -153,12 +163,16 @@ class TestAdminTicketFlow:
         context = MagicMock()
         context.user_data = {}
 
-        result = await handler.admin_view_ticket(update, context, spinner_message_id=None)
+        result = await handler.admin_view_ticket(
+            update, context, spinner_message_id=None
+        )
 
         assert result == ADMIN_MENU
 
     @pytest.mark.asyncio
-    async def test_admin_respond_prompt(self, handler, ticket_service, sample_ticket, mock_settings):
+    async def test_admin_respond_prompt(
+        self, handler, ticket_service, sample_ticket, mock_settings
+    ):
         """admin_respond_prompt debe preparar el estado para responder."""
         update = MagicMock()
         update.effective_user.id = ADMIN_ID
@@ -192,7 +206,9 @@ class TestAdminTicketFlow:
         context = MagicMock()
         context.user_data = {"responding_to_ticket": str(sample_ticket.id)}
 
-        with patch("telegram_bot.features.admin.handlers_admin.settings") as mock_settings:
+        with patch(
+            "telegram_bot.features.admin.handlers_admin.settings"
+        ) as mock_settings:
             mock_settings.ADMIN_ID = str(ADMIN_ID)
             result = await handler.handle_admin_response(update, context)
 
@@ -201,7 +217,9 @@ class TestAdminTicketFlow:
         assert context.user_data.get("responding_to_ticket") is None
 
     @pytest.mark.asyncio
-    async def test_handle_admin_response_shows_next_ticket(self, handler, ticket_service, sample_ticket):
+    async def test_handle_admin_response_shows_next_ticket(
+        self, handler, ticket_service, sample_ticket
+    ):
         """handle_admin_response debe mostrar tickets restantes después de responder."""
         another_ticket = Ticket(
             id=uuid.uuid4(),
@@ -225,7 +243,9 @@ class TestAdminTicketFlow:
         context = MagicMock()
         context.user_data = {"responding_to_ticket": str(sample_ticket.id)}
 
-        with patch("telegram_bot.features.admin.handlers_admin.settings") as mock_settings:
+        with patch(
+            "telegram_bot.features.admin.handlers_admin.settings"
+        ) as mock_settings:
             mock_settings.ADMIN_ID = str(ADMIN_ID)
             result = await handler.handle_admin_response(update, context)
 
@@ -249,7 +269,9 @@ class TestAdminTicketFlow:
         assert context.user_data.get("responding_to_ticket") is None
 
     @pytest.mark.asyncio
-    async def test_ticket_set_in_progress(self, handler, ticket_service, sample_ticket, mock_settings):
+    async def test_ticket_set_in_progress(
+        self, handler, ticket_service, sample_ticket, mock_settings
+    ):
         """ticket_set_in_progress debe cambiar el estado del ticket a in_progress."""
         sample_ticket.status = TicketStatus.IN_PROGRESS
         ticket_service.set_in_progress = AsyncMock(return_value=sample_ticket)
@@ -285,12 +307,16 @@ class TestAdminTicketFlow:
         context = MagicMock()
         context.user_data = {}
 
-        result = await handler.admin_view_ticket(update, context, spinner_message_id=None)
+        result = await handler.admin_view_ticket(
+            update, context, spinner_message_id=None
+        )
 
         assert result == ADMIN_MENU
 
     @pytest.mark.asyncio
-    async def test_admin_view_ticket_without_ticket_service(self, admin_service, mock_settings):
+    async def test_admin_view_ticket_without_ticket_service(
+        self, admin_service, mock_settings
+    ):
         """admin_view_ticket debe manejar cuando no hay ticket_service."""
         handler = AdminHandler(admin_service, ticket_service=None)
 
@@ -306,12 +332,16 @@ class TestAdminTicketFlow:
         context = MagicMock()
         context.user_data = {}
 
-        result = await handler.admin_view_ticket(update, context, spinner_message_id=None)
+        result = await handler.admin_view_ticket(
+            update, context, spinner_message_id=None
+        )
 
         assert result == ADMIN_MENU
 
     @pytest.mark.asyncio
-    async def test_handle_admin_response_non_admin(self, handler, ticket_service, sample_ticket, mock_settings):
+    async def test_handle_admin_response_non_admin(
+        self, handler, ticket_service, sample_ticket, mock_settings
+    ):
         """handle_admin_response debe rechazar usuarios no admin."""
         update = MagicMock()
         update.effective_user.id = 999999999
@@ -329,7 +359,9 @@ class TestAdminTicketFlow:
         ticket_service.respond_to_ticket.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_handle_admin_response_without_user_data(self, handler, ticket_service, mock_settings):
+    async def test_handle_admin_response_without_user_data(
+        self, handler, ticket_service, mock_settings
+    ):
         """handle_admin_response debe manejar falta de user_data."""
         update = MagicMock()
         update.effective_user.id = ADMIN_ID

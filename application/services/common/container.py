@@ -14,7 +14,7 @@ from typing import TypeVar
 import punq
 from sqlalchemy.ext.asyncio import AsyncSession
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 from application.services.admin_service import AdminService
 from application.services.data_package_service import DataPackageService

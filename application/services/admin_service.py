@@ -133,7 +133,9 @@ class AdminService(IAdminService):
                 balance = await self.payment_repository.get_balance(user.telegram_id)
 
                 name_parts = (user.full_name or "").split(" ", 1)
-                first_name = name_parts[0] if name_parts and name_parts[0] else "Unknown"
+                first_name = (
+                    name_parts[0] if name_parts and name_parts[0] else "Unknown"
+                )
                 last_name = name_parts[1] if len(name_parts) > 1 else None
 
                 user_info = AdminUserInfo(

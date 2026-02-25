@@ -87,7 +87,8 @@ class KeyManagementHandler(BaseHandler):
                 logger.error(f"Error mostrando submenú de llaves: {e}")
                 if update.message is not None:
                     await update.message.reply_text(
-                        text=KeyManagementMessages.Error.SYSTEM_ERROR, parse_mode="Markdown"
+                        text=KeyManagementMessages.Error.SYSTEM_ERROR,
+                        parse_mode="Markdown",
                     )
         else:
             await self._safe_answer_query(query)

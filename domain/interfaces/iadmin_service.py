@@ -43,7 +43,9 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
-    async def update_user_status(self, user_id: int, status: str) -> AdminOperationResult:
+    async def update_user_status(
+        self, user_id: int, status: str
+    ) -> AdminOperationResult:
         """Actualizar estado del usuario."""
         pass
 

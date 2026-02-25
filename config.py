@@ -5,13 +5,13 @@ Gestiona variables de entorno con validación estricta y valores seguros por def
 Author: uSipipo Team
 """
 
-from version import __version__
-
 from pathlib import Path
 from typing import List, Optional
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from version import __version__
 
 
 class Settings(BaseSettings):
@@ -27,9 +27,7 @@ class Settings(BaseSettings):
         default="uSipipo VPN Manager", description="Nombre del proyecto"
     )
 
-    VERSION: str = Field(
-        default=__version__, description="Versión de la aplicación"
-    )
+    VERSION: str = Field(default=__version__, description="Versión de la aplicación")
 
     APP_ENV: str = Field(
         default="development",
@@ -290,37 +288,33 @@ class Settings(BaseSettings):
     # TRON DEALER API (Crypto Payments)
     # =========================================================================
     TRON_DEALER_API_KEY: Optional[str] = Field(
-        default=None,
-        description="API key de Tron Dealer (prefijo td_)"
+        default=None, description="API key de Tron Dealer (prefijo td_)"
     )
 
     TRON_DEALER_WEBHOOK_SECRET: str = Field(
         ...,
         min_length=32,
-        description="Secret para verificar firmas HMAC de webhooks (generar con openssl rand -hex 32)"
+        description="Secret para verificar firmas HMAC de webhooks (generar con openssl rand -hex 32)",
     )
 
     TRON_DEALER_SWEEP_WALLET: Optional[str] = Field(
-        default=None,
-        description="Wallet BSC donde recibir los fondos"
+        default=None, description="Wallet BSC donde recibir los fondos"
     )
 
     # =========================================================================
     # DYNAMIC DNS (DuckDNS)
     # =========================================================================
     DUCKDNS_DOMAIN: Optional[str] = Field(
-        default=None,
-        description="Dominio de DuckDNS (sin .duckdns.org)"
+        default=None, description="Dominio de DuckDNS (sin .duckdns.org)"
     )
 
     DUCKDNS_TOKEN: Optional[str] = Field(
-        default=None,
-        description="Token de autenticacion de DuckDNS"
+        default=None, description="Token de autenticacion de DuckDNS"
     )
 
     PUBLIC_URL: Optional[str] = Field(
         default=None,
-        description="URL publica del servidor (https://dominio.duckdns.org)"
+        description="URL publica del servidor (https://dominio.duckdns.org)",
     )
 
     # =========================================================================

@@ -26,11 +26,7 @@ class DuckDNSService:
 
     async def update_ip(self) -> bool:
         session = await self._get_session()
-        params = {
-            "domains": self.domain,
-            "token": self.token,
-            "ip": ""
-        }
+        params = {"domains": self.domain, "token": self.token, "ip": ""}
         try:
             async with session.get(self.DUCKDNS_UPDATE_URL, params=params) as response:
                 result = await response.text()
@@ -49,9 +45,9 @@ class DuckDNSService:
 
     @staticmethod
     def get_cron_script_content(domain: str, token: str) -> str:
-        return f'''#!/bin/bash
+        return f"""#!/bin/bash
 echo url="https://www.duckdns.org/update?domains={domain}&token={token}&ip=" | curl -k -o ~/duckdns/duck.log -K -
-'''
+"""
 
     @staticmethod
     def setup_instructions(domain: str, token: str) -> str:

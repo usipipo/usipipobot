@@ -18,9 +18,7 @@ from telegram.ext import (
 
 from application.services.admin_service import AdminService
 from application.services.user_profile_service import UserProfileService
-
 from application.services.vpn_service import VpnService
-
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
 from telegram_bot.common.keyboards import get_miniapp_url
@@ -98,9 +96,9 @@ class UserManagementHandler(BaseHandler):
             await update.message.reply_text(
                 text=welcome_message,
                 reply_markup=MainMenuKeyboard.main_menu_with_admin(
-                    admin_id=int(settings.ADMIN_ID), 
+                    admin_id=int(settings.ADMIN_ID),
                     current_user_id=user.id,
-                    miniapp_url=miniapp_url
+                    miniapp_url=miniapp_url,
                 ),
                 parse_mode="Markdown",
             )
