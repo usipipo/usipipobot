@@ -92,4 +92,4 @@ class PostgresWebhookTokenRepository(IWebhookTokenRepository):
             )
         )
         await self.session.commit()
-        return result.rowcount
+        return result.rowcount  # type: ignore[attr-defined]
