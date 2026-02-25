@@ -23,6 +23,7 @@ from config import settings
 from telegram_bot.common.keyboards import get_miniapp_url
 from telegram_bot.keyboards import MainMenuKeyboard
 from utils.logger import logger
+from utils.telegram_utils import escape_markdown
 
 from .keyboards_tickets import TicketKeyboards
 from .messages_tickets import TicketMessages
@@ -190,17 +191,18 @@ class TicketHandler:
                     if ticket.resolved_at
                     else "N/A"
                 )
+                escaped_response = escape_markdown(ticket.response)
                 response_section = TicketMessages.User.RESPONSE_SECTION.format(
-                    response=ticket.response,
+                    response=escaped_response,
                     resolved_at=resolved_at,
                 )
 
             text = TicketMessages.User.TICKET_DETAIL.format(
                 ticket_id=str(ticket.id)[:8],
-                subject=ticket.subject,
+                subject=escape_markdown(ticket.subject),
                 status=f"{ticket.status_emoji} {ticket.status.value}",
                 created_at=ticket.created_at.strftime("%Y-%m-%d %H:%M"),
-                message=ticket.message,
+                message=escape_markdown(ticket.message),
                 response_section=response_section,
             )
 
@@ -310,17 +312,18 @@ class TicketHandler:
                     if ticket.resolved_at
                     else "N/A"
                 )
+                escaped_response = escape_markdown(ticket.response)
                 response_section = (
-                    f"\n✅ *Respuesta:* {ticket.response}\n_Respondido: {resolved_at}_"
+                    f"\n✅ *Respuesta:* {escaped_response}\n_Respondido: {resolved_at}_"
                 )
 
             text = TicketMessages.Admin.TICKET_DETAIL.format(
                 ticket_id=str(ticket.id)[:8],
                 user_id=ticket.user_id,
-                subject=ticket.subject,
+                subject=escape_markdown(ticket.subject),
                 status=f"{ticket.status_emoji} {ticket.status.value}",
                 created_at=ticket.created_at.strftime("%Y-%m-%d %H:%M"),
-                message=ticket.message,
+                message=escape_markdown(ticket.message),
                 response_section=response_section,
             )
 
