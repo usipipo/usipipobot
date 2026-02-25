@@ -187,7 +187,7 @@ class TicketHandler:
             response_section = ""
             if ticket.response:
                 resolved_at = (
-                    ticket.resolved_at.strftime("%Y-%m-%d %H:%M")
+                    escape_markdown(ticket.resolved_at.strftime("%Y-%m-%d %H:%M"))
                     if ticket.resolved_at
                     else "N/A"
                 )
@@ -200,8 +200,8 @@ class TicketHandler:
             text = TicketMessages.User.TICKET_DETAIL.format(
                 ticket_id=str(ticket.id)[:8],
                 subject=escape_markdown(ticket.subject),
-                status=f"{ticket.status_emoji} {ticket.status.value}",
-                created_at=ticket.created_at.strftime("%Y-%m-%d %H:%M"),
+                status=f"{ticket.status_emoji} {escape_markdown(ticket.status.value)}",
+                created_at=escape_markdown(ticket.created_at.strftime("%Y-%m-%d %H:%M")),
                 message=escape_markdown(ticket.message),
                 response_section=response_section,
             )
@@ -308,7 +308,7 @@ class TicketHandler:
             response_section = ""
             if ticket.response:
                 resolved_at = (
-                    ticket.resolved_at.strftime("%Y-%m-%d %H:%M")
+                    escape_markdown(ticket.resolved_at.strftime("%Y-%m-%d %H:%M"))
                     if ticket.resolved_at
                     else "N/A"
                 )
@@ -321,8 +321,8 @@ class TicketHandler:
                 ticket_id=str(ticket.id)[:8],
                 user_id=ticket.user_id,
                 subject=escape_markdown(ticket.subject),
-                status=f"{ticket.status_emoji} {ticket.status.value}",
-                created_at=ticket.created_at.strftime("%Y-%m-%d %H:%M"),
+                status=f"{ticket.status_emoji} {escape_markdown(ticket.status.value)}",
+                created_at=escape_markdown(ticket.created_at.strftime("%Y-%m-%d %H:%M")),
                 message=escape_markdown(ticket.message),
                 response_section=response_section,
             )
