@@ -235,7 +235,11 @@ def _configure_handlers(container: punq.Container) -> None:
 
     def create_inline_callback_handlers_list() -> list:
         handlers = []
-        handlers.extend(get_admin_callback_handlers(container.resolve(AdminService)))
+        handlers.extend(
+            get_admin_callback_handlers(
+                container.resolve(AdminService), container.resolve(TicketService)
+            )
+        )
         handlers.extend(get_vpn_keys_callback_handlers(container.resolve(VpnService)))
         handlers.extend(
             get_key_management_callback_handlers(container.resolve(VpnService))
