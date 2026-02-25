@@ -40,8 +40,10 @@ async def shutdown():
 def run_api_server():
     """Ejecuta el servidor API en un hilo separado."""
     import asyncio
-    from infrastructure.api.server import create_app
+
     import uvicorn
+
+    from infrastructure.api.server import create_app
 
     app = create_app()
     uvicorn.run(
@@ -49,7 +51,7 @@ def run_api_server():
         host=settings.API_HOST,
         port=settings.API_PORT,
         log_level="info",
-        access_log=True
+        access_log=True,
     )
 
 
@@ -75,15 +77,15 @@ def main():
         except Exception as e:
             logger.critical(f"❌ Error al inicializar el contenedor: {e}")
             sys.exit(1)
-        
+
         await startup()
 
         if settings.DUCKDNS_DOMAIN and settings.DUCKDNS_TOKEN:
             try:
                 from infrastructure.dns.duckdns_service import DuckDNSService
+
                 duckdns = DuckDNSService(
-                    domain=settings.DUCKDNS_DOMAIN,
-                    token=settings.DUCKDNS_TOKEN
+                    domain=settings.DUCKDNS_DOMAIN, token=settings.DUCKDNS_TOKEN
                 )
                 await duckdns.update_ip()
                 logger.info(f"🌐 DuckDNS configurado: {duckdns.get_public_url()}")
@@ -98,7 +100,10 @@ def main():
             return
 
         job_queue.run_repeating(
-            sync_vpn_usage_job, interval=1800, first=60, data={"vpn_service": vpn_service}
+            sync_vpn_usage_job,
+            interval=1800,
+            first=60,
+            data={"vpn_service": vpn_service},
         )
         logger.info("⏰ Job de cuota programado.")
 

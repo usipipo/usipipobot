@@ -6,7 +6,8 @@ Version: 1.0.0
 """
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from infrastructure.api.server import create_app
 
 
@@ -15,8 +16,7 @@ async def client():
     """Cliente de pruebas para la API."""
     app = create_app()
     async with AsyncClient(
-        transport=ASGITransport(app=app), 
-        base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
 
@@ -90,7 +90,13 @@ class TestDropdownNavigation:
     async def test_base_template_has_nav_items(self, client):
         """Test que el base template contiene los items del nav."""
         import pathlib
-        base_template = pathlib.Path(__file__).parent.parent.parent / "miniapp" / "templates" / "base.html"
+
+        base_template = (
+            pathlib.Path(__file__).parent.parent.parent
+            / "miniapp"
+            / "templates"
+            / "base.html"
+        )
         content = base_template.read_text().lower()
         assert "dashboard" in content
         assert "claves" in content
@@ -102,7 +108,13 @@ class TestDropdownNavigation:
     async def test_privacy_link_not_in_bottom_nav(self, client):
         """Test que el link de privacidad no está en el nav inferior del base template."""
         import pathlib
-        base_template = pathlib.Path(__file__).parent.parent.parent / "miniapp" / "templates" / "base.html"
+
+        base_template = (
+            pathlib.Path(__file__).parent.parent.parent
+            / "miniapp"
+            / "templates"
+            / "base.html"
+        )
         content = base_template.read_text().lower()
         nav_start = content.find("bottom-nav")
         nav_end = content.find("{% endblock %}", nav_start) if nav_start != -1 else 0

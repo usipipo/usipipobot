@@ -68,7 +68,7 @@ class AdminHandler(BaseConversationHandler):
         user = update.effective_user
         if user is None:
             return ConversationHandler.END
-        
+
         if not self._is_admin(user.id):
             await self._reply_message(
                 update,
@@ -102,7 +102,7 @@ class AdminHandler(BaseConversationHandler):
         """Muestra lista de usuarios con paginación."""
         query = update.callback_query
         await self._safe_answer_query(query)
-        
+
         user = update.effective_user
         if user is None:
             return ADMIN_MENU
@@ -470,7 +470,9 @@ class AdminHandler(BaseConversationHandler):
         admin_id = user.id
 
         page = context.user_data.get("keys_page", 1) if context.user_data else 1
-        key_filter = context.user_data.get("keys_filter", "all") if context.user_data else "all"
+        key_filter = (
+            context.user_data.get("keys_filter", "all") if context.user_data else "all"
+        )
 
         try:
             result = await self._get_filtered_keys(admin_id, page, key_filter)
@@ -578,7 +580,9 @@ class AdminHandler(BaseConversationHandler):
         if user is None:
             return ADMIN_MENU
         admin_id = user.id
-        key_filter = context.user_data.get("keys_filter", "all") if context.user_data else "all"
+        key_filter = (
+            context.user_data.get("keys_filter", "all") if context.user_data else "all"
+        )
 
         try:
             result = await self._get_filtered_keys(admin_id, page, key_filter)
@@ -1161,7 +1165,11 @@ class AdminHandler(BaseConversationHandler):
         )
 
         keyboard = [
-            [InlineKeyboardButton("❌ Cancelar", callback_data="cancel_ticket_response")]
+            [
+                InlineKeyboardButton(
+                    "❌ Cancelar", callback_data="cancel_ticket_response"
+                )
+            ]
         ]
 
         await self._safe_edit_message(
@@ -1697,7 +1705,9 @@ def get_admin_callback_handlers(
         CallbackQueryHandler(
             handler.show_key_details, pattern=r"^admin_key_details_[a-f0-9\-]+$"
         ),
-        CallbackQueryHandler(handler.suspend_key, pattern=r"^admin_key_suspend_[a-f0-9\-]+$"),
+        CallbackQueryHandler(
+            handler.suspend_key, pattern=r"^admin_key_suspend_[a-f0-9\-]+$"
+        ),
         CallbackQueryHandler(
             handler.reactivate_key, pattern=r"^admin_key_reactivate_[a-f0-9\-]+$"
         ),
@@ -1800,10 +1810,12 @@ def get_admin_conversation_handler(
                     handler.suspend_key, pattern=r"^admin_key_suspend_[a-f0-9\-]+$"
                 ),
                 CallbackQueryHandler(
-                    handler.reactivate_key, pattern=r"^admin_key_reactivate_[a-f0-9\-]+$"
+                    handler.reactivate_key,
+                    pattern=r"^admin_key_reactivate_[a-f0-9\-]+$",
                 ),
                 CallbackQueryHandler(
-                    handler.confirm_delete_key, pattern=r"^admin_key_delete_[a-f0-9\-]+$"
+                    handler.confirm_delete_key,
+                    pattern=r"^admin_key_delete_[a-f0-9\-]+$",
                 ),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
@@ -1820,17 +1832,20 @@ def get_admin_conversation_handler(
             ],
             VIEWING_TICKETS: [
                 CallbackQueryHandler(
-                    handler.admin_view_ticket, pattern=r"^admin_view_ticket_[a-f0-9\-]+$"
+                    handler.admin_view_ticket,
+                    pattern=r"^admin_view_ticket_[a-f0-9\-]+$",
                 ),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             VIEWING_TICKET_DETAILS: [
                 CallbackQueryHandler(
-                    handler.admin_respond_prompt, pattern=r"^ticket_respond_[a-f0-9\-]+$"
+                    handler.admin_respond_prompt,
+                    pattern=r"^ticket_respond_[a-f0-9\-]+$",
                 ),
                 CallbackQueryHandler(
-                    handler.ticket_set_in_progress, pattern=r"^ticket_progress_[a-f0-9\-]+$"
+                    handler.ticket_set_in_progress,
+                    pattern=r"^ticket_progress_[a-f0-9\-]+$",
                 ),
                 CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),

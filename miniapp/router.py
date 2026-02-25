@@ -29,8 +29,8 @@ from infrastructure.persistence.postgresql.data_package_repository import (
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from miniapp.services.miniapp_auth import (
-    MiniAppAuthService,
     MiniAppAuthResult,
+    MiniAppAuthService,
     TelegramUser,
     get_miniapp_auth_service,
 )
@@ -46,7 +46,7 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 async def miniapp_entry(request: Request):
     """
     Página de entrada pública para la Mini App.
-    
+
     Esta página se carga sin autenticación para obtener initData
     del SDK de Telegram y redirigir al dashboard autenticado.
     """
@@ -63,7 +63,7 @@ async def miniapp_entry(request: Request):
 async def privacy_policy(request: Request):
     """
     Página pública de Política de Privacidad.
-    
+
     Requerido por Telegram para bots con Mini Apps.
     Esta página es accesible sin autenticación.
     """
@@ -84,7 +84,8 @@ class MiniAppContext:
 
 
 async def get_current_user(
-    request: Request, auth_service: MiniAppAuthService = Depends(get_miniapp_auth_service)
+    request: Request,
+    auth_service: MiniAppAuthService = Depends(get_miniapp_auth_service),
 ) -> MiniAppContext:
     """
     Dependencia para obtener el usuario actual desde initData.
@@ -138,7 +139,9 @@ async def dashboard(request: Request, ctx: MiniAppContext = Depends(get_current_
             remaining_bytes = max(0, total_limit_bytes - total_used_bytes)
 
             usage_percent = (
-                (total_used_bytes / total_limit_bytes * 100) if total_limit_bytes > 0 else 0
+                (total_used_bytes / total_limit_bytes * 100)
+                if total_limit_bytes > 0
+                else 0
             )
 
             return templates.TemplateResponse(
@@ -237,7 +240,9 @@ async def create_key_submit(
             current_user_id=ctx.user.id,
         )
 
-        logger.info(f"🔑 Nueva clave creada via Mini App: {new_key.id} para {ctx.user.id}")
+        logger.info(
+            f"🔑 Nueva clave creada via Mini App: {new_key.id} para {ctx.user.id}"
+        )
 
         return JSONResponse(
             status_code=200,
@@ -302,7 +307,9 @@ async def purchase_page(
 
 
 @router.get("/profile", response_class=HTMLResponse)
-async def profile_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+async def profile_page(
+    request: Request, ctx: MiniAppContext = Depends(get_current_user)
+):
     """Página de perfil del usuario."""
     try:
         async with get_session_context() as session:
@@ -330,18 +337,25 @@ async def profile_page(request: Request, ctx: MiniAppContext = Depends(get_curre
             if user:
                 profile_info = {
                     "created_at": user.created_at,
-                    "status": user.status.value if hasattr(user.status, 'value') else str(user.status),
+                    "status": (
+                        user.status.value
+                        if hasattr(user.status, "value")
+                        else str(user.status)
+                    ),
                     "max_keys": user.max_keys,
-                    "referral_code": getattr(user, 'referral_code', None),
-                    "total_referrals": getattr(user, 'total_referrals', 0),
+                    "referral_code": getattr(user, "referral_code", None),
+                    "total_referrals": getattr(user, "total_referrals", 0),
                 }
 
                 try:
                     from infrastructure.persistence.postgresql.transaction_repository import (
                         PostgresTransactionRepository,
                     )
+
                     tx_repo = PostgresTransactionRepository(session)
-                    transactions = await tx_repo.get_user_transactions(ctx.user.id, limit=10)
+                    transactions = await tx_repo.get_user_transactions(
+                        ctx.user.id, limit=10
+                    )
                 except Exception as tx_error:
                     logger.warning(f"Could not fetch transactions: {tx_error}")
 
@@ -362,7 +376,9 @@ async def profile_page(request: Request, ctx: MiniAppContext = Depends(get_curre
 
 
 @router.get("/settings", response_class=HTMLResponse)
-async def settings_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+async def settings_page(
+    request: Request, ctx: MiniAppContext = Depends(get_current_user)
+):
     """Página de ajustes del usuario."""
     return templates.TemplateResponse(
         "settings.html",
@@ -428,7 +444,9 @@ async def api_get_keys(ctx: MiniAppContext = Depends(get_current_user)):
                         "used_gb": round(k.used_gb, 2),
                         "limit_gb": round(k.data_limit_gb, 2),
                         "remaining_gb": round(k.remaining_bytes / (1024**3), 2),
-                        "created_at": k.created_at.isoformat() if k.created_at else None,
+                        "created_at": (
+                            k.created_at.isoformat() if k.created_at else None
+                        ),
                         "last_seen": (
                             k.last_seen_at.isoformat() if k.last_seen_at else None
                         ),

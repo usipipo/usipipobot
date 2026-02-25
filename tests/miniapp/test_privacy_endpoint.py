@@ -6,7 +6,8 @@ Version: 1.0.0
 """
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from infrastructure.api.server import create_app
 
 
@@ -15,8 +16,7 @@ async def client():
     """Cliente de pruebas para la API."""
     app = create_app()
     async with AsyncClient(
-        transport=ASGITransport(app=app), 
-        base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
 
@@ -89,7 +89,11 @@ async def test_privacy_endpoint_contains_contact_section(client):
     response = await client.get("/miniapp/privacy")
     assert response.status_code == 200
     content_lower = response.content.lower()
-    assert b"contacto" in content_lower or b"contact" in content_lower or b"soporte" in content_lower
+    assert (
+        b"contacto" in content_lower
+        or b"contact" in content_lower
+        or b"soporte" in content_lower
+    )
 
 
 @pytest.mark.asyncio
@@ -107,4 +111,6 @@ async def test_privacy_endpoint_contains_vpn_specific_info(client):
     response = await client.get("/miniapp/privacy")
     assert response.status_code == 200
     content_lower = response.content.lower()
-    assert b"vpn" in content_lower or b"clave" in content_lower or b"key" in content_lower
+    assert (
+        b"vpn" in content_lower or b"clave" in content_lower or b"key" in content_lower
+    )

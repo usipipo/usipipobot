@@ -66,9 +66,7 @@ class MiniAppAuthService:
             MiniAppAuthResult con el resultado de la validación
         """
         if not init_data:
-            return MiniAppAuthResult(
-                success=False, error="initData vacío"
-            )
+            return MiniAppAuthResult(success=False, error="initData vacío")
 
         try:
             parsed_data = parse_qs(init_data, keep_blank_values=True)
@@ -81,16 +79,12 @@ class MiniAppAuthService:
 
             auth_date_str = parsed_data.get("auth_date", [None])[0]
             if not auth_date_str:
-                return MiniAppAuthResult(
-                    success=False, error="auth_date no encontrado"
-                )
+                return MiniAppAuthResult(success=False, error="auth_date no encontrado")
 
             auth_date = int(auth_date_str)
 
             if not self._is_auth_fresh(auth_date):
-                return MiniAppAuthResult(
-                    success=False, error="Sesión expirada"
-                )
+                return MiniAppAuthResult(success=False, error="Sesión expirada")
 
             if not self._verify_hash(parsed_data, hash_value):
                 return MiniAppAuthResult(

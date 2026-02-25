@@ -24,7 +24,7 @@ class WireGuardClient:
         self.clients_dir = self.base_path / "clients"
         self.default_quota = 10 * 1024 * 1024 * 1024
         self._permissions_checked = False
-        
+
         # Cache for get_usage results to prevent race conditions
         self._usage_cache: Optional[Tuple[List[Dict], datetime]] = None
         self._cache_ttl = timedelta(seconds=10)  # Cache for 10 seconds
@@ -32,10 +32,12 @@ class WireGuardClient:
 
         os.makedirs(self.clients_dir, exist_ok=True)
 
-    async def _run_cmd(self, cmd: str, require_admin: bool = False, retries: int = 2) -> str:
+    async def _run_cmd(
+        self, cmd: str, require_admin: bool = False, retries: int = 2
+    ) -> str:
         """
         Ejecuta comandos de WireGuard con reintentos para errores transitorios.
-        
+
         Uses synchronous subprocess.run wrapped in asyncio.to_thread for compatibility
         with all event loop implementations (including uvloop).
 
@@ -44,16 +46,12 @@ class WireGuardClient:
             require_admin: Si True, verifica permisos antes de ejecutar
             retries: Número de reintentos para errores transitorios
         """
+
         def run_sync() -> str:
-            result = subprocess.run(
-                cmd,
-                shell=True,
-                capture_output=True,
-                text=True
-            )
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
             if result.returncode != 0:
                 error_msg = result.stderr.strip() or f"Exit code: {result.returncode}"
-                
+
                 if "Operation not permitted" in error_msg:
                     raise PermissionError(
                         "WireGuard requiere CAP_NET_ADMIN. "
@@ -61,13 +59,13 @@ class WireGuardClient:
                     )
                 raise Exception(f"Error ejecutando comando WireGuard: {error_msg}")
             return result.stdout.strip()
-        
+
         last_error = None
-        
+
         for attempt in range(retries + 1):
             try:
                 return await asyncio.to_thread(run_sync)
-                
+
             except PermissionError:
                 raise
             except Exception as e:
@@ -78,7 +76,7 @@ class WireGuardClient:
                 if attempt < retries:
                     await asyncio.sleep(0.5 * (attempt + 1))
                     continue
-        
+
         raise last_error or Exception("Error desconocido ejecutando comando WireGuard")
 
     async def _check_permissions(self) -> bool:
@@ -238,7 +236,9 @@ PersistentKeepalive = 15
         """
         try:
             if not self.conf_path.exists():
-                logger.warning(f"Archivo de configuración no encontrado: {self.conf_path}")
+                logger.warning(
+                    f"Archivo de configuración no encontrado: {self.conf_path}"
+                )
                 return {"transfer_total": 0}
 
             content = self.conf_path.read_text()
@@ -270,7 +270,7 @@ PersistentKeepalive = 15
         except Exception as e:
             logger.error(
                 f"Error obteniendo métricas específicas para {client_name}: {e}",
-                error=e
+                error=e,
             )
             return {"transfer_total": 0}
 
@@ -282,7 +282,7 @@ PersistentKeepalive = 15
                 if datetime.now() - cached_time < self._cache_ttl:
                     logger.debug("Returning cached WireGuard usage metrics")
                     return cached_data
-            
+
             try:
                 output = await self._run_cmd(f"wg show {self.interface} dump")
                 lines = output.split("\n")[1:]
@@ -299,10 +299,12 @@ PersistentKeepalive = 15
                                 "total": int(cols[5]) + int(cols[6]),
                             }
                         )
-                
+
                 self._usage_cache = (usage, datetime.now())
                 return usage
             except Exception as e:
-                error_msg = str(e) if str(e) else repr(e) or "Unknown error (empty exception)"
+                error_msg = (
+                    str(e) if str(e) else repr(e) or "Unknown error (empty exception)"
+                )
                 logger.error(f"Error obteniendo métricas WG: {error_msg}", error=e)
                 return []

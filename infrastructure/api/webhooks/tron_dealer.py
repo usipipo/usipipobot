@@ -1,14 +1,14 @@
 import json
-from datetime import datetime, timezone
-from fastapi import APIRouter, Request, HTTPException, Header, Depends
-from pydantic import BaseModel, Field
-from typing import Optional
 import uuid
+from datetime import datetime, timezone
+from typing import Optional
 
-from application.services.webhook_security_service import WebhookSecurityService
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from pydantic import BaseModel, Field
+
 from application.services.crypto_payment_service import CryptoPaymentService
+from application.services.webhook_security_service import WebhookSecurityService
 from utils.logger import logger
-
 
 router = APIRouter(tags=["webhooks"])
 
@@ -26,7 +26,9 @@ _security_service_instance: Optional[WebhookSecurityService] = None
 _payment_service_instance: Optional[CryptoPaymentService] = None
 
 
-def set_services(security_service: WebhookSecurityService, payment_service: CryptoPaymentService):
+def set_services(
+    security_service: WebhookSecurityService, payment_service: CryptoPaymentService
+):
     global _security_service_instance, _payment_service_instance
     _security_service_instance = security_service
     _payment_service_instance = payment_service
@@ -52,7 +54,7 @@ async def handle_tron_dealer_webhook(
     x_timestamp: Optional[str] = Header(None, alias="X-Timestamp"),
     x_nonce: Optional[str] = Header(None, alias="X-Nonce"),
     security: WebhookSecurityService = Depends(get_security_service),
-    payment: CryptoPaymentService = Depends(get_payment_service)
+    payment: CryptoPaymentService = Depends(get_payment_service),
 ):
     request_id = str(uuid.uuid4())[:8]
     client_ip = security.extract_client_ip(dict(request.headers)) or "unknown"
@@ -63,7 +65,9 @@ async def handle_tron_dealer_webhook(
 
     if x_signature:
         if not security.verify_hmac_signature(raw_body, x_signature, x_timestamp):
-            logger.warning(f"[{request_id}] Invalid HMAC signature from IP: {client_ip}")
+            logger.warning(
+                f"[{request_id}] Invalid HMAC signature from IP: {client_ip}"
+            )
             raise HTTPException(status_code=401, detail="Invalid signature")
 
     if x_timestamp:
@@ -79,8 +83,7 @@ async def handle_tron_dealer_webhook(
         raise HTTPException(status_code=400, detail=error)
 
     is_suspicious, reason = security.is_suspicious_request(
-        payload.model_dump(),
-        dict(request.headers)
+        payload.model_dump(), dict(request.headers)
     )
     if is_suspicious:
         logger.warning(f"[{request_id}] Suspicious request: {reason}")
@@ -97,7 +100,7 @@ async def handle_tron_dealer_webhook(
             amount=payload.amount,
             tx_hash=payload.tx_hash,
             token_symbol=payload.token_symbol,
-            raw_payload=payload.model_dump()
+            raw_payload=payload.model_dump(),
         )
 
         if transaction:
@@ -108,22 +111,19 @@ async def handle_tron_dealer_webhook(
             return {
                 "status": "success",
                 "transaction_id": str(transaction.id),
-                "request_id": request_id
+                "request_id": request_id,
             }
         else:
             logger.error(f"[{request_id}] Failed to process transaction")
             return {
                 "status": "error",
                 "message": "Transaction processing failed",
-                "request_id": request_id
+                "request_id": request_id,
             }
 
     except Exception as e:
         logger.error(f"[{request_id}] Error processing webhook: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Internal server error"
-        )
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.get("/tron-dealer/health")
@@ -131,5 +131,5 @@ async def webhook_health():
     return {
         "status": "healthy",
         "service": "tron-dealer-webhook",
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
