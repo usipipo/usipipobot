@@ -1,0 +1,361 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - uSipipo VPN{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        text-align: center;
+        padding: 24px 0;
+        margin-bottom: 20px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 3px solid var(--neon-cyan);
+        box-shadow: var(--glow-cyan);
+        object-fit: cover;
+        margin-bottom: 16px;
+    }
+
+    .profile-avatar-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        font-weight: 700;
+        color: var(--bg-void);
+        margin: 0 auto 16px;
+        border: 3px solid var(--neon-cyan);
+        box-shadow: var(--glow-cyan);
+    }
+
+    .profile-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .profile-username {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .profile-id {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-family: monospace;
+    }
+
+    .premium-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--neon-magenta));
+        color: var(--bg-void);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 8px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .stat-icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--neon-cyan);
+        text-shadow: var(--glow-cyan);
+    }
+
+    .stat-label {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 4px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .section-icon {
+        font-size: 18px;
+    }
+
+    .section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .transaction-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .transaction-item {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .transaction-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .transaction-icon.purchase {
+        background: rgba(0, 240, 255, 0.1);
+        border: 1px solid var(--neon-cyan);
+    }
+
+    .transaction-icon.bonus {
+        background: rgba(0, 255, 65, 0.1);
+        border: 1px solid var(--terminal-green);
+    }
+
+    .transaction-icon.referral {
+        background: rgba(255, 0, 170, 0.1);
+        border: 1px solid var(--neon-magenta);
+    }
+
+    .transaction-content {
+        flex: 1;
+    }
+
+    .transaction-title {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .transaction-date {
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+
+    .transaction-amount {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .transaction-amount.positive {
+        color: var(--terminal-green);
+    }
+
+    .transaction-amount.negative {
+        color: var(--neon-magenta);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .info-value {
+        font-size: 13px;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--neon-cyan);
+        text-decoration: none;
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="/miniapp/" class="back-link">← Volver al Dashboard</a>
+
+<div class="profile-header">
+    {% if user.photo_url %}
+    <img src="{{ user.photo_url }}" alt="{{ user.first_name }}" class="profile-avatar">
+    {% else %}
+    <div class="profile-avatar-placeholder">
+        {{ user.first_name[0] if user.first_name else '?' }}
+    </div>
+    {% endif %}
+    
+    <div class="profile-name">{{ user.first_name }}</div>
+    {% if user.username %}
+    <div class="profile-username">@{{ user.username }}</div>
+    {% endif %}
+    <div class="profile-id">ID: {{ user.id }}</div>
+    
+    {% if user.is_premium %}
+    <div class="premium-badge">⭐ Premium</div>
+    {% endif %}
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">🔑</div>
+        <div class="stat-value">{{ stats.keys_count }}</div>
+        <div class="stat-label">Claves VPN</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value">{{ stats.total_used_gb }}<span style="font-size: 12px;">GB</span></div>
+        <div class="stat-label">Datos Usados</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">💎</div>
+        <div class="stat-value">{{ stats.remaining_gb }}<span style="font-size: 12px;">GB</span></div>
+        <div class="stat-label">Disponible</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-value">{{ stats.active_packages }}</div>
+        <div class="stat-label">Paquetes Activos</div>
+    </div>
+</div>
+
+{% if profile_info %}
+<div class="card">
+    <div class="section-header">
+        <span class="section-icon">📋</span>
+        <span class="section-title">Información de Cuenta</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Miembro desde</span>
+        <span class="info-value">{{ profile_info.created_at.strftime('%d/%m/%Y') if profile_info.created_at else 'N/A' }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Estado</span>
+        <span class="info-value">
+            <span class="badge badge-active">{{ profile_info.status|upper if profile_info.status else 'ACTIVO' }}</span>
+        </span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Máximo de claves</span>
+        <span class="info-value">{{ profile_info.max_keys }}</span>
+    </div>
+    {% if profile_info.referral_code %}
+    <div class="info-row">
+        <span class="info-label">Código de referido</span>
+        <span class="info-value" style="color: var(--neon-cyan); font-family: monospace;">{{ profile_info.referral_code }}</span>
+    </div>
+    <div class="info-row">
+        <span class="info-label">Referidos activos</span>
+        <span class="info-value">{{ profile_info.total_referrals }}</span>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="section-header">
+        <span class="section-icon">💳</span>
+        <span class="section-title">Historial de Transacciones</span>
+    </div>
+    
+    {% if transactions %}
+    <div class="transaction-list">
+        {% for tx in transactions %}
+        <div class="transaction-item">
+            <div class="transaction-icon {{ tx.transaction_type }}">
+                {% if tx.transaction_type == 'package_purchase' %}💎
+                {% elif tx.transaction_type == 'referral_bonus' %}🎁
+                {% elif tx.transaction_type == 'data_package' %}📦
+                {% else %}💳{% endif %}
+            </div>
+            <div class="transaction-content">
+                <div class="transaction-title">{{ tx.description }}</div>
+                <div class="transaction-date">{{ tx.created_at.strftime('%d/%m/%Y %H:%M') if tx.created_at else '' }}</div>
+            </div>
+            <div class="transaction-amount {% if tx.amount > 0 %}positive{% else %}negative{% endif %}">
+                {% if tx.amount > 0 %}+{% endif %}{{ tx.amount }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <p>No hay transacciones aún</p>
+        <p style="font-size: 12px; margin-top: 8px;">Las compras aparecerán aquí</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

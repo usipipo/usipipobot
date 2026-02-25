@@ -18,6 +18,7 @@ from fastapi.templating import Jinja2Templates
 
 from application.services.common.container import get_service
 from application.services.data_package_service import DataPackageService
+from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from config import settings
 from domain.entities.vpn_key import KeyType
@@ -295,6 +296,79 @@ async def purchase_page(
             "request": request,
             "user": ctx.user,
             "packages": packages,
+            "bot_username": settings.BOT_USERNAME,
+        },
+    )
+
+
+@router.get("/profile", response_class=HTMLResponse)
+async def profile_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+    """Página de perfil del usuario."""
+    try:
+        async with get_session_context() as session:
+            user_repo = PostgresUserRepository(session)
+            key_repo = PostgresKeyRepository(session)
+
+            user = await user_repo.get_by_id(ctx.user.id, ctx.user.id)
+            keys = await key_repo.get_by_user_id(ctx.user.id, ctx.user.id)
+
+            total_used_bytes = sum(k.used_bytes for k in keys if k.is_active)
+            total_limit_bytes = sum(k.data_limit_bytes for k in keys if k.is_active)
+            remaining_bytes = max(0, total_limit_bytes - total_used_bytes)
+
+            stats = {
+                "keys_count": len([k for k in keys if k.is_active]),
+                "total_used_gb": round(total_used_bytes / (1024**3), 2),
+                "total_limit_gb": round(total_limit_bytes / (1024**3), 2),
+                "remaining_gb": round(remaining_bytes / (1024**3), 2),
+                "active_packages": 0,
+            }
+
+            profile_info = None
+            transactions = []
+
+            if user:
+                profile_info = {
+                    "created_at": user.created_at,
+                    "status": user.status.value if hasattr(user.status, 'value') else str(user.status),
+                    "max_keys": user.max_keys,
+                    "referral_code": getattr(user, 'referral_code', None),
+                    "total_referrals": getattr(user, 'total_referrals', 0),
+                }
+
+                try:
+                    from infrastructure.persistence.postgresql.transaction_repository import (
+                        PostgresTransactionRepository,
+                    )
+                    tx_repo = PostgresTransactionRepository(session)
+                    transactions = await tx_repo.get_user_transactions(ctx.user.id, limit=10)
+                except Exception as tx_error:
+                    logger.warning(f"Could not fetch transactions: {tx_error}")
+
+            return templates.TemplateResponse(
+                "profile.html",
+                {
+                    "request": request,
+                    "user": ctx.user,
+                    "stats": stats,
+                    "profile_info": profile_info,
+                    "transactions": transactions,
+                    "bot_username": settings.BOT_USERNAME,
+                },
+            )
+    except Exception as e:
+        logger.error(f"Error en profile page: {e}")
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+
+@router.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+    """Página de ajustes del usuario."""
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "user": ctx.user,
             "bot_username": settings.BOT_USERNAME,
         },
     )
