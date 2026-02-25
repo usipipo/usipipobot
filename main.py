@@ -2,7 +2,6 @@
 Punto de entrada principal del bot uSipipo VPN Manager.
 
 Author: uSipipo Team
-Version: 2.1.0
 """
 
 import sys
@@ -22,6 +21,7 @@ from infrastructure.jobs.usage_sync import sync_vpn_usage_job
 from infrastructure.persistence.database import close_database, init_database
 from telegram_bot.handlers.handler_initializer import initialize_handlers
 from utils.logger import logger
+from version import __version__
 
 
 async def startup():
@@ -55,7 +55,7 @@ def run_api_server():
 
 def main():
     """Función principal del bot."""
-    logger.info("🚀 Iniciando uSipipo VPN Manager Bot...")
+    logger.info(f"🚀 Iniciando uSipipo VPN Manager v{__version__}...")
 
     if not settings.TELEGRAM_TOKEN:
         logger.error("❌ No se encontró el TELEGRAM_TOKEN en el archivo .env")

@@ -3,9 +3,9 @@ Configuración central de la aplicación uSipipo VPN Manager.
 Gestiona variables de entorno con validación estricta y valores seguros por defecto.
 
 Author: uSipipo Team
-Version: 3.0.0
-Last Updated: 2026-02-21
 """
+
+from version import __version__
 
 from pathlib import Path
 from typing import List, Optional
@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     # =========================================================================
     PROJECT_NAME: str = Field(
         default="uSipipo VPN Manager", description="Nombre del proyecto"
+    )
+
+    VERSION: str = Field(
+        default=__version__, description="Versión de la aplicación"
     )
 
     APP_ENV: str = Field(
