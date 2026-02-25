@@ -2,6 +2,7 @@ import asyncio
 import ipaddress
 import os
 import re
+import subprocess
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -31,37 +32,54 @@ class WireGuardClient:
 
         os.makedirs(self.clients_dir, exist_ok=True)
 
-    async def _run_cmd(self, cmd: str, require_admin: bool = False) -> str:
+    async def _run_cmd(self, cmd: str, require_admin: bool = False, retries: int = 2) -> str:
         """
-        Ejecuta comandos de WireGuard.
+        Ejecuta comandos de WireGuard con reintentos para errores transitorios.
+        
+        Uses synchronous subprocess.run wrapped in asyncio.to_thread for compatibility
+        with all event loop implementations (including uvloop).
 
         Args:
             cmd: Comando a ejecutar
             require_admin: Si True, verifica permisos antes de ejecutar
+            retries: Número de reintentos para errores transitorios
         """
-        process = await asyncio.create_subprocess_shell(
-            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-        )
-        stdout, stderr = await process.communicate()
-
-        if process.returncode != 0:
-            error_msg = stderr.decode().strip()
-
-            # Detectar error de permisos y dar mensaje útil
-            if "Operation not permitted" in error_msg:
-                logger.error(
-                    f"❌ Permisos insuficientes para WireGuard. "
-                    f"Ejecuta: sudo setcap cap_net_admin+ep /usr/bin/wg"
+        def run_sync() -> str:
+            result = subprocess.run(
+                cmd,
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            if result.returncode != 0:
+                error_msg = result.stderr.strip() or f"Exit code: {result.returncode}"
+                
+                if "Operation not permitted" in error_msg:
+                    raise PermissionError(
+                        "WireGuard requiere CAP_NET_ADMIN. "
+                        "Ejecuta: sudo setcap cap_net_admin+ep /usr/bin/wg"
+                    )
+                raise Exception(f"Error ejecutando comando WireGuard: {error_msg}")
+            return result.stdout.strip()
+        
+        last_error = None
+        
+        for attempt in range(retries + 1):
+            try:
+                return await asyncio.to_thread(run_sync)
+                
+            except PermissionError:
+                raise
+            except Exception as e:
+                last_error = e
+                logger.warning(
+                    f"Excepción en comando WG (intento {attempt + 1}): {type(e).__name__}: {e}"
                 )
-                raise PermissionError(
-                    "WireGuard requiere CAP_NET_ADMIN. "
-                    "Ejecuta: sudo setcap cap_net_admin+ep /usr/bin/wg"
-                )
-
-            logger.error(f"Comando fallido: {cmd} | Error: {error_msg}")
-            raise Exception(f"Error ejecutando comando WireGuard: {error_msg}")
-
-        return stdout.decode().strip()
+                if attempt < retries:
+                    await asyncio.sleep(0.5 * (attempt + 1))
+                    continue
+        
+        raise last_error or Exception("Error desconocido ejecutando comando WireGuard")
 
     async def _check_permissions(self) -> bool:
         """Verifica si tenemos permisos para gestionar WireGuard."""
@@ -219,28 +237,25 @@ PersistentKeepalive = 15
         en el archivo de configuración basándose en el client_name.
         """
         try:
-            # 1. Leer configuración para encontrar la Public Key asociada al nombre
             if not self.conf_path.exists():
+                logger.warning(f"Archivo de configuración no encontrado: {self.conf_path}")
                 return {"transfer_total": 0}
 
             content = self.conf_path.read_text()
 
-            # Usamos el mismo patrón regex que en delete_peer para hallar la key
             pk_pattern = (
                 rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
             )
             match = re.search(pk_pattern, content, flags=re.DOTALL)
 
             if not match:
-                # El cliente no está en la configuración
+                logger.debug(f"Cliente {client_name} no encontrado en configuración")
                 return {"transfer_total": 0}
 
             target_pub_key = match.group(1).strip()
 
-            # 2. Obtener uso general de la interfaz
             all_usage = await self.get_usage()
 
-            # 3. Buscar la coincidencia por Public Key
             for peer in all_usage:
                 if peer["public_key"] == target_pub_key:
                     return {
@@ -249,25 +264,25 @@ PersistentKeepalive = 15
                         "transfer_total": peer["total"],
                     }
 
+            logger.debug(f"Public key {target_pub_key[:20]}... no encontrada en uso")
             return {"transfer_total": 0}
 
         except Exception as e:
             logger.error(
-                f"Error obteniendo métricas específicas para {client_name}: {e}"
+                f"Error obteniendo métricas específicas para {client_name}: {e}",
+                error=e
             )
             return {"transfer_total": 0}
 
     async def get_usage(self) -> List[Dict]:
         """Get WireGuard usage metrics with caching to prevent race conditions."""
         async with self._cache_lock:
-            # Check cache
             if self._usage_cache is not None:
                 cached_data, cached_time = self._usage_cache
                 if datetime.now() - cached_time < self._cache_ttl:
                     logger.debug("Returning cached WireGuard usage metrics")
                     return cached_data
             
-            # Cache miss or expired - fetch fresh data
             try:
                 output = await self._run_cmd(f"wg show {self.interface} dump")
                 lines = output.split("\n")[1:]
@@ -285,10 +300,9 @@ PersistentKeepalive = 15
                             }
                         )
                 
-                # Update cache
                 self._usage_cache = (usage, datetime.now())
                 return usage
             except Exception as e:
                 error_msg = str(e) if str(e) else repr(e) or "Unknown error (empty exception)"
-                logger.error(f"Error obteniendo métricas WG: {error_msg}", exc_info=True)
+                logger.error(f"Error obteniendo métricas WG: {error_msg}", error=e)
                 return []
