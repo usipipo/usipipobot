@@ -52,7 +52,7 @@ punq==0.7.0
 loguru==0.7.3
 qrcode[pil]==8.2
 pillow==12.1.1
-cachetools==6.2.4
+cachetools==7.0.1
 python-dateutil==2.8.2
 pytz==2025.2
 
