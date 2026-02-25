@@ -7,22 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- **CRITICAL**: WireGuard metrics error now shows detailed error message instead of empty string (#178)
-  - Improved error handling in `WireGuardClient.get_usage()` to capture actual error messages
-  - Added `exc_info=True` to logger for full stack trace
-- Added caching with TTL (10 seconds) to `WireGuardClient.get_usage()` to prevent race conditions during sync
-  - Implemented async locking to prevent concurrent `wg show` commands
-  - Cache reduces unnecessary WireGuard API calls during sync job
-- Added favicon to Mini App web to prevent 404 errors (#178)
-  - Created SVG favicon in `miniapp/static/favicon.svg`
-  - Added `/favicon.ico` endpoint in FastAPI server
+## [3.0.0] - 2026-02-25
 
 ### Added
-- Comprehensive test suite for WireGuard client with 7 new test cases
-  - Tests for caching functionality
-  - Tests for error handling
-  - Tests for edge cases (empty exceptions, invalid data)
+- **Telegram Mini App Web** - Complete web interface with cyberpunk design
+  - Dashboard with data usage visualization
+  - Key management interface (create, rename, download, toggle)
+  - Purchase flow for data packages
+  - Authentication via Telegram Web App SDK
+  - FAB button with quick actions
+- **Tron Dealer Webhook API** - Cryptocurrency payment support
+  - Secure webhook endpoint with layered security
+  - Rate limiting and IP validation
+  - HMAC signature verification
+  - Transaction tracking and status management
+- **DuckDNS + Caddy Integration** - Replaced ngrok for tunneling
+  - Dynamic DNS updates
+  - Automatic HTTPS with Caddy
+  - No more ngrok tunnel conflicts
+- **Ticket System** - User support tickets
+  - Create tickets from bot
+  - Admin ticket management
+  - Status tracking and responses
+- **Key Slots Purchase** - Buy additional VPN key slots with Telegram Stars
+
+### Changed
+- Removed VIP logic from services and UI
+- Removed balance_stars and total_deposited fields
+- Refactored admin panel with improved UX
+- Enhanced operations flow with credits and shop redesign
+- Improved user profile with history view
+
+### Fixed
+- **SECURITY**: Patched privilege escalation vulnerability in admin panel
+- WireGuard subprocess NotImplementedError during sync job (#183)
+- WireGuard metrics error showing empty string (#178)
+- FAB button CSS visual issues in Mini App
+- MarkdownV2 escaping in ticket handlers
+- Missing admin_tickets callback handler
+- VPN key creation blocked by ticket handler (#140)
+- Multiple duplicate handler fixes
+- Mobile design and button bugs (#152)
+- Various LSP/mypy type errors (449 fixes)
+
+### Security
+- Added webhook security service with multiple validation layers
+- Implemented rate limiting middleware
+- Removed hardcoded webhook secrets from documentation
+
+### Removed
+- Obsolete docs/plans/ directory from version control
+- ngrok integration (replaced with DuckDNS + Caddy)
+- Unused GROQ variables from configuration
+- Obsolete game, referral announcer, broadcast features
 
 ## [2.1.0] - 2026-02-24
 
