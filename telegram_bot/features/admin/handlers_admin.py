@@ -1303,6 +1303,7 @@ def get_admin_callback_handlers(
         CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
         CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
         CallbackQueryHandler(handler.show_dashboard, pattern="^admin_server_status$"),
+        CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
         CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
         CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
         CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
