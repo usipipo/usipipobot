@@ -1293,9 +1293,11 @@ def get_admin_handlers(admin_service: AdminService):
     ]
 
 
-def get_admin_callback_handlers(admin_service: AdminService):
+def get_admin_callback_handlers(
+    admin_service: AdminService, ticket_service: TicketService | None = None
+):
     """Retorna los handlers de callbacks para administración."""
-    handler = AdminHandler(admin_service)
+    handler = AdminHandler(admin_service, ticket_service)
 
     return [
         CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),

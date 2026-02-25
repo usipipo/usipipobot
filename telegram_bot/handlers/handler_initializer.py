@@ -66,7 +66,7 @@ def _get_admin_handlers(container) -> List[BaseHandler]:
     ticket_service = container.resolve(TicketService)
     handlers = []
     handlers.extend(get_admin_handlers(admin_service))
-    handlers.extend(get_admin_callback_handlers(admin_service))
+    handlers.extend(get_admin_callback_handlers(admin_service, ticket_service))
     handlers.append(get_admin_conversation_handler(admin_service, ticket_service))
     logger.info("✅ Handlers de administracion configurados")
     return handlers
