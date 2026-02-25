@@ -114,7 +114,7 @@ class AdminHandler(BaseConversationHandler):
 
         try:
             result = await self.service.get_users_paginated(
-                page=page, per_page=USERS_PER_PAGE
+                page=page, per_page=USERS_PER_PAGE, current_user_id=admin_id
             )
             users = result.get("users", [])
             total_pages = result.get("total_pages", 1)
@@ -176,7 +176,7 @@ class AdminHandler(BaseConversationHandler):
 
         try:
             result = await self.service.get_users_paginated(
-                page=page, per_page=USERS_PER_PAGE
+                page=page, per_page=USERS_PER_PAGE, current_user_id=admin_id
             )
             users = result.get("users", [])
             total_pages = result.get("total_pages", 1)
