@@ -1331,7 +1331,6 @@ def get_admin_callback_handlers(admin_service: AdminService):
             handler.execute_delete_key, pattern=r"^confirm_delete_key_[a-f0-9\-]+$"
         ),
         CallbackQueryHandler(handler.cancel_key_action, pattern=r"^cancel_delete_key$"),
-        CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
         CallbackQueryHandler(handler.show_settings, pattern="^admin_settings$"),
         CallbackQueryHandler(handler.show_maintenance, pattern="^admin_maintenance$"),
         CallbackQueryHandler(

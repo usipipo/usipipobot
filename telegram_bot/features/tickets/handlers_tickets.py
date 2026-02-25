@@ -480,7 +480,6 @@ def get_ticket_callback_handlers(ticket_service: TicketService):
     return [
         CallbackQueryHandler(handler.list_my_tickets, pattern="^list_my_tickets$"),
         CallbackQueryHandler(handler.view_ticket, pattern=r"^view_ticket_[a-f0-9\-]+$"),
-        CallbackQueryHandler(handler.admin_list_tickets, pattern="^admin_tickets$"),
         CallbackQueryHandler(
             handler.admin_view_ticket, pattern=r"^admin_view_ticket_[a-f0-9\-]+$"
         ),
