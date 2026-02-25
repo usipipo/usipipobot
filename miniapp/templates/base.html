@@ -54,7 +54,7 @@
             max-width: 100%;
             min-height: 100vh;
             padding: 16px;
-            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            padding-bottom: calc(70px + env(safe-area-inset-bottom));
         }
 
         .header {
@@ -342,8 +342,8 @@
             border-top: 1px solid var(--border-subtle);
             display: flex;
             justify-content: space-around;
-            padding: 12px 0;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            padding: 8px 0;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
             z-index: 100;
         }
 
@@ -351,12 +351,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
             color: var(--text-muted);
             text-decoration: none;
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
             transition: color 0.3s ease;
+            padding: 4px 8px;
         }
 
         .nav-item.active, .nav-item:hover {
@@ -364,12 +365,12 @@
         }
 
         .nav-icon {
-            font-size: 20px;
+            font-size: 18px;
         }
 
         .fab {
             position: fixed;
-            bottom: calc(80px + env(safe-area-inset-bottom));
+            bottom: calc(70px + env(safe-area-inset-bottom));
             right: 20px;
             width: 56px;
             height: 56px;
@@ -538,149 +539,14 @@
             }
         }
 
-        /* Profile Dropdown Styles */
-        .header {
-            cursor: pointer;
-            position: relative;
-        }
 
-        .header:hover .user-avatar {
-            box-shadow: 0 0 30px rgba(0, 240, 255, 0.8);
-        }
-
-        .header-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            margin-top: 8px;
-            padding: 8px 0;
-            display: none;
-            z-index: 1000;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-            animation: dropdownFade 0.2s ease;
-        }
-
-        .header-dropdown.show {
-            display: block;
-        }
-
-        @keyframes dropdownFade {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            color: var(--text-primary);
-            text-decoration: none;
-            transition: all 0.2s ease;
-            border-left: 3px solid transparent;
-        }
-
-        .dropdown-item:hover {
-            background: rgba(0, 240, 255, 0.05);
-            border-left-color: var(--neon-cyan);
-        }
-
-        .dropdown-item:active {
-            background: rgba(0, 240, 255, 0.1);
-        }
-
-        .dropdown-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .dropdown-icon.profile {
-            background: rgba(0, 240, 255, 0.1);
-            border: 1px solid var(--neon-cyan);
-        }
-
-        .dropdown-icon.settings {
-            background: rgba(255, 0, 170, 0.1);
-            border: 1px solid var(--neon-magenta);
-        }
-
-        .dropdown-icon.privacy {
-            background: rgba(0, 255, 65, 0.1);
-            border: 1px solid var(--terminal-green);
-        }
-
-        .dropdown-text {
-            flex: 1;
-        }
-
-        .dropdown-label {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .dropdown-hint {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .dropdown-arrow {
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background: var(--border-subtle);
-            margin: 8px 0;
-        }
-
-        .dropdown-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 999;
-            display: none;
-        }
-
-        .dropdown-overlay.show {
-            display: block;
-        }
-
-        .chevron-indicator {
-            margin-left: auto;
-            color: var(--text-muted);
-            font-size: 10px;
-            transition: transform 0.2s ease;
-        }
-
-        .header.expanded .chevron-indicator {
-            transform: rotate(180deg);
-        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <div class="app-container">
         {% block header %}
-        <div class="header" id="profileHeader" onclick="toggleDropdown()">
+        <div class="header">
             {% if user.photo_url %}
             <img src="{{ user.photo_url }}" alt="{{ user.first_name }}" class="user-avatar">
             {% else %}
@@ -695,39 +561,6 @@
                     <span>Conectado</span>
                 </div>
             </div>
-            <span class="chevron-indicator">▼</span>
-        </div>
-        
-        <!-- Dropdown Overlay -->
-        <div class="dropdown-overlay" id="dropdownOverlay" onclick="toggleDropdown()"></div>
-        
-        <!-- Profile Dropdown Menu -->
-        <div class="header-dropdown" id="headerDropdown">
-            <a href="/miniapp/profile" class="dropdown-item">
-                <div class="dropdown-icon profile">👤</div>
-                <div class="dropdown-text">
-                    <div class="dropdown-label">Mi Perfil</div>
-                    <div class="dropdown-hint">Ver información y estadísticas</div>
-                </div>
-                <span class="dropdown-arrow">›</span>
-            </a>
-            <a href="/miniapp/settings" class="dropdown-item">
-                <div class="dropdown-icon settings">⚙️</div>
-                <div class="dropdown-text">
-                    <div class="dropdown-label">Ajustes</div>
-                    <div class="dropdown-hint">Preferencias y soporte</div>
-                </div>
-                <span class="dropdown-arrow">›</span>
-            </a>
-            <div class="dropdown-divider"></div>
-            <a href="/miniapp/privacy" class="dropdown-item">
-                <div class="dropdown-icon privacy">📜</div>
-                <div class="dropdown-text">
-                    <div class="dropdown-label">Política de Privacidad</div>
-                    <div class="dropdown-hint">Términos y condiciones</div>
-                </div>
-                <span class="dropdown-arrow">›</span>
-            </a>
         </div>
         {% endblock %}
 
@@ -748,39 +581,18 @@
             <span class="nav-icon">💎</span>
             <span>Comprar</span>
         </a>
+        <a href="/miniapp/profile" class="nav-item {% if '/profile' in request.url.path %}active{% endif %}">
+            <span class="nav-icon">👤</span>
+            <span>Perfil</span>
+        </a>
+        <a href="/miniapp/settings" class="nav-item {% if '/settings' in request.url.path %}active{% endif %}">
+            <span class="nav-icon">⚙️</span>
+            <span>Ajustes</span>
+        </a>
     </nav>
     {% endblock %}
 
     <script src="/miniapp/static/js/app.js"></script>
-    <script>
-        function toggleDropdown() {
-            const header = document.getElementById('profileHeader');
-            const dropdown = document.getElementById('headerDropdown');
-            const overlay = document.getElementById('dropdownOverlay');
-            
-            const isExpanded = dropdown.classList.contains('show');
-            
-            if (isExpanded) {
-                dropdown.classList.remove('show');
-                overlay.classList.remove('show');
-                header.classList.remove('expanded');
-            } else {
-                dropdown.classList.add('show');
-                overlay.classList.add('show');
-                header.classList.add('expanded');
-            }
-        }
-        
-        // Close dropdown on escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                const dropdown = document.getElementById('headerDropdown');
-                if (dropdown.classList.contains('show')) {
-                    toggleDropdown();
-                }
-            }
-        });
-    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
