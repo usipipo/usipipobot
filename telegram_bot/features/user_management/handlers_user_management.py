@@ -189,14 +189,7 @@ class UserManagementHandler(BaseHandler):
             await ops_handler.operations_menu(update, _context)
 
         elif callback_data == "show_usage":
-            from application.services.common.container import get_container
-            from application.services.data_package_service import DataPackageService
-            from telegram_bot.features.buy_gb.handlers_buy_gb import BuyGbHandler
-
-            container = get_container()
-            data_package_service = container.resolve(DataPackageService)
-            buy_gb_handler = BuyGbHandler(data_package_service)
-            await buy_gb_handler.data_handler(update, _context)
+            await self.info_handler(update, _context)
 
         elif callback_data == "help":
             await query.edit_message_text(

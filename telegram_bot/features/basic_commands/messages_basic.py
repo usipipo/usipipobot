@@ -16,5 +16,5 @@ class BasicMessages:
         "/keys - Ver mis claves\n"
         "/newkey - Crear nueva clave\n"
         "/operaciones - Menu de operaciones\n"
-        "/data - Ver consumo\n"
+        "/info - Ver mi perfil y consumo\n"
     )
