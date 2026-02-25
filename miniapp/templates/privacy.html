@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Política de Privacidad - uSipipo VPN</title>
+    
+    <style>
+        :root {
+            --bg-void: #0a0a0f;
+            --bg-surface: #12121a;
+            --bg-card: #1a1a24;
+            --neon-cyan: #00f0ff;
+            --neon-magenta: #ff00aa;
+            --terminal-green: #00ff41;
+            --amber: #ff9500;
+            --text-primary: #e0e0e0;
+            --text-secondary: #8a8a9a;
+            --text-muted: #5a5a6a;
+            --border-subtle: rgba(0, 240, 255, 0.1);
+            --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            background: var(--bg-void);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+            font-size: 14px;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        body {
+            background: 
+                radial-gradient(ellipse at 20% 0%, rgba(0, 240, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, rgba(255, 0, 170, 0.03) 0%, transparent 50%),
+                var(--bg-void);
+            min-height: 100vh;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        .app-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 16px;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
+
+        .header {
+            text-align: center;
+            padding: 24px 0;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            text-shadow: var(--glow-cyan);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .last-updated {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            opacity: 0.5;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--neon-cyan);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '>';
+            color: var(--terminal-green);
+        }
+
+        .section-content {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .section-content p {
+            margin-bottom: 12px;
+        }
+
+        .section-content ul {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .section-content li {
+            margin-bottom: 8px;
+        }
+
+        .section-content a {
+            color: var(--neon-cyan);
+            text-decoration: none;
+        }
+
+        .section-content a:hover {
+            text-decoration: underline;
+        }
+
+        .highlight-box {
+            background: rgba(0, 240, 255, 0.05);
+            border-left: 3px solid var(--neon-cyan);
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box {
+            background: rgba(255, 149, 0, 0.05);
+            border-left: 3px solid var(--amber);
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box strong {
+            color: var(--amber);
+        }
+
+        .contact-card {
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.1), rgba(255, 0, 170, 0.1));
+            border: 1px solid var(--neon-cyan);
+            text-align: center;
+        }
+
+        .contact-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .contact-info {
+            color: var(--neon-cyan);
+            font-size: 13px;
+        }
+
+        .rights-list {
+            display: grid;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .right-item {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .right-icon {
+            color: var(--terminal-green);
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .right-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .right-text strong {
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: center;
+            padding: 12px 0;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 10px;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+        }
+
+        .nav-item:hover {
+            color: var(--neon-cyan);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .toc {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+            display: grid;
+            gap: 6px;
+        }
+
+        .toc-list a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toc-list a:hover {
+            color: var(--neon-cyan);
+        }
+
+        .toc-list a::before {
+            content: '>';
+            color: var(--terminal-green);
+            font-size: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 22px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="logo">🔐</div>
+            <h1 class="title">Política de Privacidad</h1>
+            <p class="subtitle">uSipipo VPN - Mini App de Telegram</p>
+            <p class="last-updated">Última actualización: 25 de febrero de 2026</p>
+        </header>
+
+        <nav class="toc">
+            <div class="toc-title">Contenido</div>
+            <ul class="toc-list">
+                <li><a href="#terminos">Términos y Definiciones</a></li>
+                <li><a href="#disposiciones">Disposiciones Generales</a></li>
+                <li><a href="#descargos">Descargos de Responsabilidad</a></li>
+                <li><a href="#recopilacion">Recopilación de Datos</a></li>
+                <li><a href="#procesamiento">Procesamiento de Datos</a></li>
+                <li><a href="#proteccion">Protección de Datos</a></li>
+                <li><a href="#derechos">Derechos del Usuario</a></li>
+                <li><a href="#california">Derechos CCPA (California)</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+        </nav>
+
+        <section class="card" id="terminos">
+            <h2 class="section-title">1. Términos y Definiciones</h2>
+            <div class="section-content">
+                <ul>
+                    <li><strong>uSipipo</strong> – La entidad que opera y mantiene el Servicio de Terceros.</li>
+                    <li><strong>Telegram</strong> – Telegram Messenger Inc.</li>
+                    <li><strong>Plataforma</strong> – La Plataforma de Bots de Telegram.</li>
+                    <li><strong>Servicio de Terceros</strong> – El bot y mini app de uSipipo, disponible para usuarios en la Plataforma.</li>
+                    <li><strong>Usuario</strong> – La persona que accede al Servicio de Terceros a través de su cuenta en la Plataforma (también "usted").</li>
+                    <li><strong>Política</strong> – Este documento, que regula la relación entre el Servicio de Terceros y el Usuario.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="card" id="disposiciones">
+            <h2 class="section-title">2. Disposiciones Generales</h2>
+            <div class="section-content">
+                <p>Esta Política es un documento estándar que aplica a todos los bots y mini apps de terceros en la Plataforma por defecto.</p>
+                <p>Esta Política regula únicamente la relación entre uSipipo y el Usuario. No puede ni regula la relación entre Telegram y sus usuarios, ni reemplaza la <a href="https://telegram.org/privacy" target="_blank">Política de Privacidad de Telegram</a>.</p>
+                <div class="highlight-box">
+                    uSipipo sigue todas las directrices de privacidad establecidas por las plataformas que distribuyen las aplicaciones de Telegram, incluyendo las <a href="https://developer.apple.com/app-store/review/guidelines/#legal" target="_blank">Directrices de Revisión de Aplicaciones de Apple</a> y las <a href="https://support.google.com/googleplay/android-developer/topic/9877467" target="_blank">Políticas de Desarrolladores de Google</a>.
+                </div>
+                <p>Su acceso continuado y uso del Servicio de Terceros constituirá su aceptación de esta Política, los <a href="https://telegram.org/tos/bots" target="_blank">Términos de Bot de Telegram</a> y los <a href="https://telegram.org/tos/mini-apps" target="_blank">Términos de Mini App de Telegram</a>.</p>
+            </div>
+        </section>
+
+        <section class="card" id="descargos">
+            <h2 class="section-title">3. Descargos de Responsabilidad</h2>
+            <div class="section-content">
+                <p>El Servicio de Terceros es una aplicación de terceros independiente que no es mantenida, respaldada ni afiliada con Telegram.</p>
+                <p>Usted reconoce que ha leído, comprendido y aceptado los <a href="https://telegram.org/tos/bots" target="_blank">Términos de Bot de Telegram</a> y los <a href="https://telegram.org/tos/mini-apps" target="_blank">Términos de Mini App de Telegram</a>.</p>
+                <p>Usted reconoce y garantiza que posee todos los derechos y permisos necesarios para usar el Servicio de Terceros en cumplimiento con las leyes locales aplicables y obligaciones legales, incluyendo sin limitación restricciones de edad.</p>
+            </div>
+        </section>
+
+        <section class="card" id="recopilacion">
+            <h2 class="section-title">4. Recopilación de Datos Personales</h2>
+            <div class="section-content">
+                <p><strong>Datos proporcionados por Telegram:</strong></p>
+                <p>Las formas en que la Plataforma permite nativamente que el Servicio de Terceros acceda a cierta información limitada del Usuario se describen en la <a href="https://telegram.org/privacy#6-bot-messages" target="_blank">Política de Privacidad de Telegram</a> y los <a href="https://telegram.org/tos/mini-apps#4-privacy" target="_blank">Términos de Mini App</a>.</p>
+                
+                <p><strong>Datos que recopilamos directamente:</strong></p>
+                <ul>
+                    <li><strong>ID de Telegram:</strong> Identificador único de su cuenta para gestionar su servicio VPN.</li>
+                    <li><strong>Nombre de usuario:</strong> Su @username de Telegram (si está disponible).</li>
+                    <li><strong>Nombre:</strong> Su primer nombre de Telegram.</li>
+                    <li><strong>Foto de perfil:</strong> URL de su foto de perfil de Telegram (para personalización visual).</li>
+                    <li><strong>Claves VPN:</strong> Claves WireGuard/Outline generadas para su servicio.</li>
+                    <li><strong>Consumo de datos:</strong> Bytes utilizados y límites de su plan.</li>
+                    <li><strong>Historial de transacciones:</strong> Pagos realizados con Telegram Stars.</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>Nota importante:</strong> No almacenamos su número de teléfono, contactos, mensajes u otros datos personales de Telegram que no sean los listados arriba.
+                </div>
+
+                <p><strong>Datos anónimos:</strong></p>
+                <p>El Servicio de Terceros puede recopilar datos anónimos que no están vinculados a usted de ninguna manera, como diagnósticos anonimizados o estadísticas de uso.</p>
+            </div>
+        </section>
+
+        <section class="card" id="procesamiento">
+            <h2 class="section-title">5. Procesamiento de Datos Personales</h2>
+            <div class="section-content">
+                <p>El Servicio de Terceros solo solicita, recopila, procesa y almacena datos que son necesarios para que sus funciones designadas operen correctamente.</p>
+                <p>Procesamos sus datos personales basándonos en el fundamento legal de que dicho procesamiento es necesario para nuestros intereses legítimos, incluyendo:</p>
+                <ul>
+                    <li>Proporcionar servicios a nuestros usuarios (conexión VPN, gestión de claves).</li>
+                    <li>Detectar y abordar problemas de seguridad.</li>
+                    <li>Procesar pagos y gestionar suscripciones.</li>
+                    <li>Proporcionar soporte técnico.</li>
+                </ul>
+                <p>uSipipo no monetiza ni utiliza datos de usuario para aplicaciones fuera del alcance del Servicio de Terceros.</p>
+                <p>La información privada del usuario no será transferida ni accesible a ningún tercero, excepto según lo estipulado por esta Política y acordado por el Usuario.</p>
+            </div>
+        </section>
+
+        <section class="card" id="proteccion">
+            <h2 class="section-title">6. Protección de Datos</h2>
+            <div class="section-content">
+                <p>uSipipo emplea medidas de seguridad robustas para proteger la integridad y confidencialidad de todos los datos que procesa.</p>
+                <div class="highlight-box">
+                    <strong>Medidas de seguridad implementadas:</strong>
+                    <ul style="margin-top: 8px;">
+                        <li>Encriptación de datos en tránsito (TLS/HTTPS).</li>
+                        <li>Encriptación de claves VPN (WireGuard/Outline).</li>
+                        <li>Acceso restringido a bases de datos.</li>
+                        <li>Autenticación segura mediante Telegram.</li>
+                        <li>Auditoría y monitoreo de accesos.</li>
+                    </ul>
+                </div>
+                <p>La información del usuario se maneja, transfiere y almacena en cumplimiento con las leyes aplicables, incluyendo todas las precauciones necesarias para prevenir acceso no autorizado, modificación, eliminación o distribución.</p>
+                <p><strong>uSipipo nunca compartirá datos de usuario con terceros</strong>, incluyendo servicios o bots adicionales propios, a menos que sea explícitamente autorizado por el Usuario o requerido por ley.</p>
+            </div>
+        </section>
+
+        <section class="card" id="derechos">
+            <h2 class="section-title">7. Derechos y Obligaciones del Usuario</h2>
+            <div class="section-content">
+                <p>Como Usuario, usted tiene los siguientes derechos:</p>
+                <div class="rights-list">
+                    <div class="right-item">
+                        <span class="right-icon">📋</span>
+                        <div class="right-text">
+                            <strong>Acceso a Datos</strong>
+                            Solicitar una copia de todos los datos personales que el Servicio de Terceros ha recopilado y almacenado en relación con usted.
+                        </div>
+                    </div>
+                    <div class="right-item">
+                        <span class="right-icon">🗑️</span>
+                        <div class="right-text">
+                            <strong>Eliminación de Datos</strong>
+                            Solicitar la eliminación oportuna de todos sus datos personales, con excepción de datos esenciales que podemos conservar según lo permitido por la ley aplicable.
+                        </div>
+                    </div>
+                    <div class="right-item">
+                        <span class="right-icon">✏️</span>
+                        <div class="right-text">
+                            <strong>Rectificación</strong>
+                            Enmendar, restringir u objetar el procesamiento de sus datos.
+                        </div>
+                    </div>
+                    <div class="right-item">
+                        <span class="right-icon">🚫</span>
+                        <div class="right-text">
+                            <strong>Revocación de Consentimiento</strong>
+                            Ejercer la opción de revocar cualquier consentimiento previamente otorgado en cualquier momento y por cualquier razón.
+                        </div>
+                    </div>
+                    <div class="right-item">
+                        <span class="right-icon">⚖️</span>
+                        <div class="right-text">
+                            <strong>Presentar Queja</strong>
+                            Presentar una queja ante las autoridades de protección de datos nacionales con jurisdicción si cree que sus derechos no están siendo respetados.
+                        </div>
+                    </div>
+                </div>
+                <p style="margin-top: 16px;">uSipipo procesará y responderá a solicitudes legítimas de usuarios dentro de los plazos permitidos por la ley aplicable, y en cualquier caso, no más tarde de 30 días desde la fecha en que se presentó la solicitud.</p>
+            </div>
+        </section>
+
+        <section class="card" id="california">
+            <h2 class="section-title">8. Derechos CCPA (California Consumer Privacy Act)</h2>
+            <div class="section-content">
+                <p>Si usted es residente de California, tiene derechos adicionales bajo la CCPA:</p>
+                <div class="rights-list">
+                    <div class="right-item">
+                        <span class="right-icon">ℹ️</span>
+                        <div class="right-text">
+                            <strong>Derecho a Saber</strong>
+                            Solicitar información sobre qué datos personales hemos recopilado, cómo se usan y si se venden o comparten.
+                        </div>
+                    </div>
+                    <div class="right-item">
+                        <span class="right-icon">❌</span>
+                        <div class="right-text">
+                            <strong>Derecho a Opt-Out</strong>
+                            Solicitar que no vendamos ni compartamos sus datos personales. (Nota: uSipipo no vende datos personales).
+                        </div>
+                    </div>
+                    <div class="right-item">
+                        <span class="right-icon">✅</span>
+                        <div class="right-text">
+                            <strong>Derecho a No Ser Discriminado</strong>
+                            No ser discriminado por ejercer sus derechos bajo CCPA.
+                        </div>
+                    </div>
+                    <div class="right-item">
+                        <span class="right-icon">👤</span>
+                        <div class="right-text">
+                            <strong>Derecho a Eliminación</strong>
+                            Solicitar la eliminación de sus datos personales, sujeto a excepciones legales.
+                        </div>
+                    </div>
+                    <div class="right-item">
+                        <span class="right-icon">🔧</span>
+                        <div class="right-text">
+                            <strong>Derecho a Corrección</strong>
+                            Solicitar la corrección de datos personales inexactos.
+                        </div>
+                    </div>
+                </div>
+                <div class="highlight-box" style="margin-top: 16px;">
+                    <strong>Divulgación CCPA:</strong> uSipipo no vende, alquila ni comparte datos personales con terceros con fines publicitarios. Sus datos se utilizan únicamente para proporcionar el servicio VPN contratado.
+                </div>
+            </div>
+        </section>
+
+        <section class="card contact-card" id="contacto">
+            <h2 class="section-title">9. Contacto y Solicitudes</h2>
+            <div class="section-content">
+                <p>Para ejercer cualquiera de sus derechos o si tiene preguntas sobre esta Política:</p>
+                <div class="highlight-box" style="text-align: center; margin: 20px 0;">
+                    <p style="margin-bottom: 12px;"><strong>Sistema de Tickets / Soporte</strong></p>
+                    <p>Abra un ticket desde el bot de Telegram usando el comando <code style="background: var(--bg-surface); padding: 2px 8px; border-radius: 4px;">/soporte</code> o desde el menú principal.</p>
+                </div>
+                <p>Al enviar solicitudes de datos, proporcione información precisa y actualizada, y coopere con cualquier medida razonable necesaria para que podamos cumplir con su solicitud.</p>
+                <p style="margin-top: 16px; font-size: 12px; color: var(--text-muted);">
+                    Podemos verificar la identidad del Usuario que envía solicitudes de datos si sospechamos acceso no autorizado o uso indebido de información personal.
+                </p>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2 class="section-title">10. Cambios a esta Política</h2>
+            <div class="section-content">
+                <p>Podemos revisar y actualizar esta Política de Privacidad de vez en cuando. Cualquier cambio será efectivo cuando publiquemos la Política revisada en esta página.</p>
+                <p>Le recomendamos revisar esta página frecuentemente para ver actualizaciones o cambios.</p>
+                <div class="highlight-box">
+                    <strong>Resumen de cambios:</strong>
+                    <ul style="margin-top: 8px;">
+                        <li>Versión inicial - 25 de febrero de 2026</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2 class="section-title">11. Enlaces Externos</h2>
+            <div class="section-content">
+                <p>Esta Política incorpora por referencia los siguientes documentos de Telegram:</p>
+                <ul>
+                    <li><a href="https://telegram.org/privacy" target="_blank">Política de Privacidad de Telegram</a></li>
+                    <li><a href="https://telegram.org/tos/bots" target="_blank">Términos de Bot de Telegram</a></li>
+                    <li><a href="https://telegram.org/tos/mini-apps" target="_blank">Términos de Mini App de Telegram</a></li>
+                    <li><a href="https://telegram.org/privacy-tpa" target="_blank">Política de Privacidad Estándar de Telegram para Bots y Mini Apps</a></li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="/miniapp/entry" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span>Volver al Inicio</span>
+        </a>
+    </nav>
+</body>
+</html>

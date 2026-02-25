@@ -58,6 +58,22 @@ async def miniapp_entry(request: Request):
     )
 
 
+@router.get("/privacy", response_class=HTMLResponse)
+async def privacy_policy(request: Request):
+    """
+    Página pública de Política de Privacidad.
+    
+    Requerido por Telegram para bots con Mini Apps.
+    Esta página es accesible sin autenticación.
+    """
+    return templates.TemplateResponse(
+        "privacy.html",
+        {
+            "request": request,
+        },
+    )
+
+
 class MiniAppContext:
     """Contexto de autenticación para Mini App."""
 
