@@ -471,7 +471,6 @@ def get_buy_gb_handlers(data_package_service: DataPackageService):
         MessageHandler(filters.Regex("^📦 Comprar GB$"), handler.show_packages),
         CommandHandler("buy", handler.show_packages),
         CommandHandler("packages", handler.show_packages),
-        CommandHandler("data", handler.data_handler),
     ]
 
 
