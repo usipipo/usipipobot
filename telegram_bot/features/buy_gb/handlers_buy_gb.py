@@ -393,6 +393,46 @@ Monto a pagar: *{usdt_amount} USDT*
                 parse_mode="Markdown",
             )
 
+    async def show_slots_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Muestra el menú de compra de slots de claves."""
+        query = update.callback_query
+        if query:
+            await query.answer()
+
+        if not update.effective_user:
+            return
+
+        try:
+            slots_list = BuyGbMessages.Slots.format_slots_list()
+            message = BuyGbMessages.Slots.MENU.format(slots_list=slots_list)
+            keyboard = BuyGbKeyboards.slots_menu()
+
+            if query:
+                await query.edit_message_text(
+                    text=message, reply_markup=keyboard, parse_mode="Markdown"
+                )
+            elif update.message:
+                await update.message.reply_text(
+                    text=message, reply_markup=keyboard, parse_mode="Markdown"
+                )
+
+        except Exception as e:
+            logger.error(f"Error en show_slots_menu: {e}")
+            error_message = BuyGbMessages.Error.SYSTEM_ERROR
+
+            if query:
+                await query.edit_message_text(
+                    text=error_message,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+            elif update.message:
+                await update.message.reply_text(
+                    text=error_message,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+
     async def pre_checkout_callback(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
