@@ -136,9 +136,184 @@ class BuyGbHandler:
                 text=BuyGbMessages.Error.SYSTEM_ERROR,
                 reply_markup=BuyGbKeyboards.back_to_packages(),
                 parse_mode="Markdown",
+                )
+
+    async def select_payment_method(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Muestra opciones de método de pago para un paquete."""
+        query = update.callback_query
+        if not query or not query.data:
+            return
+        await query.answer()
+
+        package_type_str = query.data.split("_")[-1]
+
+        try:
+            package_option = None
+            for pkg in PACKAGE_OPTIONS:
+                if pkg.package_type.value == package_type_str:
+                    package_option = pkg
+                    break
+
+            if not package_option:
+                await query.edit_message_text(
+                    text=BuyGbMessages.Error.INVALID_PACKAGE,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            message = BuyGbMessages.Payment.SELECT_METHOD.format(
+                package_name=package_option.name,
+                gb_amount=package_option.data_gb,
+                stars_price=package_option.stars,
+                crypto_price=package_option.data_gb / 10,  # 1 USDT = 10 GB
             )
 
-    async def show_slots_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+            keyboard = BuyGbKeyboards.payment_method_selection(package_type_str)
+
+            await query.edit_message_text(
+                text=message, reply_markup=keyboard, parse_mode="Markdown"
+            )
+
+        except Exception as e:
+            logger.error(f"Error en select_payment_method: {e}")
+            await query.edit_message_text(
+                text=BuyGbMessages.Error.SYSTEM_ERROR,
+                reply_markup=BuyGbKeyboards.back_to_packages(),
+                parse_mode="Markdown",
+            )
+
+    async def pay_with_stars(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Procesa pago con Telegram Stars."""
+        query = update.callback_query
+        if not query or not query.data:
+            return
+        await query.answer()
+
+        if not update.effective_user or not update.effective_chat:
+            return
+        user_id = update.effective_user.id
+        package_type_str = query.data.split("_")[-1]
+
+        try:
+            package_option = None
+            for pkg in PACKAGE_OPTIONS:
+                if pkg.package_type.value == package_type_str:
+                    package_option = pkg
+                    break
+
+            if not package_option:
+                await query.edit_message_text(
+                    text=BuyGbMessages.Error.INVALID_PACKAGE,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            payload = f"data_package_{package_type_str}_{user_id}"
+
+            await context.bot.send_invoice(
+                chat_id=update.effective_chat.id,
+                title=BuyGbMessages.Payment.INVOICE_TITLE.format(
+                    package_name=package_option.name
+                ),
+                description=BuyGbMessages.Payment.INVOICE_DESCRIPTION.format(
+                    gb_amount=package_option.data_gb
+                ),
+                payload=payload,
+                provider_token="",
+                currency="XTR",
+                prices=[
+                    LabeledPrice(f"{package_option.data_gb} GB", package_option.stars)
+                ],
+            )
+
+            logger.info(
+                f"📦 Invoice enviado: {package_option.name} para usuario {user_id}"
+            )
+
+        except Exception as e:
+            logger.error(f"Error en pay_with_stars: {e}")
+            await query.edit_message_text(
+                text=BuyGbMessages.Error.SYSTEM_ERROR,
+                reply_markup=BuyGbKeyboards.back_to_packages(),
+                parse_mode="Markdown",
+            )
+
+    async def pay_with_crypto(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Inicia pago con crypto usando TronDealer."""
+        query = update.callback_query
+        if not query or not query.data:
+            return
+        await query.answer()
+
+        if not update.effective_user:
+            return
+        user_id = update.effective_user.id
+        package_type_str = query.data.split("_")[-1]
+
+        try:
+            package_option = None
+            for pkg in PACKAGE_OPTIONS:
+                if pkg.package_type.value == package_type_str:
+                    package_option = pkg
+                    break
+
+            if not package_option:
+                await query.edit_message_text(
+                    text=BuyGbMessages.Error.INVALID_PACKAGE,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            # Import here to avoid circular imports
+            from application.services.wallet_management_service import WalletManagementService
+            from application.services.common.container import get_service
+            
+            wallet_service = get_service(WalletManagementService)
+            
+            # Get or create wallet for user
+            wallet = await wallet_service.assign_wallet(user_id, current_user_id=user_id)
+            
+            if not wallet:
+                await query.edit_message_text(
+                    text="❌ Error al asignar billetera. Intente nuevamente.",
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            # Calculate USDT amount needed
+            usdt_amount = package_option.data_gb / 10  # 1 USDT = 10 GB
+            
+            message = BuyGbMessages.Payment.CRYPTO_INSTRUCTIONS.format(
+                package_name=package_option.name,
+                gb_amount=package_option.data_gb,
+                usdt_amount=usdt_amount,
+                wallet_address=wallet.address,
+                blockchain="BSC"
+            )
+
+            await query.edit_message_text(
+                text=message,
+                reply_markup=BuyGbKeyboards.back_to_packages(),
+                parse_mode="Markdown",
+            )
+
+            logger.info(
+                f"💰 Crypto payment initiated: {package_option.name} ({usdt_amount} USDT) for user {user_id}, wallet {wallet.address}"
+            )
+
+        except Exception as e:
+            logger.error(f"Error en pay_with_crypto: {e}")
+            await query.edit_message_text(
+                text=BuyGbMessages.Error.SYSTEM_ERROR,
+                reply_markup=BuyGbKeyboards.back_to_packages(),
+                parse_mode="Markdown",
+            )
         query = update.callback_query
         if not query:
             return
@@ -479,7 +654,9 @@ def get_buy_gb_callback_handlers(data_package_service: DataPackageService):
 
     return [
         CallbackQueryHandler(handler.show_packages, pattern="^buy_gb_menu$"),
-        CallbackQueryHandler(handler.buy_package, pattern="^buy_package_"),
+        CallbackQueryHandler(handler.select_payment_method, pattern="^select_payment_"),
+        CallbackQueryHandler(handler.pay_with_stars, pattern="^pay_stars_"),
+        CallbackQueryHandler(handler.pay_with_crypto, pattern="^pay_crypto_"),
         CallbackQueryHandler(handler.view_data_summary, pattern="^view_data_summary$"),
         CallbackQueryHandler(handler.show_slots_menu, pattern="^buy_slots_menu$"),
         CallbackQueryHandler(handler.buy_slots, pattern="^buy_slots_"),

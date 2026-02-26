@@ -22,6 +22,7 @@ from application.services.referral_service import ReferralService
 from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
+from application.services.wallet_management_service import WalletManagementService
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
 from domain.interfaces.iticket_repository import ITicketRepository
@@ -29,6 +30,7 @@ from domain.interfaces.itransaction_repository import ITransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
+from infrastructure.api_clients.client_tron_dealer import TronDealerClient
 from infrastructure.persistence.database import get_session_factory
 from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
@@ -118,6 +120,7 @@ def _configure_infrastructure_clients(container: punq.Container) -> None:
     """Configura los clientes de infraestructura en el contenedor."""
     container.register(OutlineClient, scope=punq.Scope.singleton)
     container.register(WireGuardClient, scope=punq.Scope.singleton)
+    container.register(TronDealerClient, scope=punq.Scope.singleton)
 
 
 def _configure_repositories(container: punq.Container) -> None:
@@ -212,12 +215,19 @@ def _configure_application_services(container: punq.Container) -> None:
     def create_ticket_service() -> TicketService:
         return TicketService(ticket_repo=create_ticket_repo_inner())
 
+    def create_wallet_management_service() -> WalletManagementService:
+        return WalletManagementService(
+            tron_dealer_client=container.resolve(TronDealerClient),
+            user_repo=create_user_repo(),
+        )
+
     container.register(VpnService, factory=create_vpn_service)
     container.register(AdminService, factory=create_admin_service)
     container.register(DataPackageService, factory=create_data_package_service)
     container.register(ReferralService, factory=create_referral_service)
     container.register(UserProfileService, factory=create_user_profile_service)
     container.register(TicketService, factory=create_ticket_service)
+    container.register(WalletManagementService, factory=create_wallet_management_service)
 
 
 def _configure_handlers(container: punq.Container) -> None:

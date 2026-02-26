@@ -384,6 +384,15 @@ class Settings(BaseSettings):
         log_dir = Path(self.LOG_FILE_PATH).parent
         log_dir.mkdir(parents=True, exist_ok=True)
 
+        # Validate TronDealer configuration in production
+        if self.is_production:
+            if not self.TRON_DEALER_API_KEY:
+                raise ValueError("TRON_DEALER_API_KEY is required in production")
+            if not self.TRON_DEALER_WEBHOOK_SECRET:
+                raise ValueError("TRON_DEALER_WEBHOOK_SECRET is required in production")
+            if not self.TRON_DEALER_SWEEP_WALLET:
+                raise ValueError("TRON_DEALER_SWEEP_WALLET is required in production")
+
         return self
 
     # =========================================================================

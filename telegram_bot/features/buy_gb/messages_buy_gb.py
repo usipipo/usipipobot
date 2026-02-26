@@ -59,6 +59,30 @@ class BuyGbMessages:
         INVOICE_TITLE = "Paquete {package_name}"
         INVOICE_DESCRIPTION = "{gb_amount} GB de datos - Valido 35 dias"
 
+        SELECT_METHOD = (
+            "💳 **Seleccionar Método de Pago**\n\n"
+            "📦 **Paquete:** {package_name}\n"
+            "📊 **Datos:** {gb_amount} GB\n\n"
+            "⭐ **Precio con Stars:** {stars_price} ⭐\n"
+            "💰 **Precio con Crypto:** {crypto_price:.2f} USDT\n\n"
+            "💡 *Elige tu método de pago preferido*"
+        )
+
+        CRYPTO_INSTRUCTIONS = (
+            "💰 **Pago con Cryptomoneda**\n\n"
+            "📦 **Paquete:** {package_name}\n"
+            "📊 **Datos:** {gb_amount} GB\n"
+            "💰 **Monto a Pagar:** {usdt_amount:.2f} USDT\n\n"
+            "🏦 **Enviar a esta dirección BSC:**\n"
+            "`{wallet_address}`\n\n"
+            "🔗 **Blockchain:** {blockchain}\n\n"
+            "⚠️ **Importante:**\n"
+            "• Solo envía **USDT** en la red **BSC**\n"
+            "• El pago se procesa automáticamente\n"
+            "• Recibirás confirmación cuando se complete\n\n"
+            "💡 *Copia la dirección y realiza el pago*"
+        )
+
         CONFIRMATION = (
             "✅ **Compra Exitosa**\n\n"
             "📦 **Paquete:** {package_name}\n"

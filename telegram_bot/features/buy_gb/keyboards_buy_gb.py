@@ -22,7 +22,7 @@ class BuyGbKeyboards:
             button_text = f"⭐ {pkg.name} - {pkg.data_gb}GB"
             row.append(
                 InlineKeyboardButton(
-                    button_text, callback_data=f"buy_package_{pkg.package_type.value}"
+                    button_text, callback_data=f"select_payment_{pkg.package_type.value}"
                 )
             )
 
@@ -97,5 +97,25 @@ class BuyGbKeyboards:
                 ),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def payment_method_selection(package_type: str) -> InlineKeyboardMarkup:
+        """Teclado para seleccionar método de pago (Stars o Crypto)."""
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "⭐ Pagar con Stars", callback_data=f"pay_stars_{package_type}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "💰 Pagar con Crypto", callback_data=f"pay_crypto_{package_type}"
+                )
+            ],
+            [
+                InlineKeyboardButton("🔙 Volver a Paquetes", callback_data="buy_gb_menu")
+            ],
         ]
         return InlineKeyboardMarkup(keyboard)
