@@ -22,7 +22,8 @@ class BuyGbKeyboards:
             button_text = f"⭐ {pkg.name} - {pkg.data_gb}GB"
             row.append(
                 InlineKeyboardButton(
-                    button_text, callback_data=f"select_payment_{pkg.package_type.value}"
+                    button_text,
+                    callback_data=f"select_payment_{pkg.package_type.value}",
                 )
             )
 
@@ -114,8 +115,6 @@ class BuyGbKeyboards:
                     "💰 Pagar con Crypto", callback_data=f"pay_crypto_{package_type}"
                 )
             ],
-            [
-                InlineKeyboardButton("🔙 Volver a Paquetes", callback_data="buy_gb_menu")
-            ],
+            [InlineKeyboardButton("🔙 Volver a Paquetes", callback_data="buy_gb_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)

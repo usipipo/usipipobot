@@ -28,20 +28,32 @@ async def lifespan(app: FastAPI):
 
     from application.services.crypto_payment_service import CryptoPaymentService
     from application.services.webhook_security_service import WebhookSecurityService
+    from infrastructure.persistence.postgresql.crypto_order_repository import (
+        PostgresCryptoOrderRepository,
+    )
     from infrastructure.persistence.postgresql.crypto_transaction_repository import (
         PostgresCryptoTransactionRepository,
         PostgresWebhookTokenRepository,
+    )
+    from infrastructure.persistence.postgresql.user_repository import (
+        PostgresUserRepository,
     )
 
     async with get_session_context() as session:
         token_repo = PostgresWebhookTokenRepository(session)
         crypto_repo = PostgresCryptoTransactionRepository(session)
+        user_repo = PostgresUserRepository(session)
+        crypto_order_repo = PostgresCryptoOrderRepository(session)
 
         security_service = WebhookSecurityService(
             webhook_secret=settings.TRON_DEALER_WEBHOOK_SECRET, token_repo=token_repo
         )
 
-        payment_service = CryptoPaymentService(crypto_repo=crypto_repo, user_repo=None)
+        payment_service = CryptoPaymentService(
+            crypto_repo=crypto_repo,
+            user_repo=user_repo,
+            crypto_order_repo=crypto_order_repo,
+        )
 
         set_services(security_service, payment_service)
 

@@ -136,7 +136,7 @@ class BuyGbHandler:
                 text=BuyGbMessages.Error.SYSTEM_ERROR,
                 reply_markup=BuyGbKeyboards.back_to_packages(),
                 parse_mode="Markdown",
-                )
+            )
 
     async def select_payment_method(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -269,15 +269,19 @@ class BuyGbHandler:
                 )
                 return
 
-            # Import here to avoid circular imports
-            from application.services.wallet_management_service import WalletManagementService
+            from application.services.wallet_management_service import (
+                WalletManagementService,
+            )
+            from application.services.crypto_payment_service import CryptoPaymentService
             from application.services.common.container import get_service
-            
+
             wallet_service = get_service(WalletManagementService)
-            
-            # Get or create wallet for user
-            wallet = await wallet_service.assign_wallet(user_id, current_user_id=user_id)
-            
+            payment_service = get_service(CryptoPaymentService)
+
+            wallet = await wallet_service.assign_wallet(
+                user_id, current_user_id=user_id
+            )
+
             if not wallet:
                 await query.edit_message_text(
                     text="❌ Error al asignar billetera. Intente nuevamente.",
@@ -286,16 +290,36 @@ class BuyGbHandler:
                 )
                 return
 
-            # Calculate USDT amount needed
-            usdt_amount = package_option.data_gb / 10  # 1 USDT = 10 GB
-            
-            message = BuyGbMessages.Payment.CRYPTO_INSTRUCTIONS.format(
-                package_name=package_option.name,
-                gb_amount=package_option.data_gb,
-                usdt_amount=usdt_amount,
+            usdt_amount = package_option.data_gb / 10
+
+            order = await payment_service.create_order(
+                user_id=user_id,
+                package_type=package_option.package_type.value,
+                amount_usdt=usdt_amount,
                 wallet_address=wallet.address,
-                blockchain="BSC"
             )
+
+            from domain.entities.crypto_order import CryptoOrderStatus
+
+            expires_minutes = 30
+
+            message = f"""💰 *Pago con USDT - BSC*
+
+Paquete: *{package_option.name}*
+Cantidad: *{package_option.data_gb} GB*
+Monto a pagar: *{usdt_amount} USDT*
+
+� wallet:
+`{wallet.address}`
+
+⏱️ Tiempo límite: *{expires_minutes} minutos*
+
+⚠️ *Importante:*
+• Envíe exactamente *{usdt_amount} USDT* a la dirección mostrada
+• Espere al menos *15 confirmaciones* de la red BSC
+• No cierre esta pantalla hasta que el pago sea confirmado
+
+✅ Una vez realizado el pago, el sistema detectará automáticamente la transacción."""
 
             await query.edit_message_text(
                 text=message,
@@ -304,31 +328,12 @@ class BuyGbHandler:
             )
 
             logger.info(
-                f"💰 Crypto payment initiated: {package_option.name} ({usdt_amount} USDT) for user {user_id}, wallet {wallet.address}"
+                f"💰 Crypto payment initiated: {package_option.name} ({usdt_amount} USDT) "
+                f"for user {user_id}, wallet {wallet.address}, order {order.id}"
             )
 
         except Exception as e:
-            logger.error(f"Error en pay_with_crypto: {e}")
-            await query.edit_message_text(
-                text=BuyGbMessages.Error.SYSTEM_ERROR,
-                reply_markup=BuyGbKeyboards.back_to_packages(),
-                parse_mode="Markdown",
-            )
-        query = update.callback_query
-        if not query:
-            return
-        await query.answer()
-
-        try:
-            slots_list = BuyGbMessages.Slots.format_slots_list()
-            message = BuyGbMessages.Slots.MENU.format(slots_list=slots_list)
-            keyboard = BuyGbKeyboards.slots_menu()
-
-            await query.edit_message_text(
-                text=message, reply_markup=keyboard, parse_mode="Markdown"
-            )
-        except Exception as e:
-            logger.error(f"Error en show_slots_menu: {e}")
+            logger.error(f"Error en pay_with_crypto: {e}", exc_info=True)
             await query.edit_message_text(
                 text=BuyGbMessages.Error.SYSTEM_ERROR,
                 reply_markup=BuyGbKeyboards.back_to_packages(),

@@ -64,6 +64,22 @@ class TransactionResponse:
     transactions: List[WalletTransaction]
 
 
+@dataclass
+class PaymentOrder:
+    order_id: str
+    blockchain: str
+    amount: float
+    currency: str
+    status: str
+    created_at: Optional[str] = None
+
+
+@dataclass
+class PaymentQRCode:
+    qr_code: str
+    expires_at: Optional[str] = None
+
+
 class TronDealerApiError(Exception):
     def __init__(self, status_code: int, message: str):
         self.status_code = status_code
@@ -100,15 +116,10 @@ class TronDealerClient:
 
     @property
     def headers(self):
-        return {
-            "x-api-key": self.api_key,
-            "Content-Type": "application/json"
-        }
+        return {"x-api-key": self.api_key, "Content-Type": "application/json"}
 
     async def _make_request(
-        self,
-        endpoint: str,
-        data: Dict[str, Any]
+        self, endpoint: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         Make a POST request to TronDealer API
@@ -125,11 +136,7 @@ class TronDealerClient:
             if self._client is None:
                 self._client = httpx.AsyncClient()
 
-            response = await self._client.post(
-                url,
-                headers=self.headers,
-                json=data
-            )
+            response = await self._client.post(url, headers=self.headers, json=data)
 
             logger.debug(f"TronDealer API response status: {response.status_code}")
 
@@ -140,21 +147,21 @@ class TronDealerClient:
                 raise TronDealerApiError(500, "Invalid response format")
 
             if response.status_code == 401:
-                raise TronDealerApiError(401, response_data.get("error", "Unauthorized"))
+                raise TronDealerApiError(
+                    401, response_data.get("error", "Unauthorized")
+                )
             elif response.status_code == 403:
                 raise TronDealerApiError(403, response_data.get("error", "Forbidden"))
             elif response.status_code == 404:
                 raise TronDealerApiError(404, response_data.get("error", "Not found"))
             elif response.status_code != 200 and response.status_code != 201:
                 raise TronDealerApiError(
-                    response.status_code,
-                    response_data.get("error", "Unknown error")
+                    response.status_code, response_data.get("error", "Unknown error")
                 )
 
             if not response_data.get("success"):
                 raise TronDealerApiError(
-                    response.status_code,
-                    response_data.get("error", "Request failed")
+                    response.status_code, response_data.get("error", "Request failed")
                 )
 
             return response_data
@@ -189,14 +196,16 @@ class TronDealerClient:
 
         wallet_data = response_data.get("wallet")
         if not wallet_data:
-            raise TronDealerApiError(500, "Invalid response format: missing wallet data")
-        
+            raise TronDealerApiError(
+                500, "Invalid response format: missing wallet data"
+            )
+
         return BscWallet(
             id=wallet_data["id"],
             address=wallet_data["address"],
             label=wallet_data.get("label"),
             status=WalletStatus(wallet_data["status"]),
-            created_at=wallet_data.get("created_at")
+            created_at=wallet_data.get("created_at"),
         )
 
     async def get_balance(self, address: str) -> WalletBalance:
@@ -210,17 +219,20 @@ class TronDealerClient:
             WalletBalance: Wallet with balances
         """
         response_data = await self._make_request(
-            "wallets/balance",
-            {"address": address}
+            "wallets/balance", {"address": address}
         )
 
         wallet_data = response_data.get("wallet")
         balances_data = response_data.get("balances")
-        
+
         if not wallet_data:
-            raise TronDealerApiError(500, "Invalid response format: missing wallet data")
+            raise TronDealerApiError(
+                500, "Invalid response format: missing wallet data"
+            )
         if not balances_data:
-            raise TronDealerApiError(500, "Invalid response format: missing balances data")
+            raise TronDealerApiError(
+                500, "Invalid response format: missing balances data"
+            )
 
         return WalletBalance(
             address=wallet_data["address"],
@@ -228,7 +240,7 @@ class TronDealerClient:
             status=WalletStatus(wallet_data["status"]),
             bnb=float(balances_data.get("BNB", 0)),
             usdt=float(balances_data.get("USDT", 0)),
-            usdc=float(balances_data.get("USDC", 0))
+            usdc=float(balances_data.get("USDC", 0)),
         )
 
     async def get_transactions(
@@ -236,7 +248,7 @@ class TronDealerClient:
         address: str,
         limit: int = 50,
         offset: int = 0,
-        status: Optional[TransactionStatus] = None
+        status: Optional[TransactionStatus] = None,
     ) -> TransactionResponse:
         """
         Get paginated transaction history for a specific wallet.
@@ -253,36 +265,92 @@ class TronDealerClient:
         data = {
             "address": address,
             "limit": min(max(1, limit), 100),
-            "offset": max(0, offset)
+            "offset": max(0, offset),
         }
 
         if status:
             data["status"] = status.value
 
-        response_data = await self._make_request(
-            "wallets/transactions",
-            data
-        )
+        response_data = await self._make_request("wallets/transactions", data)
 
         transactions = []
         for tx_data in response_data.get("transactions", []):
-            transactions.append(WalletTransaction(
-                tx_hash=tx_data["tx_hash"],
-                log_index=tx_data["log_index"],
-                block_number=tx_data["block_number"],
-                from_address=tx_data["from_address"],
-                to_address=tx_data["to_address"],
-                asset=tx_data["asset"],
-                amount=float(tx_data["amount"]),
-                confirmations=tx_data["confirmations"],
-                status=TransactionStatus(tx_data["status"]),
-                detected_at=tx_data.get("detected_at"),
-                created_at=tx_data.get("created_at")
-            ))
+            transactions.append(
+                WalletTransaction(
+                    tx_hash=tx_data["tx_hash"],
+                    log_index=tx_data["log_index"],
+                    block_number=tx_data["block_number"],
+                    from_address=tx_data["from_address"],
+                    to_address=tx_data["to_address"],
+                    asset=tx_data["asset"],
+                    amount=float(tx_data["amount"]),
+                    confirmations=tx_data["confirmations"],
+                    status=TransactionStatus(tx_data["status"]),
+                    detected_at=tx_data.get("detected_at"),
+                    created_at=tx_data.get("created_at"),
+                )
+            )
 
         return TransactionResponse(
             total=response_data.get("total", 0),
             limit=response_data.get("limit", 50),
             offset=response_data.get("offset", 0),
-            transactions=transactions
+            transactions=transactions,
+        )
+
+    async def create_payment(
+        self, blockchain: str, amount: float, currency: str = "USDT"
+    ) -> PaymentOrder:
+        """
+        Create a payment order via TronDealer API.
+
+        Args:
+            blockchain: Blockchain network (e.g., "BSC", "TRON")
+            amount: Amount to pay
+            currency: Currency symbol (default: USDT)
+
+        Returns:
+            PaymentOrder: Created payment order
+        """
+        data = {"blockchain": blockchain, "amount": amount, "currency": currency}
+
+        response_data = await self._make_request("payment/create", data)
+
+        payment_data = response_data.get("payment")
+        if not payment_data:
+            raise TronDealerApiError(
+                500, "Invalid response format: missing payment data"
+            )
+
+        return PaymentOrder(
+            order_id=payment_data.get("order_id", ""),
+            blockchain=payment_data.get("blockchain", blockchain),
+            amount=float(payment_data.get("amount", amount)),
+            currency=payment_data.get("currency", currency),
+            status=payment_data.get("status", "pending"),
+            created_at=payment_data.get("created_at"),
+        )
+
+    async def generate_qrcode(self, blockchain: str) -> PaymentQRCode:
+        """
+        Generate a QR code for payment.
+
+        Args:
+            blockchain: Blockchain network (e.g., "BSC", "TRON")
+
+        Returns:
+            PaymentQRCode: QR code data
+        """
+        data = {"blockchain": blockchain}
+
+        response_data = await self._make_request("payment/qrcode", data)
+
+        qr_data = response_data.get("qr_code")
+        if not qr_data:
+            raise TronDealerApiError(
+                500, "Invalid response format: missing qr_code data"
+            )
+
+        return PaymentQRCode(
+            qr_code=qr_data.get("code", ""), expires_at=qr_data.get("expires_at")
         )
