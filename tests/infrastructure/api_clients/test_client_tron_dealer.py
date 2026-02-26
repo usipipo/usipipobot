@@ -29,19 +29,19 @@ class TestTronDealerClient:
                 "address": "0xbf1Ce072C22FcD4cb85Dab46BeB5ef4e5C456269",
                 "label": "test-wallet",
                 "status": "active",
-                "created_at": "2026-02-26T00:59:01.157845+00:00"
-            }
+                "created_at": "2026-02-26T00:59:01.157845+00:00",
+            },
         }
 
         # Create mock async client
         mock_async_client = AsyncMock()
-        
+
         async def mock_post(url, **kwargs):
             mock_response_obj = AsyncMock()
             mock_response_obj.json = AsyncMock(return_value=mock_response)
             mock_response_obj.status_code = 201
             return mock_response_obj
-            
+
         mock_async_client.post = mock_post
 
         # Patch the client creation
@@ -49,7 +49,7 @@ class TestTronDealerClient:
 
         # Test
         wallet = await client.assign_wallet(label="test-wallet")
-        
+
         assert wallet is not None
         assert isinstance(wallet, BscWallet)
         assert wallet.address == "0xbf1Ce072C22FcD4cb85Dab46BeB5ef4e5C456269"
@@ -66,24 +66,20 @@ class TestTronDealerClient:
             "wallet": {
                 "address": "0xbf1Ce072C22FcD4cb85Dab46BeB5ef4e5C456269",
                 "label": "test-wallet",
-                "status": "active"
+                "status": "active",
             },
-            "balances": {
-                "BNB": 0.1,
-                "USDT": 100.50,
-                "USDC": 50.0
-            }
+            "balances": {"BNB": 0.1, "USDT": 100.50, "USDC": 50.0},
         }
 
         # Create mock async client
         mock_async_client = AsyncMock()
-        
+
         async def mock_post(url, **kwargs):
             mock_response_obj = AsyncMock()
             mock_response_obj.json.return_value = mock_response
             mock_response_obj.status_code = 200
             return mock_response_obj
-            
+
         mock_async_client.post = mock_post
 
         # Patch the client creation
@@ -91,7 +87,7 @@ class TestTronDealerClient:
 
         # Test
         balance = await client.get_balance("0xbf1Ce072C22FcD4cb85Dab46BeB5ef4e5C456269")
-        
+
         assert balance is not None
         assert isinstance(balance, WalletBalance)
         assert balance.address == "0xbf1Ce072C22FcD4cb85Dab46BeB5ef4e5C456269"
@@ -107,7 +103,7 @@ class TestTronDealerClient:
             "success": True,
             "wallet": {
                 "address": "0xbf1Ce072C22FcD4cb85Dab46BeB5ef4e5C456269",
-                "label": "test-wallet"
+                "label": "test-wallet",
             },
             "total": 2,
             "limit": 50,
@@ -124,20 +120,20 @@ class TestTronDealerClient:
                     "confirmations": 12,
                     "status": "confirmed",
                     "detected_at": "2026-02-26T01:05:44.688Z",
-                    "created_at": "2026-02-26T01:05:44.688Z"
+                    "created_at": "2026-02-26T01:05:44.688Z",
                 }
-            ]
+            ],
         }
 
         # Create mock async client
         mock_async_client = AsyncMock()
-        
+
         async def mock_post(url, **kwargs):
             mock_response_obj = AsyncMock()
             mock_response_obj.json.return_value = mock_response
             mock_response_obj.status_code = 200
             return mock_response_obj
-            
+
         mock_async_client.post = mock_post
 
         # Patch the client creation
@@ -147,7 +143,7 @@ class TestTronDealerClient:
         transactions = await client.get_transactions(
             "0xbf1Ce072C22FcD4cb85Dab46BeB5ef4e5C456269"
         )
-        
+
         assert transactions is not None
         assert isinstance(transactions, TransactionResponse)
         assert transactions.total == 2
@@ -163,13 +159,13 @@ class TestTronDealerClient:
 
         # Create mock async client
         mock_async_client = AsyncMock()
-        
+
         async def mock_post(url, **kwargs):
             mock_response_obj = AsyncMock()
             mock_response_obj.json.return_value = mock_response
             mock_response_obj.status_code = 401
             return mock_response_obj
-            
+
         mock_async_client.post = mock_post
 
         # Patch the client creation
@@ -222,7 +218,10 @@ class TestWalletManagementService:
     @pytest.fixture
     def service(self, mock_tron_dealer_client, mock_user_repo):
         """Fixture to create WalletManagementService instance."""
-        from application.services.wallet_management_service import WalletManagementService
+        from application.services.wallet_management_service import (
+            WalletManagementService,
+        )
+
         return WalletManagementService(mock_tron_dealer_client, mock_user_repo)
 
     @pytest.mark.asyncio
@@ -230,17 +229,18 @@ class TestWalletManagementService:
         """Test wallet assignment."""
         # Mock API response
         from infrastructure.api_clients.client_tron_dealer import WalletStatus
+
         mock_wallet = BscWallet(
             id="test-id",
             address="0x1234...",
             label="test-wallet",
-            status=WalletStatus.ACTIVE
+            status=WalletStatus.ACTIVE,
         )
         mock_tron_dealer_client.assign_wallet.return_value = mock_wallet
 
         # Test
         result = await service.assign_wallet(user_id=12345)
-        
+
         assert result is not None
         assert result.address == "0x1234..."
         mock_tron_dealer_client.assign_wallet.assert_called_once()
@@ -250,10 +250,7 @@ class TestWalletManagementService:
         """Test balance retrieval."""
         # Mock API response
         mock_balance = WalletBalance(
-            address="0x1234...",
-            bnb=0.1,
-            usdt=100.50,
-            usdc=50.0
+            address="0x1234...", bnb=0.1, usdt=100.50, usdc=50.0
         )
         mock_tron_dealer_client.get_balance.return_value = mock_balance
 
@@ -264,7 +261,7 @@ class TestWalletManagementService:
 
         # Test
         result = await service.get_wallet_balance(mock_user)
-        
+
         assert result is not None
         assert result.bnb == 0.1
         assert result.usdt == 100.50
@@ -275,10 +272,7 @@ class TestWalletManagementService:
         """Test transactions retrieval."""
         # Mock API response
         mock_response = TransactionResponse(
-            total=1,
-            limit=50,
-            offset=0,
-            transactions=[]
+            total=1, limit=50, offset=0, transactions=[]
         )
         mock_tron_dealer_client.get_transactions.return_value = mock_response
 
@@ -289,7 +283,7 @@ class TestWalletManagementService:
 
         # Test
         result = await service.get_wallet_transactions(mock_user)
-        
+
         assert result is not None
         assert result.total == 1
         mock_tron_dealer_client.get_transactions.assert_called_once()

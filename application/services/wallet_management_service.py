@@ -19,11 +19,15 @@ class WalletManagementService:
     Service for managing BSC wallet operations via TronDealer API.
     """
 
-    def __init__(self, tron_dealer_client: TronDealerClient, user_repo: IUserRepository):
+    def __init__(
+        self, tron_dealer_client: TronDealerClient, user_repo: IUserRepository
+    ):
         self.tron_dealer_client = tron_dealer_client
         self.user_repo = user_repo
 
-    async def assign_wallet(self, user_id: int, label: Optional[str] = None) -> Optional[BscWallet]:
+    async def assign_wallet(
+        self, user_id: int, label: Optional[str] = None
+    ) -> Optional[BscWallet]:
         """
         Assign a new BSC wallet to a user and update their profile.
 
@@ -97,7 +101,7 @@ class WalletManagementService:
         user: User,
         limit: int = 50,
         offset: int = 0,
-        status: Optional[TransactionStatus] = None
+        status: Optional[TransactionStatus] = None,
     ) -> Optional[TransactionResponse]:
         """
         Get the transaction history of a user's wallet.
@@ -118,10 +122,7 @@ class WalletManagementService:
         try:
             async with self.tron_dealer_client as client:
                 transactions = await client.get_transactions(
-                    user.wallet_address,
-                    limit=limit,
-                    offset=offset,
-                    status=status
+                    user.wallet_address, limit=limit, offset=offset, status=status
                 )
 
             logger.debug(
@@ -149,14 +150,19 @@ class WalletManagementService:
         """
         if user.wallet_address:
             # TODO: Verify existing wallet is valid
-            logger.debug(f"User {user.telegram_id} already has wallet {user.wallet_address}")
+            logger.debug(
+                f"User {user.telegram_id} already has wallet {user.wallet_address}"
+            )
             # For now, return a minimal wallet object with existing address
             from infrastructure.api_clients.client_tron_dealer import WalletStatus
+
             return BscWallet(
                 id="existing",
                 address=user.wallet_address,
                 label=f"user-{user.telegram_id}",
-                status=WalletStatus.ACTIVE
+                status=WalletStatus.ACTIVE,
             )
 
-        return await self.assign_wallet(user.telegram_id, label=f"user-{user.telegram_id}")
+        return await self.assign_wallet(
+            user.telegram_id, label=f"user-{user.telegram_id}"
+        )

@@ -1,10 +1,12 @@
 from typing import Optional
 import uuid
 
+from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
 from domain.entities.crypto_transaction import (
     CryptoTransaction,
     CryptoTransactionStatus,
 )
+from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
 from domain.interfaces.icrypto_transaction_repository import (
     ICryptoTransactionRepository,
 )
@@ -12,6 +14,7 @@ from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
 
 GB_PER_USDT = 10
+REQUIRED_CONFIRMATIONS = 15
 
 
 class CryptoPaymentService:
@@ -19,9 +22,36 @@ class CryptoPaymentService:
         self,
         crypto_repo: ICryptoTransactionRepository,
         user_repo: Optional[IUserRepository] = None,
+        crypto_order_repo: Optional[ICryptoOrderRepository] = None,
     ):
         self.crypto_repo = crypto_repo
         self.user_repo = user_repo
+        self.crypto_order_repo = crypto_order_repo
+
+    async def create_order(
+        self,
+        user_id: int,
+        package_type: str,
+        amount_usdt: float,
+        wallet_address: str,
+    ) -> CryptoOrder:
+        order = CryptoOrder(
+            user_id=user_id,
+            package_type=package_type,
+            amount_usdt=amount_usdt,
+            wallet_address=wallet_address,
+            status=CryptoOrderStatus.PENDING,
+        )
+
+        if self.crypto_order_repo:
+            order = await self.crypto_order_repo.save(order, current_user_id=user_id)
+
+        logger.info(
+            f"Created crypto order {order.id} for user {user_id}: "
+            f"{amount_usdt} USDT to {wallet_address}"
+        )
+
+        return order
 
     async def process_webhook_payment(
         self,
@@ -30,15 +60,41 @@ class CryptoPaymentService:
         tx_hash: str,
         token_symbol: str,
         raw_payload: dict,
+        confirmations: int = 0,
     ) -> Optional[CryptoTransaction]:
+        if confirmations < REQUIRED_CONFIRMATIONS:
+            logger.info(
+                f"Transaction {tx_hash} has {confirmations} confirmations, "
+                f"need {REQUIRED_CONFIRMATIONS}. Keeping as pending."
+            )
+            existing = await self.crypto_repo.get_by_tx_hash(tx_hash)
+            if existing:
+                return existing
+            transaction = CryptoTransaction(
+                wallet_address=wallet_address,
+                amount=amount,
+                tx_hash=tx_hash,
+                token_symbol=token_symbol,
+                status=CryptoTransactionStatus.PENDING,
+                raw_payload=raw_payload,
+            )
+            return await self.crypto_repo.save(transaction)
+
         existing = await self.crypto_repo.get_by_tx_hash(tx_hash)
         if existing:
             logger.info(f"Transaction already processed: {tx_hash}")
             return existing
 
+        order = None
+        if self.crypto_order_repo:
+            order = await self.crypto_order_repo.get_by_wallet(wallet_address)
+
         user_id = await self._find_user_by_wallet(wallet_address)
+
         if not user_id:
             logger.warning(f"No user found for wallet: {wallet_address}")
+            if order:
+                await self.crypto_order_repo.mark_failed(order.id)
             transaction = CryptoTransaction(
                 wallet_address=wallet_address,
                 amount=amount,
@@ -61,7 +117,12 @@ class CryptoPaymentService:
 
         saved_tx = await self.crypto_repo.save(transaction)
 
-        await self._credit_user(user_id, amount, token_symbol)
+        if order:
+            await self.crypto_order_repo.mark_completed(order.id, tx_hash)
+
+        await self._credit_user(
+            user_id, amount, token_symbol, order.package_type if order else "basic"
+        )
 
         logger.info(f"Payment processed: {amount} {token_symbol} for user {user_id}")
 
@@ -71,16 +132,22 @@ class CryptoPaymentService:
         if not self.user_repo:
             logger.warning("User repository not available")
             return None
-        
+
         try:
-            user = await self.user_repo.get_by_wallet_address(wallet_address, current_user_id=0)
+            user = await self.user_repo.get_by_wallet_address(
+                wallet_address, current_user_id=0
+            )
             return user.telegram_id if user else None
         except Exception as e:
             logger.error(f"Error finding user by wallet: {e}")
             return None
 
     async def _credit_user(
-        self, user_id: int, amount: float, token_symbol: str
+        self,
+        user_id: int,
+        amount: float,
+        token_symbol: str,
+        package_type: str = "basic",
     ) -> bool:
         if token_symbol.upper() != "USDT":
             logger.warning(f"Unsupported token: {token_symbol}")
@@ -93,54 +160,74 @@ class CryptoPaymentService:
 
         try:
             logger.info(f"Crediting {gb_to_credit} GB to user {user_id}")
-            
-            # Import here to avoid circular imports
+
             from application.services.data_package_service import DataPackageService
             from application.services.common.container import get_service
             from domain.entities.data_package import PackageType
-            
-            # Get DataPackageService from container
+
             data_package_service = get_service(DataPackageService)
-            
-            # Convert GB to bytes
+
             bytes_to_credit = gb_to_credit * 1024**3
-            
-            # Create a crypto payment package (similar to Telegram Stars purchase)
-            # Use a unique payment ID for crypto transactions
+
             crypto_payment_id = f"crypto_{uuid.uuid4()}"
-            
-            # Create package with crypto payment
+
+            pkg_type = PackageType(package_type) if package_type else PackageType.BASIC
+
             package = await data_package_service.purchase_package(
                 user_id=user_id,
-                package_type=PackageType.BASIC.value,  # Use BASIC as base type
+                package_type=pkg_type.value,
                 telegram_payment_id=crypto_payment_id,
-                current_user_id=user_id
+                current_user_id=user_id,
             )
-            
-            # Override the data limit to match crypto payment
+
             if package.data_limit_bytes < bytes_to_credit:
-                # Adjust the package data limit for crypto payment
                 from domain.entities.data_package import DataPackage
+
                 adjusted_package = DataPackage(
                     id=package.id,
                     user_id=user_id,
-                    package_type=PackageType.BASIC,
+                    package_type=pkg_type,
                     data_limit_bytes=bytes_to_credit,
-                    stars_paid=0,  # No stars for crypto
+                    stars_paid=0,
                     expires_at=package.expires_at,
-                    telegram_payment_id=crypto_payment_id
+                    telegram_payment_id=crypto_payment_id,
                 )
-                # Update in repository
-                from application.services.common.container import get_service
-                from domain.interfaces.idata_package_repository import IDataPackageRepository
+                from domain.interfaces.idata_package_repository import (
+                    IDataPackageRepository,
+                )
+
                 package_repo = get_service(IDataPackageRepository)
                 await package_repo.save(adjusted_package, user_id)
-            
-            logger.info(f"Successfully credited {gb_to_credit} GB ({bytes_to_credit} bytes) to user {user_id} via crypto payment")
+
+            logger.info(
+                f"Successfully credited {gb_to_credit} GB ({bytes_to_credit} bytes) to user {user_id} via crypto payment"
+            )
             return True
         except Exception as e:
             logger.error(f"Error crediting user {user_id}: {e}")
             return False
 
-    async def get_user_transactions(self, user_id: int, limit: int = 50) -> list:
-        return await self.crypto_repo.get_by_user(user_id, limit)
+    async def get_user_orders(self, user_id: int) -> list:
+        if not self.crypto_order_repo:
+            return []
+        return await self.crypto_order_repo.get_by_user(user_id)
+
+    async def get_order(self, order_id: uuid.UUID) -> Optional[CryptoOrder]:
+        if not self.crypto_order_repo:
+            return None
+        return await self.crypto_order_repo.get_by_id(order_id)
+
+    async def check_and_expire_orders(self) -> int:
+        if not self.crypto_order_repo:
+            return 0
+
+        pending_orders = await self.crypto_order_repo.get_pending()
+        expired_count = 0
+
+        for order in pending_orders:
+            if order.is_expired:
+                await self.crypto_order_repo.mark_expired(order.id)
+                expired_count += 1
+                logger.info(f"Order {order.id} marked as expired")
+
+        return expired_count

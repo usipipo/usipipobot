@@ -28,38 +28,45 @@ class TestCryptoPaymentService:
         return repo
 
     @pytest.fixture
-    def service(self, mock_crypto_repo, mock_user_repo):
+    def mock_order_repo(self):
+        """Mock crypto order repository."""
+        repo = AsyncMock()
+        repo.get_by_wallet.return_value = None
+        return repo
+
+    @pytest.fixture
+    def service(self, mock_crypto_repo, mock_user_repo, mock_order_repo):
         """Fixture to create CryptoPaymentService instance."""
         return CryptoPaymentService(
             crypto_repo=mock_crypto_repo,
-            user_repo=mock_user_repo
+            user_repo=mock_user_repo,
+            crypto_order_repo=mock_order_repo,
         )
 
     @pytest.mark.asyncio
-    async def test_process_webhook_payment_with_user(self, service, mock_crypto_repo, mock_user_repo):
+    async def test_process_webhook_payment_with_user(
+        self, service, mock_crypto_repo, mock_user_repo
+    ):
         """Test that webhook payment process finds user by wallet address."""
-        # Arrange
         wallet_address = "0x1234567890abcdef1234567890abcdef12345678"
-        tx_hash = "0xabc123..."
+        tx_hash = "0xabc123def456789..."
         amount = 10.5
-        
-        # Test
+
         result = await service.process_webhook_payment(
             wallet_address=wallet_address,
             amount=amount,
             tx_hash=tx_hash,
             token_symbol="USDT",
-            raw_payload={"test": "data"}
+            raw_payload={"test": "data"},
+            confirmations=15,
         )
-        
-        # Assert
+
         assert result is not None
         mock_user_repo.get_by_wallet_address.assert_called_once_with(
             wallet_address, current_user_id=0
         )
         mock_crypto_repo.save.assert_called_once()
-        
-        # Verify the created transaction
+
         saved_tx = mock_crypto_repo.save.call_args[0][0]
         assert isinstance(saved_tx, CryptoTransaction)
         assert saved_tx.user_id == 12345
@@ -70,85 +77,79 @@ class TestCryptoPaymentService:
         assert saved_tx.status == CryptoTransactionStatus.CONFIRMED
 
     @pytest.mark.asyncio
-    async def test_process_webhook_payment_no_wallet_match(self, service, mock_crypto_repo, mock_user_repo):
+    async def test_process_webhook_payment_no_wallet_match(
+        self, service, mock_crypto_repo, mock_user_repo
+    ):
         """Test payment processing when no user matches the wallet address."""
-        # Arrange
         wallet_address = "0x9999999999abcdef1234567890abcdef12345678"
-        tx_hash = "0xabc123..."
+        tx_hash = "0xabc123def456789..."
         amount = 10.5
-        
-        # Mock user not found
+
         mock_user_repo.get_by_wallet_address.return_value = None
-        
-        # Test
+
         result = await service.process_webhook_payment(
             wallet_address=wallet_address,
             amount=amount,
             tx_hash=tx_hash,
             token_symbol="USDT",
-            raw_payload={"test": "data"}
+            raw_payload={"test": "data"},
+            confirmations=15,
         )
-        
-        # Assert
+
         assert result is not None
         mock_user_repo.get_by_wallet_address.assert_called_once_with(
             wallet_address, current_user_id=0
         )
         mock_crypto_repo.save.assert_called_once()
-        
-        # Verify transaction is pending
+
         saved_tx = mock_crypto_repo.save.call_args[0][0]
         assert saved_tx.user_id == 0
         assert saved_tx.status == CryptoTransactionStatus.PENDING
 
     @pytest.mark.asyncio
-    async def test_process_webhook_payment_existing_transaction(self, service, mock_crypto_repo):
+    async def test_process_webhook_payment_existing_transaction(
+        self, service, mock_crypto_repo
+    ):
         """Test that existing transactions are not reprocessed."""
-        # Arrange
         wallet_address = "0x1234567890abcdef1234567890abcdef12345678"
-        tx_hash = "0xabc123..."
+        tx_hash = "0xabc123def456789..."
         amount = 10.5
-        
-        # Mock existing transaction
+
         existing_tx = AsyncMock()
         mock_crypto_repo.get_by_tx_hash.return_value = existing_tx
-        
-        # Test
+
         result = await service.process_webhook_payment(
             wallet_address=wallet_address,
             amount=amount,
             tx_hash=tx_hash,
             token_symbol="USDT",
-            raw_payload={"test": "data"}
+            raw_payload={"test": "data"},
+            confirmations=15,
         )
-        
-        # Assert
+
         assert result == existing_tx
         mock_crypto_repo.get_by_tx_hash.assert_called_once_with(tx_hash)
         mock_crypto_repo.save.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_credit_user_with_usdt(self, service):
-        """Test that users are credited for USDT payments."""
-        # Test
-        result = await service._credit_user(
-            user_id=12345,
-            amount=5.0,
-            token_symbol="USDT"
-        )
-        
-        # Assert
-        assert result is True
+    async def test_process_webhook_payment_insufficient_confirmations(
+        self, service, mock_crypto_repo
+    ):
+        """Test that payments with less than 15 confirmations are kept pending."""
+        wallet_address = "0x1234567890abcdef1234567890abcdef12345678"
+        tx_hash = "0xabc123def456789..."
+        amount = 10.5
 
-    @pytest.mark.asyncio
-    async def test_credit_user_with_other_token(self, service):
-        """Test that unsupported tokens are rejected."""
-        # Test
-        result = await service._credit_user(
-            user_id=12345,
-            amount=5.0,
-            token_symbol="ETH"
+        result = await service.process_webhook_payment(
+            wallet_address=wallet_address,
+            amount=amount,
+            tx_hash=tx_hash,
+            token_symbol="USDT",
+            raw_payload={"test": "data"},
+            confirmations=5,
         )
-        
-        # Assert
-        assert result is False
+
+        assert result is not None
+        mock_crypto_repo.save.assert_called_once()
+        saved_tx = mock_crypto_repo.save.call_args[0][0]
+        assert saved_tx.status == CryptoTransactionStatus.PENDING

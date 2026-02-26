@@ -18,6 +18,7 @@ class TronDealerWebhookPayload(BaseModel):
     amount: float = Field(..., gt=0)
     tx_hash: str = Field(..., min_length=66, max_length=66)
     token_symbol: str = Field(default="USDT")
+    confirmations: int = Field(default=0, ge=0)
     timestamp: Optional[str] = None
     nonce: Optional[str] = None
 
@@ -101,6 +102,7 @@ async def handle_tron_dealer_webhook(
             tx_hash=payload.tx_hash,
             token_symbol=payload.token_symbol,
             raw_payload=payload.model_dump(),
+            confirmations=payload.confirmations,
         )
 
         if transaction:

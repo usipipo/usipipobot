@@ -23,6 +23,10 @@ from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from application.services.wallet_management_service import WalletManagementService
+from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
+from domain.interfaces.icrypto_transaction_repository import (
+    ICryptoTransactionRepository,
+)
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
 from domain.interfaces.iticket_repository import ITicketRepository
@@ -32,6 +36,9 @@ from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
 from infrastructure.api_clients.client_tron_dealer import TronDealerClient
 from infrastructure.persistence.database import get_session_factory
+from infrastructure.persistence.postgresql.crypto_order_repository import (
+    PostgresCryptoOrderRepository,
+)
 from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
 )
@@ -147,11 +154,16 @@ def _configure_repositories(container: punq.Container) -> None:
         session = session_factory()
         return PostgresTicketRepository(session)
 
+    def create_crypto_order_repo() -> PostgresCryptoOrderRepository:
+        session = session_factory()
+        return PostgresCryptoOrderRepository(session)
+
     container.register(IUserRepository, factory=create_user_repo)
     container.register(IKeyRepository, factory=create_key_repo)
     container.register(IDataPackageRepository, factory=create_data_package_repo)
     container.register(ITransactionRepository, factory=create_transaction_repo)
     container.register(ITicketRepository, factory=create_ticket_repo)
+    container.register(ICryptoOrderRepository, factory=create_crypto_order_repo)
 
 
 def _configure_application_services(container: punq.Container) -> None:
@@ -227,7 +239,9 @@ def _configure_application_services(container: punq.Container) -> None:
     container.register(ReferralService, factory=create_referral_service)
     container.register(UserProfileService, factory=create_user_profile_service)
     container.register(TicketService, factory=create_ticket_service)
-    container.register(WalletManagementService, factory=create_wallet_management_service)
+    container.register(
+        WalletManagementService, factory=create_wallet_management_service
+    )
 
 
 def _configure_handlers(container: punq.Container) -> None:
