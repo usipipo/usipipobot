@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 T = TypeVar("T")
 
 from application.services.admin_service import AdminService
+from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
 from application.services.ticket_service import TicketService
@@ -38,6 +39,9 @@ from infrastructure.api_clients.client_tron_dealer import TronDealerClient
 from infrastructure.persistence.database import get_session_factory
 from infrastructure.persistence.postgresql.crypto_order_repository import (
     PostgresCryptoOrderRepository,
+)
+from infrastructure.persistence.postgresql.crypto_transaction_repository import (
+    PostgresCryptoTransactionRepository,
 )
 from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
@@ -233,6 +237,15 @@ def _configure_application_services(container: punq.Container) -> None:
             user_repo=create_user_repo(),
         )
 
+    def create_crypto_payment_service() -> CryptoPaymentService:
+        session = session_factory()
+        crypto_repo = PostgresCryptoTransactionRepository(session)
+        return CryptoPaymentService(
+            crypto_repo=crypto_repo,
+            user_repo=create_user_repo(),
+            crypto_order_repo=PostgresCryptoOrderRepository(session),
+        )
+
     container.register(VpnService, factory=create_vpn_service)
     container.register(AdminService, factory=create_admin_service)
     container.register(DataPackageService, factory=create_data_package_service)
@@ -241,6 +254,9 @@ def _configure_application_services(container: punq.Container) -> None:
     container.register(TicketService, factory=create_ticket_service)
     container.register(
         WalletManagementService, factory=create_wallet_management_service
+    )
+    container.register(
+        CryptoPaymentService, factory=create_crypto_payment_service
     )
 
 
