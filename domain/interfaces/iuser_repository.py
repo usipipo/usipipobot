@@ -67,3 +67,15 @@ class IUserRepository(Protocol):
     ) -> bool:
         """Incrementa el límite de claves de un usuario."""
         ...
+
+    async def get_by_wallet_address(
+        self, wallet_address: str, current_user_id: int
+    ) -> Optional[User]:
+        """Busca un usuario por su dirección de wallet BSC."""
+        ...
+
+    async def update_wallet_address(
+        self, telegram_id: int, wallet_address: str, current_user_id: int
+    ) -> bool:
+        """Actualiza la dirección de wallet de un usuario."""
+        ...

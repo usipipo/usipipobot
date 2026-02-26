@@ -38,6 +38,7 @@ class User:
     referral_code: Optional[str] = None
     referred_by: Optional[int] = None
     referral_credits: int = 0
+    wallet_address: Optional[str] = None
 
     keys: List = field(default_factory=list)
 
