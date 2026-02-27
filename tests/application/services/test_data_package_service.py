@@ -32,7 +32,7 @@ class TestGetAvailablePackages:
 
         assert len(packages) == 4
         assert packages[0].name == "Básico"
-        assert packages[0].data_gb == 10
+        assert packages[0].data_gb == 5
         assert packages[0].stars == 500
 
     def test_premium_has_bonus(self, service):
