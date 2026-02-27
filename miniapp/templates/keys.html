@@ -11,7 +11,7 @@
 
 {% if not can_create %}
 <div class="error-message">
-    ⚠️ Has alcanzado el límite de {{ max_keys }} claves. Elimina una clave o compra más slots.
+    ⚠️ Has alcanzado el límite de {{ max_keys }} claves. Compra slots extra o mejora tu plan.
 </div>
 {% endif %}
 
@@ -58,9 +58,7 @@
             <button class="btn btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px;" onclick="copyKey('{{ key.key_data[:50] }}...')">
                 📋 Copiar
             </button>
-            <button class="btn btn-danger" style="flex: 1; padding: 8px 12px; font-size: 12px;" onclick="deleteKey('{{ key.id }}')">
-                🗑️ Eliminar
-            </button>
+            <!-- Delete button removed - prevents abuse of free 5GB -->
         </div>
     </div>
     {% endfor %}
@@ -90,31 +88,7 @@ function copyKey(keyData) {
     }
 }
 
-async function deleteKey(keyId) {
-    const confirmed = await new Promise((resolve) => {
-        Telegram.WebApp.showConfirm('¿Estás seguro de eliminar esta clave?', resolve);
-    });
-    
-    if (!confirmed) return;
-    
-    try {
-        const response = await fetch('/miniapp/api/keys/delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key_id: keyId })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            Telegram.WebApp.showAlert('Clave eliminada correctamente');
-            location.reload();
-        } else {
-            Telegram.WebApp.showAlert('Error: ' + (result.error || 'No se pudo eliminar'));
-        }
-    } catch (error) {
-        Telegram.WebApp.showAlert('Error de conexión');
-    }
-}
+// deleteKey function removed - users cannot delete keys to prevent 5GB abuse
+// Only administrators can delete keys via admin panel
 </script>
 {% endblock %}
