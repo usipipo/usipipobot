@@ -25,7 +25,7 @@ class BasicHandler:
         if user is None:
             logger.warning("No user in update for /help command")
             return
-        
+
         user_id = user.id
         logger.info(f"📋 /help ejecutado por usuario {user_id}")
 

@@ -6,7 +6,8 @@ Version: 1.0.0
 """
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from infrastructure.api.server import create_app
 
 
@@ -15,8 +16,7 @@ async def client():
     """Cliente de pruebas para la API."""
     app = create_app()
     async with AsyncClient(
-        transport=ASGITransport(app=app), 
-        base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
 
@@ -76,22 +76,47 @@ class TestProfileAndSettingsIntegration:
 
 
 class TestDropdownNavigation:
-    """Tests para la navegación con dropdown."""
+    """Tests para la navegación de la miniapp."""
 
     @pytest.mark.asyncio
-    async def test_base_template_contains_dropdown_styles(self, client):
-        """Test que el template base contiene estilos del dropdown."""
-        response = await client.get("/miniapp/entry")
+    async def test_base_template_contains_header(self, client):
+        """Test que el template base contiene el header."""
+        response = await client.get("/miniapp/privacy")
         assert response.status_code == 200
         content = response.content.decode("utf-8")
-        # Verificar que existe la clase del dropdown
-        assert "dropdown" in content.lower() or "header" in content.lower()
+        assert "header" in content.lower()
 
     @pytest.mark.asyncio
-    async def test_privacy_link_removed_from_bottom_nav(self, client):
-        """Test que el link de privacidad ya no está en el nav inferior."""
-        response = await client.get("/miniapp/entry")
-        assert response.status_code == 200
-        content = response.content.decode("utf-8").lower()
-        # Verificar que el nav tiene 3 items (sin privacidad)
-        assert "dashboard" in content or "clave" in content
+    async def test_base_template_has_nav_items(self, client):
+        """Test que el base template contiene los items del nav."""
+        import pathlib
+
+        base_template = (
+            pathlib.Path(__file__).parent.parent.parent
+            / "miniapp"
+            / "templates"
+            / "base.html"
+        )
+        content = base_template.read_text().lower()
+        assert "dashboard" in content
+        assert "claves" in content
+        assert "comprar" in content
+        assert "perfil" in content
+        assert "ajustes" in content
+
+    @pytest.mark.asyncio
+    async def test_privacy_link_not_in_bottom_nav(self, client):
+        """Test que el link de privacidad no está en el nav inferior del base template."""
+        import pathlib
+
+        base_template = (
+            pathlib.Path(__file__).parent.parent.parent
+            / "miniapp"
+            / "templates"
+            / "base.html"
+        )
+        content = base_template.read_text().lower()
+        nav_start = content.find("bottom-nav")
+        nav_end = content.find("{% endblock %}", nav_start) if nav_start != -1 else 0
+        nav_section = content[nav_start:nav_end] if nav_start != -1 else ""
+        assert "privacidad" not in nav_section

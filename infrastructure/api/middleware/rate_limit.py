@@ -1,8 +1,10 @@
 import time
 from collections import defaultdict
 from typing import Dict, List
-from fastapi import Request, HTTPException
+
+from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from utils.logger import logger
 
 
@@ -15,9 +17,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def _cleanup_old_requests(self, ip: str):
         current_time = time.time()
         cutoff = current_time - 60
-        self.requests[ip] = [
-            ts for ts in self.requests[ip] if ts > cutoff
-        ]
+        self.requests[ip] = [ts for ts in self.requests[ip] if ts > cutoff]
 
     async def dispatch(self, request: Request, call_next):
         if request.url.path.startswith("/health"):
@@ -30,8 +30,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if len(self.requests[client_ip]) >= self.requests_per_minute:
             logger.warning(f"Rate limit exceeded for IP: {client_ip}")
             raise HTTPException(
-                status_code=429,
-                detail="Too many requests. Please try again later."
+                status_code=429, detail="Too many requests. Please try again later."
             )
 
         self.requests[client_ip].append(time.time())

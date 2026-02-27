@@ -1,8 +1,8 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
-import uuid
 
 
 class CryptoTransactionStatus(str, Enum):

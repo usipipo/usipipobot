@@ -14,24 +14,34 @@ class MainMenuKeyboard:
     @staticmethod
     def main_menu(miniapp_url: str | None = None) -> InlineKeyboardMarkup:
         keyboard = []
-        
+
         if miniapp_url:
-            keyboard.append([
-                InlineKeyboardButton("📱 Mini App", web_app=WebAppInfo(url=miniapp_url)),
-            ])
-        
-        keyboard.append([
-            InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
-            InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
-        ])
-        
-        keyboard.extend([
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "📱 Mini App", web_app=WebAppInfo(url=miniapp_url)
+                    ),
+                ]
+            )
+
+        keyboard.append(
             [
-                InlineKeyboardButton("⚙️ Operaciones", callback_data="operations_menu"),
-                InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage"),
-            ],
-            [InlineKeyboardButton("❓ Ayuda", callback_data="help")],
-        ])
+                InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
+                InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
+            ]
+        )
+
+        keyboard.extend(
+            [
+                [
+                    InlineKeyboardButton(
+                        "⚙️ Operaciones", callback_data="operations_menu"
+                    ),
+                    InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage"),
+                ],
+                [InlineKeyboardButton("❓ Ayuda", callback_data="help")],
+            ]
+        )
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
@@ -42,23 +52,37 @@ class MainMenuKeyboard:
             keyboard = [
                 [InlineKeyboardButton("🔧 Admin", callback_data="admin_panel")],
             ]
-            
+
             if miniapp_url:
-                keyboard.append([
-                    InlineKeyboardButton("📱 Mini App", web_app=WebAppInfo(url=miniapp_url)),
-                ])
-            
-            keyboard.append([
-                InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
-                InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
-            ])
-            
-            keyboard.extend([
+                keyboard.append(
+                    [
+                        InlineKeyboardButton(
+                            "📱 Mini App", web_app=WebAppInfo(url=miniapp_url)
+                        ),
+                    ]
+                )
+
+            keyboard.append(
                 [
-                    InlineKeyboardButton("⚙️ Operaciones", callback_data="operations_menu"),
-                    InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage"),
-                ],
-                [InlineKeyboardButton("❓ Ayuda", callback_data="help")],
-            ])
+                    InlineKeyboardButton(
+                        "🔑 Mis Claves VPN", callback_data="show_keys"
+                    ),
+                    InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
+                ]
+            )
+
+            keyboard.extend(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "⚙️ Operaciones", callback_data="operations_menu"
+                        ),
+                        InlineKeyboardButton(
+                            "💾 Mis Datos", callback_data="show_usage"
+                        ),
+                    ],
+                    [InlineKeyboardButton("❓ Ayuda", callback_data="help")],
+                ]
+            )
             return InlineKeyboardMarkup(keyboard)
         return MainMenuKeyboard.main_menu(miniapp_url)

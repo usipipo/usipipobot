@@ -131,7 +131,9 @@ class VpnKeysHandler:
         if not update.effective_user or not update.message or not update.message.text:
             return ConversationHandler.END
         key_name = update.message.text
-        tmp_key_type = context.user_data.get("tmp_key_type") if context.user_data else None
+        tmp_key_type = (
+            context.user_data.get("tmp_key_type") if context.user_data else None
+        )
         if not tmp_key_type:
             return ConversationHandler.END
         key_type: str = tmp_key_type

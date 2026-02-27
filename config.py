@@ -5,13 +5,13 @@ Gestiona variables de entorno con validación estricta y valores seguros por def
 Author: uSipipo Team
 """
 
-from version import __version__
-
 from pathlib import Path
 from typing import List, Optional
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from version import __version__
 
 
 class Settings(BaseSettings):
@@ -27,9 +27,7 @@ class Settings(BaseSettings):
         default="uSipipo VPN Manager", description="Nombre del proyecto"
     )
 
-    VERSION: str = Field(
-        default=__version__, description="Versión de la aplicación"
-    )
+    VERSION: str = Field(default=__version__, description="Versión de la aplicación")
 
     APP_ENV: str = Field(
         default="development",
@@ -259,6 +257,40 @@ class Settings(BaseSettings):
         description="Nivel de logging: DEBUG | INFO | WARNING | ERROR | CRITICAL",
     )
 
+    # =========================================================================
+    # AUTO LIMPIEZA DE MEMORIA RAM
+    # =========================================================================
+    MEMORY_CLEANUP_ENABLED: bool = Field(
+        default=True,
+        description="Habilitar limpieza automática de RAM",
+    )
+
+    MEMORY_CLEANUP_THRESHOLD_PERCENT: int = Field(
+        default=80,
+        ge=50,
+        le=95,
+        description="Umbral de uso de RAM (%) para ejecutar limpieza",
+    )
+
+    MEMORY_CLEANUP_CRITICAL_PERCENT: int = Field(
+        default=90,
+        ge=60,
+        le=99,
+        description="Umbral crítico de RAM (%) que requiere limpieza agresiva",
+    )
+
+    MEMORY_CLEANUP_INTERVAL_MINUTES: int = Field(
+        default=10,
+        ge=1,
+        le=60,
+        description="Intervalo en minutos entre verificaciones de RAM",
+    )
+
+    MEMORY_NOTIFY_ADMIN: bool = Field(
+        default=True,
+        description="Notificar al admin cuando se limpie la RAM",
+    )
+
     LOG_FILE_PATH: str = Field(
         default="./logs/vpn_manager.log", description="Ruta del archivo de logs"
     )
@@ -290,37 +322,33 @@ class Settings(BaseSettings):
     # TRON DEALER API (Crypto Payments)
     # =========================================================================
     TRON_DEALER_API_KEY: Optional[str] = Field(
-        default=None,
-        description="API key de Tron Dealer (prefijo td_)"
+        default=None, description="API key de Tron Dealer (prefijo td_)"
     )
 
     TRON_DEALER_WEBHOOK_SECRET: str = Field(
         ...,
         min_length=32,
-        description="Secret para verificar firmas HMAC de webhooks (generar con openssl rand -hex 32)"
+        description="Secret para verificar firmas HMAC de webhooks (generar con openssl rand -hex 32)",
     )
 
     TRON_DEALER_SWEEP_WALLET: Optional[str] = Field(
-        default=None,
-        description="Wallet BSC donde recibir los fondos"
+        default=None, description="Wallet BSC donde recibir los fondos"
     )
 
     # =========================================================================
     # DYNAMIC DNS (DuckDNS)
     # =========================================================================
     DUCKDNS_DOMAIN: Optional[str] = Field(
-        default=None,
-        description="Dominio de DuckDNS (sin .duckdns.org)"
+        default=None, description="Dominio de DuckDNS (sin .duckdns.org)"
     )
 
     DUCKDNS_TOKEN: Optional[str] = Field(
-        default=None,
-        description="Token de autenticacion de DuckDNS"
+        default=None, description="Token de autenticacion de DuckDNS"
     )
 
     PUBLIC_URL: Optional[str] = Field(
         default=None,
-        description="URL publica del servidor (https://dominio.duckdns.org)"
+        description="URL publica del servidor (https://dominio.duckdns.org)",
     )
 
     # =========================================================================
@@ -389,6 +417,15 @@ class Settings(BaseSettings):
 
         log_dir = Path(self.LOG_FILE_PATH).parent
         log_dir.mkdir(parents=True, exist_ok=True)
+
+        # Validate TronDealer configuration in production
+        if self.is_production:
+            if not self.TRON_DEALER_API_KEY:
+                raise ValueError("TRON_DEALER_API_KEY is required in production")
+            if not self.TRON_DEALER_WEBHOOK_SECRET:
+                raise ValueError("TRON_DEALER_WEBHOOK_SECRET is required in production")
+            if not self.TRON_DEALER_SWEEP_WALLET:
+                raise ValueError("TRON_DEALER_SWEEP_WALLET is required in production")
 
         return self
 

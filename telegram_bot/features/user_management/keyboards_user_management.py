@@ -33,9 +33,9 @@ class UserManagementKeyboards:
             from config import settings
 
             return MainMenuKeyboard.main_menu_with_admin(
-                admin_id=int(settings.ADMIN_ID), 
+                admin_id=int(settings.ADMIN_ID),
                 current_user_id=int(settings.ADMIN_ID),
-                miniapp_url=miniapp_url
+                miniapp_url=miniapp_url,
             )
         return MainMenuKeyboard.main_menu(miniapp_url=miniapp_url)
 

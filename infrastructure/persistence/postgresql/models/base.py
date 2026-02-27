@@ -49,6 +49,7 @@ class UserModel(Base):
     referral_code: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     referred_by: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     referral_credits: Mapped[int] = mapped_column(Integer, server_default="0")
+    wallet_address: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     free_data_limit_bytes: Mapped[int] = mapped_column(
         BigInteger, server_default="10737418240"
