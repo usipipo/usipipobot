@@ -142,7 +142,7 @@ class TronDealerClient:
             logger.debug(f"TronDealer API response status: {response.status_code}")
 
             try:
-                response_data = await response.json()
+                response_data = response.json()
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse TronDealer API response: {e}")
                 raise TronDealerApiError(500, "Invalid response format")

@@ -40,7 +40,7 @@ class TestTronDealerClient:
 
         async def mock_post(url, **kwargs):
             mock_response_obj = AsyncMock()
-            mock_response_obj.json = AsyncMock(return_value=mock_response)
+            mock_response_obj.json = MagicMock(return_value=mock_response)
             mock_response_obj.status_code = 201
             return mock_response_obj
 
@@ -78,7 +78,7 @@ class TestTronDealerClient:
 
         async def mock_post(url, **kwargs):
             mock_response_obj = AsyncMock()
-            mock_response_obj.json.return_value = mock_response
+            mock_response_obj.json = MagicMock(return_value=mock_response)
             mock_response_obj.status_code = 200
             return mock_response_obj
 
@@ -132,7 +132,7 @@ class TestTronDealerClient:
 
         async def mock_post(url, **kwargs):
             mock_response_obj = AsyncMock()
-            mock_response_obj.json.return_value = mock_response
+            mock_response_obj.json = MagicMock(return_value=mock_response)
             mock_response_obj.status_code = 200
             return mock_response_obj
 
@@ -164,7 +164,7 @@ class TestTronDealerClient:
 
         async def mock_post(url, **kwargs):
             mock_response_obj = AsyncMock()
-            mock_response_obj.json.return_value = mock_response
+            mock_response_obj.json = MagicMock(return_value=mock_response)
             mock_response_obj.status_code = 401
             return mock_response_obj
 
