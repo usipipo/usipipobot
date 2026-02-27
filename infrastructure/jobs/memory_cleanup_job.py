@@ -82,12 +82,7 @@ def drop_caches(level: int = 1) -> bool:
         if level not in [1, 2, 3]:
             level = 1
 
-        result = subprocess.run(
-            ["sync"],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
+        result = subprocess.run(["sync"], capture_output=True, text=True, timeout=10)
 
         if result.returncode != 0:
             logger.warning(f"sync falló: {result.stderr}")
@@ -153,8 +148,7 @@ async def memory_cleanup_job(context: ContextTypes.DEFAULT_TYPE) -> None:
             return
 
         logger.info(
-            f"🚨 RAM alta detectada: {used_percent}% "
-            f"(umbral: {threshold}%)"
+            f"🚨 RAM alta detectada: {used_percent}% " f"(umbral: {threshold}%)"
         )
 
         mem_before = dict(mem_info)
@@ -175,7 +169,9 @@ async def memory_cleanup_job(context: ContextTypes.DEFAULT_TYPE) -> None:
         mem_after = get_memory_info()
 
         if mem_after:
-            freed_kb = mem_after.get("available_kb", 0) - mem_before.get("available_kb", 0)
+            freed_kb = mem_after.get("available_kb", 0) - mem_before.get(
+                "available_kb", 0
+            )
             freed_mb = freed_kb / 1024 if freed_kb > 0 else 0
 
             logger.info(
@@ -197,7 +193,7 @@ async def notify_admin(
     context: ContextTypes.DEFAULT_TYPE,
     before: Dict[str, Any],
     after: Dict[str, Any],
-    cleanup_type: str
+    cleanup_type: str,
 ) -> None:
     """
     Notifica al administrador sobre la limpieza de RAM.
@@ -222,9 +218,7 @@ async def notify_admin(
         )
 
         await context.bot.send_message(
-            chat_id=settings.ADMIN_ID,
-            text=message,
-            parse_mode="Markdown"
+            chat_id=settings.ADMIN_ID, text=message, parse_mode="Markdown"
         )
     except Exception as e:
         logger.warning(f"⚠️ No se pudo notificar al admin: {e}")
