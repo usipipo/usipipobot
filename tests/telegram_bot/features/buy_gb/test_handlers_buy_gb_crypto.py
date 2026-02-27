@@ -49,6 +49,8 @@ class TestBuyGbHandler:
         # Setup
         mock_update.callback_query.data = "select_payment_basic"
         context = MagicMock()
+        context.bot = AsyncMock()
+        context.bot.send_photo = AsyncMock()
 
         # Mock the edit_message_text method
         mock_update.callback_query.edit_message_text = AsyncMock()
@@ -63,7 +65,7 @@ class TestBuyGbHandler:
 
         assert "Seleccionar Método de Pago" in message
         assert "Básico" in message
-        assert "10 GB" in message
+        assert "5 GB" in message
         assert "50 ⭐" in message
         assert "1.00 USDT" in message
 
@@ -115,6 +117,6 @@ class TestBuyGbHandler:
 
             assert "Pago con USDT" in message
             assert "Básico" in message
-            assert "10 GB" in message
+            assert "5 GB" in message
             assert "1.0 USDT" in message
             assert "0x1234567890abcdef" in message
