@@ -42,7 +42,7 @@ class User:
 
     keys: List = field(default_factory=list)
 
-    free_data_limit_bytes: int = 10 * 1024**3
+    free_data_limit_bytes: int = 5 * 1024**3
     free_data_used_bytes: int = 0
 
     @property
@@ -54,6 +54,34 @@ class User:
     def is_blocked(self) -> bool:
         """Verifica si el usuario está bloqueado."""
         return self.status == UserStatus.BLOCKED
+
+    def get_key_count_by_type(self, key_type: str) -> int:
+        """
+        Cuenta las claves activas de un tipo específico.
+        """
+        active_keys = [
+            k for k in self.keys
+            if getattr(k, "is_active", True) and getattr(k, "key_type", None) == key_type
+        ]
+        return len(active_keys)
+
+    def can_create_key_type(self, key_type: str) -> bool:
+        """
+        Lógica de negocio: Verifica si el usuario puede crear una clave
+        del tipo especificado. Solo permite 1 clave por tipo de servidor.
+        Los administradores pueden crear ilimitadas.
+        """
+        if self.role == UserRole.ADMIN:
+            return True
+
+        # Verificar límite total de claves
+        active_keys = [k for k in self.keys if getattr(k, "is_active", True)]
+        if len(active_keys) >= self.max_keys:
+            return False
+
+        # Verificar que no tenga ya una clave del mismo tipo
+        existing_of_type = self.get_key_count_by_type(key_type)
+        return existing_of_type == 0
 
     def can_create_more_keys(self) -> bool:
         """
