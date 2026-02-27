@@ -279,7 +279,7 @@ class BuyGbHandler:
             payment_service = get_service(CryptoPaymentService)
 
             wallet = await wallet_service.assign_wallet(
-                user_id, current_user_id=user_id
+                user_id, label=f"user-{user_id}"
             )
 
             if not wallet:
