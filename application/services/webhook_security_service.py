@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
 
 from domain.entities.crypto_transaction import WebhookToken
@@ -13,19 +13,12 @@ class WebhookSecurityService:
     MAX_TIMESTAMP_DRIFT_SECONDS = 300
     NONCE_EXPIRY_HOURS = 24
 
-    def __init__(
-        self,
-        webhook_secret: str,
-        token_repo: IWebhookTokenRepository
-    ):
+    def __init__(self, webhook_secret: str, token_repo: IWebhookTokenRepository):
         self.webhook_secret = webhook_secret
         self.token_repo = token_repo
 
     def verify_hmac_signature(
-        self,
-        payload: bytes,
-        signature: str,
-        timestamp: Optional[str] = None
+        self, payload: bytes, signature: str, timestamp: Optional[str] = None
     ) -> bool:
         if not signature:
             logger.warning("Missing HMAC signature")
@@ -36,9 +29,7 @@ class WebhookSecurityService:
             message = f"{timestamp}.".encode() + payload
 
         expected_signature = hmac.new(
-            self.webhook_secret.encode(),
-            message,
-            hashlib.sha256
+            self.webhook_secret.encode(), message, hashlib.sha256
         ).hexdigest()
 
         if not hmac.compare_digest(signature, expected_signature):
@@ -72,8 +63,9 @@ class WebhookSecurityService:
         token = WebhookToken(
             token_hash=nonce_hash,
             purpose="replay_protection",
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=self.NONCE_EXPIRY_HOURS),
-            extra_data={"nonce": nonce}
+            expires_at=datetime.now(timezone.utc)
+            + timedelta(hours=self.NONCE_EXPIRY_HOURS),
+            extra_data={"nonce": nonce},
         )
 
         await self.token_repo.save(token)
@@ -96,7 +88,9 @@ class WebhookSecurityService:
 
         return None
 
-    def is_suspicious_request(self, payload: dict, headers: dict) -> Tuple[bool, Optional[str]]:
+    def is_suspicious_request(
+        self, payload: dict, headers: dict
+    ) -> Tuple[bool, Optional[str]]:
         if not payload:
             return True, "Empty payload"
 

@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Optional
 
+from domain.entities.balance import Balance
+
 
 class ITransactionRepository(ABC):
     @abstractmethod
@@ -19,4 +21,18 @@ class ITransactionRepository(ABC):
 
     @abstractmethod
     async def get_user_transactions(self, user_id: int, limit: int = 10) -> list:
+        pass
+
+    @abstractmethod
+    async def get_balance(self, user_id: int) -> Balance:
+        """
+        Obtiene el saldo actual de un usuario.
+
+        Args:
+            user_id: ID del usuario de Telegram.
+
+        Returns:
+            Objeto Balance con el saldo en stars del usuario.
+            Retorna Balance con 0 stars si no hay transacciones.
+        """
         pass

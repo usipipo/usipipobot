@@ -80,7 +80,7 @@ def admin_required(func):
         if user is None:
             logger.warning(f"No user in update for admin action: {func.__name__}")
             return None
-        
+
         if user.id != int(settings.ADMIN_ID):
             logger.warning(
                 f"Access denied for user {user.id} attempting admin action: {func.__name__}"

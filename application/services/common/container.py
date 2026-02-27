@@ -14,22 +14,35 @@ from typing import TypeVar
 import punq
 from sqlalchemy.ext.asyncio import AsyncSession
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 from application.services.admin_service import AdminService
+from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
 from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
+from application.services.wallet_management_service import WalletManagementService
+from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
+from domain.interfaces.icrypto_transaction_repository import (
+    ICryptoTransactionRepository,
+)
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
 from domain.interfaces.iticket_repository import ITicketRepository
 from domain.interfaces.itransaction_repository import ITransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
+from infrastructure.api_clients.client_tron_dealer import TronDealerClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
 from infrastructure.persistence.database import get_session_factory
+from infrastructure.persistence.postgresql.crypto_order_repository import (
+    PostgresCryptoOrderRepository,
+)
+from infrastructure.persistence.postgresql.crypto_transaction_repository import (
+    PostgresCryptoTransactionRepository,
+)
 from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
 )
@@ -119,6 +132,13 @@ def _configure_infrastructure_clients(container: punq.Container) -> None:
     container.register(OutlineClient, scope=punq.Scope.singleton)
     container.register(WireGuardClient, scope=punq.Scope.singleton)
 
+    def create_tron_dealer_client() -> TronDealerClient:
+        return TronDealerClient()
+
+    container.register(
+        TronDealerClient, factory=create_tron_dealer_client, scope=punq.Scope.singleton
+    )
+
 
 def _configure_repositories(container: punq.Container) -> None:
     """Configura los repositorios en el contenedor."""
@@ -144,11 +164,16 @@ def _configure_repositories(container: punq.Container) -> None:
         session = session_factory()
         return PostgresTicketRepository(session)
 
+    def create_crypto_order_repo() -> PostgresCryptoOrderRepository:
+        session = session_factory()
+        return PostgresCryptoOrderRepository(session)
+
     container.register(IUserRepository, factory=create_user_repo)
     container.register(IKeyRepository, factory=create_key_repo)
     container.register(IDataPackageRepository, factory=create_data_package_repo)
     container.register(ITransactionRepository, factory=create_transaction_repo)
     container.register(ITicketRepository, factory=create_ticket_repo)
+    container.register(ICryptoOrderRepository, factory=create_crypto_order_repo)
 
 
 def _configure_application_services(container: punq.Container) -> None:
@@ -212,12 +237,31 @@ def _configure_application_services(container: punq.Container) -> None:
     def create_ticket_service() -> TicketService:
         return TicketService(ticket_repo=create_ticket_repo_inner())
 
+    def create_wallet_management_service() -> WalletManagementService:
+        return WalletManagementService(
+            tron_dealer_client=container.resolve(TronDealerClient),
+            user_repo=create_user_repo(),
+        )
+
+    def create_crypto_payment_service() -> CryptoPaymentService:
+        session = session_factory()
+        crypto_repo = PostgresCryptoTransactionRepository(session)
+        return CryptoPaymentService(
+            crypto_repo=crypto_repo,
+            user_repo=create_user_repo(),
+            crypto_order_repo=PostgresCryptoOrderRepository(session),
+        )
+
     container.register(VpnService, factory=create_vpn_service)
     container.register(AdminService, factory=create_admin_service)
     container.register(DataPackageService, factory=create_data_package_service)
     container.register(ReferralService, factory=create_referral_service)
     container.register(UserProfileService, factory=create_user_profile_service)
     container.register(TicketService, factory=create_ticket_service)
+    container.register(
+        WalletManagementService, factory=create_wallet_management_service
+    )
+    container.register(CryptoPaymentService, factory=create_crypto_payment_service)
 
 
 def _configure_handlers(container: punq.Container) -> None:

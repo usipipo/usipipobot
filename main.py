@@ -16,6 +16,7 @@ from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
 from config import settings
 from infrastructure.jobs.key_cleanup_job import key_cleanup_job
+from infrastructure.jobs.memory_cleanup_job import memory_cleanup_job
 from infrastructure.jobs.package_expiration_job import expire_packages_job
 from infrastructure.jobs.usage_sync import sync_vpn_usage_job
 from infrastructure.persistence.database import close_database, init_database
@@ -40,8 +41,10 @@ async def shutdown():
 def run_api_server():
     """Ejecuta el servidor API en un hilo separado."""
     import asyncio
-    from infrastructure.api.server import create_app
+
     import uvicorn
+
+    from infrastructure.api.server import create_app
 
     app = create_app()
     uvicorn.run(
@@ -49,7 +52,7 @@ def run_api_server():
         host=settings.API_HOST,
         port=settings.API_PORT,
         log_level="info",
-        access_log=True
+        access_log=True,
     )
 
 
@@ -75,15 +78,15 @@ def main():
         except Exception as e:
             logger.critical(f"❌ Error al inicializar el contenedor: {e}")
             sys.exit(1)
-        
+
         await startup()
 
         if settings.DUCKDNS_DOMAIN and settings.DUCKDNS_TOKEN:
             try:
                 from infrastructure.dns.duckdns_service import DuckDNSService
+
                 duckdns = DuckDNSService(
-                    domain=settings.DUCKDNS_DOMAIN,
-                    token=settings.DUCKDNS_TOKEN
+                    domain=settings.DUCKDNS_DOMAIN, token=settings.DUCKDNS_TOKEN
                 )
                 await duckdns.update_ip()
                 logger.info(f"🌐 DuckDNS configurado: {duckdns.get_public_url()}")
@@ -98,7 +101,10 @@ def main():
             return
 
         job_queue.run_repeating(
-            sync_vpn_usage_job, interval=1800, first=60, data={"vpn_service": vpn_service}
+            sync_vpn_usage_job,
+            interval=1800,
+            first=60,
+            data={"vpn_service": vpn_service},
         )
         logger.info("⏰ Job de cuota programado.")
 
@@ -114,6 +120,18 @@ def main():
             data={"data_package_service": data_package_service},
         )
         logger.info("⏰ Job de expiración de paquetes programado.")
+
+        interval_minutes = settings.MEMORY_CLEANUP_INTERVAL_MINUTES
+        job_queue.run_repeating(
+            memory_cleanup_job,
+            interval=interval_minutes * 60,
+            first=120,
+            data={},
+        )
+        logger.info(
+            f"⏰ Job de limpieza de RAM programado cada {interval_minutes} minutos "
+            f"(umbral: {settings.MEMORY_CLEANUP_THRESHOLD_PERCENT}%)"
+        )
 
         handlers = initialize_handlers(vpn_service, referral_service)
         for handler in handlers:

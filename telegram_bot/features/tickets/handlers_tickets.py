@@ -201,7 +201,9 @@ class TicketHandler:
                 ticket_id=str(ticket.id)[:8],
                 subject=escape_markdown(ticket.subject),
                 status=f"{ticket.status_emoji} {escape_markdown(ticket.status.value)}",
-                created_at=escape_markdown(ticket.created_at.strftime("%Y-%m-%d %H:%M")),
+                created_at=escape_markdown(
+                    ticket.created_at.strftime("%Y-%m-%d %H:%M")
+                ),
                 message=escape_markdown(ticket.message),
                 response_section=response_section,
             )
@@ -322,7 +324,9 @@ class TicketHandler:
                 user_id=ticket.user_id,
                 subject=escape_markdown(ticket.subject),
                 status=f"{ticket.status_emoji} {escape_markdown(ticket.status.value)}",
-                created_at=escape_markdown(ticket.created_at.strftime("%Y-%m-%d %H:%M")),
+                created_at=escape_markdown(
+                    ticket.created_at.strftime("%Y-%m-%d %H:%M")
+                ),
                 message=escape_markdown(ticket.message),
                 response_section=response_section,
             )

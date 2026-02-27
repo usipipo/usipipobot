@@ -18,9 +18,7 @@ from telegram.ext import (
 
 from application.services.admin_service import AdminService
 from application.services.user_profile_service import UserProfileService
-
 from application.services.vpn_service import VpnService
-
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
 from telegram_bot.common.keyboards import get_miniapp_url
@@ -98,9 +96,9 @@ class UserManagementHandler(BaseHandler):
             await update.message.reply_text(
                 text=welcome_message,
                 reply_markup=MainMenuKeyboard.main_menu_with_admin(
-                    admin_id=int(settings.ADMIN_ID), 
+                    admin_id=int(settings.ADMIN_ID),
                     current_user_id=user.id,
-                    miniapp_url=miniapp_url
+                    miniapp_url=miniapp_url,
                 ),
                 parse_mode="Markdown",
             )
@@ -189,14 +187,7 @@ class UserManagementHandler(BaseHandler):
             await ops_handler.operations_menu(update, _context)
 
         elif callback_data == "show_usage":
-            from application.services.common.container import get_container
-            from application.services.data_package_service import DataPackageService
-            from telegram_bot.features.buy_gb.handlers_buy_gb import BuyGbHandler
-
-            container = get_container()
-            data_package_service = container.resolve(DataPackageService)
-            buy_gb_handler = BuyGbHandler(data_package_service)
-            await buy_gb_handler.data_handler(update, _context)
+            await self.info_handler(update, _context)
 
         elif callback_data == "help":
             await query.edit_message_text(

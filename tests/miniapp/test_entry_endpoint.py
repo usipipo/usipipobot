@@ -6,7 +6,8 @@ Version: 1.0.0
 """
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
+
 from infrastructure.api.server import create_app
 
 
@@ -15,8 +16,7 @@ async def client():
     """Cliente de pruebas para la API."""
     app = create_app()
     async with AsyncClient(
-        transport=ASGITransport(app=app), 
-        base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
 

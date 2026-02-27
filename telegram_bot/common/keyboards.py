@@ -11,12 +11,12 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 def get_miniapp_url() -> str | None:
     """
     Get Mini App URL if enabled.
-    
+
     Returns:
         Mini App entry URL if enabled and configured, None otherwise.
     """
     from config import settings
-    
+
     if settings.MINIAPP_ENABLED and settings.MINIAPP_URL:
         return f"{settings.MINIAPP_URL.rstrip('/')}/miniapp/entry"
     return None
@@ -273,7 +273,9 @@ class CommonKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def main_menu(is_admin: bool = False, miniapp_url: str | None = None) -> InlineKeyboardMarkup:
+    def main_menu(
+        is_admin: bool = False, miniapp_url: str | None = None
+    ) -> InlineKeyboardMarkup:
         """
         Main menu keyboard.
 
@@ -290,9 +292,9 @@ class CommonKeyboards:
             from config import settings
 
             return MainMenuKeyboard.main_menu_with_admin(
-                admin_id=int(settings.ADMIN_ID), 
+                admin_id=int(settings.ADMIN_ID),
                 current_user_id=int(settings.ADMIN_ID),
-                miniapp_url=miniapp_url
+                miniapp_url=miniapp_url,
             )
         return MainMenuKeyboard.main_menu(miniapp_url)
 

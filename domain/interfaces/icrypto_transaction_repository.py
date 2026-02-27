@@ -1,6 +1,7 @@
+import uuid
 from abc import ABC, abstractmethod
 from typing import List, Optional
-import uuid
+
 from domain.entities.crypto_transaction import CryptoTransaction, WebhookToken
 
 
@@ -14,7 +15,9 @@ class ICryptoTransactionRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_user(self, user_id: int, limit: int = 50) -> List[CryptoTransaction]:
+    async def get_by_user(
+        self, user_id: int, limit: int = 50
+    ) -> List[CryptoTransaction]:
         pass
 
     @abstractmethod

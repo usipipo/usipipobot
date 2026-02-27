@@ -41,6 +41,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             referral_credits=model.referral_credits or 0,
             free_data_limit_bytes=model.free_data_limit_bytes or 10 * 1024**3,
             free_data_used_bytes=model.free_data_used_bytes or 0,
+            wallet_address=model.wallet_address,
         )
 
     def _entity_to_model(self, entity: User) -> UserModel:
@@ -62,6 +63,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             referral_credits=entity.referral_credits,
             free_data_limit_bytes=entity.free_data_limit_bytes,
             free_data_used_bytes=entity.free_data_used_bytes,
+            wallet_address=entity.wallet_address,
         )
 
     async def get_by_id(self, telegram_id: int, current_user_id: int) -> Optional[User]:
@@ -96,6 +98,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 existing.referral_credits = user.referral_credits
                 existing.free_data_limit_bytes = user.free_data_limit_bytes
                 existing.free_data_used_bytes = user.free_data_used_bytes
+                existing.wallet_address = user.wallet_address
             else:
                 model = self._entity_to_model(user)
                 self.session.add(model)
@@ -286,6 +289,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 existing.referral_credits = user.referral_credits
                 existing.free_data_limit_bytes = user.free_data_limit_bytes
                 existing.free_data_used_bytes = user.free_data_used_bytes
+                existing.wallet_address = user.wallet_address
                 await self.session.commit()
                 logger.info(f"Usuario {user.telegram_id} actualizado correctamente.")
                 return user
@@ -295,6 +299,42 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             await self.session.rollback()
             logger.error(f"Error al actualizar usuario: {e}")
             raise
+
+    async def get_by_wallet_address(
+        self, wallet_address: str, current_user_id: int
+    ) -> Optional[User]:
+        """Busca un usuario por su dirección de wallet BSC."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = select(UserModel).where(UserModel.wallet_address == wallet_address)
+            result = await self.session.execute(query)
+            model = result.scalar_one_or_none()
+            return self._model_to_entity(model) if model else None
+        except Exception as e:
+            logger.error(f"Error al buscar por wallet address {wallet_address}: {e}")
+            return None
+
+    async def update_wallet_address(
+        self, telegram_id: int, wallet_address: str, current_user_id: int
+    ) -> bool:
+        """Actualiza la dirección de wallet de un usuario."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = (
+                update(UserModel)
+                .where(UserModel.telegram_id == telegram_id)
+                .values(wallet_address=wallet_address)
+            )
+            await self.session.execute(query)
+            await self.session.commit()
+            logger.debug(
+                f"Wallet address actualizada para usuario {telegram_id}: {wallet_address}"
+            )
+            return True
+        except Exception as e:
+            await self.session.rollback()
+            logger.error(f"Error al actualizar wallet address: {e}")
+            return False
 
     async def delete_user(self, telegram_id: int) -> bool:
         """Elimina un usuario de la base de datos."""

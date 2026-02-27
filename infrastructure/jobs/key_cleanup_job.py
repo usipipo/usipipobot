@@ -68,7 +68,9 @@ async def cleanup_inactive_keys(vpn_service: VpnService, keys: List[VpnKey]) -> 
             if last_seen_naive and last_seen_naive < inactive_threshold:
                 if key.id is not None:
                     key_uuid = uuid.UUID(key.id)
-                    if await vpn_service.deactivate_inactive_key(key_uuid, settings.ADMIN_ID):
+                    if await vpn_service.deactivate_inactive_key(
+                        key_uuid, settings.ADMIN_ID
+                    ):
                         deactivated_count += 1
                         logger.info(
                             f"🔒 Llave {key.id} desactivada por inactividad (última actividad: {key.last_seen_at})"
@@ -100,7 +102,11 @@ async def check_and_notify_data_limits(
     notified_users: set[int] = set()
 
     for key in keys:
-        if key.is_over_limit and key.user_id is not None and key.user_id not in notified_users:
+        if (
+            key.is_over_limit
+            and key.user_id is not None
+            and key.user_id not in notified_users
+        ):
             try:
                 await context.bot.send_message(
                     chat_id=key.user_id,
