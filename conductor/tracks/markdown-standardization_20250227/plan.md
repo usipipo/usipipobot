@@ -120,7 +120,7 @@ Migrar TODO el codebase a `parse_mode="Markdown"` (normal), eliminando el uso in
 
 | Phase | Checkpoint SHA | Date | Status |
 | ----- | -------------- | ---- | ------ |
-| Phase 1 | - | 2025-02-27 | completed |
-| Phase 2 | - | 2025-02-27 | completed |
-| Phase 3 | - | 2025-02-27 | completed |
-| Phase 4 | - | 2025-02-27 | completed |
+| Phase 1 | 4d15ff9 | 2025-02-27 | completed |
+| Phase 2 | 4d15ff9 | 2025-02-27 | completed |
+| Phase 3 | 4d15ff9 | 2025-02-27 | completed |
+| Phase 4 | 4d15ff9 | 2025-02-27 | completed |
