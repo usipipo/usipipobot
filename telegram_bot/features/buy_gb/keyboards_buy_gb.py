@@ -70,13 +70,31 @@ class BuyGbKeyboards:
             keyboard.append(
                 [
                     InlineKeyboardButton(
-                        button_text, callback_data=f"buy_slots_{slot.slots}"
+                        button_text, callback_data=f"select_slot_payment_{slot.slots}"
                     )
                 ]
             )
         keyboard.append(
             [InlineKeyboardButton("🔙 Volver a Paquetes", callback_data="buy_gb_menu")]
         )
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def slot_payment_method_selection(slots: int) -> InlineKeyboardMarkup:
+        """Teclado para seleccionar método de pago para slots (Stars o Crypto)."""
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "⭐ Pagar con Stars", callback_data=f"pay_slots_stars_{slots}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "💰 Pagar con Crypto", callback_data=f"pay_slots_crypto_{slots}"
+                )
+            ],
+            [InlineKeyboardButton("🔙 Volver a Slots", callback_data="buy_slots_menu")],
+        ]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod

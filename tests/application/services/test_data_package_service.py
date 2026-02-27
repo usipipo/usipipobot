@@ -149,7 +149,7 @@ class TestGetUserDataSummary:
         ]
         mock_user_repo.get_by_id.return_value = User(
             telegram_id=123,
-            free_data_limit_bytes=10 * 1024**3,
+            free_data_limit_bytes=5 * 1024**3,
             free_data_used_bytes=int(1.5 * 1024**3),
         )
 
@@ -160,8 +160,8 @@ class TestGetUserDataSummary:
         assert result["packages"][0]["name"] == "Básico"
         assert result["packages"][0]["days_remaining"] > 0
         assert "free_plan" in result
-        assert result["free_plan"]["remaining_gb"] == 8.5
-        assert result["remaining_gb"] == pytest.approx(15.3)
+        assert result["free_plan"]["remaining_gb"] == 3.5
+        assert result["remaining_gb"] == pytest.approx(10.3)
 
 
 class TestConsumeData:

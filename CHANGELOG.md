@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-02-26
+
+### Added
+- **Crypto Payments for Slots** - Buy key slots with USDT (BSC)
+  - Payment method selection (Stars or Crypto)
+  - QR code generation for easy wallet scanning
+  - Automatic slot delivery after payment confirmation
+- **Payment QR Codes** - EIP-681 format for wallet compatibility
+  - BSC/BEP20 USDT support
+  - Auto-cleanup of old QR files
+- **Order Expiration Notifications** - Users notified when orders expire
+  - 30-minute timeout for crypto payments
+  - Automatic order cancellation and status update
+  - Transaction history including expired orders
+
+### Changed
+- **Free Plan Data Limit** - Reduced from 10GB to 5GB per key
+  - Total free data remains 10GB (5GB x 2 keys)
+- **One Key Per Server Type** - Users limited to 1 Outline and 1 WireGuard key
+  - Enforced at key creation time
+  - Clear error messages for users
+
 ## [3.0.0] - 2026-02-25
 
 ### Added

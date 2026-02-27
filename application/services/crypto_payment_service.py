@@ -153,12 +153,39 @@ class CryptoPaymentService:
             logger.warning(f"Unsupported token: {token_symbol}")
             return False
 
-        gb_to_credit = int(amount * GB_PER_USDT)
-
-        if gb_to_credit <= 0:
-            return False
-
         try:
+            from application.services.common.container import get_service
+            from application.services.data_package_service import DataPackageService
+
+            data_package_service = get_service(DataPackageService)
+            crypto_payment_id = f"crypto_{uuid.uuid4()}"
+
+            # Verificar si es una orden de slots (formato: "slots_X")
+            if package_type.startswith("slots_"):
+                slots_str = package_type.split("_")[1]
+                slots = int(slots_str)
+
+                logger.info(f"Crediting {slots} slots to user {user_id}")
+
+                result = await data_package_service.purchase_key_slots(
+                    user_id=user_id,
+                    slots=slots,
+                    telegram_payment_id=crypto_payment_id,
+                    current_user_id=user_id,
+                )
+
+                logger.info(
+                    f"Successfully credited {slots} slots to user {user_id} via crypto payment. "
+                    f"New max_keys: {result['new_max_keys']}"
+                )
+                return True
+
+            # Es un paquete de datos normal
+            gb_to_credit = int(amount * GB_PER_USDT)
+
+            if gb_to_credit <= 0:
+                return False
+
             logger.info(f"Crediting {gb_to_credit} GB to user {user_id}")
 
             from application.services.common.container import get_service
@@ -170,7 +197,6 @@ class CryptoPaymentService:
             bytes_to_credit = gb_to_credit * 1024**3
 
             crypto_payment_id = f"crypto_{uuid.uuid4()}"
-
             pkg_type = PackageType(package_type) if package_type else PackageType.BASIC
 
             package = await data_package_service.purchase_package(
@@ -217,6 +243,38 @@ class CryptoPaymentService:
             return None
         return await self.crypto_order_repo.get_by_id(order_id)
 
+    async def get_user_transaction_history(self, user_id: int) -> list:
+        """
+        Obtiene el historial completo de transacciones de un usuario,
+        incluyendo órdenes completadas, fallidas y expiradas.
+        """
+        if not self.crypto_order_repo:
+            return []
+
+        orders = await self.crypto_order_repo.get_by_user(user_id)
+
+        history = []
+        for order in orders:
+            # Determinar tipo de producto
+            product_name = "Paquete de datos"
+            if order.package_type.startswith("slots_"):
+                slots = order.package_type.split("_")[1]
+                product_name = f"+{slots} claves"
+            else:
+                product_name = f"Paquete {order.package_type.title()}"
+
+            history.append({
+                "order_id": str(order.id),
+                "product": product_name,
+                "amount_usdt": order.amount_usdt,
+                "status": order.status.value,
+                "created_at": order.created_at,
+                "expires_at": order.expires_at,
+                "confirmed_at": order.confirmed_at,
+                "tx_hash": order.tx_hash,
+            })
+
+        return history
     async def check_and_expire_orders(self) -> int:
         if not self.crypto_order_repo:
             return 0

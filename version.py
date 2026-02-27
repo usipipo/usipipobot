@@ -8,17 +8,26 @@ Usage:
     from version import __version__, VERSION_INFO
 """
 
-__version__ = "3.2.0"
+__version__ = "3.3.0"
 
 VERSION_INFO = {
     "major": 3,
-    "minor": 2,
+    "minor": 3,
     "patch": 0,
-    "release": "2026-02-27",
-    "codename": "Transaction System",
+    "release": "2026-02-26",
+    "codename": "Business Model Refactor",
 }
 
 VERSION_HISTORY = """
+v3.3.0 (2026-02-26) - Business Model Refactor
+  - Reduced data limit to 5GB per key (from 10GB)
+  - One key per server type limit (Outline/WireGuard)
+  - Crypto payments for key slots (USDT/BSC)
+  - Payment QR codes (EIP-681 format)
+  - Order expiration notifications (30 min timeout)
+  - Transaction history with expired orders
+  - 42 tests passing, flake8 clean
+
 v3.2.0 (2026-02-27) - Transaction System
   - Transaction repository with balance tracking
   - Crypto payment improvements
