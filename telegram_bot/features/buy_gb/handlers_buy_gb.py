@@ -386,7 +386,7 @@ Monto a pagar: *{usdt_amount} USDT*
                 return
 
             # Calcular precio en USDT (aproximación: 1 USDT = 10 Stars)
-            usdt_amount = slot_option.stars / 10
+            usdt_amount = slot_option.stars / 100
 
             message = f"""💳 *Selecciona método de pago*
 
@@ -518,7 +518,7 @@ Elige cómo quieres pagar:"""
                 return
 
             # Calcular monto en USDT (aproximación: 1 USDT = 10 Stars)
-            usdt_amount = slot_option.stars / 10
+            usdt_amount = slot_option.stars / 100
 
             # Crear orden de tipo "slots" para diferenciar de paquetes
             order = await payment_service.create_order(

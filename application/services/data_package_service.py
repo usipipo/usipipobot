@@ -31,36 +31,36 @@ PACKAGE_OPTIONS: List[PackageOption] = [
         name="Básico",
         package_type=PackageType.BASIC,
         data_gb=10,
-        stars=50,
+        stars=500,
         bonus_percent=0,
     ),
     PackageOption(
         name="Estándar",
         package_type=PackageType.ESTANDAR,
         data_gb=25,
-        stars=65,
+        stars=650,
         bonus_percent=30,
     ),
     PackageOption(
         name="Avanzado",
         package_type=PackageType.AVANZADO,
         data_gb=50,
-        stars=85,
+        stars=850,
         bonus_percent=30,
     ),
     PackageOption(
         name="Premium",
         package_type=PackageType.PREMIUM,
         data_gb=100,
-        stars=110,
+        stars=1100,
         bonus_percent=30,
     ),
 ]
 
 SLOT_OPTIONS: List[SlotOption] = [
-    SlotOption(name="+1 Clave", slots=1, stars=25),
-    SlotOption(name="+3 Claves", slots=3, stars=60),
-    SlotOption(name="+5 Claves", slots=5, stars=90),
+    SlotOption(name="+1 Clave", slots=1, stars=250),
+    SlotOption(name="+3 Claves", slots=3, stars=600),
+    SlotOption(name="+5 Claves", slots=5, stars=900),
 ]
 
 
