@@ -2,14 +2,14 @@
 Teclados para gestión de llaves VPN de uSipipo.
 
 Author: uSipipo Team
-Version: 2.0.0 - Feature-based architecture
+Version: 3.0.0 - Cyberpunk UX
 """
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 class VpnKeysKeyboards:
-    """Teclados para gestión de llaves VPN."""
+    """Teclados para gestión de llaves VPN - Estilo Cyberpunk."""
 
     @staticmethod
     def vpn_types() -> InlineKeyboardMarkup:
@@ -88,7 +88,7 @@ class VpnKeysKeyboards:
     @staticmethod
     def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
         """
-        Teclado del menú principal contextual.
+        Teclado del menú principal contextual - Estilo Cyberpunk.
 
         Args:
             is_admin: Si es True, incluye opciones de administrador
@@ -119,7 +119,7 @@ class VpnKeysKeyboards:
     @staticmethod
     def key_list(keys: list, is_admin: bool = False) -> InlineKeyboardMarkup:
         """
-        Genera teclado dinámico para lista de llaves.
+        Genera teclado dinámico para lista de llaves - Estilo Cyberpunk.
 
         Args:
             keys: Lista de llaves VPN
@@ -131,8 +131,9 @@ class VpnKeysKeyboards:
         keyboard = []
 
         for key in keys:
-            # Botón principal de la llave
-            button_text = f"🔑 {key.name} ({key.type.upper()})"
+            # Botón principal de la llave con icono según tipo
+            icon = "🌐" if key.type.lower() == "outline" else "🔒"
+            button_text = f"{icon} {key.name}"
             callback_data = f"key_details_{key.id}"
             keyboard.append(
                 [InlineKeyboardButton(button_text, callback_data=callback_data)]

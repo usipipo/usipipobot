@@ -71,13 +71,13 @@ class VpnKeysHandler:
                 await update.callback_query.edit_message_text(
                     text=error_message,
                     reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
-                    parse_mode="Markdown",
+                    parse_mode="MarkdownV2",
                 )
             elif update.message:
                 await update.message.reply_text(
                     text=error_message,
                     reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
-                    parse_mode="Markdown",
+                    parse_mode="MarkdownV2",
                 )
             return ConversationHandler.END
 
@@ -86,13 +86,13 @@ class VpnKeysHandler:
             await update.callback_query.edit_message_text(
                 text=VpnKeysMessages.SELECT_TYPE,
                 reply_markup=VpnKeysKeyboards.vpn_types(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
         elif update.message:
             await update.message.reply_text(
                 text=VpnKeysMessages.SELECT_TYPE,
                 reply_markup=VpnKeysKeyboards.vpn_types(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
         return SELECT_TYPE
 
@@ -118,9 +118,10 @@ class VpnKeysHandler:
 
         cancel_keyboard = VpnKeysKeyboards.cancel_creation()
 
+        escaped_key_type = escape_markdown(key_type.upper())
         await query.edit_message_text(
-            text=f"🛡️ Has seleccionado **{key_type.upper()}**.\n\nEscribe un nombre para identificar tu nueva llave (ej: Mi Laptop):",
-            parse_mode="Markdown",
+            text=f"🛡️ Has seleccionado *{escaped_key_type}*\.\n\nEscribe un nombre para identificar tu nueva llave \(ej: Mi Laptop\):",
+            parse_mode="MarkdownV2",
             reply_markup=cancel_keyboard,
         )
         return INPUT_NAME
@@ -175,18 +176,19 @@ class VpnKeysHandler:
             elif key_type == "wireguard":
                 conf_path = QrGenerator.save_conf_file(new_key.key_data, file_id)
 
+                escaped_name = escape_markdown(key_name)
                 caption = (
                     VpnKeysMessages.Success.KEY_CREATED_WITH_DATA.format(
                         type="WIREGUARD",
-                        name=key_name,
+                        name=escaped_name,
                         data_limit=new_key.data_limit_gb,
                     )
-                    + "\n\nEscanea el QR en tu móvil o usa el archivo adjunto en tu PC."
+                    + "\n\nEscanea el QR en tu móvil o usa el archivo adjunto en tu PC\."
                 )
 
                 with open(qr_path, "rb") as photo:
                     await update.message.reply_photo(
-                        photo=photo, caption=caption, parse_mode="Markdown"
+                        photo=photo, caption=caption, parse_mode="MarkdownV2"
                     )
 
                 with open(conf_path, "rb") as document:
@@ -194,6 +196,7 @@ class VpnKeysHandler:
                         document=document,
                         filename=f"{key_name}.conf",
                         caption="📁 *Configuración WireGuard*\n\n🔑 Tu nueva llave VPN está lista para usar\n\n⚠️ *Guarda este archivo en un lugar seguro*",
+                        parse_mode="MarkdownV2",
                         reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
                     )
 

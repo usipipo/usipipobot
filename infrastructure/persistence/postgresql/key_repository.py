@@ -45,7 +45,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
             is_active=model.is_active,
             used_bytes=model.used_bytes or 0,
             last_seen_at=_normalize_datetime(model.last_seen_at),
-            data_limit_bytes=model.data_limit_bytes or 10 * 1024**3,
+            data_limit_bytes=model.data_limit_bytes or 5 * 1024**3,
             billing_reset_at=_normalize_datetime(model.billing_reset_at)
             or datetime.now(timezone.utc),
             expires_at=_normalize_datetime(model.expires_at),

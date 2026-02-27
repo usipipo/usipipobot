@@ -20,7 +20,7 @@ from application.services.vpn_service import VpnService
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
 from utils.logger import logger
-from utils.telegram_utils import format_percentage
+from utils.telegram_utils import escape_markdown, format_percentage
 
 from .keyboards_key_management import KeyManagementKeyboards
 from .messages_key_management import KeyManagementMessages
@@ -72,15 +72,15 @@ class KeyManagementHandler(BaseHandler):
                     message = KeyManagementMessages.NO_KEYS
                 else:
                     message = KeyManagementMessages.MAIN_MENU.format(
-                        total_keys=keys_summary["total_count"],
-                        outline_count=keys_summary.get("outline_count", 0),
-                        wireguard_count=keys_summary.get("wireguard_count", 0),
+                        total_keys=escape_markdown(str(keys_summary["total_count"])),
+                        outline_count=escape_markdown(str(keys_summary.get("outline_count", 0))),
+                        wireguard_count=escape_markdown(str(keys_summary.get("wireguard_count", 0))),
                     )
 
                 await update.message.reply_text(
                     text=message,
                     reply_markup=KeyManagementKeyboards.main_menu(keys_summary),
-                    parse_mode="Markdown",
+                    parse_mode="MarkdownV2",
                 )
 
             except Exception as e:
@@ -88,7 +88,7 @@ class KeyManagementHandler(BaseHandler):
                 if update.message is not None:
                     await update.message.reply_text(
                         text=KeyManagementMessages.Error.SYSTEM_ERROR,
-                        parse_mode="Markdown",
+                        parse_mode="MarkdownV2",
                     )
         else:
             await self._safe_answer_query(query)
@@ -114,9 +114,9 @@ class KeyManagementHandler(BaseHandler):
                     message = KeyManagementMessages.NO_KEYS
                 else:
                     message = KeyManagementMessages.MAIN_MENU.format(
-                        total_keys=keys_summary["total_count"],
-                        outline_count=keys_summary.get("outline_count", 0),
-                        wireguard_count=keys_summary.get("wireguard_count", 0),
+                        total_keys=escape_markdown(str(keys_summary["total_count"])),
+                        outline_count=escape_markdown(str(keys_summary.get("outline_count", 0))),
+                        wireguard_count=escape_markdown(str(keys_summary.get("wireguard_count", 0))),
                     )
 
                 await self._safe_edit_message(
@@ -124,7 +124,7 @@ class KeyManagementHandler(BaseHandler):
                     context,
                     text=message,
                     reply_markup=KeyManagementKeyboards.main_menu(keys_summary),
-                    parse_mode="Markdown",
+                    parse_mode="MarkdownV2",
                 )
 
             except Exception as e:
@@ -134,7 +134,7 @@ class KeyManagementHandler(BaseHandler):
                     context,
                     text=KeyManagementMessages.Error.SYSTEM_ERROR,
                     reply_markup=KeyManagementKeyboards.back_to_main(),
-                    parse_mode="Markdown",
+                    parse_mode="MarkdownV2",
                 )
 
     async def show_keys_by_type(
@@ -167,26 +167,27 @@ class KeyManagementHandler(BaseHandler):
 
             if not filtered_keys:
                 message = KeyManagementMessages.NO_KEYS_TYPE.format(
-                    type=key_type.upper()
+                    type=escape_markdown(key_type.upper())
                 )
                 keyboard = KeyManagementKeyboards.back_to_submenu()
             else:
                 message = KeyManagementMessages.KEYS_LIST_HEADER.format(
-                    type=key_type.upper()
+                    type=escape_markdown(key_type.upper())
                 )
                 keyboard = KeyManagementKeyboards.keys_list(filtered_keys)
 
                 # Agregar información de cada llave
                 for key in filtered_keys:
                     status = "🟢 Activa" if key.is_active else "🔴 Inactiva"
-                    message += f"\n🔑 {key.name}\n   📊 {key.used_gb:.2f}/{key.data_limit_gb:.2f} GB\n   {status}\n"
+                    escaped_name = escape_markdown(key.name)
+                    message += f"\n🔑 {escaped_name}\n   📊 {key.used_gb:.2f}/{key.data_limit_gb:.2f} GB\n   {status}\n"
 
             await self._safe_edit_message(
                 query,
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
         except Exception as e:
@@ -196,7 +197,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
     async def show_key_details(
@@ -223,7 +224,8 @@ class KeyManagementHandler(BaseHandler):
                 message = KeyManagementMessages.KEY_NOT_FOUND
                 keyboard = KeyManagementKeyboards.back_to_submenu()
             else:
-                status = "🟢 Activa" if key.is_active else "🔴 Inactiva"
+                status = "Activa" if key.is_active else "Inactiva"
+                status_icon = "🟢" if key.is_active else "🔴"
                 usage_percentage = (
                     (key.used_gb / key.data_limit_gb) * 100
                     if key.data_limit_gb > 0
@@ -233,15 +235,16 @@ class KeyManagementHandler(BaseHandler):
                 usage_bar = format_percentage(key.used_gb, key.data_limit_gb)
 
                 message = KeyManagementMessages.KEY_DETAILS.format(
-                    name=key.name,
-                    type=key.key_type.upper(),
-                    server=key.server or "N/A",
-                    usage_bar=usage_bar,
-                    usage=key.used_gb,
-                    limit=key.data_limit_gb,
-                    percentage=usage_percentage,
-                    status=status,
-                    expires=(
+                    name=escape_markdown(key.name),
+                    type=escape_markdown(key.key_type.upper()),
+                    server=escape_markdown(key.server or "N/A"),
+                    usage_bar=usage_bar,  # No escapar - usa caracteres seguros
+                    usage=escape_markdown(f"{key.used_gb:.1f}"),
+                    limit=escape_markdown(f"{key.data_limit_gb:.1f}"),
+                    percentage=escape_markdown(f"{usage_percentage:.0f}"),
+                    status=escape_markdown(status),
+                    status_icon=status_icon,
+                    expires=escape_markdown(
                         key.expires_at.strftime("%d/%m/%Y") if key.expires_at else "N/A"
                     ),
                 )
@@ -255,7 +258,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
         except Exception as e:
@@ -265,8 +268,20 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
+
+    def _generate_cyberpunk_progress_bar(self, percentage: float, width: int = 10) -> str:
+        """Genera una barra de progreso estilo cyberpunk."""
+        filled = int((percentage / 100) * width)
+        empty = width - filled
+
+        # Usar caracteres que no requieren escape en MarkdownV2
+        # y tienen ancho consistente en fuentes monoespaciadas de Telegram
+        filled_char = "█"
+        empty_char = "░"
+
+        return filled_char * filled + empty_char * empty
 
     async def show_key_statistics(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -303,16 +318,20 @@ class KeyManagementHandler(BaseHandler):
                 outline_keys = [k for k in keys if k.key_type.lower() == "outline"]
                 wireguard_keys = [k for k in keys if k.key_type.lower() == "wireguard"]
 
+                # Generar barra de progreso cyberpunk
+                usage_bar = self._generate_cyberpunk_progress_bar(overall_percentage)
+
                 message = KeyManagementMessages.STATISTICS.format(
-                    total_keys=total_keys,
-                    active_keys=active_keys,
-                    total_usage=total_usage,
-                    total_limit=total_limit,
-                    percentage=overall_percentage,
-                    outline_count=len(outline_keys),
-                    wireguard_count=len(wireguard_keys),
-                    outline_usage=sum(k.used_gb for k in outline_keys),
-                    wireguard_usage=sum(k.used_gb for k in wireguard_keys),
+                    total_keys=escape_markdown(str(total_keys)),
+                    active_keys=escape_markdown(str(active_keys)),
+                    total_usage=escape_markdown(f"{total_usage:.1f}"),
+                    total_limit=escape_markdown(f"{total_limit:.1f}"),
+                    percentage=escape_markdown(f"{overall_percentage:.0f}"),
+                    usage_bar=usage_bar,  # No escapar - usa caracteres seguros
+                    outline_count=escape_markdown(str(len(outline_keys))),
+                    wireguard_count=escape_markdown(str(len(wireguard_keys))),
+                    outline_usage=escape_markdown(f"{sum(k.used_gb for k in outline_keys):.1f}"),
+                    wireguard_usage=escape_markdown(f"{sum(k.used_gb for k in wireguard_keys):.1f}"),
                 )
 
             keyboard = KeyManagementKeyboards.back_to_submenu()
@@ -322,7 +341,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
         except Exception as e:
@@ -332,7 +351,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
     async def handle_key_action(
@@ -387,7 +406,7 @@ class KeyManagementHandler(BaseHandler):
                         else:
                             message = (
                                 KeyManagementMessages.Error.OPERATION_FAILED.format(
-                                    error=str(e)
+                                    error=escape_markdown(str(e))
                                 )
                             )
                         keyboard = KeyManagementKeyboards.back_to_submenu()
@@ -404,14 +423,14 @@ class KeyManagementHandler(BaseHandler):
                     # Iniciar flujo de renombrado
                     if context.user_data is not None:
                         context.user_data["rename_key_id"] = key_id
-                    message = "✏️ **Renombrar Llave**\n\nPor favor, escribe el nuevo nombre para tu llave:"
+                    message = "✏️ Renombrar Llave\n\nPor favor, escribe el nuevo nombre para tu llave:"
                     keyboard = KeyManagementKeyboards.cancel_rename()
                     await self._safe_edit_message(
                         query,
                         context,
                         text=message,
                         reply_markup=keyboard,
-                        parse_mode="Markdown",
+                        parse_mode="MarkdownV2",
                     )
                     return
 
@@ -431,7 +450,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
         except Exception as e:
@@ -439,9 +458,9 @@ class KeyManagementHandler(BaseHandler):
             await self._safe_edit_message(
                 query,
                 context,
-                text=KeyManagementMessages.Error.OPERATION_FAILED.format(error=str(e)),
+                text=KeyManagementMessages.Error.OPERATION_FAILED.format(error=escape_markdown(str(e))),
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
     async def show_key_config(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -480,7 +499,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
         except Exception as e:
@@ -490,7 +509,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
     async def download_wireguard_config(
@@ -535,7 +554,7 @@ class KeyManagementHandler(BaseHandler):
                 document=bio,
                 filename=f"{key_name}.conf",
                 caption=f"📄 Configuración WireGuard: *{key_name}*\n\nImporta este archivo en tu aplicación WireGuard.",
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
         except Exception as e:
@@ -545,7 +564,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
     async def get_outline_link(
@@ -590,7 +609,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
         except Exception as e:
@@ -600,7 +619,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
     async def back_to_main_menu(
@@ -625,7 +644,7 @@ class KeyManagementHandler(BaseHandler):
             context,
             text=CommonMessages.Menu.WELCOME_BACK,
             reply_markup=CommonKeyboards.main_menu(is_admin=is_admin),
-            parse_mode="Markdown",
+            parse_mode="MarkdownV2",
         )
 
     async def back_to_keys(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -675,7 +694,7 @@ class KeyManagementHandler(BaseHandler):
 
             if success:
                 message = KeyManagementMessages.Actions.KEY_RENAMED.format(
-                    new_name=new_name
+                    new_name=escape_markdown(new_name)
                 )
             else:
                 message = (
@@ -686,7 +705,7 @@ class KeyManagementHandler(BaseHandler):
             await update.message.reply_text(
                 text=message,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
+                parse_mode="MarkdownV2",
             )
 
         except Exception as e:
@@ -695,7 +714,7 @@ class KeyManagementHandler(BaseHandler):
                 await update.message.reply_text(
                     text=KeyManagementMessages.Error.SYSTEM_ERROR,
                     reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                    parse_mode="Markdown",
+                    parse_mode="MarkdownV2",
                 )
 
 

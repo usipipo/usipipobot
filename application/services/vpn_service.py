@@ -7,6 +7,7 @@ from typing import List, Optional
 from config import settings
 from domain.entities.user import User, UserRole
 from domain.entities.vpn_key import KeyType, VpnKey
+from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
@@ -21,11 +22,13 @@ class VpnService:
         self,
         user_repo: IUserRepository,
         key_repo: IKeyRepository,
+        package_repo: IDataPackageRepository,
         outline_client: OutlineClient,
         wireguard_client: WireGuardClient,
     ):
         self.user_repo = user_repo
         self.key_repo = key_repo
+        self.package_repo = package_repo
         self.outline_client = outline_client
         self.wireguard_client = wireguard_client
 
@@ -145,17 +148,28 @@ class VpnService:
         user = await self.user_repo.get_by_id(telegram_id, current_user_id)
         keys = await self.key_repo.get_by_user_id(telegram_id, current_user_id)
 
-        # Calcular consumo total
+        # Calcular consumo total de llaves
         total_used_bytes = sum(k.used_bytes for k in keys)
-        total_data_limit = sum(k.data_limit_bytes for k in keys)
+        keys_data_limit = sum(k.data_limit_bytes for k in keys)
+
+        # Obtener paquetes de datos activos y sumar sus límites
+        packages = await self.package_repo.get_valid_by_user(telegram_id, current_user_id)
+        packages_data_limit = sum(p.data_limit_bytes for p in packages)
+        packages_used_bytes = sum(p.data_used_bytes for p in packages)
+
+        # Límite total = llaves + paquetes comprados (Opción B)
+        total_data_limit = keys_data_limit + packages_data_limit
+        total_used_including_packages = total_used_bytes + packages_used_bytes
 
         return {
             "user": user,
             "keys_count": len(keys),
             "keys": keys,
-            "total_used_gb": total_used_bytes / (1024**3),
+            "total_used_gb": total_used_including_packages / (1024**3),
             "total_limit_gb": total_data_limit / (1024**3),
-            "remaining_gb": max(0, total_data_limit - total_used_bytes) / (1024**3),
+            "remaining_gb": max(0, total_data_limit - total_used_including_packages) / (1024**3),
+            "keys_limit_gb": keys_data_limit / (1024**3),
+            "packages_limit_gb": packages_data_limit / (1024**3),
         }
 
     async def check_and_reset_billing_cycle(self, key: VpnKey) -> bool:
