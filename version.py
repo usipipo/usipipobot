@@ -8,17 +8,23 @@ Usage:
     from version import __version__, VERSION_INFO
 """
 
-__version__ = "3.1.0"
+__version__ = "3.2.0"
 
 VERSION_INFO = {
     "major": 3,
-    "minor": 1,
+    "minor": 2,
     "patch": 0,
-    "release": "2026-02-25",
-    "codename": "Mini App Enhanced",
+    "release": "2026-02-27",
+    "codename": "Transaction System",
 }
 
 VERSION_HISTORY = """
+v3.2.0 (2026-02-27) - Transaction System
+  - Transaction repository with balance tracking
+  - Crypto payment improvements
+  - Code quality fixes (black, isort)
+  - 20 commits ahead of main
+
 v3.1.0 (2026-02-25) - Mini App Enhanced
   - Privacy Policy page for Telegram Mini App compliance
   - User Profile page with statistics and transaction history
