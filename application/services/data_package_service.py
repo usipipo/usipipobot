@@ -30,7 +30,7 @@ PACKAGE_OPTIONS: List[PackageOption] = [
     PackageOption(
         name="Básico",
         package_type=PackageType.BASIC,
-        data_gb=10,
+        data_gb=5,
         stars=500,
         bonus_percent=0,
     ),
