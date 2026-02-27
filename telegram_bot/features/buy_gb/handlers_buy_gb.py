@@ -5,6 +5,7 @@ Author: uSipipo Team
 Version: 1.1.0
 """
 
+import os
 from datetime import datetime, timezone
 
 from telegram import LabeledPrice, Update
@@ -303,29 +304,51 @@ class BuyGbHandler:
 
             expires_minutes = 30
 
+            # Generar QR de pago
+            from utils.qr_generator import QrGenerator
+            qr_filename = f"payment_{order.id}"
+            qr_path = QrGenerator.generate_payment_qr(
+                wallet_address=wallet.address,
+                amount=usdt_amount,
+                filename=qr_filename
+            )
+
             message = f"""💰 *Pago con USDT - BSC*
 
 Paquete: *{package_option.name}*
 Cantidad: *{package_option.data_gb} GB*
 Monto a pagar: *{usdt_amount} USDT*
 
-� wallet:
+📋 Wallet:
 `{wallet.address}`
 
 ⏱️ Tiempo límite: *{expires_minutes} minutos*
 
 ⚠️ *Importante:*
-• Envíe exactamente *{usdt_amount} USDT* a la dirección mostrada
-• Espere al menos *15 confirmaciones* de la red BSC
+• Escanea el QR con tu wallet o copia la dirección
+• Envíe exactamente *{usdt_amount} USDT* (red BSC/BEP20)
+• Espere al menos *15 confirmaciones* de la red
 • No cierre esta pantalla hasta que el pago sea confirmado
 
 ✅ Una vez realizado el pago, el sistema detectará automáticamente la transacción."""
 
-            await query.edit_message_text(
-                text=message,
-                reply_markup=BuyGbKeyboards.back_to_packages(),
-                parse_mode="Markdown",
-            )
+            if qr_path and os.path.exists(qr_path):
+                # Enviar mensaje con QR
+                await query.delete_message()
+                with open(qr_path, "rb") as photo:
+                    await context.bot.send_photo(
+                        chat_id=update.effective_chat.id,
+                        photo=photo,
+                        caption=message,
+                        reply_markup=BuyGbKeyboards.back_to_packages(),
+                        parse_mode="Markdown",
+                    )
+            else:
+                await query.edit_message_text(
+                    text=message,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
 
             logger.info(
                 f"💰 Crypto payment initiated: {package_option.name} ({usdt_amount} USDT) "
@@ -514,6 +537,15 @@ Elige cómo quieres pagar:"""
 
             expires_minutes = 30
 
+            # Generar QR de pago
+            from utils.qr_generator import QrGenerator
+            qr_filename = f"payment_slots_{order.id}"
+            qr_path = QrGenerator.generate_payment_qr(
+                wallet_address=wallet.address,
+                amount=usdt_amount,
+                filename=qr_filename
+            )
+
             message = f"""💰 *Pago de Slots con USDT - BSC*
 
 🔑 Producto: *{slot_option.name}*
@@ -526,17 +558,30 @@ Elige cómo quieres pagar:"""
 ⏱️ Tiempo límite: *{expires_minutes} minutos*
 
 ⚠️ *Importante:*
-• Envíe exactamente *{usdt_amount:.2f} USDT* a la dirección mostrada
-• Espere al menos *15 confirmaciones* de la red BSC
+• Escanea el QR con tu wallet o copia la dirección
+• Envíe exactamente *{usdt_amount:.2f} USDT* (red BSC/BEP20)
+• Espere al menos *15 confirmaciones* de la red
 • No cierre esta pantalla hasta que el pago sea confirmado
 
 ✅ Una vez realizado el pago, el sistema detectará automáticamente la transacción y agregará las claves a tu cuenta."""
 
-            await query.edit_message_text(
-                text=message,
-                reply_markup=BuyGbKeyboards.back_to_packages(),
-                parse_mode="Markdown",
-            )
+            if qr_path and os.path.exists(qr_path):
+                # Enviar mensaje con QR
+                await query.delete_message()
+                with open(qr_path, "rb") as photo:
+                    await context.bot.send_photo(
+                        chat_id=update.effective_chat.id,
+                        photo=photo,
+                        caption=message,
+                        reply_markup=BuyGbKeyboards.back_to_packages(),
+                        parse_mode="Markdown",
+                    )
+            else:
+                await query.edit_message_text(
+                    text=message,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
 
             logger.info(
                 f"💰 Crypto payment for slots initiated: {slot_option.name} ({usdt_amount} USDT) "
