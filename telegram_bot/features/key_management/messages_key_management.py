@@ -2,187 +2,182 @@
 Mensajes para gestión avanzada de llaves VPN de uSipipo.
 
 Author: uSipipo Team
-Version: 2.0.0 - Feature-based architecture
+Version: 3.2.0 - MarkdownV2 Compatible
 """
 
 
 class KeyManagementMessages:
-    """Mensajes para gestión de llaves VPN."""
+    """Mensajes para gestión de llaves VPN - MarkdownV2 Compatible."""
 
     # ============================================
-    # MAIN MENU
+    # MAIN MENU - MarkdownV2 OK
     # ============================================
 
     MAIN_MENU = (
-        "🔑 **Gestión de Llaves VPN**\n\n"
-        "📊 **Resumen de tus llaves:**\n"
-        "• **Total:** {total_keys} llaves\n"
-        "• **Outline:** {outline_count} llaves\n"
-        "• **WireGuard:** {wireguard_count} llaves\n\n"
-        "Selecciona una opción para gestionar tus accesos:"
+        "🔐 *Mis Llaves VPN*\n\n"
+        "📊 Resumen:\n"
+        "🔑 Total: {total_keys}\n"
+        "🌐 Outline: {outline_count}\n"
+        "🔒 WireGuard: {wireguard_count}\n\n"
+        "⚡ *Elige una opción:*"
     )
 
     NO_KEYS = (
-        "📭 **Sin Llaves VPN**\n\n"
-        "No tienes llaves VPN activas.\n\n"
-        "💡 Crea una nueva llave para comenzar a usar el servicio."
+        "📭 *Sin llaves*\n\n"
+        "🔒 No tienes llaves activas\n\n"
+        "💡 Crea tu primera llave segura 🚀"
     )
 
-    BACK_TO_MAIN = "🔙 Volviendo al menú principal..."
+    BACK_TO_MAIN = "🔙 Volviendo al menú..."
 
     # ============================================
     # KEYS LIST
     # ============================================
 
-    KEYS_LIST_HEADER = "🔑 **Tus llaves {type}**\n\n"
+    KEYS_LIST_HEADER = "🔑 *Tus llaves {type}*\n\n"
 
     NO_KEYS_TYPE = (
-        "📭 **Sin llaves {type}**\n\n"
-        "No tienes llaves {type} activas.\n\n"
+        "📭 Sin llaves {type}\n\n"
         "💡 Crea una nueva llave para comenzar."
     )
 
     NO_KEYS_STATS = (
-        "📭 **Sin estadísticas**\n\n" "No tienes llaves para mostrar estadísticas."
+        "📭 *Sin estadísticas*\n\n"
+        "No hay llaves para mostrar datos de consumo."
     )
 
     # ============================================
-    # KEY DETAILS
+    # KEY DETAILS - MarkdownV2 OK
     # ============================================
 
     KEY_DETAILS = (
-        "💎 **{name}**\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "📡 **Protocolo:** `{type}`\n"
-        "🖥️ **Servidor:** `{server}`\n"
-        "📊 **Consumo de Datos:**\n"
-        "{usage_bar}\n"
-        "   `{usage:.2f} / {limit:.2f} GB ({percentage:.1f}%)`\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "🟢 **Estado:** {status}\n"
-        "📅 **Expiración:** {expires}\n"
-        "━━━━━━━━━━━━━━━━━━━━\n"
-        "Selecciona una acción:"
+        "💎 *{name}*\n\n"
+        "📡 {type} · 🖥️ {server}\n\n"
+        "📊 Consumo: {usage}/{limit}GB ({percentage}%)\n"
+        "{usage_bar}\n\n"
+        "{status_icon} Estado: *{status}*\n"
+        "📅 Expira: {expires}\n\n"
+        "⚡ *Acciones:*"
     )
 
     KEY_NOT_FOUND = (
-        "❌ **Llave no encontrada**\n\n"
-        "La llave que buscas no existe o no te pertenece."
+        "❌ *Llave no encontrada*\n\n"
+        "No existe o no te pertenece a tu cuenta."
     )
 
     # ============================================
-    # STATISTICS
+    # STATISTICS - MarkdownV2 OK
     # ============================================
 
     STATISTICS = (
-        "📊 **Estadísticas de Uso**\n\n"
-        "🔑 **Total de llaves:** {total_keys}\n"
-        "✅ **Llaves activas:** {active_keys}\n"
-        "📈 **Uso total:** {total_usage} / {total_limit} GB ({percentage:.1f}%)\n\n"
-        "📡 **Por protocolo:**\n"
-        "• **Outline:** {outline_count} llaves ({outline_usage} GB)\n"
-        "• **WireGuard:** {wireguard_count} llaves ({wireguard_usage} GB)\n\n"
-        "💡 Mantén tu uso por debajo del límite para evitar interrupciones."
+        "📊 Mis Estadísticas\n\n"
+        "🔐 Llaves: {total_keys} (🟢 {active_keys} activas)\n\n"
+        "📡 Datos: {total_usage}/{total_limit}GB "
+        "({percentage}%)\n"
+        "{usage_bar}\n\n"
+        "🔌 Protocolos:\n"
+        "🌐 Outline {outline_count} 💾 {outline_usage}GB\n"
+        "🔒 WireGuard {wireguard_count} 💾 {wireguard_usage}GB\n\n"
+        "💡 ¡Excelente! Uso menor al 80% 🎯"
     )
 
     # ============================================
-    # ACTIONS
+    # ACTIONS - MarkdownV2 OK
     # ============================================
 
     class Actions:
-        """Mensajes de acciones sobre llaves."""
+        """Mensajes de acciones - MarkdownV2 Compatible."""
 
         KEY_SUSPENDED = (
-            "⏸️ **Llave Suspendida**\n\n"
-            "La llave ha sido suspendida temporalmente.\n\n"
-            "🔄 Puedes reactivarla cuando quieras."
+            "⏸️ *Llave suspendida*\n\n"
+            "🔒 Modo reposo activado\n\n"
+            "🔄 Puedes reactivarla cuando quieras ⚡"
         )
 
         KEY_REACTIVATED = (
-            "✅ **Llave Reactivada**\n\n"
-            "La llave ha sido reactivada exitosamente.\n\n"
-            "🌐 Ya puedes volver a usar tu conexión VPN."
+            "✅ *Llave activada*\n\n"
+            "🚀 Conexión lista\n\n"
+            "🌐 ¡A navegar seguro\\! 🔥"
         )
 
         KEY_DELETED = (
-            "🗑️ **Llave Eliminada**\n\n"
-            "La llave ha sido eliminada permanentemente.\n\n"
-            "⚠️ Todos los dispositivos conectados se desconectarán."
+            "🗑️ *Llave eliminada*\n\n"
+            "💥 Destruida permanentemente\n\n"
+            "🔌 Dispositivos desconectados ⚡"
         )
 
         KEY_RENAMED = (
-            "✏️ **Llave Renombrada**\n\n"
-            "La llave ahora se llama: **{new_name}**\n\n"
-            "✅ Cambio aplicado exitosamente."
+            "✏️ *Renombrada*\n\n"
+            "✨ {new_name}\n\n"
+            "✅ Cambio guardado 🎯"
         )
 
         CONFIG_UPDATED = (
-            "⚙️ **Configuración Actualizada**\n\n"
-            "La configuración de la llave ha sido actualizada.\n\n"
-            "🔄 Los cambios se aplicarán en la próxima conexión."
+            "⚙️ *Configuración actualizada*\n\n"
+            "🔧 Cambios guardados\n\n"
+            "🔄 Se aplicarán en la próxima conexión ⚡"
         )
 
     # ============================================
-    # ERRORS
+    # ERRORS - MarkdownV2 OK
     # ============================================
 
     class Error:
-        """Mensajes de error."""
+        """Mensajes de error - MarkdownV2 Compatible."""
 
         SYSTEM_ERROR = (
-            "❌ **Error del Sistema**\n\n"
-            "No pude procesar tu solicitud.\n\n"
-            "Por favor, intenta más tarde."
+            "🚨 *Error del sistema*\n\n"
+            "💥 Fallo temporal\n\n"
+            "🔄 Intenta de nuevo en un momento 📡"
         )
 
         KEY_NOT_ACCESSIBLE = (
-            "🚫 **Llave no accesible**\n\n"
-            "No tienes permisos para acceder a esta llave."
+            "🚫 *Acceso denegado*\n\n"
+            "🔒 No tienes permisos para esta llave 🔐"
         )
 
         OPERATION_FAILED = (
-            "❌ **Operación Fallida**\n\n"
-            "No pude completar la operación solicitada.\n\n"
-            "Error: {error}"
+            "❌ *Operación fallida*\n\n"
+            "💥 No se pudo completar\n\n"
+            "📟 {error}"
         )
 
         DELETE_NOT_ALLOWED = (
-            "🚫 **Eliminación No Permitida**\n\n"
-            "Para eliminar llaves, debes haber realizado al menos un depósito.\n\n"
-            "💰 **Realiza un depósito** para desbloquear esta función.\n\n"
-            "📍 Ve a → 💳 Depositar"
+            "🔒 *Eliminación bloqueada*\n\n"
+            "💰 Requiere depósito previo\n\n"
+            "📍 Ve a 💳 *Depositar* 🗝️"
         )
 
         INVALID_ACTION = (
-            "❌ **Acción Inválida**\n\n"
-            "La acción solicitada no es válida para esta llave."
+            "⛔ *Acción inválida*\n\n"
+            "🚫 No disponible en este momento"
         )
 
         QUOTA_EXCEEDED = (
-            "⚠️ **Cuota Excedida**\n\n"
-            "Has alcanzado el límite de llaves para tu plan.\n\n"
-            "💡 *Soluciones:*\n"
-            "• Elimina llaves que no usas\n"
-            "• Actualiza tu plan para más llaves"
+            "⚠️ *Cuota excedida*\n\n"
+            "💥 Has alcanzado tu límite\n\n"
+            "💡 🗑️ Elimina una llave o ⬆️ mejora tu plan ⚡"
         )
 
     # ============================================
-    # SUCCESS
+    # SUCCESS - MarkdownV2 OK
     # ============================================
 
     class Success:
-        """Mensajes de éxito."""
+        """Mensajes de éxito - MarkdownV2 Compatible."""
 
         OPERATION_COMPLETED = (
-            "✅ **Operación Completada**\n\n" "La acción se ha realizado exitosamente."
+            "✅ *Listo*\n\n"
+            "⚡ Operación completada 🎯"
         )
 
         CHANGES_SAVED = (
-            "💾 **Cambios Guardados**\n\n" "Tus preferencias han sido actualizadas."
+            "💾 *Guardado*\n\n"
+            "✨ Cambios actualizados"
         )
 
         BACKUP_CREATED = (
-            "📦 **Backup Creado**\n\n"
-            "Se ha creado una copia de seguridad de tus llaves.\n\n"
-            "📁 Archivo: {filename}"
+            "📦 *Backup creado*\n\n"
+            "💾 Copia segura guardada\n\n"
+            "📁 {filename}"
         )

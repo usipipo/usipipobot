@@ -11,11 +11,12 @@ from domain.entities.vpn_key import KeyType, VpnKey
 
 @pytest.fixture
 def vpn_service(
-    mock_user_repo, mock_key_repo, mock_outline_client, mock_wireguard_client
+    mock_user_repo, mock_key_repo, mock_package_repo, mock_outline_client, mock_wireguard_client
 ):
     return VpnService(
         user_repo=mock_user_repo,
         key_repo=mock_key_repo,
+        package_repo=mock_package_repo,
         outline_client=mock_outline_client,
         wireguard_client=mock_wireguard_client,
     )
@@ -165,11 +166,12 @@ class TestRevokeKey:
 class TestGetUserStatus:
     @pytest.mark.asyncio
     async def test_get_user_status_returns_summary(
-        self, vpn_service, mock_user_repo, mock_key_repo, sample_user, sample_vpn_key
+        self, vpn_service, mock_user_repo, mock_key_repo, mock_package_repo, sample_user, sample_vpn_key
     ):
         mock_user_repo.get_by_id.return_value = sample_user
         sample_vpn_key.used_bytes = 5 * 1024**3
         mock_key_repo.get_by_user_id.return_value = [sample_vpn_key]
+        mock_package_repo.get_valid_by_user.return_value = []
 
         status = await vpn_service.get_user_status(123456789, 123456789)
 
@@ -178,6 +180,43 @@ class TestGetUserStatus:
         assert status["total_used_gb"] == pytest.approx(5.0)
         mock_user_repo.get_by_id.assert_called_once()
         mock_key_repo.get_by_user_id.assert_called_once()
+        mock_package_repo.get_valid_by_user.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_get_user_status_includes_packages(
+        self, vpn_service, mock_user_repo, mock_key_repo, mock_package_repo, sample_user, sample_vpn_key
+    ):
+        """Test that data packages are included in the total limit calculation."""
+        from datetime import datetime, timedelta, timezone
+        from domain.entities.data_package import DataPackage, PackageType
+
+        mock_user_repo.get_by_id.return_value = sample_user
+        sample_vpn_key.used_bytes = 2 * 1024**3  # 2GB used from key
+        sample_vpn_key.data_limit_bytes = 5 * 1024**3  # 5GB key limit
+        mock_key_repo.get_by_user_id.return_value = [sample_vpn_key]
+
+        # Add a data package
+        package = DataPackage(
+            user_id=123456789,
+            package_type=PackageType.BASIC,
+            data_limit_bytes=10 * 1024**3,  # 10GB package
+            data_used_bytes=1 * 1024**3,    # 1GB used from package
+            stars_paid=600,
+            expires_at=datetime.now(timezone.utc) + timedelta(days=35),
+        )
+        mock_package_repo.get_valid_by_user.return_value = [package]
+
+        status = await vpn_service.get_user_status(123456789, 123456789)
+
+        # Total limit should be: 5GB (key) + 10GB (package) = 15GB
+        assert status["total_limit_gb"] == pytest.approx(15.0)
+        # Total used should be: 2GB (key) + 1GB (package) = 3GB
+        assert status["total_used_gb"] == pytest.approx(3.0)
+        # Remaining should be: 15GB - 3GB = 12GB
+        assert status["remaining_gb"] == pytest.approx(12.0)
+        # Verify breakdown
+        assert status["keys_limit_gb"] == pytest.approx(5.0)
+        assert status["packages_limit_gb"] == pytest.approx(10.0)
 
 
 class TestFetchRealUsage:

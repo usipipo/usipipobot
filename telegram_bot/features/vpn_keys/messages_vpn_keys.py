@@ -2,77 +2,88 @@
 Mensajes para gestión de llaves VPN de uSipipo.
 
 Author: uSipipo Team
-Version: 2.0.0 - Feature-based architecture
+Version: 3.2.0 - MarkdownV2 Compatible
 """
 
 
 class VpnKeysMessages:
-    """Mensajes para gestión de llaves VPN."""
+    """Mensajes para gestión de llaves VPN - MarkdownV2 Compatible."""
 
     # ============================================
-    # CREATION FLOW
+    # CREATION FLOW - MarkdownV2 OK
     # ============================================
 
     SELECT_TYPE = (
-        "🛡️ **Selecciona tu protocolo**\n\n" "Elige según tu dispositivo y necesidad:"
+        "🔮 ╔══════════════╗\n"
+        "    ║ 🛡️ ELIGE VPN ║\n"
+        "    ╚══════════════╝\n\n"
+        "💡 *Según dispositivo:*\n"
+        "   • 🌐 *Outline*\n"
+        "   • 🔒 *WireGuard*"
     )
 
-    CANCELLED = "❌ Operación cancelada."
+    CANCELLED = (
+        "❌ *CANCELADO*"
+    )
 
     # ============================================
-    # ERRORS
+    # ERRORS - MarkdownV2 OK
     # ============================================
 
     class Error:
-        """Mensajes de error."""
+        """Mensajes de error - MarkdownV2 Compatible."""
 
         CREATION_FAILED = (
-            "❌ **Error creando llave**\n\n"
-            "No pude generar tu llave VPN. Error: {error}\n\n"
-            "Por favor, intenta más tarde o contacta soporte."
+            "💥 *ERROR AL CREAR*\n\n"
+            "🚨 Fallo generando\n\n"
+            "📟 `{error}`\n\n"
+            "🔄 Intenta luego 📡"
         )
 
         KEY_LIMIT_REACHED = (
-            "❌ **Límite de llaves alcanzado**\n\n"
-            "Has alcanzado el límite de **{max_keys}** llaves para tu plan.\n\n"
-            "💡 *Soluciones:*\n"
-            "• Elimina llaves que no usas desde **🛡️ Mis Llaves**\n"
-            "• Actualiza tu plan para más llaves"
+            "⚠️ *LÍMITE ALCANZADO*\n\n"
+            "🔒 Máx: `{max_keys}` llaves\n\n"
+            "💡 🗑️ Elimina o ⬆️ Sube plan ⚡"
         )
 
         INVALID_NAME = (
-            "❌ **Nombre inválido**\n\n"
-            "El nombre de la llave solo puede contener letras, números y espacios.\n\n"
-            "Por favor, intenta con otro nombre."
+            "⛔ *NOMBRE INVÁLIDO*\n\n"
+            "📝 Solo letras, números\n"
+            "   y espacios 🎯"
         )
 
     # ============================================
-    # SUCCESS
+    # SUCCESS - MarkdownV2 OK
     # ============================================
 
     class Success:
-        """Mensajes de éxito."""
+        """Mensajes de éxito - MarkdownV2 Compatible."""
 
         KEY_CREATED = (
-            "✅ **¡Llave creada exitosamente!**\n\n"
-            "📡 Protocolo: **{type}**\n\n"
-            "Sigue las instrucciones para conectarte."
+            "🔮 ╔══════════════╗\n"
+            "    ║ ✅ CREADA    ║\n"
+            "    ╚══════════════╝\n\n"
+            "📡 `{type}`\n\n"
+            "🚀 Activa y lista ⚡"
         )
 
         KEY_CREATED_WITH_DATA = (
-            "✅ \\*\\*¡Llave creada exitosamente\\!\\*\\*\n\n"
-            "📡 \\*\\*Protocolo:\\*\\* {type}\n"
-            "🔑 \\*\\*Nombre:\\*\\* {name}\n"
-            "📊 \\*\\*Datos disponibles:\\*\\* {data_limit:.1f} GB\n\n"
-            "Sigue las instrucciones para conectarte\\."
+            "🔮 ╔══════════════╗\n"
+            "    ║ ✅ CREADA    ║\n"
+            "    ╚══════════════╝\n\n"
+            "📡 `{type}` \| 🔑 `{name}`\n"
+            "💾 `{data_limit:.1f}GB`\n\n"
+            "🚀 Lista para usar ⚡"
         )
 
         KEY_DELETED = (
-            "🗑️ **Llave eliminada**\n\n"
-            "La llave **{name}** ha sido eliminada permanentemente.\n\n"
-            "Todos los dispositivos conectados se desconectarán."
+            "🗑️ *ELIMINADA*\n\n"
+            "💥 `{name}` destruida\n\n"
+            "🔌 Devices off ⚡"
         )
 
         KEY_RENAMED = (
-            "✏️ **Llave renombrada**\n\n" "Tu llave ahora se llama: **{new_name}**"
+            "✏️ *RENOMBRADA*\n\n"
+            "✨ {new_name}\n\n"
+            "✅ Listo 🎯"
         )

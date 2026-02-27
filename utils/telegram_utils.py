@@ -301,18 +301,23 @@ def truncate_string(text: str, max_length: int, suffix: str = "...") -> str:
 
 def escape_markdown(text: str) -> str:
     """
-    Escape markdown special characters.
+    Escape markdown special characters for Telegram MarkdownV2.
+
+    Only escapes characters that would be interpreted as markdown syntax.
+    Preserves dots, exclamation marks and other characters that don't need
+    escaping in regular text context.
 
     Args:
         text: Text to escape
 
     Returns:
-        str: Escaped text
+        str: Escaped text safe for MarkdownV2
     """
+    # Caracteres que deben escaparse en MarkdownV2
+    # Orden importante: primero escapar la barra invertida para evitar doble-escape
     escape_chars = [
-        "*",
+        "\\",  # Debe ir primero
         "_",
-        "`",
         "[",
         "]",
         "(",
@@ -327,8 +332,6 @@ def escape_markdown(text: str) -> str:
         "|",
         "{",
         "}",
-        ".",
-        "!",
     ]
 
     for char in escape_chars:
