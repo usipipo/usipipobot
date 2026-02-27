@@ -42,6 +42,10 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             free_data_limit_bytes=model.free_data_limit_bytes or 5 * 1024**3,
             free_data_used_bytes=model.free_data_used_bytes or 0,
             wallet_address=model.wallet_address,
+            purchase_count=model.purchase_count or 0,
+            loyalty_bonus_percent=model.loyalty_bonus_percent or 0,
+            welcome_bonus_used=model.welcome_bonus_used or False,
+            referred_users_with_purchase=model.referred_users_with_purchase or 0,
         )
 
     def _entity_to_model(self, entity: User) -> UserModel:
@@ -64,6 +68,10 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             free_data_limit_bytes=entity.free_data_limit_bytes,
             free_data_used_bytes=entity.free_data_used_bytes,
             wallet_address=entity.wallet_address,
+            purchase_count=entity.purchase_count,
+            loyalty_bonus_percent=entity.loyalty_bonus_percent,
+            welcome_bonus_used=entity.welcome_bonus_used,
+            referred_users_with_purchase=entity.referred_users_with_purchase,
         )
 
     async def get_by_id(self, telegram_id: int, current_user_id: int) -> Optional[User]:
@@ -99,6 +107,10 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 existing.free_data_limit_bytes = user.free_data_limit_bytes
                 existing.free_data_used_bytes = user.free_data_used_bytes
                 existing.wallet_address = user.wallet_address
+                existing.purchase_count = user.purchase_count
+                existing.loyalty_bonus_percent = user.loyalty_bonus_percent
+                existing.welcome_bonus_used = user.welcome_bonus_used
+                existing.referred_users_with_purchase = user.referred_users_with_purchase
             else:
                 model = self._entity_to_model(user)
                 self.session.add(model)
