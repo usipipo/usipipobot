@@ -267,3 +267,44 @@ class ReferralService:
         except Exception as e:
             logger.error(f"Error canjeando créditos por slot: {e}")
             return {"success": False, "error": str(e)}
+
+    async def record_referred_user_purchase(
+        self,
+        referrer_id: int,
+        referred_user_id: int,
+        current_user_id: int
+    ) -> Dict[str, Any]:
+        """
+        Registra que un usuario referido realizó una compra.
+        Otorga +5GB al referidor.
+
+        Returns:
+            Dict con resultado de la operación
+        """
+        try:
+            referrer = await self.user_repo.get_by_id(referrer_id, current_user_id)
+            if not referrer:
+                return {"success": False, "error": "referrer_not_found"}
+
+            # Incrementar contador de referidos con compra
+            referrer.referred_users_with_purchase += 1
+            await self.user_repo.save(referrer, current_user_id)
+
+            # Nota: El +5GB se aplica automáticamente en la próxima compra
+            # via UserBonusService.calculate_referral_bonus_gb()
+
+            logger.info(
+                f"👥 Referido {referred_user_id} realizó compra. "
+                f"Referidor {referrer_id} tiene {referrer.referred_users_with_purchase} "
+                f"referidos con compra (+{referrer.referred_users_with_purchase * 5}GB bono)"
+            )
+
+            return {
+                "success": True,
+                "referrer_id": referrer_id,
+                "total_referral_bonus_gb": referrer.referred_users_with_purchase * 5
+            }
+
+        except Exception as e:
+            logger.error(f"Error registrando compra de referido: {e}")
+            return {"success": False, "error": str(e)}
