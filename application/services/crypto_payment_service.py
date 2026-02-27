@@ -153,23 +153,44 @@ class CryptoPaymentService:
             logger.warning(f"Unsupported token: {token_symbol}")
             return False
 
-        gb_to_credit = int(amount * GB_PER_USDT)
-
-        if gb_to_credit <= 0:
-            return False
-
         try:
-            logger.info(f"Crediting {gb_to_credit} GB to user {user_id}")
-
             from application.services.common.container import get_service
             from application.services.data_package_service import DataPackageService
-            from domain.entities.data_package import PackageType
 
             data_package_service = get_service(DataPackageService)
+            crypto_payment_id = f"crypto_{uuid.uuid4()}"
+
+            # Verificar si es una orden de slots (formato: "slots_X")
+            if package_type.startswith("slots_"):
+                slots_str = package_type.split("_")[1]
+                slots = int(slots_str)
+
+                logger.info(f"Crediting {slots} slots to user {user_id}")
+
+                result = await data_package_service.purchase_key_slots(
+                    user_id=user_id,
+                    slots=slots,
+                    telegram_payment_id=crypto_payment_id,
+                    current_user_id=user_id,
+                )
+
+                logger.info(
+                    f"Successfully credited {slots} slots to user {user_id} via crypto payment. "
+                    f"New max_keys: {result['new_max_keys']}"
+                )
+                return True
+
+            # Es un paquete de datos normal
+            gb_to_credit = int(amount * GB_PER_USDT)
+
+            if gb_to_credit <= 0:
+                return False
+
+            logger.info(f"Crediting {gb_to_credit} GB to user {user_id}")
+
+            from domain.entities.data_package import PackageType
 
             bytes_to_credit = gb_to_credit * 1024**3
-
-            crypto_payment_id = f"crypto_{uuid.uuid4()}"
 
             pkg_type = PackageType(package_type) if package_type else PackageType.BASIC
 
