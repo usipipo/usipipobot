@@ -12,7 +12,7 @@ from dataclasses import dataclass
 class Balance:
     """
     Representa el saldo de un usuario en el sistema.
-    
+
     El saldo se mide en 'stars' (unidades de pago de Telegram).
     """
 

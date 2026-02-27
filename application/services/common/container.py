@@ -261,9 +261,7 @@ def _configure_application_services(container: punq.Container) -> None:
     container.register(
         WalletManagementService, factory=create_wallet_management_service
     )
-    container.register(
-        CryptoPaymentService, factory=create_crypto_payment_service
-    )
+    container.register(CryptoPaymentService, factory=create_crypto_payment_service)
 
 
 def _configure_handlers(container: punq.Container) -> None:
