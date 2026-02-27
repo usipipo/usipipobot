@@ -36,7 +36,7 @@ class VpnKey:
     used_bytes: int = 0  # Tráfico consumido en bytes
     last_seen_at: Optional[datetime] = None  # Última actividad del cliente
 
-    data_limit_bytes: int = 10 * 1024**3  # 10 GB por defecto
+    data_limit_bytes: int = 5 * 1024**3  # 5 GB por defecto
     billing_reset_at: datetime = field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
