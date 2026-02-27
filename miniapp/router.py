@@ -17,7 +17,11 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from application.services.common.container import get_service
-from application.services.data_package_service import DataPackageService
+from application.services.data_package_service import (
+    PACKAGE_OPTIONS,
+    SLOT_OPTIONS,
+    DataPackageService,
+)
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from config import settings
@@ -270,29 +274,29 @@ async def create_key_submit(
 async def purchase_page(
     request: Request, ctx: MiniAppContext = Depends(get_current_user)
 ):
-    """Página para comprar paquetes de datos."""
+    """Página para comprar paquetes de datos y slots."""
+    # Convert PackageOption objects to dict for template
     packages = [
         {
-            "id": "basic",
-            "name": "Básico",
-            "data_gb": 5,
-            "price_stars": 50,
-            "description": "5 GB de datos",
-        },
+            "id": opt.package_type.value,
+            "name": opt.name,
+            "data_gb": opt.data_gb,
+            "price_stars": opt.stars,
+            "description": f"{opt.data_gb} GB de datos",
+            "bonus_percent": opt.bonus_percent,
+        }
+        for opt in PACKAGE_OPTIONS
+    ]
+
+    # Convert SlotOption objects to dict for template
+    slots = [
         {
-            "id": "standard",
-            "name": "Estándar",
-            "data_gb": 25,
-            "price_stars": 100,
-            "description": "25 GB de datos",
-        },
-        {
-            "id": "premium",
-            "name": "Premium",
-            "data_gb": 50,
-            "price_stars": 180,
-            "description": "50 GB de datos",
-        },
+            "id": f"slots_{opt.slots}",
+            "name": opt.name,
+            "slots": opt.slots,
+            "price_stars": opt.stars,
+        }
+        for opt in SLOT_OPTIONS
     ]
 
     return templates.TemplateResponse(
@@ -301,6 +305,7 @@ async def purchase_page(
             "request": request,
             "user": ctx.user,
             "packages": packages,
+            "slots": slots,
             "bot_username": settings.BOT_USERNAME,
         },
     )
