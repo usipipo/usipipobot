@@ -46,6 +46,12 @@ class VpnService:
                 )
             raise ValueError(f"Límite de llaves alcanzado ({user.max_keys})")
 
+        # Verificar que no tenga ya una clave del mismo tipo
+        if not user.can_create_key_type(key_type.lower()):
+            raise ValueError(
+                f"Ya tienes una clave {key_type.title()}. Solo se permite una clave por tipo de servidor."
+            )
+
         if key_type.lower() == "outline":
             infra_data = await self.outline_client.create_key(key_name)
             access_data = infra_data["access_url"]
@@ -116,12 +122,22 @@ class VpnService:
         return settings.FREE_PLAN_DATA_LIMIT_GB * (1024**3)
 
     async def can_user_create_key(
-        self, user: User, current_user_id: int
+        self, user: User, current_user_id: int, key_type: Optional[str] = None
     ) -> tuple[bool, str]:
         """Verifica si el usuario puede crear una nueva llave."""
         keys = await self.key_repo.get_by_user_id(user.telegram_id, current_user_id)
         if len(keys) >= user.max_keys:
             return False, f"Has alcanzado el límite de {user.max_keys} llaves."
+
+        # Verificar que no tenga ya una clave del mismo tipo
+        if key_type:
+            existing_of_type = [
+                k for k in keys
+                if k.key_type.value == key_type.lower() and k.is_active
+            ]
+            if existing_of_type:
+                return False, f"Ya tienes una clave {key_type.title()}. Solo se permite una clave por tipo de servidor."
+
         return True, ""
 
     async def get_user_status(self, telegram_id: int, current_user_id: int) -> dict:

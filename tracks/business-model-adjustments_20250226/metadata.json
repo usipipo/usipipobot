@@ -1,0 +1,26 @@
+{
+  "id": "business-model-adjustments_20250226",
+  "title": "Ajustes al Modelo de Negocio - Límites, Pagos y Facturación",
+  "type": "feature",
+  "status": "pending",
+  "priority": "high",
+  "created": "2025-02-26T00:00:00Z",
+  "updated": "2025-02-26T00:00:00Z",
+  "started": null,
+  "completed": null,
+  "assignee": "@mowgli",
+  "phases": {
+    "total": 5,
+    "current": 0,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 14,
+    "completed": 0,
+    "in_progress": 0,
+    "pending": 14
+  },
+  "checkpoints": [],
+  "dependencies": [],
+  "tags": ["business-model", "crypto-payments", "limits", "billing"]
+}
