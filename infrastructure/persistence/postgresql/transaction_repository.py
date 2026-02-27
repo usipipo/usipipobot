@@ -11,6 +11,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from domain.entities.balance import Balance
 from domain.interfaces.itransaction_repository import ITransactionRepository
 from utils.logger import logger
 
@@ -115,3 +116,33 @@ class PostgresTransactionRepository(BasePostgresRepository, ITransactionReposito
                 f"Error al obtener transacciones de tipo {transaction_type}: {e}"
             )
             return []
+
+    async def get_balance(self, user_id: int) -> Balance:
+        """
+        Obtiene el saldo actual de un usuario basado en su última transacción.
+
+        Args:
+            user_id: ID del usuario de Telegram.
+
+        Returns:
+            Objeto Balance con el saldo en stars del usuario.
+            Retorna Balance con 0 stars si no hay transacciones.
+        """
+        try:
+            query = (
+                select(TransactionModel)
+                .where(TransactionModel.user_id == user_id)
+                .order_by(TransactionModel.created_at.desc())
+                .limit(1)
+            )
+            result = await self.session.execute(query)
+            transaction = result.scalar_one_or_none()
+
+            if transaction:
+                return Balance(user_id=user_id, stars=transaction.balance_after)
+            else:
+                return Balance(user_id=user_id, stars=0)
+
+        except Exception as e:
+            logger.error(f"Error al obtener saldo del usuario {user_id}: {e}")
+            return Balance(user_id=user_id, stars=0)
