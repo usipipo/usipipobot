@@ -41,7 +41,7 @@ class UserManagementMessages:
             "Tu cuenta ha sido creada exitosamente.\n\n"
             "🎁 **Regalo de bienvenida:**\n"
             "• 2 llaves VPN gratuitas\n"
-            "• 10 GB de datos por llave\n\n"
+            "• 5 GB de datos por llave\n\n"
             "📱 Toca **➕ Crear Nueva** para generar tu primera conexión."
         )
 
