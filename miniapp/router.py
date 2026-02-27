@@ -38,6 +38,7 @@ from miniapp.services.miniapp_auth import (
     TelegramUser,
     get_miniapp_auth_service,
 )
+from miniapp.services.miniapp_payment_service import MiniAppPaymentService
 from utils.logger import logger
 
 router = APIRouter(prefix="/miniapp", tags=["Mini App"])
@@ -486,3 +487,101 @@ async def api_delete_key(
     except Exception as e:
         logger.error(f"Error eliminando clave: {e}")
         return {"success": False, "error": "Error interno"}
+
+
+@router.post("/api/create-stars-invoice")
+async def api_create_stars_invoice(
+    request: Request,
+    ctx: MiniAppContext = Depends(get_current_user),
+):
+    """API: Crea una factura de Telegram Stars para pago en Mini App."""
+    try:
+        data = await request.json()
+        product_type = data.get("product_type")
+        product_id = data.get("product_id")
+
+        if not product_type or not product_id:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "product_type and product_id required"}
+            )
+
+        async with get_session_context() as session:
+            package_repo = PostgresDataPackageRepository(session)
+            user_repo = PostgresUserRepository(session)
+
+            data_package_service = DataPackageService(package_repo, user_repo)
+            payment_service = MiniAppPaymentService(data_package_service)
+
+            invoice_url = payment_service.create_stars_invoice_url(
+                user_id=ctx.user.id,
+                product_type=product_type,
+                product_id=product_id,
+            )
+
+            if not invoice_url:
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "error": "Could not create invoice"}
+                )
+
+            return {
+                "success": True,
+                "invoice_url": invoice_url,
+            }
+
+    except Exception as e:
+        logger.error(f"Error creating stars invoice: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": "Internal server error"}
+        )
+
+
+@router.post("/api/create-crypto-order")
+async def api_create_crypto_order(
+    request: Request,
+    ctx: MiniAppContext = Depends(get_current_user),
+):
+    """API: Crea una orden de pago con crypto para Mini App."""
+    try:
+        data = await request.json()
+        product_type = data.get("product_type")
+        product_id = data.get("product_id")
+
+        if not product_type or not product_id:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "error": "product_type and product_id required"}
+            )
+
+        async with get_session_context() as session:
+            package_repo = PostgresDataPackageRepository(session)
+            user_repo = PostgresUserRepository(session)
+
+            data_package_service = DataPackageService(package_repo, user_repo)
+            payment_service = MiniAppPaymentService(data_package_service)
+
+            order_data = await payment_service.create_crypto_order(
+                user_id=ctx.user.id,
+                product_type=product_type,
+                product_id=product_id,
+            )
+
+            if not order_data:
+                return JSONResponse(
+                    status_code=400,
+                    content={"success": False, "error": "Could not create crypto order"}
+                )
+
+            return {
+                "success": True,
+                **order_data,
+            }
+
+    except Exception as e:
+        logger.error(f"Error creating crypto order: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "error": "Internal server error"}
+        )
