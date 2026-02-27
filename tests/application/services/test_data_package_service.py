@@ -33,7 +33,7 @@ class TestGetAvailablePackages:
         assert len(packages) == 4
         assert packages[0].name == "Básico"
         assert packages[0].data_gb == 10
-        assert packages[0].stars == 50
+        assert packages[0].stars == 500
 
     def test_premium_has_bonus(self, service):
         packages = service.get_available_packages()
@@ -52,7 +52,7 @@ class TestPurchasePackage:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=50,
+            stars_paid=500,
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
 
@@ -85,7 +85,7 @@ class TestGetUserPackages:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=50,
+                stars_paid=500,
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35),
             )
         ]
@@ -106,7 +106,7 @@ class TestGetUserDataSummary:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=50,
+                stars_paid=500,
                 data_used_bytes=5 * 1024**3,
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35),
             ),
@@ -114,7 +114,7 @@ class TestGetUserDataSummary:
                 user_id=123,
                 package_type=PackageType.PREMIUM,
                 data_limit_bytes=100 * 1024**3,
-                stars_paid=110,
+                stars_paid=1100,
                 data_used_bytes=20 * 1024**3,
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35),
             ),
@@ -141,7 +141,7 @@ class TestGetUserDataSummary:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=50,
+                stars_paid=500,
                 data_used_bytes=int(3.2 * 1024**3),
                 expires_at=expires_at,
                 purchased_at=datetime.now(timezone.utc) - timedelta(days=20),
@@ -172,7 +172,7 @@ class TestConsumeData:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=50,
+            stars_paid=500,
             data_used_bytes=0,
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
@@ -202,7 +202,7 @@ class TestConsumeData:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=50,
+            stars_paid=500,
             data_used_bytes=0,
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
@@ -222,7 +222,7 @@ class TestExpireOldPackages:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=50,
+            stars_paid=500,
             data_used_bytes=0,
             expires_at=datetime.now(timezone.utc) - timedelta(days=1),
         )
