@@ -275,9 +275,9 @@ async def purchase_page(
         {
             "id": "basic",
             "name": "Básico",
-            "data_gb": 10,
+            "data_gb": 5,
             "price_stars": 50,
-            "description": "10 GB de datos",
+            "description": "5 GB de datos",
         },
         {
             "id": "standard",
