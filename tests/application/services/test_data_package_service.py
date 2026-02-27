@@ -22,24 +22,40 @@ def mock_user_repo():
 
 
 @pytest.fixture
-def service(mock_package_repo, mock_user_repo):
-    return DataPackageService(package_repo=mock_package_repo, user_repo=mock_user_repo)
+def mock_bonus_service():
+    from application.services.user_bonus_service import UserBonusService
+    return UserBonusService()
+
+
+@pytest.fixture
+def service(mock_package_repo, mock_user_repo, mock_bonus_service):
+    return DataPackageService(
+        package_repo=mock_package_repo,
+        user_repo=mock_user_repo,
+        bonus_service=mock_bonus_service
+    )
 
 
 class TestGetAvailablePackages:
     def test_returns_all_package_options(self, service):
         packages = service.get_available_packages()
 
-        assert len(packages) == 4
+        assert len(packages) == 5
         assert packages[0].name == "Básico"
-        assert packages[0].data_gb == 5
-        assert packages[0].stars == 500
+        assert packages[0].data_gb == 10
+        assert packages[0].stars == 600
 
     def test_premium_has_bonus(self, service):
         packages = service.get_available_packages()
         premium = [p for p in packages if p.name == "Premium"][0]
 
-        assert premium.bonus_percent == 30
+        assert premium.bonus_percent == 20
+
+    def test_unlimited_has_highest_bonus(self, service):
+        packages = service.get_available_packages()
+        unlimited = [p for p in packages if p.name == "Ilimitado"][0]
+
+        assert unlimited.bonus_percent == 25
 
 
 class TestPurchasePackage:
@@ -47,16 +63,24 @@ class TestPurchasePackage:
     async def test_purchase_creates_package(
         self, service, mock_package_repo, mock_user_repo
     ):
-        mock_user_repo.get_by_id.return_value = MagicMock(telegram_id=123)
+        from domain.entities.user import User
+        user = User(
+            telegram_id=123,
+            purchase_count=0,
+            welcome_bonus_used=False,
+            loyalty_bonus_percent=0
+        )
+        mock_user_repo.get_by_id.return_value = user
+        mock_package_repo.get_valid_by_user.return_value = []
         mock_package_repo.save.return_value = DataPackage(
             user_id=123,
             package_type=PackageType.BASIC,
-            data_limit_bytes=10 * 1024**3,
-            stars_paid=500,
+            data_limit_bytes=12 * 1024**3,  # 10GB + 20% welcome bonus
+            stars_paid=600,
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
 
-        result = await service.purchase_package(
+        result, bonus_breakdown = await service.purchase_package(
             user_id=123,
             package_type="basic",
             telegram_payment_id="pay_123",
@@ -64,7 +88,12 @@ class TestPurchasePackage:
         )
 
         assert result is not None
+        assert bonus_breakdown is not None
+        assert bonus_breakdown["total_bonus_percent"] == 20  # Welcome bonus
         mock_package_repo.save.assert_called_once()
+        # User stats should be updated
+        assert user.purchase_count == 1
+        assert user.welcome_bonus_used is True
 
     @pytest.mark.asyncio
     async def test_purchase_invalid_package_raises(self, service):
@@ -85,7 +114,7 @@ class TestGetUserPackages:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=500,
+                stars_paid=600,
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35),
             )
         ]
@@ -106,15 +135,15 @@ class TestGetUserDataSummary:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=500,
+                stars_paid=600,
                 data_used_bytes=5 * 1024**3,
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35),
             ),
             DataPackage(
                 user_id=123,
                 package_type=PackageType.PREMIUM,
-                data_limit_bytes=100 * 1024**3,
-                stars_paid=1100,
+                data_limit_bytes=144 * 1024**3,  # 120 GB + 20% bonus
+                stars_paid=1800,
                 data_used_bytes=20 * 1024**3,
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35),
             ),
@@ -123,9 +152,9 @@ class TestGetUserDataSummary:
 
         result = await service.get_user_data_summary(123, current_user_id=123)
 
-        assert result["total_limit_gb"] == 110.0
+        assert result["total_limit_gb"] == 154.0  # 10 GB + 144 GB
         assert result["total_used_gb"] == 25.0
-        assert result["remaining_gb"] == 85.0
+        assert result["remaining_gb"] == 129.0
         assert result["active_packages"] == 2
 
     @pytest.mark.asyncio
@@ -141,7 +170,7 @@ class TestGetUserDataSummary:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=500,
+                stars_paid=600,
                 data_used_bytes=int(3.2 * 1024**3),
                 expires_at=expires_at,
                 purchased_at=datetime.now(timezone.utc) - timedelta(days=20),
@@ -172,7 +201,7 @@ class TestConsumeData:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=500,
+            stars_paid=600,
             data_used_bytes=0,
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
@@ -202,7 +231,7 @@ class TestConsumeData:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=500,
+            stars_paid=600,
             data_used_bytes=0,
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
@@ -222,7 +251,7 @@ class TestExpireOldPackages:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=500,
+            stars_paid=600,
             data_used_bytes=0,
             expires_at=datetime.now(timezone.utc) - timedelta(days=1),
         )
