@@ -2,15 +2,15 @@
 Mensajes para gestión avanzada de llaves VPN de uSipipo.
 
 Author: uSipipo Team
-Version: 3.2.0 - MarkdownV2 Compatible
+Version: 3.3.0 - Markdown Standardized
 """
 
 
 class KeyManagementMessages:
-    """Mensajes para gestión de llaves VPN - MarkdownV2 Compatible."""
+    """Mensajes para gestión de llaves VPN."""
 
     # ============================================
-    # MAIN MENU - MarkdownV2 OK
+    # MAIN MENU
     # ============================================
 
     MAIN_MENU = (
@@ -47,7 +47,7 @@ class KeyManagementMessages:
     )
 
     # ============================================
-    # KEY DETAILS - MarkdownV2 OK
+    # KEY DETAILS
     # ============================================
 
     KEY_DETAILS = (
@@ -66,7 +66,7 @@ class KeyManagementMessages:
     )
 
     # ============================================
-    # STATISTICS - MarkdownV2 OK
+    # STATISTICS
     # ============================================
 
     STATISTICS = (
@@ -82,16 +82,22 @@ class KeyManagementMessages:
     )
 
     # ============================================
-    # ACTIONS - MarkdownV2 OK
+    # ACTIONS
     # ============================================
 
     class Actions:
-        """Mensajes de acciones - MarkdownV2 Compatible."""
+        """Mensajes de acciones."""
 
         KEY_SUSPENDED = (
             "⏸️ *Llave suspendida*\n\n"
             "🔒 Modo reposo activado\n\n"
             "🔄 Puedes reactivarla cuando quieras ⚡"
+        )
+
+        KEY_REACTIVATED = (
+            "✅ *Llave activada*\n\n"
+            "🚀 Conexión lista\n\n"
+            "🌐 ¡A navegar seguro! 🔥"
         )
 
         KEY_REACTIVATED = (
@@ -119,11 +125,11 @@ class KeyManagementMessages:
         )
 
     # ============================================
-    # ERRORS - MarkdownV2 OK
+    # ERRORS
     # ============================================
 
     class Error:
-        """Mensajes de error - MarkdownV2 Compatible."""
+        """Mensajes de error."""
 
         SYSTEM_ERROR = (
             "🚨 *Error del sistema*\n\n"
@@ -160,11 +166,11 @@ class KeyManagementMessages:
         )
 
     # ============================================
-    # SUCCESS - MarkdownV2 OK
+    # SUCCESS
     # ============================================
 
     class Success:
-        """Mensajes de éxito - MarkdownV2 Compatible."""
+        """Mensajes de éxito."""
 
         OPERATION_COMPLETED = (
             "✅ *Listo*\n\n"

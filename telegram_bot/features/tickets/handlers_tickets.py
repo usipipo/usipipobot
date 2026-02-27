@@ -81,7 +81,7 @@ class TicketHandler:
                     subject=subject,
                 ),
                 reply_markup=MainMenuKeyboard.main_menu(miniapp_url=get_miniapp_url()),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
             logger.info(f"🎫 Ticket {ticket.id} created by user {user_id}")
@@ -91,7 +91,7 @@ class TicketHandler:
             if update.message:
                 await update.message.reply_text(
                     text=TicketMessages.Error.CREATE_FAILED,
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
 
         return ConversationHandler.END
@@ -128,7 +128,7 @@ class TicketHandler:
                 await query.edit_message_text(
                     text=TicketMessages.User.NO_TICKETS,
                     reply_markup=TicketKeyboards.back_to_support(),
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
                 return
 
@@ -180,7 +180,7 @@ class TicketHandler:
             if not ticket:
                 await query.edit_message_text(
                     text=TicketMessages.Error.NOT_FOUND,
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
                 return
 
@@ -211,7 +211,7 @@ class TicketHandler:
             await query.edit_message_text(
                 text=text,
                 reply_markup=TicketKeyboards.user_ticket_actions(ticket.id),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -232,7 +232,7 @@ class TicketHandler:
         if str(admin_id) != str(settings.ADMIN_ID):
             await query.edit_message_text(
                 text=TicketMessages.Error.NOT_AUTHORIZED,
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
             return
 
@@ -242,7 +242,7 @@ class TicketHandler:
             if not tickets:
                 await query.edit_message_text(
                     text=TicketMessages.Admin.NO_PENDING,
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
                 return
 
@@ -293,7 +293,7 @@ class TicketHandler:
         if str(admin_id) != str(settings.ADMIN_ID):
             await query.edit_message_text(
                 text=TicketMessages.Error.NOT_AUTHORIZED,
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
             return
 
@@ -303,7 +303,7 @@ class TicketHandler:
             if not ticket:
                 await query.edit_message_text(
                     text=TicketMessages.Error.NOT_FOUND,
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
                 return
 
@@ -334,7 +334,7 @@ class TicketHandler:
             await query.edit_message_text(
                 text=text,
                 reply_markup=TicketKeyboards.ticket_actions(ticket.id),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -367,7 +367,7 @@ class TicketHandler:
             text=TicketMessages.Admin.RESPOND_PROMPT.format(
                 ticket_id=str(ticket_id)[:8]
             ),
-            parse_mode="MarkdownV2",
+            parse_mode="Markdown",
         )
         return AWAITING_ADMIN_RESPONSE
 

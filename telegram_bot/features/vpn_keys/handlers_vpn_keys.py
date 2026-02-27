@@ -71,13 +71,13 @@ class VpnKeysHandler:
                 await update.callback_query.edit_message_text(
                     text=error_message,
                     reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
             elif update.message:
                 await update.message.reply_text(
                     text=error_message,
                     reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
             return ConversationHandler.END
 
@@ -86,13 +86,13 @@ class VpnKeysHandler:
             await update.callback_query.edit_message_text(
                 text=VpnKeysMessages.SELECT_TYPE,
                 reply_markup=VpnKeysKeyboards.vpn_types(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
         elif update.message:
             await update.message.reply_text(
                 text=VpnKeysMessages.SELECT_TYPE,
                 reply_markup=VpnKeysKeyboards.vpn_types(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
         return SELECT_TYPE
 
@@ -121,7 +121,7 @@ class VpnKeysHandler:
         escaped_key_type = escape_markdown(key_type.upper())
         await query.edit_message_text(
             text=f"🛡️ Has seleccionado *{escaped_key_type}*\.\n\nEscribe un nombre para identificar tu nueva llave \(ej: Mi Laptop\):",
-            parse_mode="MarkdownV2",
+            parse_mode="Markdown",
             reply_markup=cancel_keyboard,
         )
         return INPUT_NAME
@@ -169,7 +169,7 @@ class VpnKeysHandler:
                     await update.message.reply_photo(
                         photo=photo,
                         caption=caption,
-                        parse_mode="MarkdownV2",
+                        parse_mode="Markdown",
                         reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
                     )
 
@@ -188,7 +188,7 @@ class VpnKeysHandler:
 
                 with open(qr_path, "rb") as photo:
                     await update.message.reply_photo(
-                        photo=photo, caption=caption, parse_mode="MarkdownV2"
+                        photo=photo, caption=caption, parse_mode="Markdown"
                     )
 
                 with open(conf_path, "rb") as document:
@@ -196,7 +196,7 @@ class VpnKeysHandler:
                         document=document,
                         filename=f"{key_name}.conf",
                         caption="📁 *Configuración WireGuard*\n\n🔑 Tu nueva llave VPN está lista para usar\n\n⚠️ *Guarda este archivo en un lugar seguro*",
-                        parse_mode="MarkdownV2",
+                        parse_mode="Markdown",
                         reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
                     )
 

@@ -2,15 +2,15 @@
 Mensajes para gestión de llaves VPN de uSipipo.
 
 Author: uSipipo Team
-Version: 3.2.0 - MarkdownV2 Compatible
+Version: 3.3.0 - Markdown Standardized
 """
 
 
 class VpnKeysMessages:
-    """Mensajes para gestión de llaves VPN - MarkdownV2 Compatible."""
+    """Mensajes para gestión de llaves VPN."""
 
     # ============================================
-    # CREATION FLOW - MarkdownV2 OK
+    # CREATION FLOW
     # ============================================
 
     SELECT_TYPE = (
@@ -27,11 +27,11 @@ class VpnKeysMessages:
     )
 
     # ============================================
-    # ERRORS - MarkdownV2 OK
+    # ERRORS
     # ============================================
 
     class Error:
-        """Mensajes de error - MarkdownV2 Compatible."""
+        """Mensajes de error."""
 
         CREATION_FAILED = (
             "💥 *ERROR AL CREAR*\n\n"
@@ -53,11 +53,11 @@ class VpnKeysMessages:
         )
 
     # ============================================
-    # SUCCESS - MarkdownV2 OK
+    # SUCCESS
     # ============================================
 
     class Success:
-        """Mensajes de éxito - MarkdownV2 Compatible."""
+        """Mensajes de éxito."""
 
         KEY_CREATED = (
             "🔮 ╔══════════════╗\n"
@@ -71,7 +71,7 @@ class VpnKeysMessages:
             "🔮 ╔══════════════╗\n"
             "    ║ ✅ CREADA    ║\n"
             "    ╚══════════════╝\n\n"
-            "📡 `{type}` \| 🔑 `{name}`\n"
+            "📡 `{type}` | 🔑 `{name}`\n"
             "💾 `{data_limit:.1f}GB`\n\n"
             "🚀 Lista para usar ⚡"
         )
