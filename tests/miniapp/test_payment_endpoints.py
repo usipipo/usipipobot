@@ -173,7 +173,7 @@ class TestCreateCryptoOrder:
         assert "order_id" in data
         assert "wallet_address" in data
         assert "amount_usdt" in data
-        assert data["amount_usdt"] == 0.5  # 5 GB / 10
+        assert data["amount_usdt"] == 5.0  # 600 stars / 120
 
     @pytest.mark.asyncio
     @patch("miniapp.router.MiniAppAuthService")
@@ -213,7 +213,7 @@ class TestCreateCryptoOrder:
         data = response.json()
         assert data["success"] is True
         assert "order_id" in data
-        assert data["amount_usdt"] == 6.0  # 600 stars / 100
+        assert data["amount_usdt"] == pytest.approx(5.83, rel=0.01)  # 700 stars / 120
 
     @pytest.mark.asyncio
     @patch("miniapp.router.MiniAppAuthService")
@@ -253,7 +253,7 @@ class TestMiniAppPaymentService:
         opt = payment_service.get_package_option("basic")
         assert opt is not None
         assert opt.package_type.value == "basic"
-        assert opt.stars == 500
+        assert opt.stars == 600
 
     def test_get_package_option_not_found(self):
         """Test getting an invalid package option."""

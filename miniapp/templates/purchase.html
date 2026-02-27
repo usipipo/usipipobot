@@ -39,11 +39,11 @@
                 Telegram Stars
             </div>
             <div style="font-size: 10px; color: var(--accent-green); margin-bottom: 16px;">
-                💰 {{ "%.2f"|format(package.data_gb / 10) }} USDT
+                💰 {{ "%.2f"|format(package.price_stars / 120) }} USDT
             </div>
 
             <button class="btn {% if package.bonus_percent > 0 %}btn-primary{% else %}btn-secondary{% endif %} btn-full"
-                    onclick="showPaymentMethods('package', '{{ package.id }}', {{ package.price_stars }}, {{ package.data_gb / 10 }})">
+                    onclick="showPaymentMethods('package', '{{ package.id }}', {{ package.price_stars }}, {{ package.price_stars / 120 }})">
                 Comprar Ahora
             </button>
         </div>

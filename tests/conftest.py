@@ -121,6 +121,6 @@ def sample_data_package():
         user_id=123456789,
         package_type=PackageType.BASIC,
         data_limit_bytes=10 * 1024**3,
-        stars_paid=500,
+        stars_paid=600,
         expires_at=datetime.now(timezone.utc) + timedelta(days=35),
     )

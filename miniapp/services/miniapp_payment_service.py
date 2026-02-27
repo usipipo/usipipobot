@@ -144,7 +144,8 @@ class MiniAppPaymentService:
                     logger.error(f"Package not found: {product_id}")
                     return None
 
-                amount_usdt = package_opt.data_gb / 10  # 1 USDT = 10 GB
+                # Tasa: 1 USDT = 120 Stars
+                amount_usdt = package_opt.stars / 120
 
                 # Create order
                 order = await payment_service.create_order(
@@ -180,9 +181,7 @@ class MiniAppPaymentService:
             # Generate QR code
             qr_filename = f"miniapp_payment_{order.id}"
             qr_path = QrGenerator.generate_payment_qr(
-                wallet_address=wallet.address,
-                amount=amount_usdt,
-                filename=qr_filename
+                wallet_address=wallet.address, amount=amount_usdt, filename=qr_filename
             )
 
             # Build QR code URL (relative to Mini App)
@@ -197,7 +196,9 @@ class MiniAppPaymentService:
                 "wallet_address": wallet.address,
                 "amount_usdt": amount_usdt,
                 "qr_code_url": qr_url,
-                "expires_at": order.expires_at.isoformat() if order.expires_at else None,
+                "expires_at": (
+                    order.expires_at.isoformat() if order.expires_at else None
+                ),
             }
 
         except Exception as e:
