@@ -238,6 +238,39 @@ class CryptoPaymentService:
             return None
         return await self.crypto_order_repo.get_by_id(order_id)
 
+    async def get_user_transaction_history(self, user_id: int) -> list:
+        """
+        Obtiene el historial completo de transacciones de un usuario,
+        incluyendo órdenes completadas, fallidas y expiradas.
+        """
+        if not self.crypto_order_repo:
+            return []
+
+        orders = await self.crypto_order_repo.get_by_user(user_id)
+
+        history = []
+        for order in orders:
+            # Determinar tipo de producto
+            product_name = "Paquete de datos"
+            if order.package_type.startswith("slots_"):
+                slots = order.package_type.split("_")[1]
+                product_name = f"+{slots} claves"
+            else:
+                product_name = f"Paquete {order.package_type.title()}"
+
+            history.append({
+                "order_id": str(order.id),
+                "product": product_name,
+                "amount_usdt": order.amount_usdt,
+                "status": order.status.value,
+                "created_at": order.created_at,
+                "expires_at": order.expires_at,
+                "confirmed_at": order.confirmed_at,
+                "tx_hash": order.tx_hash,
+            })
+
+        return history
+
     async def check_and_expire_orders(self) -> int:
         if not self.crypto_order_repo:
             return 0
