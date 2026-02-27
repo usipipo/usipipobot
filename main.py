@@ -16,6 +16,7 @@ from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
 from config import settings
 from infrastructure.jobs.key_cleanup_job import key_cleanup_job
+from infrastructure.jobs.memory_cleanup_job import memory_cleanup_job
 from infrastructure.jobs.package_expiration_job import expire_packages_job
 from infrastructure.jobs.usage_sync import sync_vpn_usage_job
 from infrastructure.persistence.database import close_database, init_database
@@ -119,6 +120,18 @@ def main():
             data={"data_package_service": data_package_service},
         )
         logger.info("⏰ Job de expiración de paquetes programado.")
+
+        interval_minutes = settings.MEMORY_CLEANUP_INTERVAL_MINUTES
+        job_queue.run_repeating(
+            memory_cleanup_job,
+            interval=interval_minutes * 60,
+            first=120,
+            data={},
+        )
+        logger.info(
+            f"⏰ Job de limpieza de RAM programado cada {interval_minutes} minutos "
+            f"(umbral: {settings.MEMORY_CLEANUP_THRESHOLD_PERCENT}%)"
+        )
 
         handlers = initialize_handlers(vpn_service, referral_service)
         for handler in handlers:

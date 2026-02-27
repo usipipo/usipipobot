@@ -257,6 +257,40 @@ class Settings(BaseSettings):
         description="Nivel de logging: DEBUG | INFO | WARNING | ERROR | CRITICAL",
     )
 
+    # =========================================================================
+    # AUTO LIMPIEZA DE MEMORIA RAM
+    # =========================================================================
+    MEMORY_CLEANUP_ENABLED: bool = Field(
+        default=True,
+        description="Habilitar limpieza automática de RAM",
+    )
+
+    MEMORY_CLEANUP_THRESHOLD_PERCENT: int = Field(
+        default=80,
+        ge=50,
+        le=95,
+        description="Umbral de uso de RAM (%) para ejecutar limpieza",
+    )
+
+    MEMORY_CLEANUP_CRITICAL_PERCENT: int = Field(
+        default=90,
+        ge=60,
+        le=99,
+        description="Umbral crítico de RAM (%) que requiere limpieza agresiva",
+    )
+
+    MEMORY_CLEANUP_INTERVAL_MINUTES: int = Field(
+        default=10,
+        ge=1,
+        le=60,
+        description="Intervalo en minutos entre verificaciones de RAM",
+    )
+
+    MEMORY_NOTIFY_ADMIN: bool = Field(
+        default=True,
+        description="Notificar al admin cuando se limpie la RAM",
+    )
+
     LOG_FILE_PATH: str = Field(
         default="./logs/vpn_manager.log", description="Ruta del archivo de logs"
     )
