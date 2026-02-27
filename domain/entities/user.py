@@ -45,6 +45,12 @@ class User:
     free_data_limit_bytes: int = 5 * 1024**3
     free_data_used_bytes: int = 0
 
+    # Bonus tracking fields
+    purchase_count: int = 0
+    loyalty_bonus_percent: int = 0
+    welcome_bonus_used: bool = False
+    referred_users_with_purchase: int = 0  # Track referrals who bought
+
     @property
     def is_active(self) -> bool:
         """Verifica si el usuario está activo."""
