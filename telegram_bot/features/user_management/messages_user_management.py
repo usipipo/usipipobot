@@ -76,7 +76,7 @@ class UserManagementMessages:
             "💾 _Mis Datos_ - Ver tu consumo actual\n\n"
             "💡 *Consejos:*\n"
             "• Puedes crear hasta 2 claves gratis\n"
-            "• Cada clave tiene 10GB de datos\n"
+            "• Cada clave tiene 5GB de datos\n"
             "• Usa el menú Operaciones para más opciones"
         )
 
