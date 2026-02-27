@@ -184,7 +184,7 @@ class TestRedeemCreditsForData:
         user = User(
             telegram_id=123,
             referral_credits=250,
-            free_data_limit_bytes=10 * 1024**3,
+            free_data_limit_bytes=5 * 1024**3,
         )
         mock_user_repo.get_by_id.return_value = user
 

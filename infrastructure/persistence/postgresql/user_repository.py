@@ -39,7 +39,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             referral_code=model.referral_code,
             referred_by=model.referred_by,
             referral_credits=model.referral_credits or 0,
-            free_data_limit_bytes=model.free_data_limit_bytes or 10 * 1024**3,
+            free_data_limit_bytes=model.free_data_limit_bytes or 5 * 1024**3,
             free_data_used_bytes=model.free_data_used_bytes or 0,
             wallet_address=model.wallet_address,
         )

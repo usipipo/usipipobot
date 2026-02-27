@@ -205,7 +205,7 @@ class Settings(BaseSettings):
     )
 
     FREE_PLAN_DATA_LIMIT_GB: int = Field(
-        default=10,
+        default=5,
         ge=1,
         description="Límite de datos por clave en GB para el plan gratuito",
     )
