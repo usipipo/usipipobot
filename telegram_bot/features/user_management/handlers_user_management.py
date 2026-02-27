@@ -5,6 +5,7 @@ Author: uSipipo Team
 Version: 2.0.0 - Feature-based architecture
 """
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from telegram import Update
@@ -329,6 +330,7 @@ class UserManagementHandler(BaseHandler):
                     return
 
                 join_date = profile.created_at.strftime("%Y-%m-%d")
+                days_since_join = (datetime.now(timezone.utc) - profile.created_at).days
                 status_text = "Activo" if profile.status == "active" else "Inactivo"
 
                 total_gb = profile.total_used_gb + profile.free_data_remaining_gb
@@ -343,6 +345,7 @@ class UserManagementHandler(BaseHandler):
                         user_id=profile.user_id,
                         username=profile.username or "N/A",
                         join_date=join_date,
+                        days_since_join=days_since_join,
                         status=status_text,
                         data_used=f"{profile.total_used_gb:.2f} GB",
                         data_total=f"{total_gb:.2f} GB",
@@ -373,8 +376,12 @@ class UserManagementHandler(BaseHandler):
                     return
 
                 join_date = "N/A"
+                days_since_join = 0
                 if hasattr(user_entity, "created_at") and user_entity.created_at:
                     join_date = user_entity.created_at.strftime("%Y-%m-%d")
+                    days_since_join = (
+                        datetime.now(timezone.utc) - user_entity.created_at
+                    ).days
 
                 status_text = "Inactivo"
                 if (
@@ -394,6 +401,7 @@ class UserManagementHandler(BaseHandler):
                         user_id=telegram_id,
                         username=user_entity.username or "N/A",
                         join_date=join_date,
+                        days_since_join=days_since_join,
                         status=status_text,
                         data_used=f"{data_used_gb:.2f} GB",
                         data_total="10.00 GB",

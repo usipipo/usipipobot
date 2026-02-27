@@ -199,6 +199,7 @@ class UserManagementMessages:
             user_id: int,
             username: str,
             join_date: str,
+            days_since_join: int,
             status: str,
             data_used: str,
             data_total: str,
@@ -217,11 +218,13 @@ class UserManagementMessages:
             progress = _progress_bar(data_percentage)
             key_slots = _format_key_slots(keys_used, keys_total)
 
+            date_display = f"{join_date} ({days_since_join}d)"
+
             return (
                 f"┌──────────────────────────┐\n"
                 f"│ 👤 {name[:18]:<18} │\n"
                 f"│ 🆔 `{user_id}`{' ' * (18 - len(str(user_id)))}│\n"
-                f"│ 📅 {join_date}{' ' * (16 - len(join_date))}│\n"
+                f"│ 📅 {date_display}{' ' * (16 - len(date_display))}│\n"
                 f"│ 🔰 {status_icon} {status}{' ' * (15 - len(f'{status_icon} {status}'))}│\n"
                 f"└──────────────────────────┘\n"
                 f"\n"
