@@ -131,7 +131,13 @@ def _configure_infrastructure_clients(container: punq.Container) -> None:
     """Configura los clientes de infraestructura en el contenedor."""
     container.register(OutlineClient, scope=punq.Scope.singleton)
     container.register(WireGuardClient, scope=punq.Scope.singleton)
-    container.register(TronDealerClient, scope=punq.Scope.singleton)
+
+    def create_tron_dealer_client() -> TronDealerClient:
+        return TronDealerClient()
+
+    container.register(
+        TronDealerClient, factory=create_tron_dealer_client, scope=punq.Scope.singleton
+    )
 
 
 def _configure_repositories(container: punq.Container) -> None:
