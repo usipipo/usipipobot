@@ -5,7 +5,7 @@ Author: uSipipo Team
 Version: 1.1.0
 """
 
-from datetime import datetime, timezone
+import os
 
 from telegram import LabeledPrice, Update
 from telegram.ext import (
@@ -23,7 +23,6 @@ from application.services.data_package_service import (
     DataPackageService,
 )
 from config import settings
-from domain.entities.data_package import PackageType
 from telegram_bot.features.user_management.keyboards_user_management import (
     UserManagementKeyboards,
 )
@@ -47,7 +46,6 @@ class BuyGbHandler:
 
         if not update.effective_user:
             return
-        user_id = update.effective_user.id
 
         try:
             packages_list = BuyGbMessages.Menu.format_packages_list()
@@ -299,9 +297,16 @@ class BuyGbHandler:
                 wallet_address=wallet.address,
             )
 
-            from domain.entities.crypto_order import CryptoOrderStatus
-
             expires_minutes = 30
+
+            # Generar QR de pago
+            from utils.qr_generator import QrGenerator
+            qr_filename = f"payment_{order.id}"
+            qr_path = QrGenerator.generate_payment_qr(
+                wallet_address=wallet.address,
+                amount=usdt_amount,
+                filename=qr_filename
+            )
 
             message = f"""💰 *Pago con USDT - BSC*
 
@@ -309,23 +314,36 @@ Paquete: *{package_option.name}*
 Cantidad: *{package_option.data_gb} GB*
 Monto a pagar: *{usdt_amount} USDT*
 
-� wallet:
+📋 Wallet:
 `{wallet.address}`
 
 ⏱️ Tiempo límite: *{expires_minutes} minutos*
 
 ⚠️ *Importante:*
-• Envíe exactamente *{usdt_amount} USDT* a la dirección mostrada
-• Espere al menos *15 confirmaciones* de la red BSC
+• Escanea el QR con tu wallet o copia la dirección
+• Envíe exactamente *{usdt_amount} USDT* (red BSC/BEP20)
+• Espere al menos *15 confirmaciones* de la red
 • No cierre esta pantalla hasta que el pago sea confirmado
 
 ✅ Una vez realizado el pago, el sistema detectará automáticamente la transacción."""
 
-            await query.edit_message_text(
-                text=message,
-                reply_markup=BuyGbKeyboards.back_to_packages(),
-                parse_mode="Markdown",
-            )
+            if qr_path and os.path.exists(qr_path):
+                # Enviar mensaje con QR
+                await query.delete_message()
+                with open(qr_path, "rb") as photo:
+                    await context.bot.send_photo(
+                        chat_id=update.effective_chat.id,
+                        photo=photo,
+                        caption=message,
+                        reply_markup=BuyGbKeyboards.back_to_packages(),
+                        parse_mode="Markdown",
+                    )
+            else:
+                await query.edit_message_text(
+                    text=message,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
 
             logger.info(
                 f"💰 Crypto payment initiated: {package_option.name} ({usdt_amount} USDT) "
@@ -340,7 +358,62 @@ Monto a pagar: *{usdt_amount} USDT*
                 parse_mode="Markdown",
             )
 
-    async def buy_slots(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def select_slot_payment_method(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Muestra opciones de método de pago para slots."""
+        query = update.callback_query
+        if not query or not query.data:
+            return
+        await query.answer()
+
+        slots_str = query.data.split("_")[-1]
+        slots = int(slots_str)
+
+        try:
+            slot_option = None
+            for slot in SLOT_OPTIONS:
+                if slot.slots == slots:
+                    slot_option = slot
+                    break
+
+            if not slot_option:
+                await query.edit_message_text(
+                    text=BuyGbMessages.Error.SYSTEM_ERROR,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            # Calcular precio en USDT (aproximación: 1 USDT = 10 Stars)
+            usdt_amount = slot_option.stars / 10
+
+            message = f"""💳 *Selecciona método de pago*
+
+🔑 {slot_option.name}
+⭐ Precio: {slot_option.stars} Stars
+💰 Precio: ~{usdt_amount:.2f} USDT (BSC)
+
+Elige cómo quieres pagar:"""
+
+            keyboard = BuyGbKeyboards.slot_payment_method_selection(slots)
+
+            await query.edit_message_text(
+                text=message, reply_markup=keyboard, parse_mode="Markdown"
+            )
+
+        except Exception as e:
+            logger.error(f"Error en select_slot_payment_method: {e}")
+            await query.edit_message_text(
+                text=BuyGbMessages.Error.SYSTEM_ERROR,
+                reply_markup=BuyGbKeyboards.back_to_packages(),
+                parse_mode="Markdown",
+            )
+
+    async def pay_slots_with_stars(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Procesa pago de slots con Telegram Stars."""
         query = update.callback_query
         if not query or not query.data:
             return
@@ -386,7 +459,130 @@ Monto a pagar: *{usdt_amount} USDT*
             )
 
         except Exception as e:
-            logger.error(f"Error en buy_slots: {e}")
+            logger.error(f"Error en pay_slots_with_stars: {e}")
+            await query.edit_message_text(
+                text=BuyGbMessages.Error.SYSTEM_ERROR,
+                reply_markup=BuyGbKeyboards.back_to_packages(),
+                parse_mode="Markdown",
+            )
+
+    async def pay_slots_with_crypto(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Inicia pago de slots con crypto usando TronDealer."""
+        query = update.callback_query
+        if not query or not query.data:
+            return
+        await query.answer()
+
+        if not update.effective_user:
+            return
+        user_id = update.effective_user.id
+        slots_str = query.data.split("_")[-1]
+        slots = int(slots_str)
+
+        try:
+            slot_option = None
+            for slot in SLOT_OPTIONS:
+                if slot.slots == slots:
+                    slot_option = slot
+                    break
+
+            if not slot_option:
+                await query.edit_message_text(
+                    text=BuyGbMessages.Error.SYSTEM_ERROR,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            from application.services.common.container import get_service
+            from application.services.crypto_payment_service import CryptoPaymentService
+            from application.services.wallet_management_service import (
+                WalletManagementService,
+            )
+
+            wallet_service = get_service(WalletManagementService)
+            payment_service = get_service(CryptoPaymentService)
+
+            wallet = await wallet_service.assign_wallet(
+                user_id, label=f"user-{user_id}"
+            )
+
+            if not wallet:
+                await query.edit_message_text(
+                    text="❌ Error al asignar billetera. Intente nuevamente.",
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            # Calcular monto en USDT (aproximación: 1 USDT = 10 Stars)
+            usdt_amount = slot_option.stars / 10
+
+            # Crear orden de tipo "slots" para diferenciar de paquetes
+            order = await payment_service.create_order(
+                user_id=user_id,
+                package_type=f"slots_{slots}",  # Formato especial para slots
+                amount_usdt=usdt_amount,
+                wallet_address=wallet.address,
+            )
+
+            expires_minutes = 30
+
+            # Generar QR de pago
+            from utils.qr_generator import QrGenerator
+            qr_filename = f"payment_slots_{order.id}"
+            qr_path = QrGenerator.generate_payment_qr(
+                wallet_address=wallet.address,
+                amount=usdt_amount,
+                filename=qr_filename
+            )
+
+            message = f"""💰 *Pago de Slots con USDT - BSC*
+
+🔑 Producto: *{slot_option.name}*
+⭐ Precio original: {slot_option.stars} Stars
+💰 Monto a pagar: *{usdt_amount:.2f} USDT*
+
+📋 Wallet:
+`{wallet.address}`
+
+⏱️ Tiempo límite: *{expires_minutes} minutos*
+
+⚠️ *Importante:*
+• Escanea el QR con tu wallet o copia la dirección
+• Envíe exactamente *{usdt_amount:.2f} USDT* (red BSC/BEP20)
+• Espere al menos *15 confirmaciones* de la red
+• No cierre esta pantalla hasta que el pago sea confirmado
+
+✅ Una vez realizado el pago, el sistema detectará automáticamente la transacción y agregará las claves a tu cuenta."""
+
+            if qr_path and os.path.exists(qr_path):
+                # Enviar mensaje con QR
+                await query.delete_message()
+                with open(qr_path, "rb") as photo:
+                    await context.bot.send_photo(
+                        chat_id=update.effective_chat.id,
+                        photo=photo,
+                        caption=message,
+                        reply_markup=BuyGbKeyboards.back_to_packages(),
+                        parse_mode="Markdown",
+                    )
+            else:
+                await query.edit_message_text(
+                    text=message,
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+
+            logger.info(
+                f"💰 Crypto payment for slots initiated: {slot_option.name} ({usdt_amount} USDT) "
+                f"for user {user_id}, wallet {wallet.address}, order {order.id}"
+            )
+
+        except Exception as e:
+            logger.error(f"Error en pay_slots_with_crypto: {e}", exc_info=True)
             await query.edit_message_text(
                 text=BuyGbMessages.Error.SYSTEM_ERROR,
                 reply_markup=BuyGbKeyboards.back_to_packages(),
@@ -704,7 +900,10 @@ def get_buy_gb_callback_handlers(data_package_service: DataPackageService):
         CallbackQueryHandler(handler.pay_with_crypto, pattern="^pay_crypto_"),
         CallbackQueryHandler(handler.view_data_summary, pattern="^view_data_summary$"),
         CallbackQueryHandler(handler.show_slots_menu, pattern="^buy_slots_menu$"),
-        CallbackQueryHandler(handler.buy_slots, pattern="^buy_slots_"),
+        # Slots payment handlers
+        CallbackQueryHandler(handler.select_slot_payment_method, pattern="^select_slot_payment_"),
+        CallbackQueryHandler(handler.pay_slots_with_stars, pattern="^pay_slots_stars_"),
+        CallbackQueryHandler(handler.pay_slots_with_crypto, pattern="^pay_slots_crypto_"),
     ]
 
 
