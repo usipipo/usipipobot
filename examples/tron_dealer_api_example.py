@@ -10,13 +10,14 @@ This script shows how to:
 """
 
 import asyncio
+
+from application.services.common.container import get_container
+from application.services.wallet_management_service import WalletManagementService
 from config import settings
 from infrastructure.api_clients.client_tron_dealer import (
-    TronDealerClient,
     TransactionStatus,
+    TronDealerClient,
 )
-from application.services.wallet_management_service import WalletManagementService
-from application.services.common.container import get_container
 
 
 async def main():

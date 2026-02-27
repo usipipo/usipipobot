@@ -1,9 +1,10 @@
-import httpx
 import json
 import logging
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 from config import settings
 

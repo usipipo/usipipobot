@@ -1,5 +1,7 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
 from application.services.crypto_payment_service import CryptoPaymentService
 from domain.entities.crypto_transaction import (
     CryptoTransaction,

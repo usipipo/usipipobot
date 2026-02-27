@@ -12,10 +12,10 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities.balance import Balance
+from infrastructure.persistence.postgresql.models import TransactionModel
 from infrastructure.persistence.postgresql.transaction_repository import (
     PostgresTransactionRepository,
 )
-from infrastructure.persistence.postgresql.models import TransactionModel
 
 
 class TestPostgresTransactionRepository:

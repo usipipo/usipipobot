@@ -1,12 +1,14 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
 from infrastructure.api_clients.client_tron_dealer import (
-    TronDealerClient,
     BscWallet,
-    WalletBalance,
     TransactionResponse,
     TransactionStatus,
     TronDealerApiError,
+    TronDealerClient,
+    WalletBalance,
 )
 
 

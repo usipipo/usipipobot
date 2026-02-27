@@ -1,6 +1,7 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from telegram import Update, CallbackQuery, User, Chat
+
+import pytest
+from telegram import CallbackQuery, Chat, Update, User
 
 from application.services.data_package_service import DataPackageService
 from telegram_bot.features.buy_gb.handlers_buy_gb import BuyGbHandler
