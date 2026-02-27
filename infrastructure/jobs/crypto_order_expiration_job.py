@@ -10,7 +10,6 @@ from typing import Any, Dict, cast
 from telegram.ext import ContextTypes
 
 from application.services.crypto_payment_service import CryptoPaymentService
-from config import settings
 from utils.logger import logger
 
 
@@ -37,10 +36,6 @@ async def expire_crypto_orders_job(context: ContextTypes.DEFAULT_TYPE) -> None:
 
         expired_count = 0
         notified_count = 0
-
-        from datetime import datetime, timezone
-
-        now = datetime.now(timezone.utc)
 
         for order in pending_orders:
             if order.is_expired:

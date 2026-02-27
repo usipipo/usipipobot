@@ -6,7 +6,6 @@ Version: 1.1.0
 """
 
 import os
-from datetime import datetime, timezone
 
 from telegram import LabeledPrice, Update
 from telegram.ext import (
@@ -24,7 +23,6 @@ from application.services.data_package_service import (
     DataPackageService,
 )
 from config import settings
-from domain.entities.data_package import PackageType
 from telegram_bot.features.user_management.keyboards_user_management import (
     UserManagementKeyboards,
 )
@@ -48,7 +46,6 @@ class BuyGbHandler:
 
         if not update.effective_user:
             return
-        user_id = update.effective_user.id
 
         try:
             packages_list = BuyGbMessages.Menu.format_packages_list()
@@ -300,8 +297,6 @@ class BuyGbHandler:
                 wallet_address=wallet.address,
             )
 
-            from domain.entities.crypto_order import CryptoOrderStatus
-
             expires_minutes = 30
 
             # Generar QR de pago
@@ -532,8 +527,6 @@ Elige cómo quieres pagar:"""
                 amount_usdt=usdt_amount,
                 wallet_address=wallet.address,
             )
-
-            from domain.entities.crypto_order import CryptoOrderStatus
 
             expires_minutes = 30
 
