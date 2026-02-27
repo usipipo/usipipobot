@@ -269,11 +269,11 @@ class BuyGbHandler:
                 )
                 return
 
+            from application.services.common.container import get_service
+            from application.services.crypto_payment_service import CryptoPaymentService
             from application.services.wallet_management_service import (
                 WalletManagementService,
             )
-            from application.services.crypto_payment_service import CryptoPaymentService
-            from application.services.common.container import get_service
 
             wallet_service = get_service(WalletManagementService)
             payment_service = get_service(CryptoPaymentService)

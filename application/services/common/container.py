@@ -34,8 +34,8 @@ from domain.interfaces.iticket_repository import ITicketRepository
 from domain.interfaces.itransaction_repository import ITransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
-from infrastructure.api_clients.client_wireguard import WireGuardClient
 from infrastructure.api_clients.client_tron_dealer import TronDealerClient
+from infrastructure.api_clients.client_wireguard import WireGuardClient
 from infrastructure.persistence.database import get_session_factory
 from infrastructure.persistence.postgresql.crypto_order_repository import (
     PostgresCryptoOrderRepository,

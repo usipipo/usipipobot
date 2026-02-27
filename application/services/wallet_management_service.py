@@ -1,14 +1,14 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from domain.entities.user import User
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_tron_dealer import (
-    TronDealerClient,
     BscWallet,
-    WalletBalance,
     TransactionResponse,
     TransactionStatus,
     TronDealerApiError,
+    TronDealerClient,
+    WalletBalance,
     WalletStatus,
 )
 from utils.logger import logger

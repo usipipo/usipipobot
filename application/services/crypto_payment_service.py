@@ -1,5 +1,5 @@
-from typing import Optional
 import uuid
+from typing import Optional
 
 from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
 from domain.entities.crypto_transaction import (
@@ -161,8 +161,8 @@ class CryptoPaymentService:
         try:
             logger.info(f"Crediting {gb_to_credit} GB to user {user_id}")
 
-            from application.services.data_package_service import DataPackageService
             from application.services.common.container import get_service
+            from application.services.data_package_service import DataPackageService
             from domain.entities.data_package import PackageType
 
             data_package_service = get_service(DataPackageService)
