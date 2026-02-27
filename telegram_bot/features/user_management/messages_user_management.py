@@ -41,7 +41,7 @@ class UserManagementMessages:
             "Tu cuenta ha sido creada exitosamente.\n\n"
             "🎁 **Regalo de bienvenida:**\n"
             "• 2 llaves VPN gratuitas\n"
-            "• 10 GB de datos por llave\n\n"
+            "• 5 GB de datos por llave\n\n"
             "📱 Toca **➕ Crear Nueva** para generar tu primera conexión."
         )
 
@@ -76,21 +76,26 @@ class UserManagementMessages:
             "💾 _Mis Datos_ - Ver tu consumo actual\n\n"
             "💡 *Consejos:*\n"
             "• Puedes crear hasta 2 claves gratis\n"
-            "• Cada clave tiene 10GB de datos\n"
+            "• Cada clave tiene 5GB de datos\n"
             "• Usa el menú Operaciones para más opciones"
         )
 
         FAQ_TEXT = (
             "📚 *Preguntas Frecuentes*\n\n"
-            "❓ *¿Cómo configuro mi VPN?*\n"
+            "❓ *¿Cómo configuro mi VPN\?*\n"
             "Descarga la app WireGuard o Outline, importa tu clave y conecta\\.\n\n"
-            "❓ *¿Cuántos dispositivos puedo usar?*\n"
-            "Puedes crear hasta 2 claves gratuitas\\. Cada clave = 1 dispositivo\\.\n\n"
-            "❓ *¿Qué pasa si agoto mis datos?*\n"
+            "❓ *¿Cuántos dispositivos puedo usar\?*\n"
+            "Puedes crear hasta 2 claves gratuitas\\. Cada clave \= 1 dispositivo\\.\n\n"
+            "❓ *¿Qué pasa si agoto mis datos\?*\n"
             "Compra más GB desde el menú principal con Telegram Stars\\.\n\n"
-            "❓ *¿Cómo funciona el programa de referidos?*\n"
+            "❓ *¿Cómo funcionan los bonos\?*\n"
+            "🎁 *Bono de Bienvenida:* \+20% en tu primera compra\\.\n"
+            "⭐ *Bono de Fidelidad:* Acumulativo en compras 3, 5 y 10\\.\n"
+            "⚡ *Recarga Rápida:* \+15% si renuevas 7 días antes de vencer\\.\n"
+            "👥 *Bono Referidos:* \+5GB por cada referido que compre\\.\n\n"
+            "❓ *¿Cómo funciona el programa de referidos\?*\n"
             "Comparte tu código de referido\\. Cuando alguien se registra, ambos reciben créditos\\.\n\n"
-            "❓ *¿Necesitas más ayuda?*\n"
+            "❓ *¿Necesitas más ayuda\?*\n"
             "Crea un ticket de soporte y te responderemos pronto\\."
         )
 
@@ -110,6 +115,46 @@ class UserManagementMessages:
             "Tu ticket \\#{ticket_id} ha sido enviado\\.\n\n"
             "Te responderemos lo antes posible\\.\n\n"
             "Estado: 🟡 Pendiente"
+        )
+
+        BONUSES_INFO = (
+            "🎁 *Sistema de Bonos uSipipo*\n\n"
+            "*💫 Bono de Bienvenida*\n"
+            "└ \+20% de datos en tu *primera compra*\\.\n"
+            "└ Ejemplo: Compra 10GB → Recibes 12GB\\.\n\n"
+            "*⭐ Bono de Fidelidad*\n"
+            "└ Acumulativo permanente\\.\n"
+            "└ 3ra compra: \+10%\\.\n"
+            "└ 5ta compra: \+15% adicional\\.\n"
+            "└ 10ma compra: \+25% adicional\\.\n"
+            "└ Total máximo: \+50% de bonus\\.\n\n"
+            "*⚡ Bono de Recarga Rápida*\n"
+            "└ \+15% si renuevas *7 días antes* de vencer\\.\n"
+            "└ Ideal para no perder tus datos\\.\n\n"
+            "*👥 Bono por Referidos*\n"
+            "└ \+5GB por cada referido que *realice una compra*\\.\n"
+            "└ Sin límite de referidos\\.\n\n"
+            "*💡 Tip:* ¡Combina bonos para obtener hasta \+85% de datos extra\!"
+        )
+
+        BONUSES_INFO = (
+            "🎁 *Sistema de Bonos uSipipo*\n\n"
+            "*💫 Bono de Bienvenida*\n"
+            "└ \+20% de datos en tu *primera compra*\\.\n"
+            "└ Ejemplo: Compra 10GB → Recibes 12GB\\.\n\n"
+            "*⭐ Bono de Fidelidad*\n"
+            "└ Acumulativo permanente\\.\n"
+            "└ 3ra compra: \+10%\\.\n"
+            "└ 5ta compra: \+15% adicional\\.\n"
+            "└ 10ma compra: \+25% adicional\\.\n"
+            "└ Total máximo: \+50% de bonus\\.\n\n"
+            "*⚡ Bono de Recarga Rápida*\n"
+            "└ \+15% si renuevas *7 días antes* de vencer\\.\n"
+            "└ Ideal para no perder tus datos\\.\n\n"
+            "*👥 Bono por Referidos*\n"
+            "└ \+5GB por cada referido que *realice una compra*\\.\n"
+            "└ Sin límite de referidos\\.\n\n"
+            "*💡 Tip:* ¡Combina bonos para obtener hasta \+85% de datos extra\!"
         )
 
     # ============================================

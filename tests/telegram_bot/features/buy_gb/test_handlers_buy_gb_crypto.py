@@ -49,6 +49,8 @@ class TestBuyGbHandler:
         # Setup
         mock_update.callback_query.data = "select_payment_basic"
         context = MagicMock()
+        context.bot = AsyncMock()
+        context.bot.send_photo = AsyncMock()
 
         # Mock the edit_message_text method
         mock_update.callback_query.edit_message_text = AsyncMock()
@@ -64,8 +66,8 @@ class TestBuyGbHandler:
         assert "Seleccionar Método de Pago" in message
         assert "Básico" in message
         assert "10 GB" in message
-        assert "50 ⭐" in message
-        assert "1.00 USDT" in message
+        assert "600 ⭐" in message
+        assert "5.00 USDT" in message
 
     @pytest.mark.asyncio
     async def test_pay_with_crypto_success(self, handler, mock_update):
@@ -96,25 +98,20 @@ class TestBuyGbHandler:
 
             mock_update.callback_query.data = "pay_crypto_basic"
             context = MagicMock()
+            context.bot = AsyncMock()
+            context.bot.send_photo = AsyncMock()
 
             mock_update.callback_query.edit_message_text = AsyncMock()
 
             await handler.pay_with_crypto(mock_update, context)
 
-            assert mock_update.callback_query.edit_message_text.call_count >= 1
-            calls = mock_update.callback_query.edit_message_text.call_args_list
-
-            crypto_call = None
-            for call in calls:
-                if "Pago con USDT" in call[1]["text"]:
-                    crypto_call = call
-                    break
-
-            assert crypto_call is not None
-            message = crypto_call[1]["text"]
+            # Verify send_photo was called (QR code path)
+            assert context.bot.send_photo.call_count >= 1
+            call_args = context.bot.send_photo.call_args
+            message = call_args[1]["caption"]
 
             assert "Pago con USDT" in message
             assert "Básico" in message
             assert "10 GB" in message
-            assert "1.0 USDT" in message
+            assert "5.0 USDT" in message
             assert "0x1234567890abcdef" in message

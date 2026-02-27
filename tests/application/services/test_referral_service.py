@@ -261,3 +261,55 @@ class TestRedeemCreditsForSlot:
 
         assert result["success"] is False
         assert result["error"] == "insufficient_credits"
+
+
+class TestRecordReferredUserPurchase:
+    """Tests para record_referred_user_purchase."""
+
+    @pytest.fixture
+    def service(self, mock_user_repo, mock_transaction_repo):
+        return ReferralService(
+            user_repo=mock_user_repo,
+            transaction_repo=mock_transaction_repo,
+        )
+
+    @pytest.fixture
+    def mock_user_repo(self):
+        repo = AsyncMock()
+        repo.get_by_id = AsyncMock()
+        repo.save = AsyncMock()
+        return repo
+
+    @pytest.fixture
+    def mock_transaction_repo(self):
+        repo = AsyncMock()
+        repo.record_transaction = AsyncMock()
+        return repo
+
+    @pytest.mark.asyncio
+    async def test_record_referred_user_purchase_increments_counter(
+        self, service, mock_user_repo
+    ):
+        referrer = User(
+            telegram_id=123,
+            referral_code="ABC123",
+            referred_users_with_purchase=2
+        )
+        mock_user_repo.get_by_id.return_value = referrer
+
+        result = await service.record_referred_user_purchase(123, 456, 123)
+
+        assert result["success"] is True
+        assert result["total_referral_bonus_gb"] == 15  # (2+1) * 5
+        assert referrer.referred_users_with_purchase == 3
+
+    @pytest.mark.asyncio
+    async def test_record_referred_user_purchase_referrer_not_found(
+        self, service, mock_user_repo
+    ):
+        mock_user_repo.get_by_id.return_value = None
+
+        result = await service.record_referred_user_purchase(123, 456, 123)
+
+        assert result["success"] is False
+        assert result["error"] == "referrer_not_found"

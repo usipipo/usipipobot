@@ -56,6 +56,12 @@ class UserModel(Base):
     )
     free_data_used_bytes: Mapped[int] = mapped_column(BigInteger, server_default="0")
 
+    # Bonus tracking fields
+    purchase_count: Mapped[int] = mapped_column(Integer, server_default="0")
+    loyalty_bonus_percent: Mapped[int] = mapped_column(Integer, server_default="0")
+    welcome_bonus_used: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    referred_users_with_purchase: Mapped[int] = mapped_column(Integer, server_default="0")
+
     keys: Mapped[List["VpnKeyModel"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )

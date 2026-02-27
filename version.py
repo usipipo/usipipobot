@@ -8,17 +8,24 @@ Usage:
     from version import __version__, VERSION_INFO
 """
 
-__version__ = "3.3.0"
+__version__ = "3.4.0"
 
 VERSION_INFO = {
     "major": 3,
-    "minor": 3,
+    "minor": 4,
     "patch": 0,
-    "release": "2026-02-26",
-    "codename": "Business Model Refactor",
+    "release": "2026-02-27",
+    "codename": "Bonus & Referral System",
 }
 
 VERSION_HISTORY = """
+v3.4.0 (2026-02-27) - Bonus & Referral System
+  - User bonus system with welcome, loyalty and quick renewal bonuses
+  - Referral system with +5GB bonus for referred user purchases
+  - FAQ button fixes with bonus information
+  - Updated payment flow and tests for buy GB feature
+  - Updated key slot pricing
+
 v3.3.0 (2026-02-26) - Business Model Refactor
   - Reduced data limit to 5GB per key (from 10GB)
   - One key per server type limit (Outline/WireGuard)

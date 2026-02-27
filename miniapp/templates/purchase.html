@@ -6,37 +6,130 @@
 <div class="glitch-title" style="margin-bottom: 20px;">Tienda</div>
 
 <div class="terminal-output">
-    Selecciona un paquete de datos para continuar...
+    Selecciona un paquete de datos o slots adicionales...
 </div>
 
-<div class="packages-grid" style="margin-top: 20px;">
-    {% for package in packages %}
-    <div class="package-card {% if package.id == 'standard' %}featured{% endif %}">
-        {% if package.id == 'standard' %}
-        <div style="position: absolute; top: 12px; right: 12px;">
-            <span class="badge badge-active">POPULAR</span>
-        </div>
-        {% endif %}
-        
-        <div class="package-name">{{ package.name }}</div>
-        <div class="package-data">{{ package.data_gb }} GB</div>
-        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
-            {{ package.description }}
-        </div>
-        
-        <div class="package-price">
-            ⭐ {{ package.price_stars }}
-        </div>
-        <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 16px;">
-            Telegram Stars
-        </div>
-        
-        <button class="btn {% if package.id == 'standard' %}btn-primary{% else %}btn-secondary{% endif %} btn-full" 
-                onclick="purchasePackage('{{ package.id }}', {{ package.price_stars }})">
-            Comprar Ahora
-        </button>
+<!-- Packages Section -->
+<div style="margin-top: 20px;">
+    <div style="font-size: 14px; color: var(--accent-cyan); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+        📦 Paquetes de Datos
     </div>
-    {% endfor %}
+    <div class="packages-grid">
+        {% for package in packages %}
+        <div class="package-card {% if package.bonus_percent > 0 %}featured{% endif %}">
+            {% if package.bonus_percent > 0 %}
+            <div style="position: absolute; top: 12px; right: 12px;">
+                <span class="badge badge-active">+{{ package.bonus_percent }}% BONUS</span>
+            </div>
+            {% endif %}
+
+            <div class="package-name">{{ package.name }}</div>
+            <div class="package-data">{{ package.data_gb }} GB</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                {{ package.description }}
+                {% if package.bonus_percent > 0 %}
+                <br><span style="color: var(--accent-green);">Incluye {{ package.bonus_percent }}% de bonus</span>
+                {% endif %}
+            </div>
+
+            <div class="package-price">
+                ⭐ {{ package.price_stars }}
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+                Telegram Stars
+            </div>
+            <div style="font-size: 10px; color: var(--accent-green); margin-bottom: 16px;">
+                💰 {{ "%.2f"|format(package.price_stars / 120) }} USDT
+            </div>
+
+            <button class="btn {% if package.bonus_percent > 0 %}btn-primary{% else %}btn-secondary{% endif %} btn-full"
+                    onclick="showPaymentMethods('package', '{{ package.id }}', {{ package.price_stars }}, {{ package.price_stars / 120 }})">
+                Comprar Ahora
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Slots Section -->
+<div style="margin-top: 32px;">
+    <div style="font-size: 14px; color: var(--accent-cyan); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+        🔑 Slots de Claves
+    </div>
+    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+        Aumenta el límite de claves VPN que puedes crear
+    </div>
+    <div class="packages-grid">
+        {% for slot in slots %}
+        <div class="package-card">
+            <div class="package-name">{{ slot.name }}</div>
+            <div class="package-data">+{{ slot.slots }} Claves</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                Aumenta tu límite de claves VPN
+            </div>
+
+            <div class="package-price">
+                ⭐ {{ slot.price_stars }}
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+                Telegram Stars
+            </div>
+            <div style="font-size: 10px; color: var(--accent-green); margin-bottom: 16px;">
+                💰 {{ "%.2f"|format(slot.price_stars / 100) }} USDT
+            </div>
+
+            <button class="btn btn-secondary btn-full"
+                    onclick="showPaymentMethods('slots', '{{ slot.id }}', {{ slot.price_stars }}, {{ slot.price_stars / 100 }})">
+                Comprar Ahora
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Payment Method Modal -->
+<div id="paymentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">Seleccionar Método de Pago</span>
+            <button class="btn-close" onclick="closePaymentModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="paymentDetails" style="margin-bottom: 20px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                <!-- Dynamic content -->
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn btn-primary" onclick="payWithStars()">
+                    <span style="font-size: 16px;">⭐</span> Pagar con Telegram Stars
+                </button>
+                <button class="btn btn-secondary" onclick="payWithCrypto()">
+                    <span style="font-size: 16px;">💰</span> Pagar con USDT (BSC)
+                </button>
+                <button class="btn btn-ghost" onclick="closePaymentModal()">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Crypto Payment Modal -->
+<div id="cryptoModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">Pago con USDT (BSC)</span>
+            <button class="btn-close" onclick="closeCryptoModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="cryptoPaymentContent">
+                <div style="text-align: center; padding: 20px;">
+                    <div class="loading"></div>
+                    <p style="margin-top: 12px; color: var(--text-secondary);">Generando billetera...</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="card" style="margin-top: 20px;">
@@ -44,25 +137,288 @@
     <div style="font-size: 12px; color: var(--text-secondary);">
         <p style="margin-bottom: 8px;">• Los paquetes se activan inmediatamente después del pago</p>
         <p style="margin-bottom: 8px;">• Los datos no expiran mientras tengas claves activas</p>
-        <p>• Pago seguro con Telegram Stars</p>
+        <p style="margin-bottom: 8px;">• Pagos con Stars: procesamiento instantáneo</p>
+        <p>• Pagos con Crypto: requieren 15 confirmaciones (~5 minutos)</p>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-async function purchasePackage(packageId, priceStars) {
-    const confirmed = await new Promise((resolve) => {
-        Telegram.WebApp.showConfirm(`¿Comprar paquete por ${priceStars} Stars?`, resolve);
+let currentProduct = null;
+let currentProductType = null;
+let currentPriceStars = 0;
+let currentPriceUsdt = 0;
+
+function showPaymentMethods(type, id, starsPrice, usdtPrice) {
+    currentProductType = type;
+    currentProduct = id;
+    currentPriceStars = starsPrice;
+    currentPriceUsdt = usdtPrice;
+
+    const modal = document.getElementById('paymentModal');
+    const details = document.getElementById('paymentDetails');
+
+    const productName = type === 'package' ? 'Paquete' : 'Slots';
+    const itemName = type === 'package' ? id.toUpperCase() : id.replace('slots_', '+') + ' claves';
+
+    details.innerHTML = `
+        <div style="text-align: center;">
+            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 4px;">${productName}</div>
+            <div style="font-size: 18px; font-weight: 600; color: var(--accent-cyan); margin-bottom: 8px;">${itemName}</div>
+            <div style="display: flex; justify-content: center; gap: 16px;">
+                <span style="color: var(--accent-yellow);">⭐ ${starsPrice} Stars</span>
+                <span style="color: var(--accent-green);">💰 ${usdtPrice.toFixed(2)} USDT</span>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').style.display = 'none';
+    currentProduct = null;
+    currentProductType = null;
+}
+
+function closeCryptoModal() {
+    document.getElementById('cryptoModal').style.display = 'none';
+}
+
+async function payWithStars() {
+    if (!currentProduct) return;
+
+    closePaymentModal();
+
+    try {
+        const response = await fetch('/miniapp/api/create-stars-invoice', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': Telegram.WebApp.initData
+            },
+            body: JSON.stringify({
+                product_type: currentProductType,
+                product_id: currentProduct
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            Telegram.WebApp.showAlert('Error: ' + (data.error || 'No se pudo crear la factura'));
+            return;
+        }
+
+        // Open Telegram invoice
+        Telegram.WebApp.openInvoice(data.invoice_url, function(status) {
+            if (status === 'paid') {
+                Telegram.WebApp.showAlert('✅ ¡Pago completado con éxito!');
+                setTimeout(() => window.location.reload(), 1500);
+            } else if (status === 'cancelled') {
+                Telegram.WebApp.showAlert('❌ Pago cancelado');
+            } else if (status === 'failed') {
+                Telegram.WebApp.showAlert('❌ El pago falló. Intenta nuevamente.');
+            }
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        Telegram.WebApp.showAlert('❌ Error al procesar el pago');
+    }
+}
+
+async function payWithCrypto() {
+    if (!currentProduct) return;
+
+    closePaymentModal();
+
+    const modal = document.getElementById('cryptoModal');
+    const content = document.getElementById('cryptoPaymentContent');
+
+    content.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+            <div class="loading"></div>
+            <p style="margin-top: 12px; color: var(--text-secondary);">Generando billetera...</p>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+
+    try {
+        const response = await fetch('/miniapp/api/create-crypto-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': Telegram.WebApp.initData
+            },
+            body: JSON.stringify({
+                product_type: currentProductType,
+                product_id: currentProduct
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            content.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: var(--accent-red);">
+                    <p>❌ Error: ${data.error || 'No se pudo crear la orden'}</p>
+                    <button class="btn btn-secondary" onclick="closeCryptoModal()" style="margin-top: 12px;">Cerrar</button>
+                </div>
+            `;
+            return;
+        }
+
+        content.innerHTML = `
+            <div style="text-align: center;">
+                <div style="margin-bottom: 16px;">
+                    <img src="${data.qr_code_url}" alt="QR Code" style="max-width: 200px; border-radius: 8px;">
+                </div>
+
+                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 16px; word-break: break-all; font-family: monospace; font-size: 12px;">
+                    ${data.wallet_address}
+                </div>
+
+                <div style="font-size: 14px; margin-bottom: 8px;">
+                    Monto a enviar: <span style="color: var(--accent-green); font-weight: 600;">${data.amount_usdt} USDT</span>
+                </div>
+
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                    Red: <span style="color: var(--accent-cyan);">BSC (BEP20)</span><br>
+                    Expira en: <span style="color: var(--accent-yellow);">30 minutos</span>
+                </div>
+
+                <div style="font-size: 11px; color: var(--text-muted); text-align: left; margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+                    <p style="margin-bottom: 4px;">⚠️ Importante:</p>
+                    <p style="margin-bottom: 4px;">• Envía exactamente el monto indicado</p>
+                    <p style="margin-bottom: 4px;">• Usa solo la red BSC/BEP20</p>
+                    <p>• El sistema detectará el pago automáticamente</p>
+                </div>
+
+                <button class="btn btn-secondary" onclick="copyWalletAddress('${data.wallet_address}')">
+                    📋 Copiar Dirección
+                </button>
+            </div>
+        `;
+
+    } catch (error) {
+        console.error('Error:', error);
+        content.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: var(--accent-red);">
+                <p>❌ Error al crear la orden de pago</p>
+                <button class="btn btn-secondary" onclick="closeCryptoModal()" style="margin-top: 12px;">Cerrar</button>
+            </div>
+        `;
+    }
+}
+
+function copyWalletAddress(address) {
+    navigator.clipboard.writeText(address).then(() => {
+        Telegram.WebApp.showAlert('✅ Dirección copiada al portapapeles');
+    }).catch(() => {
+        Telegram.WebApp.showAlert('❌ No se pudo copiar la dirección');
     });
-    
-    if (!confirmed) return;
-    
-    Telegram.WebApp.showAlert('🔄 Redirigiendo al bot para completar el pago...');
-    
-    setTimeout(() => {
-        Telegram.WebApp.openTelegramLink('https://t.me/{{ bot_username }}?start=buy_' + packageId);
-    }, 500);
+}
+
+// Close modals on outside click
+window.onclick = function(event) {
+    const paymentModal = document.getElementById('paymentModal');
+    const cryptoModal = document.getElementById('cryptoModal');
+    if (event.target === paymentModal) {
+        closePaymentModal();
+    }
+    if (event.target === cryptoModal) {
+        closeCryptoModal();
+    }
 }
 </script>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close:hover {
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 16px;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.loading {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
 {% endblock %}

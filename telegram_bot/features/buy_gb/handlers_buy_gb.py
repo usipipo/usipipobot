@@ -166,7 +166,7 @@ class BuyGbHandler:
                 package_name=package_option.name,
                 gb_amount=package_option.data_gb,
                 stars_price=package_option.stars,
-                crypto_price=package_option.data_gb / 10,  # 1 USDT = 10 GB
+                crypto_price=package_option.stars / 120,  # 1 USDT = 120 Stars
             )
 
             keyboard = BuyGbKeyboards.payment_method_selection(package_type_str)
@@ -288,7 +288,8 @@ class BuyGbHandler:
                 )
                 return
 
-            usdt_amount = package_option.data_gb / 10
+            # Tasa: 1 USDT = 120 Stars
+            usdt_amount = package_option.stars / 120
 
             order = await payment_service.create_order(
                 user_id=user_id,
@@ -301,11 +302,10 @@ class BuyGbHandler:
 
             # Generar QR de pago
             from utils.qr_generator import QrGenerator
+
             qr_filename = f"payment_{order.id}"
             qr_path = QrGenerator.generate_payment_qr(
-                wallet_address=wallet.address,
-                amount=usdt_amount,
-                filename=qr_filename
+                wallet_address=wallet.address, amount=usdt_amount, filename=qr_filename
             )
 
             message = f"""💰 *Pago con USDT - BSC*
@@ -385,8 +385,8 @@ Monto a pagar: *{usdt_amount} USDT*
                 )
                 return
 
-            # Calcular precio en USDT (aproximación: 1 USDT = 10 Stars)
-            usdt_amount = slot_option.stars / 10
+            # Calcular precio en USDT (tasa: 1 USDT = 120 Stars)
+            usdt_amount = slot_option.stars / 120
 
             message = f"""💳 *Selecciona método de pago*
 
@@ -517,8 +517,8 @@ Elige cómo quieres pagar:"""
                 )
                 return
 
-            # Calcular monto en USDT (aproximación: 1 USDT = 10 Stars)
-            usdt_amount = slot_option.stars / 10
+            # Calcular monto en USDT (tasa: 1 USDT = 120 Stars)
+            usdt_amount = slot_option.stars / 120
 
             # Crear orden de tipo "slots" para diferenciar de paquetes
             order = await payment_service.create_order(
@@ -532,11 +532,10 @@ Elige cómo quieres pagar:"""
 
             # Generar QR de pago
             from utils.qr_generator import QrGenerator
+
             qr_filename = f"payment_slots_{order.id}"
             qr_path = QrGenerator.generate_payment_qr(
-                wallet_address=wallet.address,
-                amount=usdt_amount,
-                filename=qr_filename
+                wallet_address=wallet.address, amount=usdt_amount, filename=qr_filename
             )
 
             message = f"""💰 *Pago de Slots con USDT - BSC*
@@ -901,9 +900,13 @@ def get_buy_gb_callback_handlers(data_package_service: DataPackageService):
         CallbackQueryHandler(handler.view_data_summary, pattern="^view_data_summary$"),
         CallbackQueryHandler(handler.show_slots_menu, pattern="^buy_slots_menu$"),
         # Slots payment handlers
-        CallbackQueryHandler(handler.select_slot_payment_method, pattern="^select_slot_payment_"),
+        CallbackQueryHandler(
+            handler.select_slot_payment_method, pattern="^select_slot_payment_"
+        ),
         CallbackQueryHandler(handler.pay_slots_with_stars, pattern="^pay_slots_stars_"),
-        CallbackQueryHandler(handler.pay_slots_with_crypto, pattern="^pay_slots_crypto_"),
+        CallbackQueryHandler(
+            handler.pay_slots_with_crypto, pattern="^pay_slots_crypto_"
+        ),
     ]
 
 

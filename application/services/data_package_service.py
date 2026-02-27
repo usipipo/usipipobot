@@ -1,12 +1,14 @@
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from domain.entities.data_package import DataPackage, PackageType
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
+
+from .user_bonus_service import UserBonusService
 
 
 @dataclass
@@ -31,45 +33,56 @@ PACKAGE_OPTIONS: List[PackageOption] = [
         name="Básico",
         package_type=PackageType.BASIC,
         data_gb=10,
-        stars=50,
+        stars=600,
         bonus_percent=0,
     ),
     PackageOption(
         name="Estándar",
         package_type=PackageType.ESTANDAR,
-        data_gb=25,
-        stars=65,
-        bonus_percent=30,
+        data_gb=30,
+        stars=960,
+        bonus_percent=10,  # +3 GB gratis
     ),
     PackageOption(
         name="Avanzado",
         package_type=PackageType.AVANZADO,
-        data_gb=50,
-        stars=85,
-        bonus_percent=30,
+        data_gb=60,
+        stars=1320,
+        bonus_percent=15,  # +9 GB gratis
     ),
     PackageOption(
         name="Premium",
         package_type=PackageType.PREMIUM,
-        data_gb=100,
-        stars=110,
-        bonus_percent=30,
+        data_gb=120,
+        stars=1800,
+        bonus_percent=20,  # +24 GB gratis
+    ),
+    PackageOption(
+        name="Ilimitado",
+        package_type=PackageType.UNLIMITED,
+        data_gb=200,
+        stars=2400,
+        bonus_percent=25,  # +50 GB gratis
     ),
 ]
 
 SLOT_OPTIONS: List[SlotOption] = [
-    SlotOption(name="+1 Clave", slots=1, stars=25),
-    SlotOption(name="+3 Claves", slots=3, stars=60),
-    SlotOption(name="+5 Claves", slots=5, stars=90),
+    SlotOption(name="+1 Clave", slots=1, stars=300),
+    SlotOption(name="+3 Claves", slots=3, stars=700),
+    SlotOption(name="+5 Claves", slots=5, stars=1000),
 ]
 
 
 class DataPackageService:
     def __init__(
-        self, package_repo: IDataPackageRepository, user_repo: IUserRepository
+        self,
+        package_repo: IDataPackageRepository,
+        user_repo: IUserRepository,
+        bonus_service: Optional[UserBonusService] = None
     ):
         self.package_repo = package_repo
         self.user_repo = user_repo
+        self.bonus_service = bonus_service or UserBonusService()
 
     def get_available_packages(self) -> List[PackageOption]:
         return PACKAGE_OPTIONS.copy()
@@ -99,7 +112,14 @@ class DataPackageService:
         package_type: str,
         telegram_payment_id: str,
         current_user_id: int,
-    ) -> DataPackage:
+        is_referred_first_purchase: bool = False
+    ) -> Tuple[DataPackage, Dict[str, Any]]:
+        """
+        Compra un paquete aplicando todos los bonos correspondientes.
+
+        Returns:
+            Tuple de (DataPackage comprado, dict con desglose de bonos)
+        """
         option = self._get_package_option(package_type)
         if not option:
             raise ValueError(f"Tipo de paquete inválido: {package_type}")
@@ -108,10 +128,20 @@ class DataPackageService:
         if not user:
             raise ValueError(f"Usuario no encontrado: {user_id}")
 
+        # Get active packages for quick renewal bonus calculation
+        active_packages = await self.package_repo.get_valid_by_user(user_id, current_user_id)
+
+        # Calculate bonuses
+        total_bonus_percent, bonuses = self.bonus_service.calculate_total_bonus(
+            user, active_packages, is_referred_first_purchase
+        )
+
+        # Calculate data with bonuses
         data_limit_bytes = option.data_gb * (1024**3)
 
-        bonus_multiplier = 1 + (option.bonus_percent / 100)
-        actual_data_bytes = int(data_limit_bytes * bonus_multiplier)
+        # Package base bonus + user bonuses
+        total_multiplier = 1 + (option.bonus_percent + total_bonus_percent) / 100
+        actual_data_bytes = int(data_limit_bytes * total_multiplier)
 
         expires_at = datetime.now(timezone.utc) + timedelta(days=option.duration_days)
 
@@ -125,8 +155,36 @@ class DataPackageService:
         )
 
         saved_package = await self.package_repo.save(new_package, current_user_id)
-        logger.info(f"📦 Paquete {option.name} comprado para usuario {user_id}")
-        return saved_package
+
+        # Update user stats
+        user.purchase_count += 1
+
+        # Mark welcome bonus as used if this was first purchase
+        if user.purchase_count == 1:
+            user.welcome_bonus_used = True
+
+        # Update loyalty bonus based on new purchase count
+        new_loyalty = self.bonus_service.get_loyalty_bonus_for_purchase_count(user.purchase_count)
+        if new_loyalty > user.loyalty_bonus_percent:
+            user.loyalty_bonus_percent = new_loyalty
+
+        await self.user_repo.save(user, current_user_id)
+
+        # Prepare bonus breakdown
+        bonus_breakdown = {
+            "base_package_bonus": option.bonus_percent,
+            "user_bonuses": bonuses,
+            "total_bonus_percent": option.bonus_percent + total_bonus_percent,
+            "base_gb": option.data_gb,
+            "final_gb": actual_data_bytes / (1024**3)
+        }
+
+        logger.info(
+            f"📦 Paquete {option.name} comprado para usuario {user_id} "
+            f"con {total_bonus_percent}% bonus adicional"
+        )
+
+        return saved_package, bonus_breakdown
 
     async def purchase_key_slots(
         self,
