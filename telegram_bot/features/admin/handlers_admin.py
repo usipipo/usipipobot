@@ -120,6 +120,20 @@ class AdminHandler(BaseConversationHandler):
             total_pages = result.get("total_pages", 1)
             total_users = result.get("total_users", 0)
 
+            # Validate and correct page number if out of bounds
+            if page < 1:
+                page = 1
+            elif total_pages > 0 and page > total_pages:
+                page = total_pages
+
+            # Re-fetch if page was corrected and we got empty results due to invalid page
+            if not users and page != result.get("page", page):
+                result = await self.service.get_users_paginated(
+                    page=page, per_page=USERS_PER_PAGE, current_user_id=admin_id
+                )
+                users = result.get("users", [])
+                total_pages = result.get("total_pages", 1)
+
             if not users:
                 await SpinnerManager.replace_spinner_with_message(
                     update,
@@ -181,6 +195,20 @@ class AdminHandler(BaseConversationHandler):
             users = result.get("users", [])
             total_pages = result.get("total_pages", 1)
             total_users = result.get("total_users", 0)
+
+            # Validate and correct page number if out of bounds
+            if page < 1:
+                page = 1
+            elif total_pages > 0 and page > total_pages:
+                page = total_pages
+
+            # Re-fetch if page was corrected and we got empty results due to invalid page
+            if not users and page != result.get("page", page):
+                result = await self.service.get_users_paginated(
+                    page=page, per_page=USERS_PER_PAGE, current_user_id=admin_id
+                )
+                users = result.get("users", [])
+                total_pages = result.get("total_pages", 1)
 
             if not users:
                 await self._safe_edit_message(
@@ -910,6 +938,10 @@ class AdminHandler(BaseConversationHandler):
         if user is None:
             return ADMIN_MENU
         admin_id = user.id
+
+        # Reset pagination when viewing dashboard to avoid stale page numbers
+        if context.user_data is not None:
+            context.user_data["users_page"] = 1
 
         try:
             stats = await self.service.get_dashboard_stats(current_user_id=admin_id)
