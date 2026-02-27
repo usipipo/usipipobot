@@ -2,7 +2,7 @@
 Handlers para gestión avanzada de llaves VPN de uSipipo.
 
 Author: uSipipo Team
-Version: 2.1.0 - Modernized Key Management
+Version: 2.2.0 - Markdown Standardized
 """
 
 import io
@@ -80,7 +80,7 @@ class KeyManagementHandler(BaseHandler):
                 await update.message.reply_text(
                     text=message,
                     reply_markup=KeyManagementKeyboards.main_menu(keys_summary),
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
 
             except Exception as e:
@@ -88,7 +88,7 @@ class KeyManagementHandler(BaseHandler):
                 if update.message is not None:
                     await update.message.reply_text(
                         text=KeyManagementMessages.Error.SYSTEM_ERROR,
-                        parse_mode="MarkdownV2",
+                        parse_mode="Markdown",
                     )
         else:
             await self._safe_answer_query(query)
@@ -124,7 +124,7 @@ class KeyManagementHandler(BaseHandler):
                     context,
                     text=message,
                     reply_markup=KeyManagementKeyboards.main_menu(keys_summary),
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
 
             except Exception as e:
@@ -134,7 +134,7 @@ class KeyManagementHandler(BaseHandler):
                     context,
                     text=KeyManagementMessages.Error.SYSTEM_ERROR,
                     reply_markup=KeyManagementKeyboards.back_to_main(),
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
 
     async def show_keys_by_type(
@@ -187,7 +187,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -197,7 +197,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
     async def show_key_details(
@@ -258,7 +258,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -268,7 +268,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
     def _generate_cyberpunk_progress_bar(self, percentage: float, width: int = 10) -> str:
@@ -341,7 +341,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -351,7 +351,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
     async def handle_key_action(
@@ -430,7 +430,7 @@ class KeyManagementHandler(BaseHandler):
                         context,
                         text=message,
                         reply_markup=keyboard,
-                        parse_mode="MarkdownV2",
+                        parse_mode="Markdown",
                     )
                     return
 
@@ -450,7 +450,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -460,7 +460,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.OPERATION_FAILED.format(error=escape_markdown(str(e))),
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
     async def show_key_config(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -499,7 +499,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=keyboard,
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -509,7 +509,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
     async def download_wireguard_config(
@@ -554,7 +554,7 @@ class KeyManagementHandler(BaseHandler):
                 document=bio,
                 filename=f"{key_name}.conf",
                 caption=f"📄 Configuración WireGuard: *{key_name}*\n\nImporta este archivo en tu aplicación WireGuard.",
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -564,7 +564,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
     async def get_outline_link(
@@ -609,7 +609,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=message,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -619,7 +619,7 @@ class KeyManagementHandler(BaseHandler):
                 context,
                 text=KeyManagementMessages.Error.SYSTEM_ERROR,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
     async def back_to_main_menu(
@@ -644,7 +644,7 @@ class KeyManagementHandler(BaseHandler):
             context,
             text=CommonMessages.Menu.WELCOME_BACK,
             reply_markup=CommonKeyboards.main_menu(is_admin=is_admin),
-            parse_mode="MarkdownV2",
+            parse_mode="Markdown",
         )
 
     async def back_to_keys(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -705,7 +705,7 @@ class KeyManagementHandler(BaseHandler):
             await update.message.reply_text(
                 text=message,
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -714,7 +714,7 @@ class KeyManagementHandler(BaseHandler):
                 await update.message.reply_text(
                     text=KeyManagementMessages.Error.SYSTEM_ERROR,
                     reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                    parse_mode="MarkdownV2",
+                    parse_mode="Markdown",
                 )
 
 

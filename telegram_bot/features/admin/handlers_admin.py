@@ -1151,7 +1151,7 @@ class AdminHandler(BaseConversationHandler):
                 spinner_message_id,
                 text=message,
                 reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
             if context.user_data is not None:
                 context.user_data["viewing_ticket_id"] = str(ticket.id)
@@ -1209,7 +1209,7 @@ class AdminHandler(BaseConversationHandler):
             context,
             text=message,
             reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="MarkdownV2",
+            parse_mode="Markdown",
         )
         return AWAITING_TICKET_RESPONSE
 
@@ -1419,7 +1419,7 @@ class AdminHandler(BaseConversationHandler):
                 context,
                 text=message,
                 reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
             return VIEWING_TICKET_DETAILS
 

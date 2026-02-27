@@ -1,4 +1,6 @@
 class TicketMessages:
+    """Mensajes para sistema de tickets."""
+
     class User:
         CREATE_PROMPT = (
             "🎫 *Crear Ticket de Soporte*\n\n"
@@ -8,22 +10,22 @@ class TicketMessages:
 
         CREATED = (
             "✅ *Ticket Creado*\n\n"
-            "ID: \\#{ticket_id}\n"
+            "ID: #{ticket_id}\n"
             "Asunto: {subject}\n"
             "Estado: 🟡 Pendiente\n\n"
-            "Te responderemos pronto\\."
+            "Te responderemos pronto."
         )
 
         MY_TICKETS_HEADER = "📋 *Mis Tickets*\n\n"
 
         NO_TICKETS = (
             "📋 *Mis Tickets*\n\n"
-            "No tienes tickets abiertos\\.\n\n"
-            "¿Necesitas ayuda? Crea uno nuevo\\."
+            "No tienes tickets abiertos.\n\n"
+            "¿Necesitas ayuda? Crea uno nuevo."
         )
 
         TICKET_DETAIL = (
-            "🎫 *Ticket \\#{ticket_id}*\n\n"
+            "🎫 *Ticket #{ticket_id}*\n\n"
             "📝 *Asunto:* {subject}\n"
             "📊 *Estado:* {status}\n"
             "📅 *Creado:* {created_at}\n\n"
@@ -40,10 +42,10 @@ class TicketMessages:
     class Admin:
         LIST_HEADER = "🔧 *Tickets Pendientes*\n\n"
 
-        NO_PENDING = "🔧 *Tickets Pendientes*\n\n" "No hay tickets pendientes\\."
+        NO_PENDING = "🔧 *Tickets Pendientes*\n\n" "No hay tickets pendientes."
 
         TICKET_DETAIL = (
-            "🎫 *Ticket \\#{ticket_id}*\n\n"
+            "🎫 *Ticket #{ticket_id}*\n\n"
             "👤 *Usuario:* `{user_id}`\n"
             "📝 *Asunto:* {subject}\n"
             "📊 *Estado:* {status}\n"
@@ -53,11 +55,11 @@ class TicketMessages:
         )
 
         RESPOND_PROMPT = (
-            "✍️ *Responder Ticket \\#{ticket_id}*\n\n"
+            "✍️ *Responder Ticket #{ticket_id}*\n\n"
             "Escribe tu respuesta para el usuario:"
         )
 
     class Error:
-        NOT_FOUND = "❌ Ticket no encontrado\\."
-        CREATE_FAILED = "❌ Error al crear el ticket\\. Intenta de nuevo\\."
-        NOT_AUTHORIZED = "❌ No tienes permiso para esta acción\\."
+        NOT_FOUND = "❌ Ticket no encontrado."
+        CREATE_FAILED = "❌ Error al crear el ticket. Intenta de nuevo."
+        NOT_AUTHORIZED = "❌ No tienes permiso para esta acción."

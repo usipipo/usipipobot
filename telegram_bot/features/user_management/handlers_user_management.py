@@ -201,14 +201,14 @@ class UserManagementHandler(BaseHandler):
             await query.edit_message_text(
                 text=UserManagementMessages.Welcome.FAQ_TEXT,
                 reply_markup=UserManagementKeyboards.back_to_help(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         elif callback_data == "help_bonuses":
             await query.edit_message_text(
                 text=UserManagementMessages.Welcome.BONUSES_INFO,
                 reply_markup=UserManagementKeyboards.back_to_help(),
-                parse_mode="MarkdownV2",
+                parse_mode="Markdown",
             )
 
         elif callback_data == "help_support":
