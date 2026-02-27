@@ -58,9 +58,9 @@ PACKAGE_OPTIONS: List[PackageOption] = [
 ]
 
 SLOT_OPTIONS: List[SlotOption] = [
-    SlotOption(name="+1 Clave", slots=1, stars=250),
-    SlotOption(name="+3 Claves", slots=3, stars=600),
-    SlotOption(name="+5 Claves", slots=5, stars=900),
+    SlotOption(name="+1 Clave", slots=1, stars=300),
+    SlotOption(name="+3 Claves", slots=3, stars=700),
+    SlotOption(name="+5 Claves", slots=5, stars=1000),
 ]
 
 

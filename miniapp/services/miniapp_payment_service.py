@@ -163,8 +163,8 @@ class MiniAppPaymentService:
                     logger.error(f"Slot option not found: {slots}")
                     return None
 
-                # Approximate: 1 USDT = 100 Stars
-                amount_usdt = slot_opt.stars / 100
+                # Tasa: 1 USDT = 120 Stars
+                amount_usdt = slot_opt.stars / 120
 
                 # Create order
                 order = await payment_service.create_order(
