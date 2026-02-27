@@ -203,6 +203,13 @@ class UserManagementHandler(BaseHandler):
                 parse_mode="MarkdownV2",
             )
 
+        elif callback_data == "help_bonuses":
+            await query.edit_message_text(
+                text=UserManagementMessages.Welcome.BONUSES_INFO,
+                reply_markup=UserManagementKeyboards.back_to_help(),
+                parse_mode="MarkdownV2",
+            )
+
         elif callback_data == "help_support":
             await query.edit_message_text(
                 text=UserManagementMessages.Welcome.SUPPORT_PROMPT,
@@ -554,6 +561,6 @@ def get_user_callback_handlers(
         ),
         CallbackQueryHandler(
             handler.main_menu_callback,
-            pattern="^(show_keys|buy_data|operations_menu|show_usage|help|help_faq|help_support|admin_panel|show_history)$",
+            pattern="^(show_keys|buy_data|operations_menu|show_usage|help|help_faq|help_bonuses|help_support|admin_panel|show_history)$",
         ),
     ]
