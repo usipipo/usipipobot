@@ -333,7 +333,25 @@ class ConsumptionHandler:
                 return
 
             user_id = update.effective_user.id
-            wallet = await wallet_service.get_or_create_wallet_by_id(user_id)
+
+            # Obtener usuario para el servicio de wallet
+            from infrastructure.persistence.postgresql.user_repository import (
+                PostgresUserRepository,
+            )
+            from application.services.common.container import get_service
+
+            user_repo = get_service(PostgresUserRepository)
+            user = await user_repo.get_by_id(user_id, user_id)
+
+            if not user:
+                if query:
+                    await query.edit_message_text(
+                        text="❌ Usuario no encontrado.",
+                        reply_markup=ConsumptionKeyboards.back_to_consumption_menu()
+                    )
+                return
+
+            wallet = await wallet_service.get_or_create_wallet(user)
 
             if not wallet:
                 if query:
