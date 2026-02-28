@@ -181,15 +181,7 @@ class KeyManagementKeyboards:
         )
         keyboard.append(management_row)
 
-        # 4. Acciones Críticas y Navegación
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "🗑️ Eliminar Llave", callback_data=f"key_delete_{key_id}"
-                )
-            ]
-        )
-
+        # 4. Navegación (Eliminar llave removido - evita abuso de 5GB gratis)
         keyboard.append(
             [InlineKeyboardButton("🔙 Volver a la lista", callback_data="back_to_keys")]
         )

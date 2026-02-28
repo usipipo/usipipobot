@@ -470,8 +470,16 @@ async def api_delete_key(
     request: Request,
     ctx: MiniAppContext = Depends(get_current_user),
 ):
-    """API: Elimina una clave VPN."""
+    """API: Elimina una clave VPN (SOLO ADMIN)."""
     try:
+        # Only admins can delete keys
+        if ctx.user.id != int(settings.ADMIN_ID):
+            logger.warning(f"User {ctx.user.id} attempted to delete key without admin privileges")
+            raise HTTPException(
+                status_code=403,
+                detail="Solo administradores pueden eliminar claves"
+            )
+
         data = await request.json()
         key_id = data.get("key_id")
 
@@ -482,6 +490,8 @@ async def api_delete_key(
         success = await vpn_service.delete_key(key_id, ctx.user.id)
 
         return {"success": success}
+    except HTTPException:
+        raise
     except ValueError as e:
         return {"success": False, "error": str(e)}
     except Exception as e:
