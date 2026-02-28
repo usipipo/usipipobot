@@ -245,8 +245,53 @@ class Settings(BaseSettings):
         default=90, ge=30, description="Días de inactividad para limpiar una clave"
     )
 
+    # Ghost Key Cleanup
+    GHOST_KEY_DETECTION_DAYS: int = Field(
+        default=90, ge=30, le=365, description="Days of inactivity to consider a key as ghost"
+    )
+    GHOST_KEY_AUTO_CLEANUP_ENABLED: bool = Field(
+        default=True, description="Enable automatic ghost key cleanup"
+    )
+    GHOST_KEY_CLEANUP_DAY: str = Field(
+        default="sunday", description="Day of week to run cleanup (monday-sunday)"
+    )
+    GHOST_KEY_CLEANUP_HOUR: int = Field(
+        default=3, ge=0, le=23, description="Hour to run cleanup (0-23)"
+    )
+
     BILLING_CYCLE_DAYS: int = Field(
         default=30, ge=1, description="Días del ciclo de facturación"
+    )
+
+    # =========================================================================
+    # SISTEMA DE TARIFA POR CONSUMO (PAY-AS-YOU-GO)
+    # =========================================================================
+    CONSUMPTION_PRICE_PER_GB_USD: float = Field(
+        default=0.45,
+        ge=0.01,
+        le=10.0,
+        description="Precio por GB consumido en modo consumo (USD)"
+    )
+
+    CONSUMPTION_PRICE_PER_MB_USD: float = Field(
+        default=0.000439453125,  # 0.45 / 1024
+        ge=0.000001,
+        le=1.0,
+        description="Precio por MB consumido en modo consumo (USD)"
+    )
+
+    CONSUMPTION_CYCLE_DAYS: int = Field(
+        default=30,
+        ge=1,
+        le=90,
+        description="Días del ciclo de consumo antes de facturar"
+    )
+
+    CONSUMPTION_INVOICE_EXPIRY_MINUTES: int = Field(
+        default=30,
+        ge=5,
+        le=120,
+        description="Minutos antes de que expire una factura de consumo"
     )
 
     # =========================================================================

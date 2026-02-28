@@ -15,6 +15,7 @@ from typing import List, Optional
 from sqlalchemy import BigInteger, Boolean, DateTime
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import ForeignKey, Integer, String, Text, text
+from sqlalchemy.dialects.postgresql import UUID as SQLUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -61,6 +62,18 @@ class UserModel(Base):
     loyalty_bonus_percent: Mapped[int] = mapped_column(Integer, server_default="0")
     welcome_bonus_used: Mapped[bool] = mapped_column(Boolean, server_default="false")
     referred_users_with_purchase: Mapped[int] = mapped_column(Integer, server_default="0")
+
+    # Consumption billing fields
+    consumption_mode_enabled: Mapped[bool] = mapped_column(
+        Boolean, server_default="false"
+    )
+    has_pending_debt: Mapped[bool] = mapped_column(Boolean, server_default="false")
+    current_billing_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        SQLUUID(as_uuid=True), ForeignKey("consumption_billings.id"), nullable=True
+    )
+    consumption_mode_activated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     keys: Mapped[List["VpnKeyModel"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
