@@ -57,7 +57,11 @@ class BuyGbHandler:
 
             if query:
                 await TelegramUtils.safe_edit_message(
-                    query, context, text=message, reply_markup=keyboard, parse_mode="Markdown"
+                    query,
+                    context,
+                    text=message,
+                    reply_markup=keyboard,
+                    parse_mode="Markdown",
                 )
             elif update.message:
                 await update.message.reply_text(
@@ -70,7 +74,9 @@ class BuyGbHandler:
 
             if query:
                 await TelegramUtils.safe_edit_message(
-                    query, context, text=error_message,
+                    query,
+                    context,
+                    text=error_message,
                     reply_markup=BuyGbKeyboards.back_to_packages(),
                     parse_mode="Markdown",
                 )
@@ -342,7 +348,9 @@ Monto a pagar: *{usdt_amount} USDT*
                         )
             else:
                 await TelegramUtils.safe_edit_message(
-                    query, context, text=message,
+                    query,
+                    context,
+                    text=message,
                     reply_markup=BuyGbKeyboards.back_to_packages(),
                     parse_mode="Markdown",
                 )
@@ -503,13 +511,22 @@ Elige cómo quieres pagar:"""
             from application.services.wallet_management_service import (
                 WalletManagementService,
             )
+            from domain.interfaces.iuser_repository import IUserRepository
 
             wallet_service = get_service(WalletManagementService)
             payment_service = get_service(CryptoPaymentService)
+            user_repo = get_service(IUserRepository)
 
-            wallet = await wallet_service.assign_wallet(
-                user_id, label=f"user-{user_id}"
-            )
+            user = await user_repo.get_by_id(user_id, current_user_id=user_id)
+            if not user:
+                await query.edit_message_text(
+                    text="❌ Error: Usuario no encontrado.",
+                    reply_markup=BuyGbKeyboards.back_to_packages(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            wallet = await wallet_service.get_or_create_wallet(user)
 
             if not wallet:
                 await query.edit_message_text(
@@ -573,7 +590,9 @@ Elige cómo quieres pagar:"""
                         )
             else:
                 await TelegramUtils.safe_edit_message(
-                    query, context, text=message,
+                    query,
+                    context,
+                    text=message,
                     reply_markup=BuyGbKeyboards.back_to_packages(),
                     parse_mode="Markdown",
                 )
