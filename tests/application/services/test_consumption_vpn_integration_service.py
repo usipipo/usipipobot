@@ -1,5 +1,7 @@
 import pytest
+import uuid
 from unittest.mock import AsyncMock, MagicMock
+from decimal import Decimal
 
 
 class TestConsumptionVpnIntegrationService:
@@ -66,3 +68,93 @@ class TestCheckCanCreateKey:
 
         assert can_create is False
         assert "no encontrado" in error.lower()
+
+
+class TestBlockUserKeys:
+    @pytest.fixture
+    def service(self):
+        from application.services.consumption_vpn_integration_service import (
+            ConsumptionVpnIntegrationService,
+        )
+
+        return ConsumptionVpnIntegrationService(
+            user_repo=AsyncMock(),
+            key_repo=AsyncMock(),
+            vpn_infra_service=AsyncMock(),
+            billing_service=AsyncMock(),
+        )
+
+    @pytest.fixture
+    def mock_outline_key(self):
+        key = MagicMock()
+        key.id = uuid.uuid4()
+        key.key_type.value = "outline"
+        key.external_id = "outline-key-123"
+        key.is_active = True
+        return key
+
+    @pytest.fixture
+    def mock_wireguard_key(self):
+        key = MagicMock()
+        key.id = uuid.uuid4()
+        key.key_type.value = "wireguard"
+        key.external_id = "wireguard-peer-456"
+        key.is_active = True
+        return key
+
+    @pytest.mark.asyncio
+    async def test_block_user_keys_success(
+        self, service, mock_outline_key, mock_wireguard_key
+    ):
+        user = MagicMock()
+        user.has_pending_debt = False
+        service.user_repo.get_by_id.return_value = user
+        service.key_repo.get_by_user_id.return_value = [
+            mock_outline_key,
+            mock_wireguard_key,
+        ]
+        service.vpn_infra_service.disable_key.return_value = {"success": True}
+
+        result = await service.block_user_keys(123, 123)
+
+        assert result["success"] is True
+        assert result["keys_blocked"] == 2
+        assert result["keys_failed"] == 0
+        assert len(result["errors"]) == 0
+
+    @pytest.mark.asyncio
+    async def test_block_user_keys_partial_failure(
+        self, service, mock_outline_key, mock_wireguard_key
+    ):
+        user = MagicMock()
+        user.has_pending_debt = False
+        service.user_repo.get_by_id.return_value = user
+        service.key_repo.get_by_user_id.return_value = [
+            mock_outline_key,
+            mock_wireguard_key,
+        ]
+
+        # First call succeeds, second fails
+        service.vpn_infra_service.disable_key.side_effect = [
+            {"success": True},
+            {"success": False, "error": "Server error"},
+        ]
+
+        result = await service.block_user_keys(123, 123)
+
+        assert result["success"] is False  # Partial success = overall failure
+        assert result["keys_blocked"] == 1
+        assert result["keys_failed"] == 1
+        assert len(result["errors"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_block_user_keys_no_keys(self, service):
+        user = MagicMock()
+        user.has_pending_debt = False
+        service.user_repo.get_by_id.return_value = user
+        service.key_repo.get_by_user_id.return_value = []
+
+        result = await service.block_user_keys(123, 123)
+
+        assert result["success"] is True
+        assert result["keys_blocked"] == 0
