@@ -37,6 +37,9 @@ from telegram_bot.features.key_management.handlers_key_management import (
     get_key_management_callback_handlers,
     get_key_management_handlers,
 )
+from infrastructure.persistence.postgresql.crypto_order_repository import (
+    PostgresCryptoOrderRepository,
+)
 from telegram_bot.features.operations.handlers_operations import (
     get_operations_callback_handlers,
     get_operations_handlers,
@@ -93,7 +96,7 @@ def _get_ticket_handlers(container) -> List[BaseHandler]:
 
 
 def _get_core_handlers(
-    vpn_service, referral_service, data_package_service, user_profile_service
+    vpn_service, referral_service, data_package_service, user_profile_service, crypto_order_repo
 ) -> List[BaseHandler]:
     """Initialize and return core feature handlers."""
     handlers = []
@@ -102,8 +105,8 @@ def _get_core_handlers(
     handlers.extend(get_key_management_callback_handlers(vpn_service))
     logger.info("Key management handlers configured")
 
-    handlers.extend(get_operations_handlers(vpn_service, referral_service))
-    handlers.extend(get_operations_callback_handlers(vpn_service, referral_service))
+    handlers.extend(get_operations_handlers(vpn_service, referral_service, crypto_order_repo))
+    handlers.extend(get_operations_callback_handlers(vpn_service, referral_service, crypto_order_repo))
     logger.info("Operations handlers configured")
 
     handlers.extend(get_user_management_handlers(vpn_service, user_profile_service))
@@ -136,6 +139,7 @@ def initialize_handlers(
         container = get_container()
         data_package_service = container.resolve(DataPackageService)
         user_profile_service = container.resolve(UserProfileService)
+        crypto_order_repo = container.resolve(PostgresCryptoOrderRepository)
 
         handlers.extend(_get_admin_handlers(container))
         handlers.extend(_get_referral_handlers(container))
@@ -146,6 +150,7 @@ def initialize_handlers(
                 referral_service,
                 data_package_service,
                 user_profile_service,
+                crypto_order_repo,
             )
         )
 

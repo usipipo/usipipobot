@@ -13,10 +13,11 @@ class OperationsMessages:
         MAIN = (
             "⚙️ **Operaciones**\n\n"
             "Gestiona tu cuenta y servicios:\n\n"
-            "🎁 **Creditos** - Obtén beneficios por referir amigos\n"
-            "🛒 **Shop** - Compra paquetes y slots\n"
-            "👥 **Referidos** - Invita amigos y gana creditos\n\n"
-            "Selecciona una opcion:"
+            "🎁 **Créditos** - Canjea por beneficios especiales\n"
+            "👥 **Referidos** - Invita amigos y gana recompensas\n"
+            "🛒 **Shop** - Compra paquetes de datos y slots\n"
+            "📜 **Historial** - Revisa todas tus transacciones\n\n"
+            "Selecciona una opción:"
         )
 
     class Credits:
@@ -62,6 +63,29 @@ class OperationsMessages:
             "No tienes suficientes creditos para esta operacion.\n\n"
             "💡 Invita mas amigos para obtener creditos."
         )
+
+    class Transactions:
+        """Mensajes para historial de transacciones."""
+
+        HISTORY_HEADER = (
+            "📜 **Historial de Transacciones**\n\n"
+            "Aquí están todas tus transacciones de crypto:\n\n"
+        )
+
+        NO_TRANSACTIONS = (
+            "📭 **Sin Transacciones**\n\n"
+            "Aún no tienes transacciones registradas.\n\n"
+            "💡 Ve al 🛒 **Shop** para hacer tu primera compra."
+        )
+
+        ORDER_ITEM = (
+            "{status_emoji} **{package_type}**\n"
+            "💰 {amount_usdt} USDT | 📅 {date}\n"
+            "Estado: {status_text}\n"
+            "───────────────\n"
+        )
+
+        PAGE_FOOTER = "\n📄 Página {page}"
 
     class Success:
         OPERATION_COMPLETED = (

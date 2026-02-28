@@ -511,11 +511,13 @@ Elige cómo quieres pagar:"""
             from application.services.wallet_management_service import (
                 WalletManagementService,
             )
-            from domain.interfaces.iuser_repository import IUserRepository
+            from infrastructure.persistence.postgresql.user_repository import (
+                PostgresUserRepository,
+            )
 
             wallet_service = get_service(WalletManagementService)
             payment_service = get_service(CryptoPaymentService)
-            user_repo = get_service(IUserRepository)
+            user_repo = get_service(PostgresUserRepository)
 
             user = await user_repo.get_by_id(user_id, current_user_id=user_id)
             if not user:
