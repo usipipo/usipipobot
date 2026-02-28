@@ -346,6 +346,24 @@
     </a>
 </div>
 
+{% if is_admin %}
+<div class="settings-section">
+    <div class="section-header">
+        <span class="section-icon">🛠️</span>
+        <span class="section-title">Administración</span>
+    </div>
+    
+    <a href="/miniapp/logs" class="settings-item">
+        <div class="settings-icon" style="background: rgba(255, 0, 170, 0.1); border-color: var(--neon-magenta);">🖥️</div>
+        <div class="settings-content">
+            <div class="settings-label">Diagnósticos</div>
+            <div class="settings-description">Ver logs del sistema en tiempo real</div>
+        </div>
+        <span class="settings-arrow">›</span>
+    </a>
+</div>
+{% endif %}
+
 <div class="settings-section">
     <div class="section-header">
         <span class="section-icon">📊</span>
