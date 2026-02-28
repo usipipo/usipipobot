@@ -13,6 +13,7 @@ from application.services.data_package_service import (
     SLOT_OPTIONS,
     DataPackageService,
 )
+from infrastructure.api_clients.client_tron_dealer import TronDealerApiError
 from utils.logger import logger
 
 
@@ -102,8 +103,11 @@ class MiniAppPaymentService:
             )
             return invoice_url
 
+        except ValueError as e:
+            logger.error(f"Validation error creating Stars invoice for user {user_id}: {e}")
+            return None
         except Exception as e:
-            logger.error(f"Error creating Stars invoice: {e}")
+            logger.error(f"Unexpected error creating Stars invoice for user {user_id}: {e}", exc_info=True)
             return None
 
     async def create_crypto_order(
@@ -125,16 +129,19 @@ class MiniAppPaymentService:
             )
             from utils.qr_generator import QrGenerator
 
+            logger.info(f"Starting crypto order creation for user {user_id}: {product_type}={product_id}")
+
             wallet_service = get_service(WalletManagementService)
             payment_service = get_service(CryptoPaymentService)
 
             # Assign wallet to user
+            logger.debug(f"Assigning wallet for user {user_id}")
             wallet = await wallet_service.assign_wallet(
                 user_id, label=f"miniapp-user-{user_id}"
             )
 
             if not wallet:
-                logger.error(f"Could not assign wallet to user {user_id}")
+                logger.error(f"Could not assign wallet to user {user_id} - wallet service returned None")
                 return None
 
             # Determine product details and amount
@@ -180,7 +187,7 @@ class MiniAppPaymentService:
 
             # Generate QR code
             qr_filename = f"miniapp_payment_{order.id}"
-            qr_path = QrGenerator.generate_payment_qr(
+            QrGenerator.generate_payment_qr(
                 wallet_address=wallet.address, amount=amount_usdt, filename=qr_filename
             )
 
@@ -201,6 +208,12 @@ class MiniAppPaymentService:
                 ),
             }
 
+        except TronDealerApiError as e:
+            logger.error(f"TronDealer API error creating crypto order for user {user_id}: {e.status_code} - {e.message}")
+            return None
+        except ValueError as e:
+            logger.error(f"Validation error creating crypto order for user {user_id}: {e}")
+            return None
         except Exception as e:
-            logger.error(f"Error creating crypto order: {e}", exc_info=True)
+            logger.error(f"Unexpected error creating crypto order for user {user_id}: {e}", exc_info=True)
             return None
