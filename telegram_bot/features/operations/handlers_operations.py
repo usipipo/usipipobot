@@ -153,6 +153,8 @@ class OperationsHandler:
 
         container = get_container()
         data_package_service = container.resolve(DataPackageService)
+        if not isinstance(data_package_service, DataPackageService):
+            raise RuntimeError("Failed to resolve DataPackageService from container")
         buy_handler = BuyGbHandler(data_package_service)
         await buy_handler.show_slots_menu(update, context)
 
