@@ -107,3 +107,60 @@ class PostgresCryptoOrderRepository(ICryptoOrderRepository):
             select(func.count()).where(CryptoOrderModel.user_id == user_id)
         )
         return result.scalar() or 0
+
+    async def get_expired_orders_with_wallets(
+        self, limit: int = 100
+    ) -> List[CryptoOrder]:
+        """Obtiene órdenes expiradas que tienen wallets asignadas."""
+        result = await self.session.execute(
+            select(CryptoOrderModel)
+            .where(
+                CryptoOrderModel.status == "expired",
+                CryptoOrderModel.wallet_address.isnot(None),
+            )
+            .order_by(CryptoOrderModel.expires_at.asc())
+            .limit(limit)
+        )
+        models = result.scalars().all()
+        return [m.to_entity() for m in models]
+
+    async def get_reusable_wallet_for_user(
+        self, user_id: int
+    ) -> Optional[str]:
+        """Busca una wallet reutilizable de una orden expirada del mismo usuario."""
+        result = await self.session.execute(
+            select(CryptoOrderModel.wallet_address)
+            .where(
+                CryptoOrderModel.user_id == user_id,
+                CryptoOrderModel.status == "expired",
+                CryptoOrderModel.wallet_address.isnot(None),
+            )
+            .order_by(CryptoOrderModel.expires_at.desc())
+            .limit(1)
+        )
+        row = result.scalar_one_or_none()
+        return row if row else None
+
+    async def get_any_reusable_wallet(self) -> Optional[str]:
+        """Busca cualquier wallet reutilizable de órdenes expiradas."""
+        from sqlalchemy import not_
+
+        subquery = (
+            select(CryptoOrderModel.wallet_address)
+            .where(CryptoOrderModel.status.in_(["pending", "completed"]))
+            .distinct()
+            .scalar_subquery()
+        )
+
+        result = await self.session.execute(
+            select(CryptoOrderModel.wallet_address)
+            .where(
+                CryptoOrderModel.status == "expired",
+                CryptoOrderModel.wallet_address.isnot(None),
+                not_(CryptoOrderModel.wallet_address.in_(subquery)),
+            )
+            .order_by(CryptoOrderModel.expires_at.desc())
+            .limit(1)
+        )
+        row = result.scalar_one_or_none()
+        return row if row else None
