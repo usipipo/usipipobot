@@ -37,11 +37,26 @@ class ConsumptionVpnIntegrationService:
     async def check_can_create_key(
         self, user_id: int, current_user_id: int
     ) -> Tuple[bool, Optional[str]]:
-        """Verifica si el usuario puede crear nuevas claves."""
-        pass
+        """
+        Verifica si el usuario puede crear nuevas claves.
 
-    async def route_usage_to_billing(
-        self, user_id: int, mb_used: float, current_user_id: int
-    ) -> bool:
-        """Registra consumo de datos en el ciclo de facturación activo."""
-        pass
+        Returns:
+            Tuple[bool, Optional[str]]: (puede_crear, mensaje_error)
+        """
+        try:
+            user = await self.user_repo.get_by_id(user_id, current_user_id)
+
+            if not user:
+                return False, "Usuario no encontrado"
+
+            if user.has_pending_debt:
+                return (
+                    False,
+                    "Tienes una deuda pendiente. Debes pagar antes de crear nuevas claves.",
+                )
+
+            return True, None
+
+        except Exception as e:
+            logger.error(f"Error checking can_create_key for user {user_id}: {e}")
+            return False, f"Error al verificar permisos: {str(e)}"
