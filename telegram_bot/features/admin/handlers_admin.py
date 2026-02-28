@@ -1140,7 +1140,10 @@ class AdminHandler(BaseConversationHandler):
                 [
                     InlineKeyboardButton(
                         "🔄 En Progreso", callback_data=f"ticket_progress_{ticket.id}"
-                    )
+                    ),
+                    InlineKeyboardButton(
+                        "❌ Cerrar", callback_data=f"ticket_close_{ticket.id}"
+                    ),
                 ],
                 [InlineKeyboardButton("🔙 Volver", callback_data="admin_tickets")],
             ]
@@ -1425,6 +1428,80 @@ class AdminHandler(BaseConversationHandler):
 
         except Exception as e:
             await self._handle_error(update, context, e, "ticket_set_in_progress")
+            return ADMIN_MENU
+
+    @admin_required
+    @admin_spinner_callback
+    async def close_ticket(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        spinner_message_id: int | None = None,
+    ):
+        """Cierra un ticket."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        user = update.effective_user
+        if user is None:
+            return ADMIN_MENU
+        admin_id = user.id
+
+        if query is None or query.data is None:
+            return ADMIN_MENU
+        ticket_id_str = query.data.replace("ticket_close_", "")
+        try:
+            ticket_id = uuid.UUID(ticket_id_str)
+        except ValueError:
+            await SpinnerManager.replace_spinner_with_message(
+                update,
+                context,
+                spinner_message_id,
+                text="❌ **ID de ticket inválido**",
+                reply_markup=AdminKeyboards.back_to_menu(),
+                parse_mode="Markdown",
+            )
+            return ADMIN_MENU
+
+        if not self.ticket_service:
+            await SpinnerManager.replace_spinner_with_message(
+                update,
+                context,
+                spinner_message_id,
+                text="❌ **Servicio de tickets no disponible**",
+                reply_markup=AdminKeyboards.back_to_menu(),
+                parse_mode="Markdown",
+            )
+            return ADMIN_MENU
+
+        try:
+            ticket = await self.ticket_service.close_ticket(ticket_id, admin_id)
+
+            if not ticket:
+                await SpinnerManager.replace_spinner_with_message(
+                    update,
+                    context,
+                    spinner_message_id,
+                    text="❌ **Ticket no encontrado**",
+                    reply_markup=AdminKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+                return ADMIN_MENU
+
+            logger.info(f"🎫 Admin {admin_id} closed ticket {ticket_id}")
+
+            await SpinnerManager.replace_spinner_with_message(
+                update,
+                context,
+                spinner_message_id,
+                text="✅ **Ticket cerrado correctamente**",
+                reply_markup=AdminKeyboards.back_to_menu(),
+                parse_mode="Markdown",
+            )
+            return ADMIN_MENU
+
+        except Exception as e:
+            await self._handle_error(update, context, e, "close_ticket")
             return ADMIN_MENU
 
     @with_spinner()
@@ -1768,6 +1845,9 @@ def get_admin_callback_handlers(
             handler.ticket_set_in_progress, pattern=r"^ticket_progress_[a-f0-9\-]+$"
         ),
         CallbackQueryHandler(
+            handler.close_ticket, pattern=r"^ticket_close_[a-f0-9\-]+$"
+        ),
+        CallbackQueryHandler(
             handler.cancel_admin_response, pattern="^cancel_ticket_response$"
         ),
     ]
@@ -1878,6 +1958,10 @@ def get_admin_conversation_handler(
                 CallbackQueryHandler(
                     handler.ticket_set_in_progress,
                     pattern=r"^ticket_progress_[a-f0-9\-]+$",
+                ),
+                CallbackQueryHandler(
+                    handler.close_ticket,
+                    pattern=r"^ticket_close_[a-f0-9\-]+$",
                 ),
                 CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),

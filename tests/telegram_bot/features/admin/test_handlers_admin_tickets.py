@@ -375,3 +375,91 @@ class TestAdminTicketFlow:
         result = await handler.handle_admin_response(update, context)
 
         assert result == ADMIN_MENU
+
+    @pytest.mark.asyncio
+    async def test_close_ticket(
+        self, handler, ticket_service, sample_ticket, mock_settings
+    ):
+        """close_ticket debe cerrar el ticket correctamente."""
+        sample_ticket.status = TicketStatus.CLOSED
+        ticket_service.close_ticket = AsyncMock(return_value=sample_ticket)
+
+        update = MagicMock()
+        update.effective_user.id = ADMIN_ID
+        update.callback_query = MagicMock()
+        update.callback_query.data = f"ticket_close_{sample_ticket.id}"
+        update.callback_query.answer = AsyncMock()
+        update.callback_query.edit_message_text = AsyncMock()
+        update.message = None
+
+        context = MagicMock()
+        context.user_data = {}
+
+        result = await handler.close_ticket(update, context, spinner_message_id=None)
+
+        assert result == ADMIN_MENU
+        ticket_service.close_ticket.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_close_ticket_not_found(
+        self, handler, ticket_service, mock_settings
+    ):
+        """close_ticket debe manejar ticket no encontrado."""
+        ticket_service.close_ticket = AsyncMock(return_value=None)
+
+        ticket_id = uuid.uuid4()
+        update = MagicMock()
+        update.effective_user.id = ADMIN_ID
+        update.callback_query = MagicMock()
+        update.callback_query.data = f"ticket_close_{ticket_id}"
+        update.callback_query.answer = AsyncMock()
+        update.callback_query.edit_message_text = AsyncMock()
+        update.message = None
+
+        context = MagicMock()
+        context.user_data = {}
+
+        result = await handler.close_ticket(update, context, spinner_message_id=None)
+
+        assert result == ADMIN_MENU
+
+    @pytest.mark.asyncio
+    async def test_close_ticket_invalid_uuid(self, handler, mock_settings):
+        """close_ticket debe manejar UUID inválido."""
+        update = MagicMock()
+        update.effective_user.id = ADMIN_ID
+        update.callback_query = MagicMock()
+        update.callback_query.data = "ticket_close_invalid-uuid"
+        update.callback_query.answer = AsyncMock()
+        update.callback_query.edit_message_text = AsyncMock()
+        update.message = None
+
+        context = MagicMock()
+        context.user_data = {}
+
+        result = await handler.close_ticket(update, context, spinner_message_id=None)
+
+        assert result == ADMIN_MENU
+
+    @pytest.mark.asyncio
+    async def test_close_ticket_without_ticket_service(
+        self, admin_service, mock_settings
+    ):
+        """close_ticket debe manejar cuando no hay ticket_service."""
+        handler = AdminHandler(admin_service, ticket_service=None)
+
+        ticket_id = uuid.uuid4()
+        update = MagicMock()
+        update.effective_user.id = ADMIN_ID
+        update.callback_query = MagicMock()
+        update.callback_query.data = f"ticket_close_{ticket_id}"
+        update.callback_query.answer = AsyncMock()
+        update.callback_query.edit_message_text = AsyncMock()
+        update.message = None
+
+        context = MagicMock()
+        context.user_data = {}
+
+        result = await handler.close_ticket(update, context, spinner_message_id=None)
+
+        assert result == ADMIN_MENU
