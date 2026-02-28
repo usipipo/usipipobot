@@ -64,9 +64,7 @@ class VpnKeysKeyboards:
                 InlineKeyboardButton(
                     "✏️ Renombrar", callback_data="key_rename_{key_id}"
                 ),
-                InlineKeyboardButton(
-                    "🗑️ Eliminar", callback_data="key_delete_{key_id}"
-                ),
+                # Delete button removed - prevents abuse of free 5GB
             ],
         ]
 
@@ -82,6 +80,35 @@ class VpnKeysKeyboards:
         keyboard.append(
             [InlineKeyboardButton("🔙 Volver", callback_data="back_to_keys")]
         )
+
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def limit_reached_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
+        """
+        Teclado cuando se alcanza el límite de llaves - Incluye opción de comprar slots.
+
+        Args:
+            is_admin: Si es True, incluye opciones de administrador
+
+        Returns:
+            InlineKeyboardMarkup: Teclado del menú de límite alcanzado
+        """
+        keyboard = [
+            [
+                InlineKeyboardButton("🔑 Comprar Slots Extra", callback_data="buy_slots_menu"),
+                InlineKeyboardButton("📦 Ver Planes", callback_data="buy_gb_menu"),
+            ],
+            [
+                InlineKeyboardButton("🗑️ Gestionar Llaves", callback_data="key_management"),
+                InlineKeyboardButton("🔙 Volver", callback_data="main_menu"),
+            ],
+        ]
+
+        if is_admin:
+            keyboard.insert(
+                0, [InlineKeyboardButton("🔧 Panel Admin", callback_data="admin")]
+            )
 
         return InlineKeyboardMarkup(keyboard)
 

@@ -390,27 +390,6 @@ class KeyManagementHandler(BaseHandler):
                     await self.vpn_service.update_key(key, current_user_id=user_id)
                     message = KeyManagementMessages.Actions.KEY_REACTIVATED
 
-                elif action == "delete":
-                    try:
-                        await self.vpn_service.delete_key(
-                            key_id, current_user_id=user_id
-                        )
-                        message = KeyManagementMessages.Actions.KEY_DELETED
-                        keyboard = KeyManagementKeyboards.back_to_submenu()
-                    except Exception as e:
-                        if (
-                            "Debes realizar al menos un depósito para eliminar claves"
-                            in str(e)
-                        ):
-                            message = KeyManagementMessages.Error.DELETE_NOT_ALLOWED
-                        else:
-                            message = (
-                                KeyManagementMessages.Error.OPERATION_FAILED.format(
-                                    error=escape_markdown(str(e))
-                                )
-                            )
-                        keyboard = KeyManagementKeyboards.back_to_submenu()
-
                 elif action == "config":
                     await self.show_key_config(update, context)
                     return
@@ -741,7 +720,7 @@ def get_key_management_callback_handlers(vpn_service: VpnService):
         CallbackQueryHandler(handler.back_to_keys, pattern="^back_to_keys$"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_suspend_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_reactivate_"),
-        CallbackQueryHandler(handler.handle_key_action, pattern="^key_delete_"),
+        # CallbackQueryHandler(handler.handle_key_action, pattern="^key_delete_"),  # Removed - prevent 5GB abuse
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_config_"),
         CallbackQueryHandler(handler.show_key_config, pattern="^key_view_config_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_rename_"),

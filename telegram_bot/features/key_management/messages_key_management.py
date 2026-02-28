@@ -162,7 +162,7 @@ class KeyManagementMessages:
         QUOTA_EXCEEDED = (
             "⚠️ *Cuota excedida*\n\n"
             "💥 Has alcanzado tu límite\n\n"
-            "💡 🗑️ Elimina una llave o ⬆️ mejora tu plan ⚡"
+            "💡 ⬆️ Mejora tu plan o compra slots extra ⚡"
         )
 
     # ============================================
