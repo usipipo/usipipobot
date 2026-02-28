@@ -116,6 +116,42 @@ class OutlineClient:
             logger.error(f"Error en getKeyUsage para {key_id}: {e}")
             return {"keyId": key_id, "bytesUsed": 0, "mbUsed": 0, "error": True}
 
+    async def disable_key(self, key_id: str) -> bool:
+        """
+        Deshabilita una clave Outline estableciendo data-limit a 1 byte.
+        El usuario puede conectarse pero no transferir datos.
+        """
+        try:
+            res = await self.client.put(
+                f"{self.api_url}/access-keys/{key_id}/data-limit",
+                json={"limit": {"bytes": 1}}
+            )
+            if res.status_code == 204:
+                logger.info(f"Key {key_id} disabled (data-limit set to 1 byte)")
+                return True
+            logger.error(f"Failed to disable key {key_id}: status {res.status_code}")
+            return False
+        except Exception as e:
+            logger.error(f"Error disabling key {key_id}: {e}")
+            return False
+
+    async def enable_key(self, key_id: str) -> bool:
+        """
+        Reactiva una clave Outline removiendo el data-limit.
+        """
+        try:
+            res = await self.client.delete(
+                f"{self.api_url}/access-keys/{key_id}/data-limit"
+            )
+            if res.status_code == 204:
+                logger.info(f"Key {key_id} enabled (data-limit removed)")
+                return True
+            logger.error(f"Failed to enable key {key_id}: status {res.status_code}")
+            return False
+        except Exception as e:
+            logger.error(f"Error enabling key {key_id}: {e}")
+            return False
+
     async def close(self):
         """Cierra la sesión del cliente HTTP."""
         await self.client.aclose()
