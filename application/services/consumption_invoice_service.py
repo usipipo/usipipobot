@@ -260,14 +260,24 @@ class ConsumptionInvoiceService:
                     await self.user_repo.save(user, current_user_id)
 
                     # Unblock all user keys
-                    from application.services.common.container import container
-                    from application.services.consumption_vpn_integration_service import ConsumptionVpnIntegrationService
+                    from application.services.common.container import (
+                        get_container,
+                    )
+                    from application.services.consumption_vpn_integration_service import (
+                        ConsumptionVpnIntegrationService,
+                    )
+
+                    container = get_container()
                     vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
-                    unblock_result = await vpn_integration.unblock_user_keys(user.id, current_user_id)
+                    unblock_result = await vpn_integration.unblock_user_keys(
+                        user.id, current_user_id
+                    )
 
                     if not unblock_result["success"]:
-                        logger.error(f"Failed to unblock keys for user {user.id}: {unblock_result['errors']}")
-                        # Log but don't fail the payment processing
+                        logger.error(
+                            f"Failed to unblock keys for user {user.id}: "
+                            f"{unblock_result['errors']}"
+                        )
 
                 # Registrar en historial de transacciones
                 await self._record_transaction(invoice, current_user_id)
@@ -343,14 +353,24 @@ class ConsumptionInvoiceService:
                     await self.user_repo.save(user, current_user_id)
 
                     # Unblock all user keys
-                    from application.services.common.container import container
-                    from application.services.consumption_vpn_integration_service import ConsumptionVpnIntegrationService
+                    from application.services.common.container import (
+                        get_container,
+                    )
+                    from application.services.consumption_vpn_integration_service import (
+                        ConsumptionVpnIntegrationService,
+                    )
+
+                    container = get_container()
                     vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
-                    unblock_result = await vpn_integration.unblock_user_keys(user.id, current_user_id)
+                    unblock_result = await vpn_integration.unblock_user_keys(
+                        user.id, current_user_id
+                    )
 
                     if not unblock_result["success"]:
-                        logger.error(f"Failed to unblock keys for user {user.id}: {unblock_result['errors']}")
-                        # Log but don't fail the payment processing
+                        logger.error(
+                            f"Failed to unblock keys for user {user.id}: "
+                            f"{unblock_result['errors']}"
+                        )
 
                 # Registrar en historial de transacciones
                 await self._record_transaction(invoice, current_user_id)

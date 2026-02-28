@@ -2,25 +2,66 @@
   "id": "pay-as-you-go_20250301",
   "title": "Pay-as-You-Go Consumption Billing System",
   "type": "feature",
-  "status": "pending",
+  "status": "completed",
   "priority": "high",
   "created": "2025-03-01T00:00:00Z",
-  "updated": "2025-03-01T00:00:00Z",
-  "started": null,
-  "completed": null,
+  "updated": "2025-02-28T17:00:00Z",
+  "started": "2025-02-28T14:00:00Z",
+  "completed": "2025-02-28T17:00:00Z",
   "assignee": "@kilo",
   "phases": {
     "total": 8,
-    "current": 0,
-    "completed": 0
+    "current": 8,
+    "completed": 8
   },
   "tasks": {
     "total": 35,
-    "completed": 0,
+    "completed": 35,
     "in_progress": 0,
-    "pending": 35
+    "pending": 0
   },
-  "checkpoints": [],
+  "checkpoints": [
+    {
+      "name": "Domain Layer",
+      "status": "completed",
+      "date": "2025-02-28"
+    },
+    {
+      "name": "Infrastructure Layer",
+      "status": "completed",
+      "date": "2025-02-28"
+    },
+    {
+      "name": "Application Services",
+      "status": "completed",
+      "date": "2025-02-28"
+    },
+    {
+      "name": "Telegram Handlers",
+      "status": "completed",
+      "date": "2025-02-28"
+    },
+    {
+      "name": "VPN Integration",
+      "status": "completed",
+      "date": "2025-02-28"
+    },
+    {
+      "name": "Cron Job",
+      "status": "completed",
+      "date": "2025-02-28"
+    },
+    {
+      "name": "Tests",
+      "status": "completed",
+      "date": "2025-02-28"
+    },
+    {
+      "name": "Database Migration",
+      "status": "completed",
+      "date": "2025-02-28"
+    }
+  ],
   "dependencies": [],
   "tags": ["billing", "consumption", "payment", "feature"]
 }
