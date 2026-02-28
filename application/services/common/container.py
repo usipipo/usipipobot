@@ -206,6 +206,7 @@ def _configure_application_services(container: punq.Container) -> None:
             package_repo=create_data_package_repo(),
             outline_client=container.resolve(OutlineClient),
             wireguard_client=container.resolve(WireGuardClient),
+            vpn_integration_service=container.resolve(ConsumptionVpnIntegrationService),
         )
 
     def create_admin_service() -> AdminService:
