@@ -102,6 +102,7 @@ async def get_current_user(
     Dependencia para obtener el usuario actual desde initData.
 
     Soporta tanto query params (GET) como form data (POST).
+    Asegura que el usuario exista en la base de datos local.
     """
     init_data = request.query_params.get("tgWebAppData")
 
@@ -121,6 +122,32 @@ async def get_current_user(
 
     if not result.success or not result.user:
         raise HTTPException(status_code=401, detail=f"No autorizado: {result.error}")
+
+    # Ensure user exists in local database
+    try:
+        async with get_session_context() as session:
+            user_repo = PostgresUserRepository(session)
+            existing_user = await user_repo.get_by_id(result.user.id, result.user.id)
+
+            if not existing_user:
+                logger.info(f"Creating new user from Mini App: {result.user.id}")
+                from domain.entities.user import User
+
+                full_name = result.user.first_name
+                if result.user.last_name:
+                    full_name = f"{full_name} {result.user.last_name}"
+
+                new_user = User(
+                    telegram_id=result.user.id,
+                    username=result.user.username,
+                    full_name=full_name,
+                )
+                await user_repo.save(new_user, current_user_id=result.user.id)
+                logger.info(f"User {result.user.id} created successfully")
+    except Exception as e:
+        logger.error(f"Error ensuring user exists: {e}", exc_info=True)
+        # Don't fail the request if user creation fails
+        # The error will be caught later when trying to create the order
 
     return MiniAppContext(user=result.user, query_id=result.query_id)
 
