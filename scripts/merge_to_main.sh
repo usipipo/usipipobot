@@ -357,8 +357,11 @@ ${changelog}" || {
         return
     }
     
-    # Crear tag anotado
-    git tag -a "$VERSION" -m "Release ${VERSION}"
+    # Crear tag anotado con changelog completo
+    local tag_message="Release ${VERSION}
+
+${changelog}"
+    echo -e "$tag_message" | git tag -a "$VERSION" -F -
     
     log_info "Commit y tag creados ✓"
     log_info "  Commit: $(git rev-parse --short HEAD)"
