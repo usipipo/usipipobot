@@ -102,6 +102,11 @@
             animation: fadeIn 0.3s ease;
         }
         
+        .error-box.info {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--neon-cyan);
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -114,11 +119,33 @@
             font-size: 14px;
         }
         
+        .error-box.info .error-title {
+            color: var(--neon-cyan);
+        }
+        
         .error-message {
             font-size: 12px;
             color: var(--text-primary);
             opacity: 0.8;
             line-height: 1.5;
+        }
+        
+        .btn-primary {
+            display: inline-block;
+            background: var(--neon-cyan);
+            color: var(--bg-void);
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+            transform: translateY(-2px);
         }
         
         .debug-info {
@@ -186,13 +213,13 @@
             showDebug('Platform: ' + tg.platform + ' | Version: ' + tg.version);
             
             messageDiv.textContent = 'Verificando autenticación...';
-            
-            setTimeout(function() {
+
+            setTimeout(async function() {
                 try {
                     const initData = tg.initData;
-                    
+
                     showDebug('Platform: ' + tg.platform + ' | initData: ' + (initData ? 'presente (' + initData.length + ' chars)' : 'vacío'));
-                    
+
                     if (!initData || initData.length === 0) {
                         showError(
                             'No se pudieron obtener los datos de autenticación. Por favor, cierra y vuelve a abrir la Mini App desde Telegram.',
@@ -200,18 +227,63 @@
                         );
                         return;
                     }
-                    
-                    messageDiv.textContent = 'Redirigiendo al dashboard...';
-                    
-                    const dashboardUrl = new URL('/miniapp/', window.location.origin);
-                    dashboardUrl.searchParams.set('tgWebAppData', initData);
-                    
-                    showDebug('Redirecting to: /miniapp/?tgWebAppData=...');
-                    
-                    setTimeout(function() {
-                        window.location.replace(dashboardUrl.toString());
-                    }, 300);
-                    
+
+                    messageDiv.textContent = 'Verificando registro...';
+
+                    // First, verify user is registered by checking the API
+                    try {
+                        const response = await fetch('/miniapp/api/user', {
+                            headers: {
+                                'X-Telegram-Init-Data': initData
+                            }
+                        });
+
+                        if (response.status === 403) {
+                            // User not registered - show message to start bot first
+                            const errorData = await response.json();
+                            if (errorData.detail === 'USER_NOT_REGISTERED') {
+                                errorBox.classList.add('info');
+                                errorBox.classList.add('show');
+                                errorBox.querySelector('.error-title').textContent = '🤖 ¡Bienvenido!';
+                                errorMessage.innerHTML =
+                                    'Para usar la Mini App, primero debes iniciar el bot.<br><br>' +
+                                    '1. Abre el bot @{{ bot_username }}<br>' +
+                                    '2. Presiona /start<br>' +
+                                    '3. Vuelve aquí y recarga la página';
+                                spinner.style.display = 'none';
+                                messageDiv.textContent = 'Registro necesario';
+                                return;
+                            }
+                        }
+
+                        if (!response.ok) {
+                            throw new Error('API Error: ' + response.status);
+                        }
+
+                        // User is registered, proceed to dashboard
+                        messageDiv.textContent = 'Redirigiendo al dashboard...';
+
+                        const dashboardUrl = new URL('/miniapp/', window.location.origin);
+                        dashboardUrl.searchParams.set('tgWebAppData', initData);
+
+                        showDebug('Redirecting to: /miniapp/?tgWebAppData=...');
+
+                        setTimeout(function() {
+                            window.location.replace(dashboardUrl.toString());
+                        }, 300);
+
+                    } catch (fetchError) {
+                        // If API check fails, try redirect anyway (backward compatibility)
+                        messageDiv.textContent = 'Redirigiendo al dashboard...';
+
+                        const dashboardUrl = new URL('/miniapp/', window.location.origin);
+                        dashboardUrl.searchParams.set('tgWebAppData', initData);
+
+                        setTimeout(function() {
+                            window.location.replace(dashboardUrl.toString());
+                        }, 300);
+                    }
+
                 } catch (e) {
                     showError(
                         'Error inesperado durante la autenticación. Por favor, intenta de nuevo.',

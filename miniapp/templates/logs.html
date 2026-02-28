@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+
+{% block title %}Logs de Sistema - uSipipo VPN{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logs-header {
+        margin-bottom: 20px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--neon-cyan);
+        text-decoration: none;
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--neon-cyan);
+        text-shadow: var(--glow-cyan);
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .logs-container {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .logs-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-subtle);
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .log-level-filter {
+        display: flex;
+        gap: 8px;
+    }
+
+    .filter-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-surface);
+        color: var(--text-muted);
+        border-radius: 6px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .filter-btn:hover {
+        border-color: var(--neon-cyan);
+        color: var(--neon-cyan);
+    }
+
+    .filter-btn.active {
+        background: var(--neon-cyan);
+        color: var(--bg-void);
+        border-color: var(--neon-cyan);
+    }
+
+    .filter-btn.debug.active { background: var(--text-muted); border-color: var(--text-muted); }
+    .filter-btn.info.active { background: var(--neon-cyan); border-color: var(--neon-cyan); }
+    .filter-btn.warning.active { background: var(--amber); border-color: var(--amber); color: var(--bg-void); }
+    .filter-btn.error.active { background: var(--neon-magenta); border-color: var(--neon-magenta); }
+
+    .logs-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .action-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        border-radius: 6px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .action-btn:hover {
+        border-color: var(--neon-cyan);
+        color: var(--neon-cyan);
+    }
+
+    .action-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .logs-terminal {
+        height: calc(100vh - 280px);
+        min-height: 400px;
+        overflow-y: auto;
+        padding: 16px;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        background: #0d0d12;
+    }
+
+    .log-entry {
+        display: flex;
+        gap: 12px;
+        padding: 4px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .log-timestamp {
+        color: var(--text-muted);
+        flex-shrink: 0;
+        min-width: 140px;
+    }
+
+    .log-level {
+        flex-shrink: 0;
+        min-width: 50px;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .log-level.debug {
+        color: var(--text-muted);
+        background: rgba(90, 90, 106, 0.2);
+    }
+
+    .log-level.info {
+        color: var(--neon-cyan);
+        background: rgba(0, 240, 255, 0.1);
+    }
+
+    .log-level.warning {
+        color: var(--amber);
+        background: rgba(255, 149, 0, 0.1);
+    }
+
+    .log-level.error {
+        color: var(--neon-magenta);
+        background: rgba(255, 0, 170, 0.1);
+    }
+
+    .log-level.critical {
+        color: #ff0040;
+        background: rgba(255, 0, 64, 0.1);
+        animation: pulse 2s infinite;
+    }
+
+    .log-message {
+        color: var(--text-primary);
+        word-break: break-word;
+        flex: 1;
+    }
+
+    .log-message .user-id {
+        color: var(--neon-magenta);
+        font-weight: 500;
+    }
+
+    .log-message .emoji {
+        margin-right: 4px;
+    }
+
+    .logs-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: var(--bg-card);
+        border-top: 1px solid var(--border-subtle);
+        font-size: 11px;
+        color: var(--text-muted);
+    }
+
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--terminal-green);
+        animation: pulse 2s infinite;
+    }
+
+    .status-indicator.paused {
+        background: var(--amber);
+        animation: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 16px;
+        padding: 12px 16px;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-subtle);
+        font-size: 11px;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .stat-value {
+        font-weight: 600;
+        color: var(--neon-cyan);
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+    }
+
+    @media (max-width: 640px) {
+        .logs-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .log-level-filter {
+            justify-content: center;
+        }
+
+        .logs-actions {
+            justify-content: center;
+        }
+
+        .log-entry {
+            flex-direction: column;
+            gap: 4px;
+            padding: 8px 0;
+        }
+
+        .log-timestamp {
+            min-width: auto;
+            font-size: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="logs-header">
+    <a href="/miniapp/settings" class="back-link">← Volver a Ajustes</a>
+    <div class="page-title">🖥️ Diagnósticos</div>
+    <div class="page-subtitle">Logs del sistema en tiempo real</div>
+</div>
+
+<div class="logs-container">
+    <div class="logs-toolbar">
+        <div class="log-level-filter">
+            <button class="filter-btn debug active" data-level="debug" onclick="toggleLevel('debug')">Debug</button>
+            <button class="filter-btn info active" data-level="info" onclick="toggleLevel('info')">Info</button>
+            <button class="filter-btn warning active" data-level="warning" onclick="toggleLevel('warning')">Warn</button>
+            <button class="filter-btn error active" data-level="error" onclick="toggleLevel('error')">Error</button>
+        </div>
+        <div class="logs-actions">
+            <button class="action-btn" onclick="toggleAutoScroll()">
+                <span id="autoscroll-icon">✓</span> Auto-scroll
+            </button>
+            <button class="action-btn" onclick="clearLogs()">🗑️ Limpiar</button>
+            <button class="action-btn" onclick="refreshLogs()">🔄 Actualizar</button>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">Total:</span>
+            <span class="stat-value" id="total-logs">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Info:</span>
+            <span class="stat-value" id="info-count">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Warnings:</span>
+            <span class="stat-value" id="warning-count">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Errors:</span>
+            <span class="stat-value" id="error-count">0</span>
+        </div>
+    </div>
+
+    <div class="logs-terminal" id="logs-terminal">
+        <div class="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <div>Cargando logs...</div>
+        </div>
+    </div>
+
+    <div class="logs-status">
+        <div class="status-indicator" id="status-indicator"></div>
+        <span id="status-text">Conectado - Actualizando cada 5s</span>
+        <span style="margin-left: auto;" id="last-update">Última actualización: --</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let autoScroll = true;
+    let activeLevels = new Set(['debug', 'info', 'warning', 'error']);
+    let logs = [];
+    let refreshInterval;
+
+    function toggleLevel(level) {
+        const btn = document.querySelector(`.filter-btn.${level}`);
+        if (activeLevels.has(level)) {
+            activeLevels.delete(level);
+            btn.classList.remove('active');
+        } else {
+            activeLevels.add(level);
+            btn.classList.add('active');
+        }
+        renderLogs();
+    }
+
+    function toggleAutoScroll() {
+        autoScroll = !autoScroll;
+        document.getElementById('autoscroll-icon').textContent = autoScroll ? '✓' : '✗';
+    }
+
+    function clearLogs() {
+        logs = [];
+        renderLogs();
+        updateStats();
+    }
+
+    function refreshLogs() {
+        fetchLogs();
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function renderLogs() {
+        const terminal = document.getElementById('logs-terminal');
+        const filteredLogs = logs.filter(log => activeLevels.has(log.level.toLowerCase()));
+
+        if (filteredLogs.length === 0) {
+            terminal.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <div>No hay logs para mostrar</div>
+                </div>
+            `;
+            return;
+        }
+
+        terminal.innerHTML = filteredLogs.map(log => {
+            const timestamp = new Date(log.timestamp).toLocaleString('es-ES');
+            const level = log.level.toLowerCase();
+            let message = escapeHtml(log.message);
+
+            // Highlight user IDs
+            message = message.replace(/User (\d+)/g, '<span class="user-id">User $1</span>');
+
+            return `
+                <div class="log-entry" data-level="${level}">
+                    <div class="log-timestamp">${timestamp}</div>
+                    <div class="log-level ${level}">${log.level}</div>
+                    <div class="log-message">${message}</div>
+                </div>
+            `;
+        }).join('');
+
+        if (autoScroll) {
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+    }
+
+    function updateStats() {
+        const counts = {
+            debug: 0,
+            info: 0,
+            warning: 0,
+            error: 0
+        };
+
+        logs.forEach(log => {
+            const level = log.level.toLowerCase();
+            if (counts[level] !== undefined) {
+                counts[level]++;
+            }
+        });
+
+        document.getElementById('total-logs').textContent = logs.length;
+        document.getElementById('info-count').textContent = counts.info;
+        document.getElementById('warning-count').textContent = counts.warning;
+        document.getElementById('error-count').textContent = counts.error;
+    }
+
+    async function fetchLogs() {
+        try {
+            const response = await fetch('/miniapp/api/logs?lines=100');
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    document.getElementById('logs-terminal').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔒</div>
+                            <div>Acceso denegado. Solo administradores pueden ver los logs.</div>
+                        </div>
+                    `;
+                    document.getElementById('status-indicator').classList.add('paused');
+                    document.getElementById('status-text').textContent = 'Acceso denegado';
+                    clearInterval(refreshInterval);
+                    return;
+                }
+                throw new Error('Failed to fetch logs');
+            }
+
+            const data = await response.json();
+            logs = data.logs || [];
+            renderLogs();
+            updateStats();
+
+            document.getElementById('last-update').textContent = 
+                'Última actualización: ' + new Date().toLocaleTimeString('es-ES');
+        } catch (error) {
+            console.error('Error fetching logs:', error);
+            document.getElementById('status-indicator').classList.add('paused');
+            document.getElementById('status-text').textContent = 'Error de conexión';
+        }
+    }
+
+    // Initial load
+    fetchLogs();
+
+    // Auto-refresh every 5 seconds
+    refreshInterval = setInterval(fetchLogs, 5000);
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        clearInterval(refreshInterval);
+    });
+</script>
+{% endblock %}
