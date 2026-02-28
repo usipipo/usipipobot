@@ -57,12 +57,15 @@ class VpnKeysHandler:
         telegram_id = update.effective_user.id
         is_admin = telegram_id == int(settings.ADMIN_ID)
 
+        logger.info(f"🔑 User {telegram_id} started key creation flow")
+
         user = await self._get_or_create_user(telegram_id)
         can_create, message = await self.vpn_service.can_user_create_key(
             user, current_user_id=telegram_id
         )
 
         if not can_create:
+            logger.warning(f"⚠️ User {telegram_id} reached key limit ({user.max_keys} keys)")
             # Obtener cantidad de claves usadas para mostrar en el mensaje
             keys = await self.vpn_service.get_user_keys(telegram_id, telegram_id)
             used_keys = len([k for k in keys if k.is_active])
@@ -120,6 +123,9 @@ class VpnKeysHandler:
         if context.user_data is not None:
             context.user_data["tmp_key_type"] = key_type
 
+        user_id = update.effective_user.id if update.effective_user else None
+        logger.info(f"🔑 User {user_id} selected key type: {key_type}")
+
         cancel_keyboard = VpnKeysKeyboards.cancel_creation()
 
         escaped_key_type = escape_markdown(key_type.upper())
@@ -144,10 +150,14 @@ class VpnKeysHandler:
         key_type: str = tmp_key_type
         telegram_id = update.effective_user.id
 
+        logger.info(f"🔑 User {telegram_id} named key: {key_name} (type: {key_type})")
+
         try:
             new_key = await self.vpn_service.create_key(
                 telegram_id, key_type, key_name, current_user_id=telegram_id
             )
+
+            logger.info(f"✅ Key {new_key.id} created successfully for user {telegram_id}")
 
             safe_name = "".join(x for x in key_name if x.isalnum())
             file_id = f"{telegram_id}_{safe_name}"
@@ -222,6 +232,9 @@ class VpnKeysHandler:
             return ConversationHandler.END
         telegram_id = update.effective_user.id
         is_admin = telegram_id == int(settings.ADMIN_ID)
+
+        logger.info(f"🔑 User {telegram_id} cancelled key creation")
+
         await update.message.reply_text(
             text=VpnKeysMessages.CANCELLED,
             reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
