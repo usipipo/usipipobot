@@ -47,22 +47,22 @@ Plan detallado para implementar el sistema de tarifa por consumo postpago, inclu
 
 ### Tasks
 
-- [ ] **Task 2.1**: Create `ConsumptionBillingModel` SQLAlchemy model
+- [x] **Task 2.1**: Create `ConsumptionBillingModel` SQLAlchemy model `eb842d3`
   - Map entity to database table
   - Add indexes for performance
   - Set up relationships
 
-- [ ] **Task 2.2**: Create `ConsumptionInvoiceModel` SQLAlchemy model
+- [x] **Task 2.2**: Create `ConsumptionInvoiceModel` SQLAlchemy model `eb842d3`
   - Map entity to database table
   - Add indexes on user_id and status
   - Set up foreign keys
 
-- [ ] **Task 2.3**: Create database migration
+- [~] **Task 2.3**: Create database migration (pending Alembic generation)
   - Generate Alembic migration for new tables
   - Include migration for User table alterations
   - Test migration rollback
 
-- [ ] **Task 2.4**: Implement `PostgresConsumptionBillingRepository`
+- [x] **Task 2.4**: Implement `PostgresConsumptionBillingRepository` `eb842d3`
   - Implement all interface methods
   - Add transaction handling
   - Add error handling
