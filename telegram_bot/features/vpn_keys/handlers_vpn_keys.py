@@ -130,7 +130,7 @@ class VpnKeysHandler:
 
         escaped_key_type = escape_markdown(key_type.upper())
         await query.edit_message_text(
-            text=f"🛡️ Has seleccionado *{escaped_key_type}*\.\n\nEscribe un nombre para identificar tu nueva llave \(ej: Mi Laptop\):",
+            text=f"🛡️ Has seleccionado *{escaped_key_type}*.\n\nEscribe un nombre para identificar tu nueva llave (ej: Mi Laptop):",
             parse_mode="Markdown",
             reply_markup=cancel_keyboard,
         )
@@ -197,7 +197,7 @@ class VpnKeysHandler:
                         name=escaped_name,
                         data_limit=new_key.data_limit_gb,
                     )
-                    + "\n\nEscanea el QR en tu móvil o usa el archivo adjunto en tu PC\."
+                    + "\n\nEscanea el QR en tu móvil o usa el archivo adjunto en tu PC."
                 )
 
                 with open(qr_path, "rb") as photo:
