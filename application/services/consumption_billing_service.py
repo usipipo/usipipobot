@@ -288,6 +288,17 @@ class ConsumptionBillingService:
                     user.mark_as_has_debt()
                     await self.user_repo.save(user, current_user_id)
 
+                    # Block all user keys
+                    from application.services.consumption_vpn_integration_service import ConsumptionVpnIntegrationService
+                    from application.services.common.container import get_container
+                    container = get_container()
+                    vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
+                    block_result = await vpn_integration.block_user_keys(billing.user_id, current_user_id)
+
+                    if not block_result["success"]:
+                        logger.error(f"Failed to block keys for user {billing.user_id}: {block_result['errors']}")
+                        # Continue anyway, don't fail the billing cycle
+
                 logger.info(
                     f"🔒 Ciclo cerrado - billing_id={billing_id}, "
                     f"user_id={billing.user_id}, "
