@@ -49,6 +49,9 @@ class ConsumptionVpnIntegrationService:
             keys = await self.key_repo.get_by_user_id(user_id, current_user_id)
             if not keys:
                 logger.info(f"User {user_id} has no keys to block")
+                # Still mark user as having debt
+                user.mark_as_has_debt()
+                await self.user_repo.update(user, current_user_id)
                 return {
                     "success": True,
                     "keys_blocked": 0,
@@ -100,6 +103,85 @@ class ConsumptionVpnIntegrationService:
                 "keys_blocked": 0,
                 "keys_failed": 0,
                 "errors": [f"Error al bloquear claves: {str(e)}"],
+            }
+
+    async def unblock_user_keys(
+        self, user_id: int, current_user_id: int
+    ) -> Dict[str, Any]:
+        """
+        Desbloquea todas las claves VPN de un usuario y limpia su deuda.
+
+        Returns:
+            Dict con {"success": bool, "keys_unblocked": int,
+                      "keys_failed": int, "errors": list}
+        """
+        try:
+            user = await self.user_repo.get_by_id(user_id, current_user_id)
+            if not user:
+                return {
+                    "success": False,
+                    "keys_unblocked": 0,
+                    "keys_failed": 0,
+                    "errors": ["Usuario no encontrado"],
+                }
+
+            keys = await self.key_repo.get_by_user_id(user_id, current_user_id)
+            if not keys:
+                logger.info(f"User {user_id} has no keys to unblock")
+                # Still mark debt as paid
+                user.mark_debt_as_paid()
+                await self.user_repo.update(user, current_user_id)
+                return {
+                    "success": True,
+                    "keys_unblocked": 0,
+                    "keys_failed": 0,
+                    "errors": [],
+                }
+
+            keys_unblocked = 0
+            keys_failed = 0
+            errors = []
+
+            for key in keys:
+                try:
+                    key_type = key.key_type.value
+                    result = await self.vpn_infra_service.enable_key(
+                        str(key.id), key_type
+                    )
+
+                    if result.get("success"):
+                        keys_unblocked += 1
+                        logger.info(f"Key {key.id} unblocked for user {user_id}")
+                    else:
+                        keys_failed += 1
+                        err = result.get("error", "Unknown error")
+                        error_msg = f"Failed to unblock key {key.id}: {err}"
+                        errors.append(error_msg)
+                        logger.warning(error_msg)
+                except Exception as e:
+                    keys_failed += 1
+                    error_msg = f"Exception unblocking key {key.id}: {str(e)}"
+                    errors.append(error_msg)
+                    logger.error(error_msg)
+
+            # Clear user's debt flag
+            user.mark_debt_as_paid()
+            await self.user_repo.update(user, current_user_id)
+
+            return {
+                "success": keys_failed == 0,
+                "keys_unblocked": keys_unblocked,
+                "keys_failed": keys_failed,
+                "errors": errors,
+            }
+
+        except Exception as e:
+            logger.error(f"Error unblocking user keys for user {user_id}: {e}")
+            return {
+                "success": False,
+                "keys_unblocked": 0,
+                "keys_failed": 0,
+                "errors": [f"Error al desbloquear claves: {str(e)}"],
             }
 
     async def check_can_create_key(
