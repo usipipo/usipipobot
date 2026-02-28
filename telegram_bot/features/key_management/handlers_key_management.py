@@ -52,6 +52,7 @@ class KeyManagementHandler(BaseHandler):
             if update.effective_user is None:
                 return
             user_id = update.effective_user.id
+            logger.info(f"User {user_id} viewing key submenu")
             if update.message is None:
                 return
             try:
@@ -95,6 +96,7 @@ class KeyManagementHandler(BaseHandler):
             if update.effective_user is None:
                 return
             user_id = update.effective_user.id
+            logger.info(f"User {user_id} viewing key submenu")
 
             try:
                 user_status = await self.vpn_service.get_user_status(
@@ -153,6 +155,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} viewing keys by type: {key_type}")
 
         try:
             user_status = await self.vpn_service.get_user_status(
@@ -216,6 +219,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} viewing details for key {key_id}")
 
         try:
             key = await self.vpn_service.get_key_by_id(key_id, current_user_id=user_id)
@@ -297,6 +301,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} viewing key statistics")
 
         try:
             user_status = await self.vpn_service.get_user_status(
@@ -373,6 +378,12 @@ class KeyManagementHandler(BaseHandler):
         user_id = update.effective_user.id
         keyboard = None
 
+        # Log action at appropriate level
+        if action in ["suspend", "delete"]:
+            logger.warning(f"User {user_id} performing action {action} on key {key_id}")
+        else:
+            logger.info(f"User {user_id} performing action {action} on key {key_id}")
+
         try:
             key = await self.vpn_service.get_key_by_id(key_id, current_user_id=user_id)
 
@@ -384,11 +395,13 @@ class KeyManagementHandler(BaseHandler):
                     key.is_active = False
                     await self.vpn_service.update_key(key, current_user_id=user_id)
                     message = KeyManagementMessages.Actions.KEY_SUSPENDED
+                    logger.info(f"User {user_id} successfully suspended key {key_id}")
 
                 elif action == "reactivate":
                     key.is_active = True
                     await self.vpn_service.update_key(key, current_user_id=user_id)
                     message = KeyManagementMessages.Actions.KEY_REACTIVATED
+                    logger.info(f"User {user_id} successfully reactivated key {key_id}")
 
                 elif action == "config":
                     await self.show_key_config(update, context)
@@ -506,6 +519,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} downloading WireGuard config for key {key_id}")
 
         try:
             config_data = await self.vpn_service.get_wireguard_config(
@@ -535,6 +549,7 @@ class KeyManagementHandler(BaseHandler):
                 caption=f"📄 Configuración WireGuard: *{key_name}*\n\nImporta este archivo en tu aplicación WireGuard.",
                 parse_mode="Markdown",
             )
+            logger.info(f"User {user_id} successfully downloaded WireGuard config for key {key_id}")
 
         except Exception as e:
             logger.error(f"Error descargando config WireGuard: {e}")
@@ -561,6 +576,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} getting Outline link for key {key_id}")
 
         try:
             config_data = await self.vpn_service.get_outline_config(
@@ -590,6 +606,7 @@ class KeyManagementHandler(BaseHandler):
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
                 parse_mode="Markdown",
             )
+            logger.info(f"User {user_id} successfully retrieved Outline link for key {key_id}")
 
         except Exception as e:
             logger.error(f"Error obteniendo enlace Outline: {e}")
@@ -664,6 +681,7 @@ class KeyManagementHandler(BaseHandler):
         user_id = update.effective_user.id
 
         try:
+            logger.info(f"User {user_id} attempting to rename key {key_id} to '{new_name}'")
             # Limpiar estado
             del context.user_data["rename_key_id"]
 
@@ -675,6 +693,7 @@ class KeyManagementHandler(BaseHandler):
                 message = KeyManagementMessages.Actions.KEY_RENAMED.format(
                     new_name=escape_markdown(new_name)
                 )
+                logger.info(f"User {user_id} renamed key {key_id} to '{new_name}'")
             else:
                 message = (
                     "❌ No se pudo renombrar la llave. Por favor, intenta de nuevo."

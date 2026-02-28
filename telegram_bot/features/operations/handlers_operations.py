@@ -36,6 +36,8 @@ class OperationsHandler:
             return
         user_id = update.effective_user.id
 
+        logger.info(f"⚙️ User {user_id} opened operations menu")
+
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
             credits = stats.referral_credits
@@ -64,8 +66,12 @@ class OperationsHandler:
 
         user_id = update.effective_user.id
 
+        logger.info(f"⚙️ User {user_id} viewing credits")
+
         try:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
+            logger.debug(f"⚙️ User {user_id} has {stats.referral_credits} credits")
+
             message = OperationsMessages.Credits.DISPLAY.format(
                 credits=stats.referral_credits
             )
@@ -86,6 +92,8 @@ class OperationsHandler:
         query = update.callback_query
         await query.answer()
 
+        logger.info("⚙️ User opened shop menu")
+
         message = OperationsMessages.Shop.MENU
         keyboard = OperationsKeyboards.shop_menu()
 
@@ -104,6 +112,9 @@ class OperationsHandler:
         query = update.callback_query
         await query.answer()
 
+        user_id = update.effective_user.id if update.effective_user else None
+        logger.debug(f"⚙️ Redirecting user {user_id} to data redemption")
+
         referral_handler = ReferralHandler(self.referral_service)
         await referral_handler.confirm_redeem_data(update, context)
 
@@ -117,6 +128,9 @@ class OperationsHandler:
 
         query = update.callback_query
         await query.answer()
+
+        user_id = update.effective_user.id if update.effective_user else None
+        logger.debug(f"⚙️ Redirecting user {user_id} to slot redemption")
 
         referral_handler = ReferralHandler(self.referral_service)
         await referral_handler.confirm_redeem_slot(update, context)
@@ -134,8 +148,13 @@ class OperationsHandler:
         query = update.callback_query
         await query.answer()
 
+        user_id = update.effective_user.id if update.effective_user else None
+        logger.info(f"⚙️ User {user_id} navigating to slots purchase menu")
+
         container = get_container()
         data_package_service = container.resolve(DataPackageService)
+        if not isinstance(data_package_service, DataPackageService):
+            raise RuntimeError("Failed to resolve DataPackageService from container")
         buy_handler = BuyGbHandler(data_package_service)
         await buy_handler.show_slots_menu(update, context)
 
@@ -146,6 +165,9 @@ class OperationsHandler:
             return
         query = update.callback_query
         await query.answer()
+
+        user_id = update.effective_user.id
+        logger.info(f"⚙️ User {user_id} returned to main menu")
 
         from telegram_bot.common.keyboards import CommonKeyboards
         from telegram_bot.common.messages import CommonMessages
