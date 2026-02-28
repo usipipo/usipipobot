@@ -151,7 +151,10 @@ class WireGuardClient:
             with open(psk_file_path, "w") as f:
                 f.write(psk)
 
-            cmd = f"wg set {self.interface} peer {pub_key} allowed-ips {client_ip}/32 preshared-key {psk_file_path}"
+            cmd = (
+                f"wg set {self.interface} peer {pub_key} "
+                f"allowed-ips {client_ip}/32 preshared-key {psk_file_path}"
+            )
             await self._run_cmd(cmd)
         finally:
             if os.path.exists(psk_file_path):

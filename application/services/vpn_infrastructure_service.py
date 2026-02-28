@@ -122,7 +122,8 @@ class VpnInfrastructureService:
             key_type: Tipo de clave ('wireguard' o 'outline')
 
         Returns:
-            Dict con {"success": bool, "server_deleted": bool, "db_deleted": bool, "error": str|None}
+            Dict con {"success": bool, "server_deleted": bool,
+                     "db_deleted": bool, "error": str|None}
         """
         try:
             key_uuid = uuid.UUID(key_id)
@@ -231,7 +232,8 @@ class VpnInfrastructureService:
             days_inactive: Días de inactividad para considerar una clave como fantasma
 
         Returns:
-            Dict con {"total_checked": int, "ghosts_found": int, "disabled_count": int, "errors": list}
+            Dict con {"total_checked": int, "ghosts_found": int,
+                     "disabled_count": int, "errors": list}
         """
         try:
             cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_inactive)

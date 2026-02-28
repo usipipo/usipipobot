@@ -6,7 +6,7 @@ Version: 1.0.0 - VPN Server Management
 """
 
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -31,7 +31,7 @@ class AdminVpnHandler(BaseHandler):
         self.vpn_service = vpn_service
         logger.info("⚡ AdminVpnHandler inicializado")
 
-    def _get_handlers(self) -> List[tuple]:
+    def get_handlers(self) -> List[tuple]:
         """Define handler callbacks."""
         return [
             ("admin_vpn", self.show_vpn_menu),
@@ -254,7 +254,7 @@ class AdminVpnHandler(BaseHandler):
             page = 1
             total_pages = max(1, (len(keys) + KEYS_PER_PAGE - 1) // KEYS_PER_PAGE)
             offset = (page - 1) * KEYS_PER_PAGE
-            page_keys = keys[offset : offset + KEYS_PER_PAGE]
+            page_keys = keys[offset:offset + KEYS_PER_PAGE]
 
             message = AdminVpnMessages.KEYS_LIST_HEADER.format(
                 server_type=server_type.upper()
@@ -315,7 +315,7 @@ class AdminVpnHandler(BaseHandler):
 
             total_pages = max(1, (len(keys) + KEYS_PER_PAGE - 1) // KEYS_PER_PAGE)
             offset = (page - 1) * KEYS_PER_PAGE
-            page_keys = keys[offset : offset + KEYS_PER_PAGE]
+            page_keys = keys[offset:offset + KEYS_PER_PAGE]
 
             message = AdminVpnMessages.KEYS_LIST_HEADER.format(
                 server_type=server_type.upper()
