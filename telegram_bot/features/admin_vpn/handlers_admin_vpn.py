@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Any, List, Optional
 
 from telegram import Update
-from telegram.ext import ContextTypes
+from telegram.ext import CallbackQueryHandler, ContextTypes
 
 from application.services.vpn_infrastructure_service import VpnInfrastructureService
 from telegram_bot.common.base_handler import BaseHandler
@@ -31,32 +31,32 @@ class AdminVpnHandler(BaseHandler):
         self.vpn_service = vpn_service
         logger.info("⚡ AdminVpnHandler inicializado")
 
-    def get_handlers(self) -> List[tuple]:
+    def get_handlers(self) -> List[CallbackQueryHandler]:
         """Define handler callbacks."""
         return [
-            ("admin_vpn", self.show_vpn_menu),
-            ("vpn_status", self.show_server_status),
-            ("vpn_manage_wireguard", self.manage_server),
-            ("vpn_manage_outline", self.manage_server),
-            ("vpn_server_status_wireguard", self.show_server_details),
-            ("vpn_server_status_outline", self.show_server_details),
-            ("vpn_list_keys_wireguard", self.list_server_keys),
-            ("vpn_list_keys_outline", self.list_server_keys),
-            ("vpn_cleanup_ghosts", self.cleanup_ghost_keys),
-            ("vpn_key_details_wireguard_", self.show_key_details),
-            ("vpn_key_details_outline_", self.show_key_details),
-            ("vpn_key_enable_wireguard_", self.handle_key_enable),
-            ("vpn_key_enable_outline_", self.handle_key_enable),
-            ("vpn_key_disable_wireguard_", self.handle_key_disable),
-            ("vpn_key_disable_outline_", self.handle_key_disable),
-            ("vpn_key_delete_wireguard_", self.confirm_delete_key),
-            ("vpn_key_delete_outline_", self.confirm_delete_key),
-            ("vpn_confirm_delete_wireguard_", self.execute_delete_key),
-            ("vpn_confirm_delete_outline_", self.execute_delete_key),
-            ("vpn_cancel_delete_wireguard_", self.cancel_key_action),
-            ("vpn_cancel_delete_outline_", self.cancel_key_action),
-            ("vpn_keys_page_wireguard_", self.keys_page),
-            ("vpn_keys_page_outline_", self.keys_page),
+            CallbackQueryHandler(self.show_vpn_menu, pattern="^admin_vpn$"),
+            CallbackQueryHandler(self.show_server_status, pattern="^vpn_status$"),
+            CallbackQueryHandler(self.manage_server, pattern="^vpn_manage_wireguard$"),
+            CallbackQueryHandler(self.manage_server, pattern="^vpn_manage_outline$"),
+            CallbackQueryHandler(self.show_server_details, pattern="^vpn_server_status_wireguard$"),
+            CallbackQueryHandler(self.show_server_details, pattern="^vpn_server_status_outline$"),
+            CallbackQueryHandler(self.list_server_keys, pattern="^vpn_list_keys_wireguard$"),
+            CallbackQueryHandler(self.list_server_keys, pattern="^vpn_list_keys_outline$"),
+            CallbackQueryHandler(self.cleanup_ghost_keys, pattern="^vpn_cleanup_ghosts$"),
+            CallbackQueryHandler(self.show_key_details, pattern="^vpn_key_details_wireguard_"),
+            CallbackQueryHandler(self.show_key_details, pattern="^vpn_key_details_outline_"),
+            CallbackQueryHandler(self.handle_key_enable, pattern="^vpn_key_enable_wireguard_"),
+            CallbackQueryHandler(self.handle_key_enable, pattern="^vpn_key_enable_outline_"),
+            CallbackQueryHandler(self.handle_key_disable, pattern="^vpn_key_disable_wireguard_"),
+            CallbackQueryHandler(self.handle_key_disable, pattern="^vpn_key_disable_outline_"),
+            CallbackQueryHandler(self.confirm_delete_key, pattern="^vpn_key_delete_wireguard_"),
+            CallbackQueryHandler(self.confirm_delete_key, pattern="^vpn_key_delete_outline_"),
+            CallbackQueryHandler(self.execute_delete_key, pattern="^vpn_confirm_delete_wireguard_"),
+            CallbackQueryHandler(self.execute_delete_key, pattern="^vpn_confirm_delete_outline_"),
+            CallbackQueryHandler(self.cancel_key_action, pattern="^vpn_cancel_delete_wireguard_"),
+            CallbackQueryHandler(self.cancel_key_action, pattern="^vpn_cancel_delete_outline_"),
+            CallbackQueryHandler(self.keys_page, pattern="^vpn_keys_page_wireguard_"),
+            CallbackQueryHandler(self.keys_page, pattern="^vpn_keys_page_outline_"),
         ]
 
     @admin_required
