@@ -1,0 +1,26 @@
+{
+  "id": "pay-as-you-go_20250301",
+  "title": "Pay-as-You-Go Consumption Billing System",
+  "type": "feature",
+  "status": "pending",
+  "priority": "high",
+  "created": "2025-03-01T00:00:00Z",
+  "updated": "2025-03-01T00:00:00Z",
+  "started": null,
+  "completed": null,
+  "assignee": "@kilo",
+  "phases": {
+    "total": 8,
+    "current": 0,
+    "completed": 0
+  },
+  "tasks": {
+    "total": 35,
+    "completed": 0,
+    "in_progress": 0,
+    "pending": 35
+  },
+  "checkpoints": [],
+  "dependencies": [],
+  "tags": ["billing", "consumption", "payment", "feature"]
+}

@@ -4,6 +4,7 @@
 
 | Track ID | Type | Status | Phase | Started | Assignee |
 |----------|------|--------|-------|---------|----------|
+| [pay-as-you-go_20250301](tracks/pay-as-you-go_20250301/) | feature | pending | 0/8 | - | @kilo |
 
 ## Completed Tracks
 
