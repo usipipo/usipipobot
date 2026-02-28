@@ -27,6 +27,7 @@ from telegram_bot.features.user_management.keyboards_user_management import (
     UserManagementKeyboards,
 )
 from utils.logger import logger
+from utils.telegram_utils import TelegramUtils
 
 from .keyboards_buy_gb import BuyGbKeyboards
 from .messages_buy_gb import BuyGbMessages
@@ -55,8 +56,8 @@ class BuyGbHandler:
             keyboard = BuyGbKeyboards.packages_menu()
 
             if query:
-                await query.edit_message_text(
-                    text=message, reply_markup=keyboard, parse_mode="Markdown"
+                await TelegramUtils.safe_edit_message(
+                    query, context, text=message, reply_markup=keyboard, parse_mode="Markdown"
                 )
             elif update.message:
                 await update.message.reply_text(
@@ -68,8 +69,8 @@ class BuyGbHandler:
             error_message = BuyGbMessages.Error.SYSTEM_ERROR
 
             if query:
-                await query.edit_message_text(
-                    text=error_message,
+                await TelegramUtils.safe_edit_message(
+                    query, context, text=error_message,
                     reply_markup=BuyGbKeyboards.back_to_packages(),
                     parse_mode="Markdown",
                 )
@@ -330,17 +331,18 @@ Monto a pagar: *{usdt_amount} USDT*
             if qr_path and os.path.exists(qr_path):
                 # Enviar mensaje con QR
                 await query.delete_message()
-                with open(qr_path, "rb") as photo:
-                    await context.bot.send_photo(
-                        chat_id=update.effective_chat.id,
-                        photo=photo,
-                        caption=message,
-                        reply_markup=BuyGbKeyboards.back_to_packages(),
-                        parse_mode="Markdown",
-                    )
+                if update.effective_chat:
+                    with open(qr_path, "rb") as photo:
+                        await context.bot.send_photo(
+                            chat_id=update.effective_chat.id,
+                            photo=photo,
+                            caption=message,
+                            reply_markup=BuyGbKeyboards.back_to_packages(),
+                            parse_mode="Markdown",
+                        )
             else:
-                await query.edit_message_text(
-                    text=message,
+                await TelegramUtils.safe_edit_message(
+                    query, context, text=message,
                     reply_markup=BuyGbKeyboards.back_to_packages(),
                     parse_mode="Markdown",
                 )
@@ -560,17 +562,18 @@ Elige cómo quieres pagar:"""
             if qr_path and os.path.exists(qr_path):
                 # Enviar mensaje con QR
                 await query.delete_message()
-                with open(qr_path, "rb") as photo:
-                    await context.bot.send_photo(
-                        chat_id=update.effective_chat.id,
-                        photo=photo,
-                        caption=message,
-                        reply_markup=BuyGbKeyboards.back_to_packages(),
-                        parse_mode="Markdown",
-                    )
+                if update.effective_chat:
+                    with open(qr_path, "rb") as photo:
+                        await context.bot.send_photo(
+                            chat_id=update.effective_chat.id,
+                            photo=photo,
+                            caption=message,
+                            reply_markup=BuyGbKeyboards.back_to_packages(),
+                            parse_mode="Markdown",
+                        )
             else:
-                await query.edit_message_text(
-                    text=message,
+                await TelegramUtils.safe_edit_message(
+                    query, context, text=message,
                     reply_markup=BuyGbKeyboards.back_to_packages(),
                     parse_mode="Markdown",
                 )
@@ -747,12 +750,13 @@ Elige cómo quieres pagar:"""
             package_type_str = parts[2]
             telegram_payment_id = payment.telegram_payment_charge_id
 
-            package = await self.data_package_service.purchase_package(
+            package_result = await self.data_package_service.purchase_package(
                 user_id=user_id,
                 package_type=package_type_str,
                 telegram_payment_id=telegram_payment_id,
                 current_user_id=user_id,
             )
+            package = package_result[0]
 
             package_option = None
             for pkg in PACKAGE_OPTIONS:
