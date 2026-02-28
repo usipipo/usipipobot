@@ -72,23 +72,26 @@ class GhostKeyCleanupJob:
 
             elapsed = (datetime.utcnow() - start_time).total_seconds()
 
-            if result.get("ghosts_found", 0) > 0:
-                logger.info(
-                    f"👻 Ghost keys found: {result['ghosts_found']} "
-                    f"disabled: {result['disabled_count']}"
-                )
-                await self._notify_admin(result)
-            else:
-                logger.info("✅ No ghost keys found")
-
-            logger.info(f"✅ Ghost key cleanup completed in {elapsed:.2f}s")
-
-            return {
+            # Build enriched result with metadata
+            enriched_result = {
                 "success": True,
                 "timestamp": start_time.isoformat(),
                 "elapsed_seconds": elapsed,
                 **result,
             }
+
+            if result.get("ghosts_found", 0) > 0:
+                logger.info(
+                    f"👻 Ghost keys found: {result['ghosts_found']} "
+                    f"disabled: {result['disabled_count']}"
+                )
+                await self._notify_admin(enriched_result)
+            else:
+                logger.info("✅ No ghost keys found")
+
+            logger.info(f"✅ Ghost key cleanup completed in {elapsed:.2f}s")
+
+            return enriched_result
 
         except Exception as e:
             elapsed = (datetime.utcnow() - start_time).total_seconds()
