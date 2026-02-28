@@ -5,7 +5,7 @@ Centralizes the initialization and registration of all Telegram handlers
 across different features following the hexagonal architecture pattern.
 
 Author: uSipipo Team
-Version: 2.0.0
+Version: 2.1.0 - Added admin VPN handlers
 """
 
 from typing import List
@@ -18,12 +18,14 @@ from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
 from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
+from application.services.vpn_infrastructure_service import VpnInfrastructureService
 from application.services.vpn_service import VpnService
 from telegram_bot.features.admin.handlers_admin import (
     get_admin_callback_handlers,
     get_admin_conversation_handler,
     get_admin_handlers,
 )
+from telegram_bot.features.admin_vpn.handlers_admin_vpn import get_admin_vpn_handlers
 from telegram_bot.features.basic_commands.handlers_basic import (
     get_basic_callback_handlers,
     get_basic_handlers,
@@ -67,10 +69,12 @@ def _get_admin_handlers(container) -> List[BaseHandler]:
     """Initialize and return admin handlers."""
     admin_service = container.resolve(AdminService)
     ticket_service = container.resolve(TicketService)
+    vpn_infrastructure_service = container.resolve(VpnInfrastructureService)
     handlers = []
     handlers.extend(get_admin_handlers(admin_service))
     handlers.extend(get_admin_callback_handlers(admin_service, ticket_service))
     handlers.append(get_admin_conversation_handler(admin_service, ticket_service))
+    handlers.extend(get_admin_vpn_handlers(vpn_infrastructure_service))
     logger.info("✅ Handlers de administracion configurados")
     return handlers
 

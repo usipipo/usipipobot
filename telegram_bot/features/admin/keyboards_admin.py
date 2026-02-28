@@ -36,6 +36,11 @@ class AdminKeyboards:
                 ),
             ],
             [
+                InlineKeyboardButton(
+                    "⚡ Gestionar Servidores VPN", callback_data="admin_vpn"
+                ),
+            ],
+            [
                 InlineKeyboardButton("📋 Ver Logs", callback_data="admin_logs"),
                 InlineKeyboardButton("🚪 Salir", callback_data="end_admin"),
             ],
