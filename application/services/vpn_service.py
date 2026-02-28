@@ -25,12 +25,14 @@ class VpnService:
         package_repo: IDataPackageRepository,
         outline_client: OutlineClient,
         wireguard_client: WireGuardClient,
+        vpn_integration_service=None,
     ):
         self.user_repo = user_repo
         self.key_repo = key_repo
         self.package_repo = package_repo
         self.outline_client = outline_client
         self.wireguard_client = wireguard_client
+        self.vpn_integration_service = vpn_integration_service
 
     async def create_key(
         self, telegram_id: int, key_type: str, key_name: str, current_user_id: int
@@ -41,6 +43,14 @@ class VpnService:
         if not user:
             user = User(telegram_id=telegram_id)
             await self.user_repo.save(user, current_user_id)
+
+        # Check for pending debt
+        if self.vpn_integration_service is not None:
+            can_create, error_msg = await self.vpn_integration_service.check_can_create_key(
+                telegram_id, current_user_id
+            )
+            if not can_create:
+                raise ValueError(error_msg)
 
         # Verificar si el usuario puede crear más llaves (incluye regla para admins)
         if not user.can_create_more_keys():
