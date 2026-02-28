@@ -62,3 +62,12 @@ class TicketService:
             raise ValueError(f"Ticket {ticket_id} not found")
         ticket.set_in_progress()
         return await self.ticket_repo.update(ticket, current_user_id)
+
+    async def close_ticket(
+        self, ticket_id: uuid.UUID, current_user_id: int
+    ) -> Ticket:
+        ticket = await self.ticket_repo.get_by_id(ticket_id, current_user_id)
+        if not ticket:
+            raise ValueError(f"Ticket {ticket_id} not found")
+        ticket.close()
+        return await self.ticket_repo.update(ticket, current_user_id)
