@@ -187,7 +187,10 @@ function closeCryptoModal() {
 }
 
 async function payWithStars() {
-    if (!currentProduct) return;
+    if (!currentProduct || !currentProductType) {
+        Telegram.WebApp.showAlert('❌ Por favor selecciona un producto primero');
+        return;
+    }
 
     closePaymentModal();
 
@@ -230,7 +233,10 @@ async function payWithStars() {
 }
 
 async function payWithCrypto() {
-    if (!currentProduct) return;
+    if (!currentProduct || !currentProductType) {
+        Telegram.WebApp.showAlert('❌ Por favor selecciona un producto primero');
+        return;
+    }
 
     closePaymentModal();
 
