@@ -25,14 +25,28 @@ def mock_get_current_user():
 
 @pytest.fixture
 async def client():
-    """Test client for the API with mocked auth."""
+    """Test client for the API with mocked auth and user repo."""
     app = create_app()
     # Override the auth dependency
     app.dependency_overrides[get_current_user] = mock_get_current_user
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
-        yield ac
+
+    # Mock the user repository to return a user (required by new user existence checks)
+    mock_user = MagicMock()
+    mock_user.telegram_id = 12345
+    mock_user.max_keys = 2
+
+    with patch(
+        "miniapp.router.PostgresUserRepository"
+    ) as mock_repo_class:
+        mock_repo = AsyncMock()
+        mock_repo.get_by_id.return_value = mock_user
+        mock_repo_class.return_value = mock_repo
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            yield ac
+
     # Clean up overrides after test
     app.dependency_overrides.clear()
 
