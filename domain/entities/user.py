@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -119,6 +120,57 @@ class User:
     def add_free_data_usage(self, bytes_used: int) -> None:
         """Agrega uso a los datos gratuitos."""
         self.free_data_used_bytes += bytes_used
+
+    # Consumption billing fields
+    consumption_mode_enabled: bool = False
+    has_pending_debt: bool = False
+    current_billing_id: Optional[uuid.UUID] = None
+    consumption_mode_activated_at: Optional[datetime] = None
+
+    @property
+    def is_consumption_mode_active(self) -> bool:
+        """Verifica si el usuario tiene el modo consumo activo."""
+        return self.consumption_mode_enabled
+
+    @property
+    def can_activate_consumption_mode(self) -> bool:
+        """
+        Verifica si el usuario puede activar el modo consumo.
+        No puede activar si tiene deuda pendiente o ya tiene modo activo.
+        """
+        if self.has_pending_debt:
+            return False
+        if self.consumption_mode_enabled:
+            return False
+        return True
+
+    def activate_consumption_mode(self, billing_id: uuid.UUID) -> None:
+        """
+        Activa el modo consumo para el usuario.
+
+        Args:
+            billing_id: ID del ciclo de facturación asociado
+        """
+        if not self.can_activate_consumption_mode:
+            raise ValueError("El usuario no puede activar el modo consumo")
+
+        self.consumption_mode_enabled = True
+        self.current_billing_id = billing_id
+        self.consumption_mode_activated_at = datetime.now(timezone.utc)
+
+    def deactivate_consumption_mode(self) -> None:
+        """Desactiva el modo consumo del usuario."""
+        self.consumption_mode_enabled = False
+        self.current_billing_id = None
+        self.consumption_mode_activated_at = None
+
+    def mark_debt_as_paid(self) -> None:
+        """Marca la deuda del usuario como pagada."""
+        self.has_pending_debt = False
+
+    def mark_as_has_debt(self) -> None:
+        """Marca al usuario como teniendo deuda pendiente."""
+        self.has_pending_debt = True
 
     def __repr__(self):
         return f"<User(id={self.telegram_id}, username={self.username}, status={self.status})>"
