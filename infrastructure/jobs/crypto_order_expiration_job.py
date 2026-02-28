@@ -31,6 +31,11 @@ async def expire_crypto_orders_job(context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         logger.debug("💰 Iniciando job de expiración de órdenes crypto...")
 
+        # Verificar que el repositorio esté disponible
+        if not crypto_payment_service.crypto_order_repo:
+            logger.warning("⚠️ Crypto order repository no disponible")
+            return
+
         # Obtener órdenes pendientes
         pending_orders = await crypto_payment_service.crypto_order_repo.get_pending()
 

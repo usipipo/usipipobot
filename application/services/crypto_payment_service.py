@@ -93,7 +93,7 @@ class CryptoPaymentService:
 
         if not user_id:
             logger.warning(f"No user found for wallet: {wallet_address}")
-            if order:
+            if order and self.crypto_order_repo:
                 await self.crypto_order_repo.mark_failed(order.id)
             transaction = CryptoTransaction(
                 wallet_address=wallet_address,
@@ -117,7 +117,7 @@ class CryptoPaymentService:
 
         saved_tx = await self.crypto_repo.save(transaction)
 
-        if order:
+        if order and self.crypto_order_repo:
             await self.crypto_order_repo.mark_completed(order.id, tx_hash)
 
         await self._credit_user(
@@ -199,11 +199,16 @@ class CryptoPaymentService:
             crypto_payment_id = f"crypto_{uuid.uuid4()}"
             pkg_type = PackageType(package_type) if package_type else PackageType.BASIC
 
-            package = await data_package_service.purchase_package(
+            package_result = await data_package_service.purchase_package(
                 user_id=user_id,
                 package_type=pkg_type.value,
                 telegram_payment_id=crypto_payment_id,
                 current_user_id=user_id,
+            )
+            package = (
+                package_result[0]
+                if isinstance(package_result, tuple)
+                else package_result
             )
 
             if package.data_limit_bytes < bytes_to_credit:
@@ -263,18 +268,21 @@ class CryptoPaymentService:
             else:
                 product_name = f"Paquete {order.package_type.title()}"
 
-            history.append({
-                "order_id": str(order.id),
-                "product": product_name,
-                "amount_usdt": order.amount_usdt,
-                "status": order.status.value,
-                "created_at": order.created_at,
-                "expires_at": order.expires_at,
-                "confirmed_at": order.confirmed_at,
-                "tx_hash": order.tx_hash,
-            })
+            history.append(
+                {
+                    "order_id": str(order.id),
+                    "product": product_name,
+                    "amount_usdt": order.amount_usdt,
+                    "status": order.status.value,
+                    "created_at": order.created_at,
+                    "expires_at": order.expires_at,
+                    "confirmed_at": order.confirmed_at,
+                    "tx_hash": order.tx_hash,
+                }
+            )
 
         return history
+
     async def check_and_expire_orders(self) -> int:
         if not self.crypto_order_repo:
             return 0
