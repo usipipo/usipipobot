@@ -42,10 +42,9 @@ class VpnKeysMessages:
 
         KEY_LIMIT_REACHED = (
             "⚠️ *LÍMITE ALCANZADO*\n\n"
-            "🔒 Máx: `{max_keys}` llaves\n\n"
-            "💡 Opciones:\n"
-            "   • 🔑 Compra slots extra\n"
-            "   • ⬆️ Sube tu plan ⚡"
+            "🔒 Has usado `{used_keys}`/`{max_keys}` claves\n\n"
+            "💡 Para crear más claves, compra slots adicionales\n"
+            "   Cada slot te permite crear 1 clave extra"
         )
 
         INVALID_NAME = (

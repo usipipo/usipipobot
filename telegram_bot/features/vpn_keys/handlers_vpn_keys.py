@@ -63,20 +63,24 @@ class VpnKeysHandler:
         )
 
         if not can_create:
+            # Obtener cantidad de claves usadas para mostrar en el mensaje
+            keys = await self.vpn_service.get_user_keys(telegram_id, telegram_id)
+            used_keys = len([k for k in keys if k.is_active])
             error_message = VpnKeysMessages.Error.KEY_LIMIT_REACHED.format(
+                used_keys=used_keys,
                 max_keys=user.max_keys
             )
             if update.callback_query:
                 await update.callback_query.answer()
                 await update.callback_query.edit_message_text(
                     text=error_message,
-                    reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+                    reply_markup=VpnKeysKeyboards.limit_reached_menu(is_admin=is_admin),
                     parse_mode="Markdown",
                 )
             elif update.message:
                 await update.message.reply_text(
                     text=error_message,
-                    reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+                    reply_markup=VpnKeysKeyboards.limit_reached_menu(is_admin=is_admin),
                     parse_mode="Markdown",
                 )
             return ConversationHandler.END
