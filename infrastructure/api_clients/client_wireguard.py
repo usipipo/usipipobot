@@ -308,3 +308,43 @@ PersistentKeepalive = 15
                 )
                 logger.error(f"Error obteniendo métricas WG: {error_msg}", error=e)
                 return []
+
+    async def disable_peer(self, client_name: str) -> bool:
+        """
+        Deshabilita un peer de WireGuard sin eliminarlo.
+        Cambia allowed-ips a 0.0.0.0/32 para bloquear tráfico.
+        """
+        try:
+            if not self.conf_path.exists():
+                logger.error(f"Config file not found: {self.conf_path}")
+                return False
+
+            content = self.conf_path.read_text()
+
+            pk_pattern = (
+                rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
+            )
+            match = re.search(pk_pattern, content, flags=re.DOTALL)
+
+            if not match:
+                logger.error(f"Peer not found: {client_name}")
+                return False
+
+            pub_key = match.group(1).strip()
+
+            await self._run_cmd(
+                f"wg set {self.interface} peer {pub_key} allowed-ips 0.0.0.0/32"
+            )
+
+            new_content = content.replace(
+                f"### CLIENT {client_name}",
+                f"### CLIENT {client_name} [DISABLED]"
+            )
+            self.conf_path.write_text(new_content)
+
+            logger.info(f"Peer {client_name} disabled successfully")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error disabling peer {client_name}: {e}")
+            return False
