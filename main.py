@@ -11,10 +11,13 @@ from typing import Any
 from telegram.ext import Application, ApplicationBuilder
 
 from application.services.common.container import get_service
+from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
 from config import settings
+from infrastructure.jobs.crypto_order_expiration_job import expire_crypto_orders_job
+from infrastructure.jobs.crypto_order_expiration_job import expire_crypto_orders_job
 from infrastructure.jobs.key_cleanup_job import key_cleanup_job
 from infrastructure.jobs.memory_cleanup_job import memory_cleanup_job
 from infrastructure.jobs.package_expiration_job import expire_packages_job
@@ -74,6 +77,7 @@ def main():
             vpn_service = get_service(VpnService)
             referral_service = get_service(ReferralService)
             data_package_service = get_service(DataPackageService)
+            crypto_payment_service = get_service(CryptoPaymentService)
             logger.info("✅ Contenedor de dependencias configurado correctamente.")
         except Exception as e:
             logger.critical(f"❌ Error al inicializar el contenedor: {e}")
@@ -120,6 +124,17 @@ def main():
             data={"data_package_service": data_package_service},
         )
         logger.info("⏰ Job de expiración de paquetes programado.")
+
+        job_queue.run_repeating(
+            expire_crypto_orders_job,
+            interval=60,
+            first=30,
+            data={
+                "crypto_payment_service": crypto_payment_service,
+                "bot": app.bot,
+            },
+        )
+        logger.info("⏰ Job de expiración de órdenes crypto programado.")
 
         interval_minutes = settings.MEMORY_CLEANUP_INTERVAL_MINUTES
         job_queue.run_repeating(
