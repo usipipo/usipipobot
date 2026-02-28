@@ -59,7 +59,8 @@ class GhostKeyCleanupJob:
         """
         start_time = datetime.utcnow()
         logger.info(
-            f"🧹 Starting ghost key cleanup job (inactive > {settings.GHOST_KEY_DETECTION_DAYS} days)"
+            f"🧹 Starting ghost key cleanup job "
+            f"(inactive > {settings.GHOST_KEY_DETECTION_DAYS} days)"
         )
 
         try:
