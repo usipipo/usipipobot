@@ -122,14 +122,14 @@ class TronDealerClient:
     ) -> Dict[str, Any]:
         """
         Make a POST request to TronDealer API.
-        
+
         Args:
             endpoint: API endpoint path (without base URL)
             data: JSON payload to send
-            
+
         Returns:
             Dict containing the API response
-            
+
         Raises:
             TronDealerApiError: If the API returns an error or request fails
         """
@@ -149,8 +149,8 @@ class TronDealerClient:
 
             # Make the async request
             response = await self._client.post(
-                url, 
-                headers=self.headers, 
+                url,
+                headers=self.headers,
                 json=data,
                 timeout=30.0
             )
@@ -160,7 +160,7 @@ class TronDealerClient:
             # Parse JSON response - response.json() is a method, not a dict
             try:
                 response_data = response.json()
-                logger.debug(f"TronDealer API response parsed successfully")
+                logger.debug("TronDealer API response parsed successfully")
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse TronDealer API response as JSON: {e}")
                 raise TronDealerApiError(500, f"Invalid JSON response: {str(e)}")
@@ -170,19 +170,24 @@ class TronDealerClient:
 
             # Handle HTTP error status codes
             if response.status_code == 401:
-                error_msg = response_data.get("error", "Unauthorized") if isinstance(response_data, dict) else "Unauthorized"
+                error_msg = (response_data.get("error", "Unauthorized")
+                             if isinstance(response_data, dict) else "Unauthorized")
                 logger.warning(f"TronDealer API 401: {error_msg}")
                 raise TronDealerApiError(401, error_msg)
             elif response.status_code == 403:
-                error_msg = response_data.get("error", "Forbidden") if isinstance(response_data, dict) else "Forbidden"
+                error_msg = (response_data.get("error", "Forbidden")
+                             if isinstance(response_data, dict) else "Forbidden")
                 logger.warning(f"TronDealer API 403: {error_msg}")
                 raise TronDealerApiError(403, error_msg)
             elif response.status_code == 404:
-                error_msg = response_data.get("error", "Not found") if isinstance(response_data, dict) else "Not found"
+                error_msg = (response_data.get("error", "Not found")
+                             if isinstance(response_data, dict) else "Not found")
                 logger.warning(f"TronDealer API 404: {error_msg}")
                 raise TronDealerApiError(404, error_msg)
             elif response.status_code >= 400:
-                error_msg = response_data.get("error", f"HTTP {response.status_code}") if isinstance(response_data, dict) else f"HTTP {response.status_code}"
+                default_msg = f"HTTP {response.status_code}"
+                error_msg = (response_data.get("error", default_msg)
+                             if isinstance(response_data, dict) else default_msg)
                 logger.warning(f"TronDealer API {response.status_code}: {error_msg}")
                 raise TronDealerApiError(response.status_code, error_msg)
 

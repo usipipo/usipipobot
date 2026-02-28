@@ -195,7 +195,8 @@ class MiniAppPaymentService:
             qr_url = f"/miniapp/static/qr/{qr_filename}.png"
 
             logger.info(
-                f"Created crypto order {order.id} for user {user_id}: {product_type}={product_id}, amount={amount_usdt} USDT"
+                f"Created crypto order {order.id} for user {user_id}: "
+                f"{product_type}={product_id}, amount={amount_usdt} USDT"
             )
 
             return {
@@ -209,7 +210,10 @@ class MiniAppPaymentService:
             }
 
         except TronDealerApiError as e:
-            logger.error(f"TronDealer API error creating crypto order for user {user_id}: {e.status_code} - {e.message}")
+            logger.error(
+                f"TronDealer API error for user {user_id}: "
+                f"{e.status_code} - {e.message}"
+            )
             return None
         except ValueError as e:
             logger.error(f"Validation error creating crypto order for user {user_id}: {e}")
