@@ -1,4 +1,18 @@
-[0;32m[INFO][0m FASE 4: Generando changelog...
+## [v3.6.0] - 2026-02-28
+
+### Features
+- Rediseño del menú de operaciones con mejor layout visual
+- Nuevo botón "📜 Historial" en menú de operaciones
+- Implementación de historial completo de transacciones crypto
+- Visualización de estados con emojis (⏳ Pendiente, ✅ Completada, ❌ Fallida, ⏰ Expirada)
+- Paginación para historial de transacciones (10 por página)
+- Métodos paginados en CryptoOrderRepository (`get_by_user_paginated`, `count_by_user`)
+
+### Technical
+- Corrección de errores de tipo mypy en inyección de dependencias
+- Tests unitarios para nuevos handlers y keyboards
+- Limpieza de imports no utilizados
+
 ## [v3.5.0] - 2026-02-28
 
 ### Features

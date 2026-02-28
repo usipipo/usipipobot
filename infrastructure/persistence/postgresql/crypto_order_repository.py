@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
@@ -86,3 +86,24 @@ class PostgresCryptoOrderRepository(ICryptoOrderRepository):
         model.status = CryptoOrderStatus.EXPIRED.value
         await self.session.commit()
         return True
+
+    async def get_by_user_paginated(
+        self, user_id: int, limit: int = 10, offset: int = 0
+    ) -> List[CryptoOrder]:
+        """Obtener órdenes de un usuario con paginación."""
+        result = await self.session.execute(
+            select(CryptoOrderModel)
+            .where(CryptoOrderModel.user_id == user_id)
+            .order_by(CryptoOrderModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        models = result.scalars().all()
+        return [m.to_entity() for m in models]
+
+    async def count_by_user(self, user_id: int) -> int:
+        """Contar total de órdenes de un usuario."""
+        result = await self.session.execute(
+            select(func.count()).where(CryptoOrderModel.user_id == user_id)
+        )
+        return result.scalar() or 0
