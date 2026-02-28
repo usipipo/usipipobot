@@ -27,7 +27,7 @@ class BasicHandler:
             return
 
         user_id = user.id
-        logger.info(f"📋 /help ejecutado por usuario {user_id}")
+        logger.info(f"User {user_id} executed /help command")
 
         try:
             if update.message:
@@ -40,6 +40,7 @@ class BasicHandler:
 
 def get_basic_handlers():
     """Retorna los handlers de comandos básicos."""
+    logger.debug("Registering basic command handlers")
     handler = BasicHandler()
 
     return [
@@ -49,4 +50,5 @@ def get_basic_handlers():
 
 def get_basic_callback_handlers():
     """Retorna los handlers de callbacks para comandos básicos."""
+    logger.debug("Registering basic callback handlers (none defined)")
     return []
