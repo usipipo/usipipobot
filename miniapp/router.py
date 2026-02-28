@@ -8,13 +8,13 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
 
 from application.services.common.container import get_service
 from application.services.data_package_service import (
@@ -22,10 +22,8 @@ from application.services.data_package_service import (
     SLOT_OPTIONS,
     DataPackageService,
 )
-from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from config import settings
-from domain.entities.vpn_key import KeyType
 from infrastructure.persistence.database import get_session_context
 from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
@@ -33,7 +31,6 @@ from infrastructure.persistence.postgresql.data_package_repository import (
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from miniapp.services.miniapp_auth import (
-    MiniAppAuthResult,
     MiniAppAuthService,
     TelegramUser,
     get_miniapp_auth_service,
@@ -45,6 +42,15 @@ router = APIRouter(prefix="/miniapp", tags=["Mini App"])
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+
+class PaymentRequest(BaseModel):
+    """Request model for payment endpoints."""
+
+    product_type: str = Field(..., description="Type of product: 'package' or 'slots'")
+    product_id: str = Field(
+        ..., description="Product identifier (e.g., 'basic', 'slots_3')"
+    )
 
 
 @router.get("/entry", response_class=HTMLResponse)
@@ -474,10 +480,11 @@ async def api_delete_key(
     try:
         # Only admins can delete keys
         if ctx.user.id != int(settings.ADMIN_ID):
-            logger.warning(f"User {ctx.user.id} attempted to delete key without admin privileges")
+            logger.warning(
+                f"User {ctx.user.id} attempted to delete key without admin privileges"
+            )
             raise HTTPException(
-                status_code=403,
-                detail="Solo administradores pueden eliminar claves"
+                status_code=403, detail="Solo administradores pueden eliminar claves"
             )
 
         data = await request.json()
@@ -501,20 +508,11 @@ async def api_delete_key(
 
 @router.post("/api/create-stars-invoice")
 async def api_create_stars_invoice(
-    request: Request,
+    payment_req: PaymentRequest,
     ctx: MiniAppContext = Depends(get_current_user),
 ):
     """API: Crea una factura de Telegram Stars para pago en Mini App."""
     try:
-        data = await request.json()
-        product_type = data.get("product_type")
-        product_id = data.get("product_id")
-
-        if not product_type or not product_id:
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "error": "product_type and product_id required"}
-            )
 
         async with get_session_context() as session:
             package_repo = PostgresDataPackageRepository(session)
@@ -525,14 +523,14 @@ async def api_create_stars_invoice(
 
             invoice_url = payment_service.create_stars_invoice_url(
                 user_id=ctx.user.id,
-                product_type=product_type,
-                product_id=product_id,
+                product_type=payment_req.product_type,
+                product_id=payment_req.product_id,
             )
 
             if not invoice_url:
                 return JSONResponse(
                     status_code=400,
-                    content={"success": False, "error": "Could not create invoice"}
+                    content={"success": False, "error": "Could not create invoice"},
                 )
 
             return {
@@ -544,26 +542,17 @@ async def api_create_stars_invoice(
         logger.error(f"Error creating stars invoice: {e}")
         return JSONResponse(
             status_code=500,
-            content={"success": False, "error": "Internal server error"}
+            content={"success": False, "error": "Internal server error"},
         )
 
 
 @router.post("/api/create-crypto-order")
 async def api_create_crypto_order(
-    request: Request,
+    payment_req: PaymentRequest,
     ctx: MiniAppContext = Depends(get_current_user),
 ):
     """API: Crea una orden de pago con crypto para Mini App."""
     try:
-        data = await request.json()
-        product_type = data.get("product_type")
-        product_id = data.get("product_id")
-
-        if not product_type or not product_id:
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "error": "product_type and product_id required"}
-            )
 
         async with get_session_context() as session:
             package_repo = PostgresDataPackageRepository(session)
@@ -574,14 +563,17 @@ async def api_create_crypto_order(
 
             order_data = await payment_service.create_crypto_order(
                 user_id=ctx.user.id,
-                product_type=product_type,
-                product_id=product_id,
+                product_type=payment_req.product_type,
+                product_id=payment_req.product_id,
             )
 
             if not order_data:
                 return JSONResponse(
                     status_code=400,
-                    content={"success": False, "error": "Could not create crypto order"}
+                    content={
+                        "success": False,
+                        "error": "Could not create crypto order",
+                    },
                 )
 
             return {
@@ -593,5 +585,5 @@ async def api_create_crypto_order(
         logger.error(f"Error creating crypto order: {e}")
         return JSONResponse(
             status_code=500,
-            content={"success": False, "error": "Internal server error"}
+            content={"success": False, "error": "Internal server error"},
         )
