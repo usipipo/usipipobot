@@ -513,6 +513,7 @@ async def api_create_stars_invoice(
 ):
     """API: Crea una factura de Telegram Stars para pago en Mini App."""
     try:
+        logger.info(f"Creating Stars invoice for user {ctx.user.id}: {payment_req.product_type}={payment_req.product_id}")
 
         async with get_session_context() as session:
             package_repo = PostgresDataPackageRepository(session)
@@ -528,21 +529,23 @@ async def api_create_stars_invoice(
             )
 
             if not invoice_url:
+                logger.warning(f"Failed to create Stars invoice for user {ctx.user.id}: service returned None")
                 return JSONResponse(
                     status_code=400,
-                    content={"success": False, "error": "Could not create invoice"},
+                    content={"success": False, "error": "No se pudo crear la factura. Verifica que el producto seleccionado sea válido."},
                 )
 
+            logger.info(f"Successfully created Stars invoice for user {ctx.user.id}")
             return {
                 "success": True,
                 "invoice_url": invoice_url,
             }
 
     except Exception as e:
-        logger.error(f"Error creating stars invoice: {e}")
+        logger.error(f"Error creating stars invoice for user {ctx.user.id}: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content={"success": False, "error": "Internal server error"},
+            content={"success": False, "error": "Error interno del servidor. Por favor intenta nuevamente."},
         )
 
 
@@ -553,6 +556,7 @@ async def api_create_crypto_order(
 ):
     """API: Crea una orden de pago con crypto para Mini App."""
     try:
+        logger.info(f"Creating crypto order for user {ctx.user.id}: {payment_req.product_type}={payment_req.product_id}")
 
         async with get_session_context() as session:
             package_repo = PostgresDataPackageRepository(session)
@@ -568,22 +572,24 @@ async def api_create_crypto_order(
             )
 
             if not order_data:
+                logger.warning(f"Failed to create crypto order for user {ctx.user.id}: service returned None")
                 return JSONResponse(
                     status_code=400,
                     content={
                         "success": False,
-                        "error": "Could not create crypto order",
+                        "error": "No se pudo crear la orden de pago. El servicio de pagos crypto no está disponible o el producto seleccionado es inválido.",
                     },
                 )
 
+            logger.info(f"Successfully created crypto order for user {ctx.user.id}: order_id={order_data.get('order_id')}")
             return {
                 "success": True,
                 **order_data,
             }
 
     except Exception as e:
-        logger.error(f"Error creating crypto order: {e}")
+        logger.error(f"Error creating crypto order for user {ctx.user.id}: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content={"success": False, "error": "Internal server error"},
+            content={"success": False, "error": "Error interno del servidor. Por favor intenta nuevamente."},
         )
