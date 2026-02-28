@@ -18,6 +18,7 @@ from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
 from config import settings
 from utils.logger import logger
+from utils.telegram_utils import TelegramUtils
 
 from .keyboards_operations import OperationsKeyboards
 from .messages_operations import OperationsMessages
@@ -51,12 +52,12 @@ class OperationsHandler:
                 )
             elif update.callback_query:
                 await update.callback_query.answer()
-                await update.callback_query.edit_message_text(
-                    text=message, reply_markup=keyboard, parse_mode="Markdown"
+                await TelegramUtils.safe_edit_message(
+                    update.callback_query, context, text=message, reply_markup=keyboard, parse_mode="Markdown"
                 )
         except Exception as e:
             logger.error(f"Error en operations_menu: {e}")
-            await self._send_error(update, OperationsMessages.Error.SYSTEM_ERROR)
+            await self._send_error(update, context, OperationsMessages.Error.SYSTEM_ERROR)
 
     async def show_credits(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not update.callback_query or not update.effective_user:
@@ -77,13 +78,13 @@ class OperationsHandler:
             )
             keyboard = OperationsKeyboards.credits_menu(stats.referral_credits)
 
-            await query.edit_message_text(
-                text=message, reply_markup=keyboard, parse_mode="Markdown"
+            await TelegramUtils.safe_edit_message(
+                query, context, text=message, reply_markup=keyboard, parse_mode="Markdown"
             )
         except Exception as e:
             logger.error(f"Error en show_credits: {e}")
-            await query.edit_message_text(
-                text=OperationsMessages.Error.SYSTEM_ERROR, parse_mode="Markdown"
+            await TelegramUtils.safe_edit_message(
+                query, context, text=OperationsMessages.Error.SYSTEM_ERROR, parse_mode="Markdown"
             )
 
     async def show_shop(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -97,8 +98,8 @@ class OperationsHandler:
         message = OperationsMessages.Shop.MENU
         keyboard = OperationsKeyboards.shop_menu()
 
-        await query.edit_message_text(
-            text=message, reply_markup=keyboard, parse_mode="Markdown"
+        await TelegramUtils.safe_edit_message(
+            query, context, text=message, reply_markup=keyboard, parse_mode="Markdown"
         )
 
     async def redeem_credits_for_data(
@@ -174,18 +175,18 @@ class OperationsHandler:
 
         is_admin = update.effective_user.id == int(settings.ADMIN_ID)
 
-        await query.edit_message_text(
-            text=CommonMessages.Menu.WELCOME_BACK,
+        await TelegramUtils.safe_edit_message(
+            query, context, text=CommonMessages.Menu.WELCOME_BACK,
             reply_markup=CommonKeyboards.main_menu(is_admin=is_admin),
             parse_mode="Markdown",
         )
 
-    async def _send_error(self, update: Update, message: str):
+    async def _send_error(self, update: Update, context: ContextTypes.DEFAULT_TYPE, message: str):
         if update.message:
             await update.message.reply_text(text=message, parse_mode="Markdown")
         elif update.callback_query:
-            await update.callback_query.edit_message_text(
-                text=message, parse_mode="Markdown"
+            await TelegramUtils.safe_edit_message(
+                update.callback_query, context, text=message, parse_mode="Markdown"
             )
 
 
