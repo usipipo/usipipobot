@@ -9,7 +9,7 @@ Version: 2.0.0
 """
 
 from functools import lru_cache
-from typing import TypeVar
+from typing import TypeVar, cast
 
 import punq
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 T = TypeVar("T")
 
 from application.services.admin_service import AdminService
+from application.services.consumption_billing_service import ConsumptionBillingService
 from application.services.consumption_vpn_integration_service import (
     ConsumptionVpnIntegrationService,
 )
@@ -25,8 +26,12 @@ from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
 from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
+from application.services.vpn_infrastructure_service import VpnInfrastructureService
 from application.services.vpn_service import VpnService
 from application.services.wallet_management_service import WalletManagementService
+from domain.interfaces.iconsumption_billing_repository import (
+    IConsumptionBillingRepository,
+)
 from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
 from domain.interfaces.icrypto_transaction_repository import (
     ICryptoTransactionRepository,
@@ -40,6 +45,9 @@ from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_tron_dealer import TronDealerClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
 from infrastructure.persistence.database import get_session_factory
+from infrastructure.persistence.postgresql.consumption_billing_repository import (
+    PostgresConsumptionBillingRepository,
+)
 from infrastructure.persistence.postgresql.crypto_order_repository import (
     PostgresCryptoOrderRepository,
 )
@@ -171,12 +179,19 @@ def _configure_repositories(container: punq.Container) -> None:
         session = session_factory()
         return PostgresCryptoOrderRepository(session)
 
+    def create_consumption_billing_repo() -> PostgresConsumptionBillingRepository:
+        session = session_factory()
+        return PostgresConsumptionBillingRepository(session)
+
     container.register(IUserRepository, factory=create_user_repo)
     container.register(IKeyRepository, factory=create_key_repo)
     container.register(IDataPackageRepository, factory=create_data_package_repo)
     container.register(ITransactionRepository, factory=create_transaction_repo)
     container.register(ITicketRepository, factory=create_ticket_repo)
     container.register(ICryptoOrderRepository, factory=create_crypto_order_repo)
+    container.register(
+        IConsumptionBillingRepository, factory=create_consumption_billing_repo
+    )
 
 
 def _configure_application_services(container: punq.Container) -> None:
@@ -199,14 +214,22 @@ def _configure_application_services(container: punq.Container) -> None:
         session = session_factory()
         return PostgresTransactionRepository(session)
 
+    def create_crypto_order_repo() -> PostgresCryptoOrderRepository:
+        session = session_factory()
+        return PostgresCryptoOrderRepository(session)
+
+    def create_consumption_billing_repo() -> PostgresConsumptionBillingRepository:
+        session = session_factory()
+        return PostgresConsumptionBillingRepository(session)
+
     def create_vpn_service() -> VpnService:
         return VpnService(
             user_repo=create_user_repo(),
             key_repo=create_key_repo(),
             package_repo=create_data_package_repo(),
-            outline_client=container.resolve(OutlineClient),
-            wireguard_client=container.resolve(WireGuardClient),
-            vpn_integration_service=container.resolve(ConsumptionVpnIntegrationService),
+            outline_client=cast(OutlineClient, container.resolve(OutlineClient)),
+            wireguard_client=cast(WireGuardClient, container.resolve(WireGuardClient)),
+            vpn_integration_service=cast(ConsumptionVpnIntegrationService, container.resolve(ConsumptionVpnIntegrationService)),
         )
 
     def create_admin_service() -> AdminService:
@@ -230,9 +253,9 @@ def _configure_application_services(container: punq.Container) -> None:
     def create_user_profile_service() -> UserProfileService:
         return UserProfileService(
             transaction_repo=create_transaction_repo(),
-            data_package_service=container.resolve(DataPackageService),
-            referral_service=container.resolve(ReferralService),
-            vpn_service=container.resolve(VpnService),
+            data_package_service=cast(DataPackageService, container.resolve(DataPackageService)),
+            referral_service=cast(ReferralService, container.resolve(ReferralService)),
+            vpn_service=cast(VpnService, container.resolve(VpnService)),
         )
 
     def create_ticket_repo_inner() -> PostgresTicketRepository:
@@ -244,7 +267,7 @@ def _configure_application_services(container: punq.Container) -> None:
 
     def create_wallet_management_service() -> WalletManagementService:
         return WalletManagementService(
-            tron_dealer_client=container.resolve(TronDealerClient),
+            tron_dealer_client=cast(TronDealerClient, container.resolve(TronDealerClient)),
             user_repo=create_user_repo(),
             crypto_order_repo=create_crypto_order_repo(),
         )
@@ -258,20 +281,30 @@ def _configure_application_services(container: punq.Container) -> None:
             crypto_order_repo=PostgresCryptoOrderRepository(session),
         )
 
+    def create_vpn_infrastructure_service() -> VpnInfrastructureService:
+        return VpnInfrastructureService(
+            key_repository=create_key_repo(),
+            user_repository=create_user_repo(),
+            wireguard_client=cast(WireGuardClient, container.resolve(WireGuardClient)),
+            outline_client=cast(OutlineClient, container.resolve(OutlineClient)),
+        )
+
+    def create_consumption_billing_service() -> ConsumptionBillingService:
+        return ConsumptionBillingService(
+            billing_repo=create_consumption_billing_repo(),
+            user_repo=create_user_repo(),
+        )
+
     def create_consumption_vpn_integration_service() -> ConsumptionVpnIntegrationService:
-        from application.services.vpn_infrastructure_service import (
-            VpnInfrastructureService,
-        )
-        from application.services.consumption_billing_service import (
-            ConsumptionBillingService,
-        )
         return ConsumptionVpnIntegrationService(
             user_repo=create_user_repo(),
             key_repo=create_key_repo(),
-            vpn_infra_service=container.resolve(VpnInfrastructureService),
-            billing_service=container.resolve(ConsumptionBillingService),
+            vpn_infra_service=cast(VpnInfrastructureService, container.resolve(VpnInfrastructureService)),
+            billing_service=cast(ConsumptionBillingService, container.resolve(ConsumptionBillingService)),
         )
 
+    container.register(VpnInfrastructureService, factory=create_vpn_infrastructure_service)
+    container.register(ConsumptionBillingService, factory=create_consumption_billing_service)
     container.register(VpnService, factory=create_vpn_service)
     container.register(AdminService, factory=create_admin_service)
     container.register(DataPackageService, factory=create_data_package_service)
@@ -305,14 +338,15 @@ def _configure_handlers(container: punq.Container) -> None:
         handlers = []
         handlers.extend(
             get_admin_callback_handlers(
-                container.resolve(AdminService), container.resolve(TicketService)
+                cast(AdminService, container.resolve(AdminService)),
+                cast(TicketService, container.resolve(TicketService))
             )
         )
-        handlers.extend(get_vpn_keys_callback_handlers(container.resolve(VpnService)))
+        handlers.extend(get_vpn_keys_callback_handlers(cast(VpnService, container.resolve(VpnService))))
         handlers.extend(
-            get_key_management_callback_handlers(container.resolve(VpnService))
+            get_key_management_callback_handlers(cast(VpnService, container.resolve(VpnService)))
         )
-        handlers.extend(get_ticket_callback_handlers(container.resolve(TicketService)))
+        handlers.extend(get_ticket_callback_handlers(cast(TicketService, container.resolve(TicketService))))
         return handlers
 
     container.register("creation_handlers", factory=create_creation_handlers)
@@ -334,4 +368,4 @@ def get_service(service_class: type[T]) -> T:
         Instancia del servicio configurado.
     """
     container = get_container()
-    return container.resolve(service_class)
+    return cast(T, container.resolve(service_class))  # type: ignore[return-value]

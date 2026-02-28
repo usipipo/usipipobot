@@ -20,6 +20,7 @@ from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_infrastructure_service import VpnInfrastructureService
 from application.services.vpn_service import VpnService
+from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
 from telegram_bot.features.admin.handlers_admin import (
     get_admin_callback_handlers,
     get_admin_conversation_handler,
@@ -38,9 +39,6 @@ from telegram_bot.features.buy_gb.handlers_buy_gb import (
 from telegram_bot.features.key_management.handlers_key_management import (
     get_key_management_callback_handlers,
     get_key_management_handlers,
-)
-from infrastructure.persistence.postgresql.crypto_order_repository import (
-    PostgresCryptoOrderRepository,
 )
 from telegram_bot.features.operations.handlers_operations import (
     get_operations_callback_handlers,
@@ -143,7 +141,7 @@ def initialize_handlers(
         container = get_container()
         data_package_service = container.resolve(DataPackageService)
         user_profile_service = container.resolve(UserProfileService)
-        crypto_order_repo = container.resolve(PostgresCryptoOrderRepository)
+        crypto_order_repo = container.resolve(ICryptoOrderRepository)
 
         handlers.extend(_get_admin_handlers(container))
         handlers.extend(_get_referral_handlers(container))
