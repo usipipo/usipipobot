@@ -31,11 +31,8 @@ class ConsumptionBilling:
     ended_at: Optional[datetime] = None
     mb_consumed: Decimal = Decimal("0.00")
     total_cost_usd: Decimal = Decimal("0.00")
+    price_per_mb_usd: Decimal = Decimal("0.000439453125")  # Default: $0.45/GB
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-
-    # Precio por MB: $0.45 / 1024 = $0.000439453125
-    PRICE_PER_MB: Decimal = field(default=Decimal("0.000439453125"), repr=False)
-    PRICE_PER_GB: Decimal = field(default=Decimal("0.45"), repr=False)
 
     def __post_init__(self):
         if self.id is None:
@@ -77,7 +74,7 @@ class ConsumptionBilling:
     def _recalculate_cost(self) -> None:
         """Recalcula el costo total basado en MB consumidos."""
         # Costo = MB * precio por MB
-        self.total_cost_usd = (self.mb_consumed * self.PRICE_PER_MB).quantize(
+        self.total_cost_usd = (self.mb_consumed * self.price_per_mb_usd).quantize(
             Decimal("0.000001")  # Precisión de 6 decimales
         )
 

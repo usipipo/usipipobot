@@ -12,26 +12,26 @@ Plan detallado para implementar el sistema de tarifa por consumo postpago, inclu
 
 ### Tasks
 
-- [~] **Task 1.1**: Create `ConsumptionBilling` entity
+- [x] **Task 1.1**: Create `ConsumptionBilling` entity `91b8bff`
   - Define dataclass with all required fields
   - Add property methods for calculations
   - Add validation methods
 
-- [ ] **Task 1.2**: Create `ConsumptionInvoice` entity
+- [x] **Task 1.2**: Create `ConsumptionInvoice` entity `91b8bff`
   - Define dataclass with payment fields
   - Add status transitions methods
   - Add expiration check property
 
-- [ ] **Task 1.3**: Create `IConsumptionBillingRepository` interface
+- [x] **Task 1.3**: Create `IConsumptionBillingRepository` interface `91b8bff`
   - Define protocol for billing operations
   - Include CRUD methods
   - Include query methods for active billing cycles
 
-- [ ] **Task 1.4**: Create `IConsumptionInvoiceRepository` interface
+- [x] **Task 1.4**: Create `IConsumptionInvoiceRepository` interface `91b8bff`
   - Define protocol for invoice operations
   - Include payment verification methods
 
-- [ ] **Task 1.5**: Update `User` entity
+- [x] **Task 1.5**: Update `User` entity `91b8bff`
   - Add `consumption_mode_enabled` field
   - Add `has_pending_debt` field
   - Add `current_billing_id` field
@@ -39,9 +39,9 @@ Plan detallado para implementar el sistema de tarifa por consumo postpago, inclu
 
 ### Verification
 
-- [ ] **Verify 1.1**: All entities have proper type hints
-- [ ] **Verify 1.2**: Interfaces follow existing patterns
-- [ ] **Verify 1.3**: No circular imports
+- [x] **Verify 1.1**: All entities have proper type hints
+- [x] **Verify 1.2**: Interfaces follow existing patterns
+- [x] **Verify 1.3**: No circular imports
 
 ## Phase 2: Infrastructure Layer - Database
 
@@ -271,10 +271,10 @@ Plan detallado para implementar el sistema de tarifa por consumo postpago, inclu
 
 ## Checkpoints
 
-| Phase   | Checkpoint SHA | Date | Status  |
-|---------|----------------|------|---------|
-| Phase 1 |                |      | pending |
-| Phase 2 |                |      | pending |
+| Phase   | Checkpoint SHA | Date       | Status   |
+|---------|----------------|------------|----------|
+| Phase 1 | 91b8bff        | 2025-03-01 | verified |
+| Phase 2 |                |            | pending  |
 | Phase 3 |                |      | pending |
 | Phase 4 |                |      | pending |
 | Phase 5 |                |      | pending |
