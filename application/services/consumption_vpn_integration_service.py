@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any, Dict, Optional, Tuple
 
 from application.services.consumption_billing_service import (
@@ -201,3 +202,26 @@ class ConsumptionVpnIntegrationService:
         except Exception as e:
             logger.error(f"Error checking can_create_key for user {user_id}: {e}")
             return False, f"Error al verificar permisos: {str(e)}"
+
+    async def route_usage_to_billing(
+        self, user_id: int, mb_used: Decimal, current_user_id: int
+    ) -> bool:
+        """Routes data usage to billing service if user has consumption mode enabled."""
+        try:
+            user = await self.user_repo.get_by_id(user_id, current_user_id)
+            if not user:
+                logger.warning(f"User {user_id} not found for usage routing")
+                return False
+
+            if not user.consumption_mode_enabled:
+                logger.debug(f"User {user_id} does not have consumption mode enabled")
+                return False
+
+            result = await self.billing_service.record_data_usage(
+                user_id, float(mb_used), current_user_id
+            )
+            return result
+
+        except Exception as e:
+            logger.error(f"Error routing usage to billing for user {user_id}: {e}")
+            return False
