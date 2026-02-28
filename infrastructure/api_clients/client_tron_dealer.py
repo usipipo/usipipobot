@@ -1,5 +1,4 @@
 import json
-import logging
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -7,8 +6,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from config import settings
-
-logger = logging.getLogger(__name__)
+from utils.logger import logger
 
 
 class WalletStatus(str, Enum):
@@ -123,61 +121,97 @@ class TronDealerClient:
         self, endpoint: str, data: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Make a POST request to TronDealer API
+        Make a POST request to TronDealer API.
+
+        Args:
+            endpoint: API endpoint path (without base URL)
+            data: JSON payload to send
+
+        Returns:
+            Dict containing the API response
+
+        Raises:
+            TronDealerApiError: If the API returns an error or request fails
         """
         if not self.api_key:
+            logger.error("TronDealer API key not configured")
             raise TronDealerApiError(401, "API key not configured")
 
         url = f"{self.BASE_URL}/{endpoint}"
 
         try:
-            logger.debug(f"Making TronDealer API request to {url}")
+            logger.debug(f"TronDealer API request: POST {endpoint}")
 
             # Ensure client is initialized
             if self._client is None:
-                self._client = httpx.AsyncClient()
+                self._client = httpx.AsyncClient(timeout=30.0)
+                logger.debug("Created new httpx.AsyncClient for TronDealer")
 
-            response = await self._client.post(url, headers=self.headers, json=data)
+            # Make the async request
+            response = await self._client.post(
+                url,
+                headers=self.headers,
+                json=data,
+                timeout=30.0
+            )
 
             logger.debug(f"TronDealer API response status: {response.status_code}")
 
+            # Parse JSON response - response.json() is a method, not a dict
             try:
                 response_data = response.json()
+                logger.debug("TronDealer API response parsed successfully")
             except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse TronDealer API response: {e}")
-                raise TronDealerApiError(500, "Invalid response format")
+                logger.error(f"Failed to parse TronDealer API response as JSON: {e}")
+                raise TronDealerApiError(500, f"Invalid JSON response: {str(e)}")
+            except Exception as e:
+                logger.error(f"Unexpected error parsing TronDealer response: {e}")
+                raise TronDealerApiError(500, f"Response parsing error: {str(e)}")
 
+            # Handle HTTP error status codes
             if response.status_code == 401:
-                raise TronDealerApiError(
-                    401, response_data.get("error", "Unauthorized")
-                )
+                error_msg = (response_data.get("error", "Unauthorized")
+                             if isinstance(response_data, dict) else "Unauthorized")
+                logger.warning(f"TronDealer API 401: {error_msg}")
+                raise TronDealerApiError(401, error_msg)
             elif response.status_code == 403:
-                raise TronDealerApiError(403, response_data.get("error", "Forbidden"))
+                error_msg = (response_data.get("error", "Forbidden")
+                             if isinstance(response_data, dict) else "Forbidden")
+                logger.warning(f"TronDealer API 403: {error_msg}")
+                raise TronDealerApiError(403, error_msg)
             elif response.status_code == 404:
-                raise TronDealerApiError(404, response_data.get("error", "Not found"))
-            elif response.status_code != 200 and response.status_code != 201:
-                raise TronDealerApiError(
-                    response.status_code, response_data.get("error", "Unknown error")
-                )
+                error_msg = (response_data.get("error", "Not found")
+                             if isinstance(response_data, dict) else "Not found")
+                logger.warning(f"TronDealer API 404: {error_msg}")
+                raise TronDealerApiError(404, error_msg)
+            elif response.status_code >= 400:
+                default_msg = f"HTTP {response.status_code}"
+                error_msg = (response_data.get("error", default_msg)
+                             if isinstance(response_data, dict) else default_msg)
+                logger.warning(f"TronDealer API {response.status_code}: {error_msg}")
+                raise TronDealerApiError(response.status_code, error_msg)
 
-            if not response_data.get("success"):
-                raise TronDealerApiError(
-                    response.status_code, response_data.get("error", "Request failed")
-                )
+            # Check success flag in response body
+            if isinstance(response_data, dict) and not response_data.get("success", True):
+                error_msg = response_data.get("error", "Request failed")
+                logger.warning(f"TronDealer API business error: {error_msg}")
+                raise TronDealerApiError(response.status_code, error_msg)
 
+            logger.info(f"TronDealer API request successful: {endpoint}")
             return response_data
 
         except TronDealerApiError:
+            # Re-raise our custom errors
             raise
         except httpx.HTTPStatusError as e:
-            logger.error(f"TronDealer API HTTP error: {e}")
-            raise TronDealerApiError(e.response.status_code, str(e))
+            logger.error(f"TronDealer API HTTP status error: {e}")
+            raise TronDealerApiError(e.response.status_code, f"HTTP error: {str(e)}")
         except httpx.RequestError as e:
-            logger.error(f"TronDealer API request error: {e}")
+            logger.error(f"TronDealer API request error: {type(e).__name__}: {e}")
             raise TronDealerApiError(503, f"Service unavailable: {str(e)}")
         except Exception as e:
-            logger.error(f"Unexpected error calling TronDealer API: {e}")
-            raise TronDealerApiError(500, f"Unexpected error: {str(e)}")
+            logger.error(f"Unexpected error in TronDealer API call: {type(e).__name__}: {e}", exc_info=True)
+            raise TronDealerApiError(500, f"Unexpected error: {type(e).__name__}: {str(e)}")
 
     async def assign_wallet(self, label: Optional[str] = None) -> BscWallet:
         """
@@ -188,14 +222,55 @@ class TronDealerClient:
 
         Returns:
             BscWallet: Newly created wallet
+
+        Raises:
+            TronDealerApiError: If wallet assignment fails
         """
-        data = {}
-        if label:
-            data["label"] = label
+        try:
+            data = {}
+            if label:
+                data["label"] = label
 
-        response_data = await self._make_request("wallets/assign", data)
+            logger.info(f"Requesting wallet assignment with label: {label or 'None'}")
+            response_data = await self._make_request("wallets/assign", data)
 
-        wallet_data = response_data.get("wallet")
+            # Validate response structure
+            if not isinstance(response_data, dict):
+                logger.error(f"Invalid response type from assign_wallet: {type(response_data)}")
+                raise TronDealerApiError(500, "Invalid response format: expected dict")
+
+            wallet_data = response_data.get("wallet")
+            if not wallet_data:
+                logger.error(f"Missing 'wallet' field in response: {response_data}")
+                raise TronDealerApiError(500, "Invalid response format: missing wallet data")
+
+            if not isinstance(wallet_data, dict):
+                logger.error(f"Invalid wallet data type: {type(wallet_data)}")
+                raise TronDealerApiError(500, "Invalid response format: wallet data is not a dict")
+
+            # Validate required fields
+            required_fields = ["id", "address"]
+            for field in required_fields:
+                if field not in wallet_data:
+                    logger.error(f"Missing required field '{field}' in wallet data: {wallet_data}")
+                    raise TronDealerApiError(500, f"Invalid response format: missing {field}")
+
+            wallet = BscWallet(
+                id=wallet_data["id"],
+                address=wallet_data["address"],
+                label=wallet_data.get("label"),
+                status=WalletStatus(wallet_data.get("status", "active")),
+                created_at=wallet_data.get("created_at"),
+            )
+
+            logger.info(f"Successfully assigned wallet {wallet.address} with id {wallet.id}")
+            return wallet
+
+        except TronDealerApiError:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error in assign_wallet: {type(e).__name__}: {e}", exc_info=True)
+            raise TronDealerApiError(500, f"Wallet assignment failed: {str(e)}")
         if not wallet_data:
             raise TronDealerApiError(
                 500, "Invalid response format: missing wallet data"

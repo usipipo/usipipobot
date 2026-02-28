@@ -1,3 +1,48 @@
+[0;32m[INFO][0m FASE 4: Generando changelog...
+## [v3.5.0] - 2026-02-28
+
+### Features
+- Add Diagnostics section with real-time logs viewer for admin (#234)
+- implement comprehensive logging across all bot features (#233)
+- add comprehensive logging to referral_service.py
+- add comprehensive logging to VpnService
+- add comprehensive logging to basic commands handlers
+- add comprehensive logging to key management handlers
+- add logs to VPN keys handlers
+- add logs to operations handlers
+- add comprehensive logs to referral handlers
+- remove key deletion option for users (#229)
+- restrict key deletion endpoint to admins only
+- remove delete button and function from miniapp
+- remove delete button from vpn key actions keyboard
+- update messages to remove delete key references
+- remove delete key handler for users
+- remove delete button from user key management keyboard
+- add days since join info and key management improvements
+- show days since join in /info command
+
+### Bug Fixes
+- implement order expiration and wallet reuse
+- 'There is no text in the message to edit' error in handlers
+- resolve invalid escape sequence warnings
+- resolve LSP type error in show_buy_slots_menu
+- improve TronDealer HTTP client error handling and logging
+- Crear usuario en BD al autenticar desde Mini App (#231)
+- Mejorar logging y manejo de errores en pagos Mini App (#231)
+- validación product_type y product_id en pagos (#230)
+- Admin ticket response not working + Missing close ticket button
+- Mejora mensaje de límite de claves alcanzado
+- preserve created_at when loading existing users
+
+### Chores
+- remove completed markdown standardization track files
+
+### Other Changes
+- fix linting issues in payment files
+- actualizar plan.md con checkpoint SHA
+- estandarizar parse_mode a Markdown en todos los mensajes
+- add migration notes and plan for bonus system columns (#223)
+
 # Changelog
 
 All notable changes to this project will be documented in this file.

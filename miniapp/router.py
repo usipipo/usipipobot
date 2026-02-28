@@ -8,13 +8,14 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
 
 from application.services.common.container import get_service
 from application.services.data_package_service import (
@@ -22,10 +23,8 @@ from application.services.data_package_service import (
     SLOT_OPTIONS,
     DataPackageService,
 )
-from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from config import settings
-from domain.entities.vpn_key import KeyType
 from infrastructure.persistence.database import get_session_context
 from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
@@ -33,7 +32,6 @@ from infrastructure.persistence.postgresql.data_package_repository import (
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from miniapp.services.miniapp_auth import (
-    MiniAppAuthResult,
     MiniAppAuthService,
     TelegramUser,
     get_miniapp_auth_service,
@@ -45,6 +43,13 @@ router = APIRouter(prefix="/miniapp", tags=["Mini App"])
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+
+class PaymentRequest(BaseModel):
+    """Request model for payment endpoints."""
+
+    product_type: str = Field(..., description="Type of product: 'package' or 'slots'")
+    product_id: str = Field(..., description="Product identifier (e.g., 'basic', 'slots_3')")
 
 
 @router.get("/entry", response_class=HTMLResponse)
@@ -96,6 +101,7 @@ async def get_current_user(
     Dependencia para obtener el usuario actual desde initData.
 
     Soporta tanto query params (GET) como form data (POST).
+    Asegura que el usuario exista en la base de datos local.
     """
     init_data = request.query_params.get("tgWebAppData")
 
@@ -116,6 +122,28 @@ async def get_current_user(
     if not result.success or not result.user:
         raise HTTPException(status_code=401, detail=f"No autorizado: {result.error}")
 
+    # CRITICAL: Verify user is registered in bot first
+    # MiniApp only works for users who have already used /start in the bot
+    try:
+        async with get_session_context() as session:
+            user_repo = PostgresUserRepository(session)
+            existing_user = await user_repo.get_by_id(result.user.id, result.user.id)
+
+            if not existing_user:
+                logger.warning(
+                    f"User {result.user.id} tried to access MiniApp but is not registered. "
+                    f"They must use /start in the bot first."
+                )
+                raise HTTPException(status_code=403, detail="USER_NOT_REGISTERED")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error verifying user registration: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Error verificando usuario. Por favor intenta nuevamente.",
+        )
+
     return MiniAppContext(user=result.user, query_id=result.query_id)
 
 
@@ -126,6 +154,7 @@ async def dashboard(request: Request, ctx: MiniAppContext = Depends(get_current_
 
     Muestra métricas de consumo, claves activas y estado del usuario.
     """
+    logger.info(f"📊 MiniApp dashboard accessed by user {ctx.user.id}")
     try:
         async with get_session_context() as session:
             user_repo = PostgresUserRepository(session)
@@ -144,9 +173,7 @@ async def dashboard(request: Request, ctx: MiniAppContext = Depends(get_current_
             remaining_bytes = max(0, total_limit_bytes - total_used_bytes)
 
             usage_percent = (
-                (total_used_bytes / total_limit_bytes * 100)
-                if total_limit_bytes > 0
-                else 0
+                (total_used_bytes / total_limit_bytes * 100) if total_limit_bytes > 0 else 0
             )
 
             return templates.TemplateResponse(
@@ -173,6 +200,7 @@ async def dashboard(request: Request, ctx: MiniAppContext = Depends(get_current_
 @router.get("/keys", response_class=HTMLResponse)
 async def keys_list(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
     """Página de gestión de claves VPN."""
+    logger.info(f"🔑 MiniApp keys list accessed by user {ctx.user.id}")
     try:
         async with get_session_context() as session:
             key_repo = PostgresKeyRepository(session)
@@ -200,10 +228,9 @@ async def keys_list(request: Request, ctx: MiniAppContext = Depends(get_current_
 
 
 @router.get("/keys/create", response_class=HTMLResponse)
-async def create_key_form(
-    request: Request, ctx: MiniAppContext = Depends(get_current_user)
-):
+async def create_key_form(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
     """Formulario para crear nueva clave VPN."""
+    logger.info(f"➕ MiniApp create key form accessed by user {ctx.user.id}")
     try:
         async with get_session_context() as session:
             user_repo = PostgresUserRepository(session)
@@ -245,9 +272,7 @@ async def create_key_submit(
             current_user_id=ctx.user.id,
         )
 
-        logger.info(
-            f"🔑 Nueva clave creada via Mini App: {new_key.id} para {ctx.user.id}"
-        )
+        logger.info(f"🔑 Nueva clave creada via Mini App: {new_key.id} para {ctx.user.id}")
 
         return JSONResponse(
             status_code=200,
@@ -272,10 +297,9 @@ async def create_key_submit(
 
 
 @router.get("/purchase", response_class=HTMLResponse)
-async def purchase_page(
-    request: Request, ctx: MiniAppContext = Depends(get_current_user)
-):
+async def purchase_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
     """Página para comprar paquetes de datos y slots."""
+    logger.info(f"💎 MiniApp purchase page accessed by user {ctx.user.id}")
     # Convert PackageOption objects to dict for template
     packages = [
         {
@@ -313,10 +337,9 @@ async def purchase_page(
 
 
 @router.get("/profile", response_class=HTMLResponse)
-async def profile_page(
-    request: Request, ctx: MiniAppContext = Depends(get_current_user)
-):
+async def profile_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
     """Página de perfil del usuario."""
+    logger.info(f"👤 MiniApp profile page accessed by user {ctx.user.id}")
     try:
         async with get_session_context() as session:
             user_repo = PostgresUserRepository(session)
@@ -344,9 +367,7 @@ async def profile_page(
                 profile_info = {
                     "created_at": user.created_at,
                     "status": (
-                        user.status.value
-                        if hasattr(user.status, "value")
-                        else str(user.status)
+                        user.status.value if hasattr(user.status, "value") else str(user.status)
                     ),
                     "max_keys": user.max_keys,
                     "referral_code": getattr(user, "referral_code", None),
@@ -359,9 +380,7 @@ async def profile_page(
                     )
 
                     tx_repo = PostgresTransactionRepository(session)
-                    transactions = await tx_repo.get_user_transactions(
-                        ctx.user.id, limit=10
-                    )
+                    transactions = await tx_repo.get_user_transactions(ctx.user.id, limit=10)
                 except Exception as tx_error:
                     logger.warning(f"Could not fetch transactions: {tx_error}")
 
@@ -382,16 +401,17 @@ async def profile_page(
 
 
 @router.get("/settings", response_class=HTMLResponse)
-async def settings_page(
-    request: Request, ctx: MiniAppContext = Depends(get_current_user)
-):
+async def settings_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
     """Página de ajustes del usuario."""
+    is_admin = ctx.user.id == int(settings.ADMIN_ID)
+    logger.info(f"⚙️ User {ctx.user.id} accessed settings (admin={is_admin})")
     return templates.TemplateResponse(
         "settings.html",
         {
             "request": request,
             "user": ctx.user,
             "bot_username": settings.BOT_USERNAME,
+            "is_admin": is_admin,
         },
     )
 
@@ -399,6 +419,7 @@ async def settings_page(
 @router.get("/api/user")
 async def api_get_user(ctx: MiniAppContext = Depends(get_current_user)):
     """API: Obtiene datos del usuario actual."""
+    logger.debug(f"📡 API /user called by user {ctx.user.id}")
     try:
         async with get_session_context() as session:
             user_repo = PostgresUserRepository(session)
@@ -433,6 +454,7 @@ async def api_get_user(ctx: MiniAppContext = Depends(get_current_user)):
 @router.get("/api/keys")
 async def api_get_keys(ctx: MiniAppContext = Depends(get_current_user)):
     """API: Obtiene lista de claves del usuario."""
+    logger.debug(f"📡 API /keys called by user {ctx.user.id}")
     try:
         async with get_session_context() as session:
             key_repo = PostgresKeyRepository(session)
@@ -450,12 +472,8 @@ async def api_get_keys(ctx: MiniAppContext = Depends(get_current_user)):
                         "used_gb": round(k.used_gb, 2),
                         "limit_gb": round(k.data_limit_gb, 2),
                         "remaining_gb": round(k.remaining_bytes / (1024**3), 2),
-                        "created_at": (
-                            k.created_at.isoformat() if k.created_at else None
-                        ),
-                        "last_seen": (
-                            k.last_seen_at.isoformat() if k.last_seen_at else None
-                        ),
+                        "created_at": (k.created_at.isoformat() if k.created_at else None),
+                        "last_seen": (k.last_seen_at.isoformat() if k.last_seen_at else None),
                     }
                     for k in keys
                 ],
@@ -470,8 +488,15 @@ async def api_delete_key(
     request: Request,
     ctx: MiniAppContext = Depends(get_current_user),
 ):
-    """API: Elimina una clave VPN."""
+    """API: Elimina una clave VPN (SOLO ADMIN)."""
     try:
+        # Only admins can delete keys
+        if ctx.user.id != int(settings.ADMIN_ID):
+            logger.warning(f"User {ctx.user.id} attempted to delete key without admin privileges")
+            raise HTTPException(
+                status_code=403, detail="Solo administradores pueden eliminar claves"
+            )
+
         data = await request.json()
         key_id = data.get("key_id")
 
@@ -482,6 +507,8 @@ async def api_delete_key(
         success = await vpn_service.delete_key(key_id, ctx.user.id)
 
         return {"success": success}
+    except HTTPException:
+        raise
     except ValueError as e:
         return {"success": False, "error": str(e)}
     except Exception as e:
@@ -491,97 +518,213 @@ async def api_delete_key(
 
 @router.post("/api/create-stars-invoice")
 async def api_create_stars_invoice(
-    request: Request,
+    payment_req: PaymentRequest,
     ctx: MiniAppContext = Depends(get_current_user),
 ):
     """API: Crea una factura de Telegram Stars para pago en Mini App."""
     try:
-        data = await request.json()
-        product_type = data.get("product_type")
-        product_id = data.get("product_id")
-
-        if not product_type or not product_id:
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "error": "product_type and product_id required"}
-            )
+        logger.info(
+            f"Creating Stars invoice for user {ctx.user.id}: "
+            f"{payment_req.product_type}={payment_req.product_id}"
+        )
 
         async with get_session_context() as session:
             package_repo = PostgresDataPackageRepository(session)
             user_repo = PostgresUserRepository(session)
+
+            # DEFENSE: Verify user exists before creating invoice
+            existing_user = await user_repo.get_by_id(ctx.user.id, ctx.user.id)
+            if not existing_user:
+                logger.error(f"User {ctx.user.id} not found in database - cannot create invoice")
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "success": False,
+                        "error": "Usuario no encontrado. Por favor reinicia la aplicación.",
+                    },
+                )
 
             data_package_service = DataPackageService(package_repo, user_repo)
             payment_service = MiniAppPaymentService(data_package_service)
 
             invoice_url = payment_service.create_stars_invoice_url(
                 user_id=ctx.user.id,
-                product_type=product_type,
-                product_id=product_id,
+                product_type=payment_req.product_type,
+                product_id=payment_req.product_id,
             )
 
             if not invoice_url:
+                logger.warning(
+                    f"Failed to create Stars invoice for user {ctx.user.id}: service returned None"
+                )
                 return JSONResponse(
                     status_code=400,
-                    content={"success": False, "error": "Could not create invoice"}
+                    content={
+                        "success": False,
+                        "error": (
+                            "No se pudo crear la factura. "
+                            "Verifica que el producto seleccionado sea válido."
+                        ),
+                    },
                 )
 
+            logger.info(f"Successfully created Stars invoice for user {ctx.user.id}")
             return {
                 "success": True,
                 "invoice_url": invoice_url,
             }
 
     except Exception as e:
-        logger.error(f"Error creating stars invoice: {e}")
+        logger.error(f"Error creating stars invoice for user {ctx.user.id}: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content={"success": False, "error": "Internal server error"}
+            content={
+                "success": False,
+                "error": "Error interno del servidor. Por favor intenta nuevamente.",
+            },
         )
 
 
 @router.post("/api/create-crypto-order")
 async def api_create_crypto_order(
-    request: Request,
+    payment_req: PaymentRequest,
     ctx: MiniAppContext = Depends(get_current_user),
 ):
     """API: Crea una orden de pago con crypto para Mini App."""
     try:
-        data = await request.json()
-        product_type = data.get("product_type")
-        product_id = data.get("product_id")
-
-        if not product_type or not product_id:
-            return JSONResponse(
-                status_code=400,
-                content={"success": False, "error": "product_type and product_id required"}
-            )
+        logger.info(
+            f"Creating crypto order for user {ctx.user.id}: "
+            f"{payment_req.product_type}={payment_req.product_id}"
+        )
 
         async with get_session_context() as session:
             package_repo = PostgresDataPackageRepository(session)
             user_repo = PostgresUserRepository(session)
+
+            # DEFENSE: Verify user exists before creating order (prevents ForeignKeyViolationError)
+            existing_user = await user_repo.get_by_id(ctx.user.id, ctx.user.id)
+            if not existing_user:
+                logger.error(
+                    f"User {ctx.user.id} not found in database - cannot create crypto order"
+                )
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "success": False,
+                        "error": "Usuario no encontrado. Por favor reinicia la aplicación.",
+                    },
+                )
 
             data_package_service = DataPackageService(package_repo, user_repo)
             payment_service = MiniAppPaymentService(data_package_service)
 
             order_data = await payment_service.create_crypto_order(
                 user_id=ctx.user.id,
-                product_type=product_type,
-                product_id=product_id,
+                product_type=payment_req.product_type,
+                product_id=payment_req.product_id,
             )
 
             if not order_data:
+                logger.warning(
+                    f"Failed to create crypto order for user {ctx.user.id}: service returned None"
+                )
                 return JSONResponse(
                     status_code=400,
-                    content={"success": False, "error": "Could not create crypto order"}
+                    content={
+                        "success": False,
+                        "error": (
+                            "No se pudo crear la orden de pago. "
+                            "El servicio de pagos crypto no está disponible "
+                            "o el producto seleccionado es inválido."
+                        ),
+                    },
                 )
 
+            logger.info(
+                f"Successfully created crypto order for user {ctx.user.id}: "
+                f"order_id={order_data.get('order_id')}"
+            )
             return {
                 "success": True,
                 **order_data,
             }
 
     except Exception as e:
-        logger.error(f"Error creating crypto order: {e}")
+        logger.error(f"Error creating crypto order for user {ctx.user.id}: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            content={"success": False, "error": "Internal server error"}
+            content={
+                "success": False,
+                "error": "Error interno del servidor. Por favor intenta nuevamente.",
+            },
         )
+
+
+@router.get("/logs", response_class=HTMLResponse)
+async def logs_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+    """Página de logs del sistema (solo administrador)."""
+    if ctx.user.id != int(settings.ADMIN_ID):
+        logger.warning(f"🚫 User {ctx.user.id} tried to access logs page without admin privileges")
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo administradores")
+
+    logger.info(f"🖥️ Admin {ctx.user.id} accessed logs page")
+    return templates.TemplateResponse(
+        "logs.html",
+        {
+            "request": request,
+            "user": ctx.user,
+        },
+    )
+
+
+@router.get("/api/logs")
+async def api_get_logs(
+    lines: int = 100,
+    ctx: MiniAppContext = Depends(get_current_user)
+):
+    """API: Obtiene los últimos logs del sistema (solo administrador)."""
+    if ctx.user.id != int(settings.ADMIN_ID):
+        logger.warning(f"🚫 User {ctx.user.id} tried to access logs API without admin privileges")
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo administradores")
+
+    try:
+        from utils.logger import logger as app_logger
+
+        log_lines = app_logger.get_last_logs(lines=lines)
+
+        # Parse log lines into structured format
+        parsed_logs = []
+        for line in log_lines.strip().split('\n'):
+            if not line.strip():
+                continue
+
+            # Try to parse log format: "YYYY-MM-DD HH:mm:ss | LEVEL | message"
+            parts = line.split(' | ', 2)
+            if len(parts) >= 3:
+                timestamp = parts[0].strip()
+                level = parts[1].strip()
+                message = parts[2].strip()
+            elif len(parts) == 2:
+                timestamp = parts[0].strip()
+                level = "INFO"
+                message = parts[1].strip()
+            else:
+                timestamp = datetime.now().isoformat()
+                level = "INFO"
+                message = line
+
+            parsed_logs.append({
+                "timestamp": timestamp,
+                "level": level,
+                "message": message,
+            })
+
+        logger.debug(f"📋 Admin {ctx.user.id} fetched {len(parsed_logs)} log lines")
+        return {
+            "logs": parsed_logs,
+            "total": len(parsed_logs),
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching logs for admin {ctx.user.id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error al obtener logs")

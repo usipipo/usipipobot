@@ -2,7 +2,7 @@
 Handlers para gestión avanzada de llaves VPN de uSipipo.
 
 Author: uSipipo Team
-Version: 2.1.0 - Modernized Key Management
+Version: 2.2.0 - Markdown Standardized
 """
 
 import io
@@ -20,7 +20,7 @@ from application.services.vpn_service import VpnService
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
 from utils.logger import logger
-from utils.telegram_utils import format_percentage
+from utils.telegram_utils import escape_markdown, format_percentage
 
 from .keyboards_key_management import KeyManagementKeyboards
 from .messages_key_management import KeyManagementMessages
@@ -52,6 +52,7 @@ class KeyManagementHandler(BaseHandler):
             if update.effective_user is None:
                 return
             user_id = update.effective_user.id
+            logger.info(f"User {user_id} viewing key submenu")
             if update.message is None:
                 return
             try:
@@ -72,9 +73,9 @@ class KeyManagementHandler(BaseHandler):
                     message = KeyManagementMessages.NO_KEYS
                 else:
                     message = KeyManagementMessages.MAIN_MENU.format(
-                        total_keys=keys_summary["total_count"],
-                        outline_count=keys_summary.get("outline_count", 0),
-                        wireguard_count=keys_summary.get("wireguard_count", 0),
+                        total_keys=escape_markdown(str(keys_summary["total_count"])),
+                        outline_count=escape_markdown(str(keys_summary.get("outline_count", 0))),
+                        wireguard_count=escape_markdown(str(keys_summary.get("wireguard_count", 0))),
                     )
 
                 await update.message.reply_text(
@@ -95,6 +96,7 @@ class KeyManagementHandler(BaseHandler):
             if update.effective_user is None:
                 return
             user_id = update.effective_user.id
+            logger.info(f"User {user_id} viewing key submenu")
 
             try:
                 user_status = await self.vpn_service.get_user_status(
@@ -114,9 +116,9 @@ class KeyManagementHandler(BaseHandler):
                     message = KeyManagementMessages.NO_KEYS
                 else:
                     message = KeyManagementMessages.MAIN_MENU.format(
-                        total_keys=keys_summary["total_count"],
-                        outline_count=keys_summary.get("outline_count", 0),
-                        wireguard_count=keys_summary.get("wireguard_count", 0),
+                        total_keys=escape_markdown(str(keys_summary["total_count"])),
+                        outline_count=escape_markdown(str(keys_summary.get("outline_count", 0))),
+                        wireguard_count=escape_markdown(str(keys_summary.get("wireguard_count", 0))),
                     )
 
                 await self._safe_edit_message(
@@ -153,6 +155,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} viewing keys by type: {key_type}")
 
         try:
             user_status = await self.vpn_service.get_user_status(
@@ -167,19 +170,20 @@ class KeyManagementHandler(BaseHandler):
 
             if not filtered_keys:
                 message = KeyManagementMessages.NO_KEYS_TYPE.format(
-                    type=key_type.upper()
+                    type=escape_markdown(key_type.upper())
                 )
                 keyboard = KeyManagementKeyboards.back_to_submenu()
             else:
                 message = KeyManagementMessages.KEYS_LIST_HEADER.format(
-                    type=key_type.upper()
+                    type=escape_markdown(key_type.upper())
                 )
                 keyboard = KeyManagementKeyboards.keys_list(filtered_keys)
 
                 # Agregar información de cada llave
                 for key in filtered_keys:
                     status = "🟢 Activa" if key.is_active else "🔴 Inactiva"
-                    message += f"\n🔑 {key.name}\n   📊 {key.used_gb:.2f}/{key.data_limit_gb:.2f} GB\n   {status}\n"
+                    escaped_name = escape_markdown(key.name)
+                    message += f"\n🔑 {escaped_name}\n   📊 {key.used_gb:.2f}/{key.data_limit_gb:.2f} GB\n   {status}\n"
 
             await self._safe_edit_message(
                 query,
@@ -215,6 +219,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} viewing details for key {key_id}")
 
         try:
             key = await self.vpn_service.get_key_by_id(key_id, current_user_id=user_id)
@@ -223,7 +228,8 @@ class KeyManagementHandler(BaseHandler):
                 message = KeyManagementMessages.KEY_NOT_FOUND
                 keyboard = KeyManagementKeyboards.back_to_submenu()
             else:
-                status = "🟢 Activa" if key.is_active else "🔴 Inactiva"
+                status = "Activa" if key.is_active else "Inactiva"
+                status_icon = "🟢" if key.is_active else "🔴"
                 usage_percentage = (
                     (key.used_gb / key.data_limit_gb) * 100
                     if key.data_limit_gb > 0
@@ -233,15 +239,16 @@ class KeyManagementHandler(BaseHandler):
                 usage_bar = format_percentage(key.used_gb, key.data_limit_gb)
 
                 message = KeyManagementMessages.KEY_DETAILS.format(
-                    name=key.name,
-                    type=key.key_type.upper(),
-                    server=key.server or "N/A",
-                    usage_bar=usage_bar,
-                    usage=key.used_gb,
-                    limit=key.data_limit_gb,
-                    percentage=usage_percentage,
-                    status=status,
-                    expires=(
+                    name=escape_markdown(key.name),
+                    type=escape_markdown(key.key_type.upper()),
+                    server=escape_markdown(key.server or "N/A"),
+                    usage_bar=usage_bar,  # No escapar - usa caracteres seguros
+                    usage=escape_markdown(f"{key.used_gb:.1f}"),
+                    limit=escape_markdown(f"{key.data_limit_gb:.1f}"),
+                    percentage=escape_markdown(f"{usage_percentage:.0f}"),
+                    status=escape_markdown(status),
+                    status_icon=status_icon,
+                    expires=escape_markdown(
                         key.expires_at.strftime("%d/%m/%Y") if key.expires_at else "N/A"
                     ),
                 )
@@ -268,6 +275,18 @@ class KeyManagementHandler(BaseHandler):
                 parse_mode="Markdown",
             )
 
+    def _generate_cyberpunk_progress_bar(self, percentage: float, width: int = 10) -> str:
+        """Genera una barra de progreso estilo cyberpunk."""
+        filled = int((percentage / 100) * width)
+        empty = width - filled
+
+        # Usar caracteres que no requieren escape en MarkdownV2
+        # y tienen ancho consistente en fuentes monoespaciadas de Telegram
+        filled_char = "█"
+        empty_char = "░"
+
+        return filled_char * filled + empty_char * empty
+
     async def show_key_statistics(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
@@ -282,6 +301,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} viewing key statistics")
 
         try:
             user_status = await self.vpn_service.get_user_status(
@@ -303,16 +323,20 @@ class KeyManagementHandler(BaseHandler):
                 outline_keys = [k for k in keys if k.key_type.lower() == "outline"]
                 wireguard_keys = [k for k in keys if k.key_type.lower() == "wireguard"]
 
+                # Generar barra de progreso cyberpunk
+                usage_bar = self._generate_cyberpunk_progress_bar(overall_percentage)
+
                 message = KeyManagementMessages.STATISTICS.format(
-                    total_keys=total_keys,
-                    active_keys=active_keys,
-                    total_usage=total_usage,
-                    total_limit=total_limit,
-                    percentage=overall_percentage,
-                    outline_count=len(outline_keys),
-                    wireguard_count=len(wireguard_keys),
-                    outline_usage=sum(k.used_gb for k in outline_keys),
-                    wireguard_usage=sum(k.used_gb for k in wireguard_keys),
+                    total_keys=escape_markdown(str(total_keys)),
+                    active_keys=escape_markdown(str(active_keys)),
+                    total_usage=escape_markdown(f"{total_usage:.1f}"),
+                    total_limit=escape_markdown(f"{total_limit:.1f}"),
+                    percentage=escape_markdown(f"{overall_percentage:.0f}"),
+                    usage_bar=usage_bar,  # No escapar - usa caracteres seguros
+                    outline_count=escape_markdown(str(len(outline_keys))),
+                    wireguard_count=escape_markdown(str(len(wireguard_keys))),
+                    outline_usage=escape_markdown(f"{sum(k.used_gb for k in outline_keys):.1f}"),
+                    wireguard_usage=escape_markdown(f"{sum(k.used_gb for k in wireguard_keys):.1f}"),
                 )
 
             keyboard = KeyManagementKeyboards.back_to_submenu()
@@ -354,6 +378,12 @@ class KeyManagementHandler(BaseHandler):
         user_id = update.effective_user.id
         keyboard = None
 
+        # Log action at appropriate level
+        if action in ["suspend", "delete"]:
+            logger.warning(f"User {user_id} performing action {action} on key {key_id}")
+        else:
+            logger.info(f"User {user_id} performing action {action} on key {key_id}")
+
         try:
             key = await self.vpn_service.get_key_by_id(key_id, current_user_id=user_id)
 
@@ -365,32 +395,13 @@ class KeyManagementHandler(BaseHandler):
                     key.is_active = False
                     await self.vpn_service.update_key(key, current_user_id=user_id)
                     message = KeyManagementMessages.Actions.KEY_SUSPENDED
+                    logger.info(f"User {user_id} successfully suspended key {key_id}")
 
                 elif action == "reactivate":
                     key.is_active = True
                     await self.vpn_service.update_key(key, current_user_id=user_id)
                     message = KeyManagementMessages.Actions.KEY_REACTIVATED
-
-                elif action == "delete":
-                    try:
-                        await self.vpn_service.delete_key(
-                            key_id, current_user_id=user_id
-                        )
-                        message = KeyManagementMessages.Actions.KEY_DELETED
-                        keyboard = KeyManagementKeyboards.back_to_submenu()
-                    except Exception as e:
-                        if (
-                            "Debes realizar al menos un depósito para eliminar claves"
-                            in str(e)
-                        ):
-                            message = KeyManagementMessages.Error.DELETE_NOT_ALLOWED
-                        else:
-                            message = (
-                                KeyManagementMessages.Error.OPERATION_FAILED.format(
-                                    error=str(e)
-                                )
-                            )
-                        keyboard = KeyManagementKeyboards.back_to_submenu()
+                    logger.info(f"User {user_id} successfully reactivated key {key_id}")
 
                 elif action == "config":
                     await self.show_key_config(update, context)
@@ -404,7 +415,7 @@ class KeyManagementHandler(BaseHandler):
                     # Iniciar flujo de renombrado
                     if context.user_data is not None:
                         context.user_data["rename_key_id"] = key_id
-                    message = "✏️ **Renombrar Llave**\n\nPor favor, escribe el nuevo nombre para tu llave:"
+                    message = "✏️ Renombrar Llave\n\nPor favor, escribe el nuevo nombre para tu llave:"
                     keyboard = KeyManagementKeyboards.cancel_rename()
                     await self._safe_edit_message(
                         query,
@@ -439,7 +450,7 @@ class KeyManagementHandler(BaseHandler):
             await self._safe_edit_message(
                 query,
                 context,
-                text=KeyManagementMessages.Error.OPERATION_FAILED.format(error=str(e)),
+                text=KeyManagementMessages.Error.OPERATION_FAILED.format(error=escape_markdown(str(e))),
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
                 parse_mode="Markdown",
             )
@@ -508,6 +519,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} downloading WireGuard config for key {key_id}")
 
         try:
             config_data = await self.vpn_service.get_wireguard_config(
@@ -537,6 +549,7 @@ class KeyManagementHandler(BaseHandler):
                 caption=f"📄 Configuración WireGuard: *{key_name}*\n\nImporta este archivo en tu aplicación WireGuard.",
                 parse_mode="Markdown",
             )
+            logger.info(f"User {user_id} successfully downloaded WireGuard config for key {key_id}")
 
         except Exception as e:
             logger.error(f"Error descargando config WireGuard: {e}")
@@ -563,6 +576,7 @@ class KeyManagementHandler(BaseHandler):
         if update.effective_user is None:
             return
         user_id = update.effective_user.id
+        logger.info(f"User {user_id} getting Outline link for key {key_id}")
 
         try:
             config_data = await self.vpn_service.get_outline_config(
@@ -592,6 +606,7 @@ class KeyManagementHandler(BaseHandler):
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
                 parse_mode="Markdown",
             )
+            logger.info(f"User {user_id} successfully retrieved Outline link for key {key_id}")
 
         except Exception as e:
             logger.error(f"Error obteniendo enlace Outline: {e}")
@@ -666,6 +681,7 @@ class KeyManagementHandler(BaseHandler):
         user_id = update.effective_user.id
 
         try:
+            logger.info(f"User {user_id} attempting to rename key {key_id} to '{new_name}'")
             # Limpiar estado
             del context.user_data["rename_key_id"]
 
@@ -675,8 +691,9 @@ class KeyManagementHandler(BaseHandler):
 
             if success:
                 message = KeyManagementMessages.Actions.KEY_RENAMED.format(
-                    new_name=new_name
+                    new_name=escape_markdown(new_name)
                 )
+                logger.info(f"User {user_id} renamed key {key_id} to '{new_name}'")
             else:
                 message = (
                     "❌ No se pudo renombrar la llave. Por favor, intenta de nuevo."
@@ -722,7 +739,7 @@ def get_key_management_callback_handlers(vpn_service: VpnService):
         CallbackQueryHandler(handler.back_to_keys, pattern="^back_to_keys$"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_suspend_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_reactivate_"),
-        CallbackQueryHandler(handler.handle_key_action, pattern="^key_delete_"),
+        # CallbackQueryHandler(handler.handle_key_action, pattern="^key_delete_"),  # Removed - prevent 5GB abuse
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_config_"),
         CallbackQueryHandler(handler.show_key_config, pattern="^key_view_config_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_rename_"),
