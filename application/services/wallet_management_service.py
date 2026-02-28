@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from domain.entities.user import User
+from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_tron_dealer import (
     BscWallet,
@@ -17,34 +18,59 @@ from utils.logger import logger
 class WalletManagementService:
     """
     Service for managing BSC wallet operations via TronDealer API.
+
+    Ahora incluye soporte para reutilización de wallets mediante
+    el WalletPoolService integrado.
     """
 
     def __init__(
-        self, tron_dealer_client: TronDealerClient, user_repo: IUserRepository
+        self,
+        tron_dealer_client: TronDealerClient,
+        user_repo: IUserRepository,
+        crypto_order_repo: Optional[ICryptoOrderRepository] = None,
     ):
         self.tron_dealer_client = tron_dealer_client
         self.user_repo = user_repo
+        self.crypto_order_repo = crypto_order_repo
+        self.crypto_order_repo = crypto_order_repo
 
     async def assign_wallet(
         self, user_id: int, label: Optional[str] = None
     ) -> Optional[BscWallet]:
         """
-        Assign a new BSC wallet to a user and update their profile.
+        Assign a BSC wallet to a user and update their profile.
+
+        Intenta reutilizar wallets de órdenes expiradas antes de crear una nueva.
 
         Args:
             user_id: Telegram user ID
             label: Optional wallet label
 
         Returns:
-            BscWallet: Newly created wallet or None if failed
+            BscWallet: Reused or newly created wallet, or None if failed
         """
         try:
-            logger.info(f"Assigning new BSC wallet to user {user_id}")
+            logger.info(f"Assigning BSC wallet to user {user_id}")
 
+            # Intentar reutilizar wallet del pool primero
+            if self.crypto_order_repo:
+                reused_wallet = await self._try_reuse_wallet(user_id, label)
+                if reused_wallet:
+                    logger.info(
+                        f"Reutilizando wallet {reused_wallet.address[:10]}... "
+                        f"para usuario {user_id}"
+                    )
+                    # Actualizar dirección del usuario
+                    await self.user_repo.update_wallet_address(
+                        user_id, reused_wallet.address, current_user_id=user_id
+                    )
+                    return reused_wallet
+
+            # Crear nueva wallet si no hay reutilizables
             async with self.tron_dealer_client as client:
                 wallet = await client.assign_wallet(label=label)
 
-            logger.info(f"Wallet {wallet.address} created for user {user_id}")
+            logger.info(f"Nueva wallet {wallet.address[:10]}... creada para user {user_id}")
 
             # Update user's wallet address
             success = await self.user_repo.update_wallet_address(
@@ -66,6 +92,48 @@ class WalletManagementService:
         except Exception as e:
             logger.error(f"Unexpected error assigning wallet to user {user_id}: {e}", exc_info=True)
             return None
+
+    async def _try_reuse_wallet(
+        self, user_id: int, label: Optional[str] = None
+    ) -> Optional[BscWallet]:
+        """
+        Intenta reutilizar una wallet de una orden expirada.
+
+        Args:
+            user_id: Telegram user ID
+            label: Optional wallet label
+
+        Returns:
+            BscWallet: Wallet reutilizable o None
+        """
+        if not self.crypto_order_repo:
+            return None
+
+        # Primero buscar wallet del mismo usuario
+        existing_wallet = await self.crypto_order_repo.get_reusable_wallet_for_user(
+            user_id
+        )
+
+        if existing_wallet:
+            return BscWallet(
+                id="reused",
+                address=existing_wallet,
+                label=label or f"user-{user_id}",
+                status=WalletStatus.ACTIVE,
+            )
+
+        # Luego buscar cualquier wallet expirada no en uso
+        any_reusable = await self.crypto_order_repo.get_any_reusable_wallet()
+
+        if any_reusable:
+            return BscWallet(
+                id="reused",
+                address=any_reusable,
+                label=label or f"user-{user_id}",
+                status=WalletStatus.ACTIVE,
+            )
+
+        return None
 
     async def get_wallet_balance(self, user: User) -> Optional[WalletBalance]:
         """

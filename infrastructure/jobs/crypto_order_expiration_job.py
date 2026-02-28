@@ -55,6 +55,13 @@ async def expire_crypto_orders_job(context: ContextTypes.DEFAULT_TYPE) -> None:
                         f"⏰ Orden {order.id} marcada como expirada (user: {order.user_id})"
                     )
 
+                    # Liberar wallet para reutilización
+                    if order.wallet_address:
+                        logger.info(
+                            f"♻️ Wallet {order.wallet_address[:10]}... liberada "
+                            f"para reutilización (orden expirada)"
+                        )
+
                     # Notificar al usuario
                     if bot:
                         try:
