@@ -57,6 +57,8 @@ class ReferralService:
         Returns:
             Dict con resultado de la operación
         """
+        logger.info(f"Starting referral registration: new_user={new_user_id}, code={referral_code}")
+
         try:
             referrer = await self.user_repo.get_by_referral_code(
                 referral_code, current_user_id
@@ -102,8 +104,9 @@ class ReferralService:
             )
 
             logger.info(
-                f"🎉 Referido registrado: {referrer.telegram_id} -> {new_user_id} "
-                f"(+{credits_for_referrer} créditos)"
+                f"🎉 Referral registration successful: referrer={referrer.telegram_id}, "
+                f"new_user={new_user_id}, referrer_credits=+{credits_for_referrer}, "
+                f"new_user_credits=+{credits_for_new_user}"
             )
 
             return {
@@ -114,7 +117,7 @@ class ReferralService:
             }
 
         except Exception as e:
-            logger.error(f"Error registrando referido: {e}")
+            logger.warning(f"Referral registration failed: new_user={new_user_id}, code={referral_code}, error={e}")
             return {"success": False, "error": str(e)}
 
     async def get_referral_stats(
@@ -130,6 +133,8 @@ class ReferralService:
         Returns:
             ReferralStats con estadísticas
         """
+        logger.debug(f"Getting referral stats: user_id={user_id}")
+
         user = await self.user_repo.get_by_id(user_id, current_user_id)
         if not user:
             raise ValueError(f"Usuario no encontrado: {user_id}")
@@ -157,6 +162,8 @@ class ReferralService:
         Returns:
             Dict con resultado del canje
         """
+        logger.info(f"Starting credit redemption for data: user={user_id}, credits={credits}")
+
         try:
             user = await self.user_repo.get_by_id(user_id, current_user_id)
             if not user:
@@ -193,16 +200,18 @@ class ReferralService:
                 reference_id=f"redeem_data_{user_id}",
             )
 
+            remaining_credits = user.referral_credits - actual_credits
             logger.info(
-                f"💳 Créditos canjeados por datos: user {user_id}, "
-                f"-{actual_credits} créditos, +{gb_to_add}GB"
+                f"Credit redemption for data successful: user={user_id}, "
+                f"credits_spent={actual_credits}, gb_added={gb_to_add}, "
+                f"remaining_credits={remaining_credits}"
             )
 
             return {
                 "success": True,
                 "credits_spent": actual_credits,
                 "gb_added": gb_to_add,
-                "remaining_credits": user.referral_credits - actual_credits,
+                "remaining_credits": remaining_credits,
             }
 
         except Exception as e:
@@ -222,6 +231,8 @@ class ReferralService:
         Returns:
             Dict con resultado del canje
         """
+        logger.info(f"Starting credit redemption for slot: user={user_id}")
+
         try:
             user = await self.user_repo.get_by_id(user_id, current_user_id)
             if not user:
@@ -252,21 +263,35 @@ class ReferralService:
                 reference_id=f"redeem_slot_{user_id}",
             )
 
+            remaining_credits = user.referral_credits - credits_per_slot
             logger.info(
-                f"💳 Créditos canjeados por slot: user {user_id}, "
-                f"-{credits_per_slot} créditos, +1 slot"
+                f"Credit redemption for slot successful: user={user_id}, "
+                f"credits_spent={credits_per_slot}, slots_added=1, "
+                f"remaining_credits={remaining_credits}"
             )
 
             return {
                 "success": True,
                 "credits_spent": credits_per_slot,
                 "slots_added": 1,
-                "remaining_credits": user.referral_credits - credits_per_slot,
+                "remaining_credits": remaining_credits,
             }
 
         except Exception as e:
             logger.error(f"Error canjeando créditos por slot: {e}")
             return {"success": False, "error": str(e)}
+
+    def generate_referral_code(self) -> str:
+        """
+        Genera un código de referido único.
+
+        Returns:
+            Código de referido generado
+        """
+        import secrets
+        code = secrets.token_hex(4).upper()
+        logger.debug(f"Generated referral code: {code}")
+        return code
 
     async def record_referred_user_purchase(
         self,

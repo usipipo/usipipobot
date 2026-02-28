@@ -200,6 +200,7 @@ def _configure_application_services(container: punq.Container) -> None:
         return VpnService(
             user_repo=create_user_repo(),
             key_repo=create_key_repo(),
+            package_repo=create_data_package_repo(),
             outline_client=container.resolve(OutlineClient),
             wireguard_client=container.resolve(WireGuardClient),
         )

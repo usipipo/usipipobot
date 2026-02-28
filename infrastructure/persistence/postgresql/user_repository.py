@@ -46,6 +46,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             loyalty_bonus_percent=model.loyalty_bonus_percent or 0,
             welcome_bonus_used=model.welcome_bonus_used or False,
             referred_users_with_purchase=model.referred_users_with_purchase or 0,
+            created_at=model.created_at,
         )
 
     def _entity_to_model(self, entity: User) -> UserModel:
@@ -110,7 +111,9 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 existing.purchase_count = user.purchase_count
                 existing.loyalty_bonus_percent = user.loyalty_bonus_percent
                 existing.welcome_bonus_used = user.welcome_bonus_used
-                existing.referred_users_with_purchase = user.referred_users_with_purchase
+                existing.referred_users_with_purchase = (
+                    user.referred_users_with_purchase
+                )
             else:
                 model = self._entity_to_model(user)
                 self.session.add(model)

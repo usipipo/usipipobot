@@ -7,8 +7,10 @@ Version: 1.0.0
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from infrastructure.api.server import create_app
+from miniapp.router import get_current_user
 
 
 @pytest.fixture
@@ -19,6 +21,26 @@ async def client():
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         yield ac
+
+
+@pytest.fixture
+async def client_with_unregistered_user():
+    """Cliente de pruebas simulando usuario no registrado."""
+    app = create_app()
+
+    async def mock_unregistered_user():
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=403,
+            detail="USER_NOT_REGISTERED"
+        )
+
+    app.dependency_overrides[get_current_user] = mock_unregistered_user
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        yield ac
+    app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
@@ -77,3 +99,23 @@ async def test_entry_endpoint_contains_usipipo_branding(client):
     assert response.status_code == 200
     content_lower = response.content.lower()
     assert b"usipipo" in content_lower or b"vpn" in content_lower
+
+
+@pytest.mark.asyncio
+async def test_api_user_returns_403_for_unregistered_user(client_with_unregistered_user):
+    """Test que la API devuelve 403 cuando el usuario no está registrado en el bot."""
+    response = await client_with_unregistered_user.get("/miniapp/api/user")
+    assert response.status_code == 403
+    data = response.json()
+    assert data["detail"] == "USER_NOT_REGISTERED"
+
+
+@pytest.mark.asyncio
+async def test_entry_page_contains_registration_check(client):
+    """Test que la página de entrada verifica registro antes de redirigir."""
+    response = await client.get("/miniapp/entry")
+    assert response.status_code == 200
+    # Should contain the API call to check user registration
+    assert b"/miniapp/api/user" in response.content
+    # Should contain logic to handle USER_NOT_REGISTERED error
+    assert b"USER_NOT_REGISTERED" in response.content

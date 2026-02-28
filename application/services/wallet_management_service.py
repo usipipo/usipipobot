@@ -58,10 +58,13 @@ class WalletManagementService:
             return wallet
 
         except TronDealerApiError as e:
-            logger.error(f"TronDealer API error assigning wallet: {e}")
+            if e.status_code == 401:
+                logger.error(f"TronDealer API authentication failed for user {user_id}: API key not configured or invalid")
+            else:
+                logger.error(f"TronDealer API error {e.status_code} assigning wallet to user {user_id}: {e.message}")
             return None
         except Exception as e:
-            logger.error(f"Error assigning wallet to user {user_id}: {e}")
+            logger.error(f"Unexpected error assigning wallet to user {user_id}: {e}", exc_info=True)
             return None
 
     async def get_wallet_balance(self, user: User) -> Optional[WalletBalance]:

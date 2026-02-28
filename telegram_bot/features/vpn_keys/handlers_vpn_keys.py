@@ -57,26 +57,33 @@ class VpnKeysHandler:
         telegram_id = update.effective_user.id
         is_admin = telegram_id == int(settings.ADMIN_ID)
 
+        logger.info(f"🔑 User {telegram_id} started key creation flow")
+
         user = await self._get_or_create_user(telegram_id)
         can_create, message = await self.vpn_service.can_user_create_key(
             user, current_user_id=telegram_id
         )
 
         if not can_create:
+            logger.warning(f"⚠️ User {telegram_id} reached key limit ({user.max_keys} keys)")
+            # Obtener cantidad de claves usadas para mostrar en el mensaje
+            keys = await self.vpn_service.get_user_keys(telegram_id, telegram_id)
+            used_keys = len([k for k in keys if k.is_active])
             error_message = VpnKeysMessages.Error.KEY_LIMIT_REACHED.format(
+                used_keys=used_keys,
                 max_keys=user.max_keys
             )
             if update.callback_query:
                 await update.callback_query.answer()
                 await update.callback_query.edit_message_text(
                     text=error_message,
-                    reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+                    reply_markup=VpnKeysKeyboards.limit_reached_menu(is_admin=is_admin),
                     parse_mode="Markdown",
                 )
             elif update.message:
                 await update.message.reply_text(
                     text=error_message,
-                    reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+                    reply_markup=VpnKeysKeyboards.limit_reached_menu(is_admin=is_admin),
                     parse_mode="Markdown",
                 )
             return ConversationHandler.END
@@ -116,10 +123,14 @@ class VpnKeysHandler:
         if context.user_data is not None:
             context.user_data["tmp_key_type"] = key_type
 
+        user_id = update.effective_user.id if update.effective_user else None
+        logger.info(f"🔑 User {user_id} selected key type: {key_type}")
+
         cancel_keyboard = VpnKeysKeyboards.cancel_creation()
 
+        escaped_key_type = escape_markdown(key_type.upper())
         await query.edit_message_text(
-            text=f"🛡️ Has seleccionado **{key_type.upper()}**.\n\nEscribe un nombre para identificar tu nueva llave (ej: Mi Laptop):",
+            text=f"🛡️ Has seleccionado *{escaped_key_type}*.\n\nEscribe un nombre para identificar tu nueva llave (ej: Mi Laptop):",
             parse_mode="Markdown",
             reply_markup=cancel_keyboard,
         )
@@ -139,10 +150,14 @@ class VpnKeysHandler:
         key_type: str = tmp_key_type
         telegram_id = update.effective_user.id
 
+        logger.info(f"🔑 User {telegram_id} named key: {key_name} (type: {key_type})")
+
         try:
             new_key = await self.vpn_service.create_key(
                 telegram_id, key_type, key_name, current_user_id=telegram_id
             )
+
+            logger.info(f"✅ Key {new_key.id} created successfully for user {telegram_id}")
 
             safe_name = "".join(x for x in key_name if x.isalnum())
             file_id = f"{telegram_id}_{safe_name}"
@@ -168,17 +183,18 @@ class VpnKeysHandler:
                     await update.message.reply_photo(
                         photo=photo,
                         caption=caption,
-                        parse_mode="MarkdownV2",
+                        parse_mode="Markdown",
                         reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
                     )
 
             elif key_type == "wireguard":
                 conf_path = QrGenerator.save_conf_file(new_key.key_data, file_id)
 
+                escaped_name = escape_markdown(key_name)
                 caption = (
                     VpnKeysMessages.Success.KEY_CREATED_WITH_DATA.format(
                         type="WIREGUARD",
-                        name=key_name,
+                        name=escaped_name,
                         data_limit=new_key.data_limit_gb,
                     )
                     + "\n\nEscanea el QR en tu móvil o usa el archivo adjunto en tu PC."
@@ -194,6 +210,7 @@ class VpnKeysHandler:
                         document=document,
                         filename=f"{key_name}.conf",
                         caption="📁 *Configuración WireGuard*\n\n🔑 Tu nueva llave VPN está lista para usar\n\n⚠️ *Guarda este archivo en un lugar seguro*",
+                        parse_mode="Markdown",
                         reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
                     )
 
@@ -215,6 +232,9 @@ class VpnKeysHandler:
             return ConversationHandler.END
         telegram_id = update.effective_user.id
         is_admin = telegram_id == int(settings.ADMIN_ID)
+
+        logger.info(f"🔑 User {telegram_id} cancelled key creation")
+
         await update.message.reply_text(
             text=VpnKeysMessages.CANCELLED,
             reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),

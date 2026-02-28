@@ -7,6 +7,7 @@ from typing import List, Optional
 from config import settings
 from domain.entities.user import User, UserRole
 from domain.entities.vpn_key import KeyType, VpnKey
+from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
@@ -21,11 +22,13 @@ class VpnService:
         self,
         user_repo: IUserRepository,
         key_repo: IKeyRepository,
+        package_repo: IDataPackageRepository,
         outline_client: OutlineClient,
         wireguard_client: WireGuardClient,
     ):
         self.user_repo = user_repo
         self.key_repo = key_repo
+        self.package_repo = package_repo
         self.outline_client = outline_client
         self.wireguard_client = wireguard_client
 
@@ -33,6 +36,7 @@ class VpnService:
         self, telegram_id: int, key_type: str, key_name: str, current_user_id: int
     ) -> VpnKey:
         """Orquesta la creación de una llave VPN."""
+        logger.info(f"🔑 Iniciando creación de llave {key_type} para usuario {telegram_id}")
         user = await self.user_repo.get_by_id(telegram_id, current_user_id)
         if not user:
             user = User(telegram_id=telegram_id)
@@ -79,7 +83,7 @@ class VpnService:
         )
         await self.key_repo.save(new_key, current_user_id)
 
-        logger.info(f"🔑 Llave {key_type} creada para el usuario {telegram_id}")
+        logger.info(f"🔑 Llave creada exitosamente - Tipo: {key_type}, ID: {new_key.id}, Usuario: {telegram_id}, Nombre: '{key_name}'")
         return new_key
 
     async def get_all_active_keys(self) -> List[VpnKey]:
@@ -125,6 +129,7 @@ class VpnService:
         self, user: User, current_user_id: int, key_type: Optional[str] = None
     ) -> tuple[bool, str]:
         """Verifica si el usuario puede crear una nueva llave."""
+        logger.debug(f"🔍 Verificando si usuario {user.telegram_id} puede crear llave (tipo: {key_type or 'any'})")
         keys = await self.key_repo.get_by_user_id(user.telegram_id, current_user_id)
         if len(keys) >= user.max_keys:
             return False, f"Has alcanzado el límite de {user.max_keys} llaves."
@@ -138,24 +143,38 @@ class VpnService:
             if existing_of_type:
                 return False, f"Ya tienes una clave {key_type.title()}. Solo se permite una clave por tipo de servidor."
 
-        return True, ""
+        result = True, ""
+        logger.debug(f"✅ Usuario {user.telegram_id} puede crear llave: {result[0]}")
+        return result
 
     async def get_user_status(self, telegram_id: int, current_user_id: int) -> dict:
         """Obtiene un resumen del estado del usuario y sus llaves."""
+        logger.debug(f"📊 Consultando estado de usuario {telegram_id}")
         user = await self.user_repo.get_by_id(telegram_id, current_user_id)
         keys = await self.key_repo.get_by_user_id(telegram_id, current_user_id)
 
-        # Calcular consumo total
+        # Calcular consumo total de llaves
         total_used_bytes = sum(k.used_bytes for k in keys)
-        total_data_limit = sum(k.data_limit_bytes for k in keys)
+        keys_data_limit = sum(k.data_limit_bytes for k in keys)
+
+        # Obtener paquetes de datos activos y sumar sus límites
+        packages = await self.package_repo.get_valid_by_user(telegram_id, current_user_id)
+        packages_data_limit = sum(p.data_limit_bytes for p in packages)
+        packages_used_bytes = sum(p.data_used_bytes for p in packages)
+
+        # Límite total = llaves + paquetes comprados (Opción B)
+        total_data_limit = keys_data_limit + packages_data_limit
+        total_used_including_packages = total_used_bytes + packages_used_bytes
 
         return {
             "user": user,
             "keys_count": len(keys),
             "keys": keys,
-            "total_used_gb": total_used_bytes / (1024**3),
+            "total_used_gb": total_used_including_packages / (1024**3),
             "total_limit_gb": total_data_limit / (1024**3),
-            "remaining_gb": max(0, total_data_limit - total_used_bytes) / (1024**3),
+            "remaining_gb": max(0, total_data_limit - total_used_including_packages) / (1024**3),
+            "keys_limit_gb": keys_data_limit / (1024**3),
+            "packages_limit_gb": packages_data_limit / (1024**3),
         }
 
     async def check_and_reset_billing_cycle(self, key: VpnKey) -> bool:
@@ -171,7 +190,9 @@ class VpnService:
         self, telegram_id: int, current_user_id: int
     ) -> List[VpnKey]:
         """Obtiene todas las llaves activas de un usuario."""
-        return await self.key_repo.get_by_user_id(telegram_id, current_user_id)
+        keys = await self.key_repo.get_by_user_id(telegram_id, current_user_id)
+        logger.debug(f"🔑 Usuario {telegram_id} tiene {len(keys)} llave(s)")
+        return keys
 
     async def revoke_key(self, key_id: uuid.UUID, current_user_id: int) -> bool:
         """Elimina una llave de la infraestructura y la marca como inactiva en BD."""
@@ -214,11 +235,11 @@ class VpnService:
                 logger.warning(f"Intentando renombrar llave inexistente: {key_id}")
                 return False
 
-            # Actualizar nombre en la base de datos
+            old_name = key.name
             key.name = new_name
             await self.key_repo.save(key, current_user_id)
 
-            logger.info(f"🔑 Llave {key_id} renombrada a '{new_name}'")
+            logger.info(f"🏷️ Llave renombrada - ID: {key_id}, Usuario: {key.user_id}, '{old_name}' → '{new_name}'")
             return True
 
         except (Exception, ValueError) as e:
@@ -313,7 +334,7 @@ class VpnService:
         """Actualiza una llave en la base de datos."""
         try:
             await self.key_repo.save(key, current_user_id)
-            logger.info(f"🔑 Llave {key.id} actualizada")
+            logger.info(f"📝 Llave actualizada - ID: {key.id}, Usuario: {key.user_id}, Tipo: {key.key_type}, Activa: {key.is_active}")
             return True
         except Exception as e:
             logger.error(f"Error actualizando llave {key.id}: {e}")
@@ -321,12 +342,15 @@ class VpnService:
 
     async def delete_key(self, key_id: str, current_user_id: int) -> bool:
         """Elimina una llave (usa revoke_key para consistencia)."""
+        logger.warning(f"⚠️ ELIMINANDO LLAVE PERMANENTEMENTE - ID: {key_id}, Usuario solicitante: {current_user_id}")
         try:
             key_uuid = uuid.UUID(key_id)
-            return await self.revoke_key(key_uuid, current_user_id)
+            result = await self.revoke_key(key_uuid, current_user_id)
+            if result:
+                logger.warning(f"✅ Llave {key_id} eliminada permanentemente")
+            return result
         except (Exception, ValueError) as e:
             logger.error(f"Error eliminando llave {key_id}: {e}")
-            # Relanzar la excepción para que el handler pueda manejarla
             raise
 
     async def deactivate_inactive_key(
@@ -343,3 +367,39 @@ class VpnService:
         except Exception as e:
             logger.error(f"Error al desactivar llave {key_id}: {e}")
             return False
+
+    async def sync_usage(self, current_user_id: int) -> dict:
+        """Sincroniza el consumo de datos de todas las llaves activas."""
+        logger.info("🔄 Iniciando sincronización de consumo de datos VPN")
+
+        keys = await self.get_all_active_keys()
+        synced_count = 0
+        error_count = 0
+        total_bytes_synced = 0
+
+        for key in keys:
+            try:
+                current_usage = await self.fetch_real_usage(key)
+                if key.id is not None:
+                    await self.update_key_usage(uuid.UUID(key.id), current_usage)
+                    synced_count += 1
+                    total_bytes_synced += current_usage
+                else:
+                    logger.warning(f"⚠️ Llave sin ID, omitiendo: {key.name}")
+                    error_count += 1
+            except Exception as e:
+                error_count += 1
+                logger.error(f"❌ Error sincronizando llave {key.id}: {e}")
+
+        summary = {
+            "total_keys": len(keys),
+            "synced": synced_count,
+            "errors": error_count,
+            "total_bytes_synced": total_bytes_synced,
+        }
+        logger.info(
+            f"✅ Sincronización completada - Total: {summary['total_keys']}, "
+            f"Exitosas: {summary['synced']}, Errores: {summary['errors']}, "
+            f"Bytes sincronizados: {summary['total_bytes_synced']}"
+        )
+        return summary

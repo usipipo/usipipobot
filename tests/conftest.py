@@ -109,7 +109,7 @@ def sample_vpn_key():
         external_id="outline-key-123",
         is_active=True,
         used_bytes=0,
-        data_limit_bytes=10 * 1024**3,
+        data_limit_bytes=5 * 1024**3,
     )
 
 
