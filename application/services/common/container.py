@@ -17,6 +17,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 T = TypeVar("T")
 
 from application.services.admin_service import AdminService
+from application.services.consumption_vpn_integration_service import (
+    ConsumptionVpnIntegrationService,
+)
 from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
@@ -253,6 +256,20 @@ def _configure_application_services(container: punq.Container) -> None:
             crypto_order_repo=PostgresCryptoOrderRepository(session),
         )
 
+    def create_consumption_vpn_integration_service() -> ConsumptionVpnIntegrationService:
+        from application.services.vpn_infrastructure_service import (
+            VpnInfrastructureService,
+        )
+        from application.services.consumption_billing_service import (
+            ConsumptionBillingService,
+        )
+        return ConsumptionVpnIntegrationService(
+            user_repo=create_user_repo(),
+            key_repo=create_key_repo(),
+            vpn_infra_service=container.resolve(VpnInfrastructureService),
+            billing_service=container.resolve(ConsumptionBillingService),
+        )
+
     container.register(VpnService, factory=create_vpn_service)
     container.register(AdminService, factory=create_admin_service)
     container.register(DataPackageService, factory=create_data_package_service)
@@ -263,6 +280,10 @@ def _configure_application_services(container: punq.Container) -> None:
         WalletManagementService, factory=create_wallet_management_service
     )
     container.register(CryptoPaymentService, factory=create_crypto_payment_service)
+    container.register(
+        ConsumptionVpnIntegrationService,
+        factory=create_consumption_vpn_integration_service,
+    )
 
 
 def _configure_handlers(container: punq.Container) -> None:
