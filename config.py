@@ -245,6 +245,20 @@ class Settings(BaseSettings):
         default=90, ge=30, description="Días de inactividad para limpiar una clave"
     )
 
+    # Ghost Key Cleanup
+    GHOST_KEY_DETECTION_DAYS: int = Field(
+        default=90, ge=30, le=365, description="Days of inactivity to consider a key as ghost"
+    )
+    GHOST_KEY_AUTO_CLEANUP_ENABLED: bool = Field(
+        default=True, description="Enable automatic ghost key cleanup"
+    )
+    GHOST_KEY_CLEANUP_DAY: str = Field(
+        default="sunday", description="Day of week to run cleanup (monday-sunday)"
+    )
+    GHOST_KEY_CLEANUP_HOUR: int = Field(
+        default=3, ge=0, le=23, description="Hour to run cleanup (0-23)"
+    )
+
     BILLING_CYCLE_DAYS: int = Field(
         default=30, ge=1, description="Días del ciclo de facturación"
     )
