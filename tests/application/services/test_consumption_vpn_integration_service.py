@@ -257,3 +257,58 @@ class TestUnblockUserKeys:
         assert result["keys_failed"] == 0
         user.mark_debt_as_paid.assert_called_once()
         service.user_repo.update.assert_called_once_with(user, 123)
+
+
+class TestRouteUsageToBilling:
+    @pytest.fixture
+    def service(self):
+        from application.services.consumption_vpn_integration_service import (
+            ConsumptionVpnIntegrationService,
+        )
+
+        return ConsumptionVpnIntegrationService(
+            user_repo=AsyncMock(),
+            key_repo=AsyncMock(),
+            vpn_infra_service=AsyncMock(),
+            billing_service=AsyncMock(),
+        )
+
+    @pytest.mark.asyncio
+    async def test_routes_usage_when_consumption_mode_active(self, service):
+        user = MagicMock()
+        user.consumption_mode_enabled = True
+        service.user_repo.get_by_id.return_value = user
+        service.billing_service.record_data_usage.return_value = True
+
+        result = await service.route_usage_to_billing(
+            user_id=123, mb_used=Decimal("50.5"), current_user_id=123
+        )
+
+        assert result is True
+        service.billing_service.record_data_usage.assert_called_once_with(
+            123, Decimal("50.5"), 123
+        )
+
+    @pytest.mark.asyncio
+    async def test_skips_routing_when_consumption_mode_not_active(self, service):
+        user = MagicMock()
+        user.consumption_mode_enabled = False
+        service.user_repo.get_by_id.return_value = user
+
+        result = await service.route_usage_to_billing(
+            user_id=123, mb_used=Decimal("50.5"), current_user_id=123
+        )
+
+        assert result is False
+        service.billing_service.record_data_usage.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_user_not_found(self, service):
+        service.user_repo.get_by_id.return_value = None
+
+        result = await service.route_usage_to_billing(
+            user_id=123, mb_used=Decimal("50.5"), current_user_id=123
+        )
+
+        assert result is False
+        service.billing_service.record_data_usage.assert_not_called()
