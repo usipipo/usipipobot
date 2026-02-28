@@ -120,71 +120,85 @@ class DataPackageService:
         Returns:
             Tuple de (DataPackage comprado, dict con desglose de bonos)
         """
-        option = self._get_package_option(package_type)
-        if not option:
-            raise ValueError(f"Tipo de paquete inválido: {package_type}")
-
-        user = await self.user_repo.get_by_id(user_id, current_user_id)
-        if not user:
-            raise ValueError(f"Usuario no encontrado: {user_id}")
-
-        # Get active packages for quick renewal bonus calculation
-        active_packages = await self.package_repo.get_valid_by_user(user_id, current_user_id)
-
-        # Calculate bonuses
-        total_bonus_percent, bonuses = self.bonus_service.calculate_total_bonus(
-            user, active_packages, is_referred_first_purchase
-        )
-
-        # Calculate data with bonuses
-        data_limit_bytes = option.data_gb * (1024**3)
-
-        # Package base bonus + user bonuses
-        total_multiplier = 1 + (option.bonus_percent + total_bonus_percent) / 100
-        actual_data_bytes = int(data_limit_bytes * total_multiplier)
-
-        expires_at = datetime.now(timezone.utc) + timedelta(days=option.duration_days)
-
-        new_package = DataPackage(
-            user_id=user_id,
-            package_type=option.package_type,
-            data_limit_bytes=actual_data_bytes,
-            stars_paid=option.stars,
-            expires_at=expires_at,
-            telegram_payment_id=telegram_payment_id,
-        )
-
-        saved_package = await self.package_repo.save(new_package, current_user_id)
-
-        # Update user stats
-        user.purchase_count += 1
-
-        # Mark welcome bonus as used if this was first purchase
-        if user.purchase_count == 1:
-            user.welcome_bonus_used = True
-
-        # Update loyalty bonus based on new purchase count
-        new_loyalty = self.bonus_service.get_loyalty_bonus_for_purchase_count(user.purchase_count)
-        if new_loyalty > user.loyalty_bonus_percent:
-            user.loyalty_bonus_percent = new_loyalty
-
-        await self.user_repo.save(user, current_user_id)
-
-        # Prepare bonus breakdown
-        bonus_breakdown = {
-            "base_package_bonus": option.bonus_percent,
-            "user_bonuses": bonuses,
-            "total_bonus_percent": option.bonus_percent + total_bonus_percent,
-            "base_gb": option.data_gb,
-            "final_gb": actual_data_bytes / (1024**3)
-        }
-
         logger.info(
-            f"📦 Paquete {option.name} comprado para usuario {user_id} "
-            f"con {total_bonus_percent}% bonus adicional"
+            f"📦 Iniciando compra de paquete - user_id={user_id}, "
+            f"package_type={package_type}, payment_id={telegram_payment_id}"
         )
 
-        return saved_package, bonus_breakdown
+        try:
+            option = self._get_package_option(package_type)
+            if not option:
+                raise ValueError(f"Tipo de paquete inválido: {package_type}")
+
+            user = await self.user_repo.get_by_id(user_id, current_user_id)
+            if not user:
+                raise ValueError(f"Usuario no encontrado: {user_id}")
+
+            # Get active packages for quick renewal bonus calculation
+            active_packages = await self.package_repo.get_valid_by_user(user_id, current_user_id)
+
+            # Calculate bonuses
+            total_bonus_percent, bonuses = self.bonus_service.calculate_total_bonus(
+                user, active_packages, is_referred_first_purchase
+            )
+
+            # Calculate data with bonuses
+            data_limit_bytes = option.data_gb * (1024**3)
+
+            # Package base bonus + user bonuses
+            total_multiplier = 1 + (option.bonus_percent + total_bonus_percent) / 100
+            actual_data_bytes = int(data_limit_bytes * total_multiplier)
+
+            expires_at = datetime.now(timezone.utc) + timedelta(days=option.duration_days)
+
+            new_package = DataPackage(
+                user_id=user_id,
+                package_type=option.package_type,
+                data_limit_bytes=actual_data_bytes,
+                stars_paid=option.stars,
+                expires_at=expires_at,
+                telegram_payment_id=telegram_payment_id,
+            )
+
+            saved_package = await self.package_repo.save(new_package, current_user_id)
+
+            # Update user stats
+            user.purchase_count += 1
+
+            # Mark welcome bonus as used if this was first purchase
+            if user.purchase_count == 1:
+                user.welcome_bonus_used = True
+
+            # Update loyalty bonus based on new purchase count
+            new_loyalty = self.bonus_service.get_loyalty_bonus_for_purchase_count(user.purchase_count)
+            if new_loyalty > user.loyalty_bonus_percent:
+                user.loyalty_bonus_percent = new_loyalty
+
+            await self.user_repo.save(user, current_user_id)
+
+            # Prepare bonus breakdown
+            bonus_breakdown = {
+                "base_package_bonus": option.bonus_percent,
+                "user_bonuses": bonuses,
+                "total_bonus_percent": option.bonus_percent + total_bonus_percent,
+                "base_gb": option.data_gb,
+                "final_gb": actual_data_bytes / (1024**3)
+            }
+
+            logger.info(
+                f"✅ Paquete comprado exitosamente - user_id={user_id}, "
+                f"package_type={option.name}, data_gb={bonus_breakdown['final_gb']:.2f}, "
+                f"stars={option.stars}, total_bonus={bonus_breakdown['total_bonus_percent']}%, "
+                f"expires_at={expires_at.isoformat()}"
+            )
+
+            return saved_package, bonus_breakdown
+        except Exception as e:
+            logger.error(
+                f"❌ Error en compra de paquete - user_id={user_id}, "
+                f"package_type={package_type}, error={e}"
+            )
+            raise
 
     async def purchase_key_slots(
         self,
@@ -193,6 +207,11 @@ class DataPackageService:
         telegram_payment_id: str,
         current_user_id: int,
     ) -> Dict[str, Any]:
+        logger.info(
+            f"🔑 Iniciando compra de slots - user_id={user_id}, "
+            f"slots={slots}, payment_id={telegram_payment_id}"
+        )
+
         option = self._get_slot_option(slots)
         if not option:
             raise ValueError(f"Cantidad de slots invalida: {slots}")
@@ -208,13 +227,19 @@ class DataPackageService:
         if not success:
             raise ValueError(f"Error al incrementar slots para usuario {user_id}")
 
-        logger.info(f"🔑 +{slots} slots comprados para usuario {user_id}")
-
-        return {
+        result = {
             "slots_added": slots,
             "new_max_keys": user.max_keys + slots,
             "stars_paid": option.stars,
         }
+
+        logger.info(
+            f"✅ Slots comprados exitosamente - user_id={user_id}, "
+            f"slots_added={slots}, new_max_keys={result['new_max_keys']}, "
+            f"stars_paid={option.stars}"
+        )
+
+        return result
 
     async def get_user_packages(
         self, user_id: int, current_user_id: int
@@ -234,6 +259,7 @@ class DataPackageService:
     async def get_user_data_summary(
         self, user_id: int, current_user_id: int
     ) -> Dict[str, Any]:
+        logger.debug(f"📊 Obteniendo resumen de datos - user_id={user_id}")
         packages = await self.package_repo.get_valid_by_user(user_id, current_user_id)
         user = await self.user_repo.get_by_id(user_id, current_user_id)
 
@@ -330,6 +356,13 @@ class DataPackageService:
             for pkg in expired_packages:
                 if pkg.id is None:
                     continue
+
+                logger.warning(
+                    f"⚠️ Paquete expirado - package_id={pkg.id}, "
+                    f"user_id={pkg.user_id}, package_type={pkg.package_type.value}, "
+                    f"expired_at={pkg.expires_at.isoformat()}"
+                )
+
                 success = await self.package_repo.deactivate(pkg.id, admin_user_id)
                 if success:
                     count += 1
