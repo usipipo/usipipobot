@@ -15,6 +15,13 @@ class InvoiceStatus(str, Enum):
     CANCELLED = "cancelled"  # Factura cancelada manualmente
 
 
+class PaymentMethod(str, Enum):
+    """Métodos de pago soportados."""
+
+    STARS = "stars"      # Pago con Telegram Stars
+    CRYPTO = "crypto"    # Pago con USDT (BSC)
+
+
 @dataclass
 class ConsumptionInvoice:
     """
@@ -27,12 +34,14 @@ class ConsumptionInvoice:
     billing_id: uuid.UUID
     user_id: int
     amount_usd: Decimal
-    wallet_address: str  # Dirección de wallet para recibir el pago
+    wallet_address: str  # Dirección de wallet para recibir el pago (solo crypto)
+    payment_method: PaymentMethod = PaymentMethod.CRYPTO
     status: InvoiceStatus = InvoiceStatus.PENDING
     id: Optional[uuid.UUID] = None
     expires_at: Optional[datetime] = None
     paid_at: Optional[datetime] = None
     transaction_hash: Optional[str] = None
+    telegram_payment_id: Optional[str] = None  # Para pagos con Stars
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Tiempo de expiración: 30 minutos
@@ -87,12 +96,17 @@ class ConsumptionInvoice:
         secs = seconds % 60
         return f"{minutes:02d}:{secs:02d}"
 
-    def mark_as_paid(self, transaction_hash: str) -> None:
+    def mark_as_paid(
+        self,
+        transaction_hash: Optional[str] = None,
+        telegram_payment_id: Optional[str] = None
+    ) -> None:
         """
         Marca la factura como pagada.
 
         Args:
-            transaction_hash: Hash de la transacción blockchain
+            transaction_hash: Hash de la transacción blockchain (para crypto)
+            telegram_payment_id: ID de pago de Telegram (para Stars)
         """
         if self.status != InvoiceStatus.PENDING:
             raise ValueError("Solo se pueden pagar facturas pendientes")
@@ -102,7 +116,11 @@ class ConsumptionInvoice:
 
         self.status = InvoiceStatus.PAID
         self.paid_at = datetime.now(timezone.utc)
-        self.transaction_hash = transaction_hash
+
+        if self.payment_method == PaymentMethod.CRYPTO and transaction_hash:
+            self.transaction_hash = transaction_hash
+        elif self.payment_method == PaymentMethod.STARS and telegram_payment_id:
+            self.telegram_payment_id = telegram_payment_id
 
     def mark_as_expired(self) -> None:
         """Marca la factura como expirada."""
@@ -116,15 +134,31 @@ class ConsumptionInvoice:
         Genera instrucciones de pago para mostrar al usuario.
         Sanitiza la dirección de wallet para no exponer datos sensibles completos.
         """
-        masked_wallet = self._mask_wallet_address()
-        return (
-            f"💰 *Instrucciones de Pago*\n\n"
-            f"Monto: *${self.amount_usd:.2f} USDT*\n"
-            f"Red: *BSC (BEP20)*\n"
-            f"Wallet: `{masked_wallet}`\n\n"
-            f"⏱️ Tiempo restante: *{self.time_remaining_formatted}*\n\n"
-            f"⚠️ Envíe exactamente el monto indicado."
-        )
+        if self.payment_method == PaymentMethod.STARS:
+            return (
+                f"💫 *Pago con Telegram Stars*\n\n"
+                f"Monto: *{self.get_stars_amount()} Stars*\n"
+                f"Equivalente: *${self.amount_usd:.2f} USD*\n\n"
+                f"⏱️ Tiempo restante: *{self.time_remaining_formatted}*\n\n"
+                f"✅ Presiona el botón de pago para completar la transacción."
+            )
+        else:
+            masked_wallet = self._mask_wallet_address()
+            return (
+                f"💰 *Instrucciones de Pago*\n\n"
+                f"Monto: *${self.amount_usd:.2f} USDT*\n"
+                f"Red: *BSC (BEP20)*\n"
+                f"Wallet: `{masked_wallet}`\n\n"
+                f"⏱️ Tiempo restante: *{self.time_remaining_formatted}*\n\n"
+                f"⚠️ Envíe exactamente el monto indicado."
+            )
+
+    def get_stars_amount(self) -> int:
+        """
+        Calcula el monto en Telegram Stars.
+        Tasa: 1 USDT = 120 Stars (misma tasa del sistema)
+        """
+        return int(self.amount_usd * 120)
 
     def _mask_wallet_address(self) -> str:
         """
