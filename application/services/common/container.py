@@ -246,6 +246,7 @@ def _configure_application_services(container: punq.Container) -> None:
         return WalletManagementService(
             tron_dealer_client=container.resolve(TronDealerClient),
             user_repo=create_user_repo(),
+            crypto_order_repo=create_crypto_order_repo(),
         )
 
     def create_crypto_payment_service() -> CryptoPaymentService:
