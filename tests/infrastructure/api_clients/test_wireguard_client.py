@@ -157,3 +157,229 @@ async def test_get_usage_skips_invalid_lines(wireguard_client):
         # Should only parse line with 7+ columns
         assert len(result) == 1
         assert result[0]["public_key"] == "pubkey2"
+
+
+class TestDisablePeer:
+    """Tests for disable_peer method."""
+
+    @pytest.fixture
+    def wireguard_client(self):
+        """Create WireGuard client for testing."""
+        client = WireGuardClient()
+        client.interface = "wg0"
+        client.conf_path = MagicMock()
+        return client
+
+    @pytest.mark.asyncio
+    async def test_disable_peer_success(self, wireguard_client):
+        """Test successful peer disable - peer found and disabled."""
+        config_content = """[Interface]
+PrivateKey = server_priv_key
+Address = 10.0.0.1/24
+ListenPort = 51820
+
+### CLIENT tg_123_abc123
+[Peer]
+PublicKey = test_pub_key_123
+PresharedKey = test_psk
+AllowedIPs = 10.0.0.2/32
+
+### CLIENT tg_456_def456
+[Peer]
+PublicKey = other_pub_key
+PresharedKey = other_psk
+AllowedIPs = 10.0.0.3/32
+"""
+
+        wireguard_client.conf_path.exists.return_value = True
+        wireguard_client.conf_path.read_text.return_value = config_content
+
+        with patch.object(
+            wireguard_client, "_run_cmd", new_callable=AsyncMock
+        ) as mock_run_cmd:
+            result = await wireguard_client.disable_peer("tg_123_abc123")
+
+            assert result is True
+            mock_run_cmd.assert_called_once_with(
+                "wg set wg0 peer test_pub_key_123 allowed-ips 0.0.0.0/32"
+            )
+            wireguard_client.conf_path.write_text.assert_called_once()
+
+            # Verify the config was updated with [DISABLED] marker
+            written_content = wireguard_client.conf_path.write_text.call_args[0][0]
+            assert "[DISABLED]" in written_content
+            assert "### CLIENT tg_123_abc123" in written_content
+
+    @pytest.mark.asyncio
+    async def test_disable_peer_not_found(self, wireguard_client):
+        """Test disable returns False when peer not found."""
+        config_content = """[Interface]
+PrivateKey = server_priv_key
+Address = 10.0.0.1/24
+
+### CLIENT tg_999_other
+[Peer]
+PublicKey = other_pub_key
+AllowedIPs = 10.0.0.5/32
+"""
+
+        wireguard_client.conf_path.exists.return_value = True
+        wireguard_client.conf_path.read_text.return_value = config_content
+
+        with patch("infrastructure.api_clients.client_wireguard.logger") as mock_logger:
+            result = await wireguard_client.disable_peer("tg_123_notfound")
+
+            assert result is False
+            mock_logger.error.assert_called_once()
+            error_msg = mock_logger.error.call_args[0][0]
+            assert "tg_123_notfound" in error_msg
+
+    @pytest.mark.asyncio
+    async def test_disable_peer_config_not_found(self, wireguard_client):
+        """Test disable returns False when config file doesn't exist."""
+        wireguard_client.conf_path.exists.return_value = False
+
+        with patch("infrastructure.api_clients.client_wireguard.logger") as mock_logger:
+            result = await wireguard_client.disable_peer("tg_123_abc")
+
+            assert result is False
+            mock_logger.error.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_disable_peer_wg_command_fails(self, wireguard_client):
+        """Test disable returns False when wg command fails."""
+        config_content = """### CLIENT tg_123_abc
+[Peer]
+PublicKey = test_pub_key
+AllowedIPs = 10.0.0.2/32
+"""
+
+        wireguard_client.conf_path.exists.return_value = True
+        wireguard_client.conf_path.read_text.return_value = config_content
+
+        with patch.object(
+            wireguard_client,
+            "_run_cmd",
+            new_callable=AsyncMock,
+            side_effect=Exception("wg command failed"),
+        ):
+            with patch(
+                "infrastructure.api_clients.client_wireguard.logger"
+            ) as mock_logger:
+                result = await wireguard_client.disable_peer("tg_123_abc")
+
+                assert result is False
+                mock_logger.error.assert_called_once()
+
+
+class TestDisablePeer:
+    """Tests for disable_peer method."""
+
+    @pytest.fixture
+    def wireguard_client(self):
+        """Create WireGuard client for testing."""
+        client = WireGuardClient()
+        client.interface = "wg0"
+        client.conf_path = MagicMock()
+        return client
+
+    @pytest.mark.asyncio
+    async def test_disable_peer_success(self, wireguard_client):
+        """Test successful peer disable - peer found and disabled."""
+        config_content = """[Interface]
+PrivateKey = server_priv_key
+Address = 10.0.0.1/24
+ListenPort = 51820
+
+### CLIENT tg_123_abc123
+[Peer]
+PublicKey = test_pub_key_123
+PresharedKey = test_psk
+AllowedIPs = 10.0.0.2/32
+
+### CLIENT tg_456_def456
+[Peer]
+PublicKey = other_pub_key
+PresharedKey = other_psk
+AllowedIPs = 10.0.0.3/32
+"""
+
+        wireguard_client.conf_path.exists.return_value = True
+        wireguard_client.conf_path.read_text.return_value = config_content
+
+        with patch.object(
+            wireguard_client, "_run_cmd", new_callable=AsyncMock
+        ) as mock_run_cmd:
+            result = await wireguard_client.disable_peer("tg_123_abc123")
+
+            assert result is True
+            mock_run_cmd.assert_called_once_with(
+                "wg set wg0 peer test_pub_key_123 allowed-ips 0.0.0.0/32"
+            )
+            wireguard_client.conf_path.write_text.assert_called_once()
+
+            # Verify the config was updated with [DISABLED] marker
+            written_content = wireguard_client.conf_path.write_text.call_args[0][0]
+            assert "[DISABLED]" in written_content
+            assert "### CLIENT tg_123_abc123" in written_content
+
+    @pytest.mark.asyncio
+    async def test_disable_peer_not_found(self, wireguard_client):
+        """Test disable returns False when peer not found."""
+        config_content = """[Interface]
+PrivateKey = server_priv_key
+Address = 10.0.0.1/24
+
+### CLIENT tg_999_other
+[Peer]
+PublicKey = other_pub_key
+AllowedIPs = 10.0.0.5/32
+"""
+
+        wireguard_client.conf_path.exists.return_value = True
+        wireguard_client.conf_path.read_text.return_value = config_content
+
+        with patch("infrastructure.api_clients.client_wireguard.logger") as mock_logger:
+            result = await wireguard_client.disable_peer("tg_123_notfound")
+
+            assert result is False
+            mock_logger.error.assert_called_once()
+            error_msg = mock_logger.error.call_args[0][0]
+            assert "tg_123_notfound" in error_msg
+
+    @pytest.mark.asyncio
+    async def test_disable_peer_config_not_found(self, wireguard_client):
+        """Test disable returns False when config file doesn't exist."""
+        wireguard_client.conf_path.exists.return_value = False
+
+        with patch("infrastructure.api_clients.client_wireguard.logger") as mock_logger:
+            result = await wireguard_client.disable_peer("tg_123_abc")
+
+            assert result is False
+            mock_logger.error.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_disable_peer_wg_command_fails(self, wireguard_client):
+        """Test disable returns False when wg command fails."""
+        config_content = """### CLIENT tg_123_abc
+[Peer]
+PublicKey = test_pub_key
+AllowedIPs = 10.0.0.2/32
+"""
+
+        wireguard_client.conf_path.exists.return_value = True
+        wireguard_client.conf_path.read_text.return_value = config_content
+
+        with patch.object(
+            wireguard_client,
+            "_run_cmd",
+            new_callable=AsyncMock,
+            side_effect=Exception("wg command failed"),
+        ):
+            with patch(
+                "infrastructure.api_clients.client_wireguard.logger"
+            ) as mock_logger:
+                result = await wireguard_client.disable_peer("tg_123_abc")
+
+                assert result is False
+                mock_logger.error.assert_called_once()
