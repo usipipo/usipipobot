@@ -5,6 +5,8 @@ Author: uSipipo Team
 Version: 3.0.0 - Creditos + Shop
 """
 
+from utils.message_separators import MessageSeparatorBuilder, section_separator
+
 
 class OperationsMessages:
     """Mensajes para operaciones del usuario."""
@@ -67,27 +69,37 @@ class OperationsMessages:
     class Transactions:
         """Mensajes para historial de transacciones."""
 
+        # Separadores reutilizables
+        _SEP_DOUBLE = (
+            MessageSeparatorBuilder()
+            .compact().style("double").length(17).build()
+        )
+        _SEP_SIMPLE = (
+            MessageSeparatorBuilder()
+            .compact().style("simple").length(17).build()
+        )
+
         HISTORY_HEADER = (
-            "📜 *Historial de Transacciones*\n\n"
-            "═══════════════════════════════════\n"
+            section_separator("Historial de Transacciones", "📜")
+            + f"{_SEP_DOUBLE}\n"
         )
 
         NO_TRANSACTIONS = (
-            "📭 *Sin Transacciones*\n\n"
-            "Aún no tienes transacciones registradas.\n\n"
-            "💡 Ve al 🛒 *Shop* para hacer tu primera compra."
+            section_separator("Sin Transacciones", "📭")
+            + "Aún no tienes transacciones registradas.\n\n"
+            + "💡 Ve al 🛒 *Shop* para hacer tu primera compra."
         )
 
         ORDER_ITEM = (
             "{status_emoji} *{package_type}*\n"
-            "   ├ 💰 {amount_usdt} USDT\n"
-            "   ├ 📅 {date}\n"
-            "   └ {status_icon} Estado: {status_text}\n"
-            "───────────────────────────────────\n"
+            "   ├─ 💰 {amount_usdt} USDT\n"
+            "   ├─ 📅 {date}\n"
+            "   └─ {status_icon} Estado: {status_text}\n"
+            f"{_SEP_SIMPLE}\n"
         )
 
         HISTORY_FOOTER = (
-            "═══════════════════════════════════\n\n"
+            f"{_SEP_DOUBLE}\n\n"
             "💵 Total: {total_usdt} USDT | 📦 {total_count} transacciones"
         )
 
