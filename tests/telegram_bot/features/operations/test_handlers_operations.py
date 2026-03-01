@@ -168,9 +168,10 @@ class TestFormatOrdersList:
     """Tests para _format_orders_list."""
 
     def test_format_orders_list_empty(self, handler):
-        """Formatear lista vacía devuelve string vacío."""
+        """Formatear lista vacía devuelve footer con totales en cero."""
         result = handler._format_orders_list([])
-        assert result == ""
+        assert "Total: 0.0 USDT" in result
+        assert "0 transacciones" in result
 
     def test_format_orders_list_with_completed(self, handler):
         """Formatear orden completada muestra emoji correcto."""
@@ -187,6 +188,7 @@ class TestFormatOrdersList:
         ]
         result = handler._format_orders_list(orders)
 
+        assert "🟢" in result
         assert "✅" in result
         assert "BASIC" in result
         assert "10.0" in result
@@ -207,6 +209,7 @@ class TestFormatOrdersList:
         ]
         result = handler._format_orders_list(orders)
 
+        assert "🟡" in result
         assert "⏳" in result
         assert "PREMIUM" in result
         assert "25.0" in result
@@ -227,6 +230,7 @@ class TestFormatOrdersList:
         ]
         result = handler._format_orders_list(orders)
 
+        assert "🔴" in result
         assert "❌" in result
         assert "Fallida" in result
 
@@ -245,7 +249,8 @@ class TestFormatOrdersList:
         ]
         result = handler._format_orders_list(orders)
 
-        assert "⏰" in result
+        assert "🔴" in result
+        assert "⚠️" in result
         assert "PRO" in result
         assert "Expirada" in result
 

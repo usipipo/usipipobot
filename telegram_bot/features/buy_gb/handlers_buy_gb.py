@@ -837,7 +837,7 @@ Elige cómo quieres pagar:"""
                 user_id=user_id, current_user_id=user_id
             )
 
-            message = BuyGbMessages.Info.DATA_SUMMARY.format(
+            message = BuyGbMessages.Info.DATA_SUMMARY(
                 active_packages=summary["active_packages"],
                 total_gb=summary["total_limit_gb"],
                 used_gb=summary["total_used_gb"],

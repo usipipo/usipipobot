@@ -206,8 +206,109 @@ container.register(VpnService)
 vpn_service = container.resolve(VpnService)
 ```
 
+## UI/UX Message Design Patterns
+
+### Message Separator System
+
+Use `utils/message_separators.py` for consistent visual styling across all Telegram messages.
+
+#### Standard Separators
+```python
+from utils.message_separators import (
+    MessageSeparatorBuilder,
+    TELEGRAM_MOBILE_WIDTH,
+    section_separator,
+)
+
+# Module-level separator constants (define at top of file)
+_SEP_HEADER = (
+    MessageSeparatorBuilder()
+    .compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
+)
+_SEP_DIVIDER = (
+    MessageSeparatorBuilder()
+    .compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
+)
+```
+
+#### Menu Message Structure
+
+All menu messages should follow this pattern:
+
+```python
+class FeatureMessages:
+    class Menu:
+        """Menu messages with visual hierarchy."""
+        
+        _HEADER = (
+            f"{_SEP_HEADER}\n"
+            "🔧 *SECTION TITLE*\n"
+            f"{_SEP_HEADER}\n"
+        )
+        
+        _DYNAMIC_INDICATOR = (
+            "\n"
+            "💎 *Metric:* `{value}`\n"
+            f"{_SEP_DIVIDER}\n"
+        )
+        
+        _TREE_STRUCTURE = (
+            "\n"
+            "*Section label:*\n"
+            "│\n"
+            "├─ 🎁 *Option 1*\n"
+            "│  └─ Description\n"
+            "│\n"
+            "└─ 📜 *Option 2*\n"
+            "   └─ Description\n"
+        )
+        
+        _FOOTER = (
+            f"\n{_SEP_DIVIDER}\n"
+            "👇 *Call to action:*"
+        )
+        
+        @classmethod
+        def main_with_data(cls, value: int = 0) -> str:
+            """Generate main message with dynamic data."""
+            message = cls._HEADER
+            if value > 0:
+                message += cls._DYNAMIC_INDICATOR.format(value=value)
+            message += cls._TREE_STRUCTURE
+            message += cls._FOOTER
+            return message
+        
+        # Legacy fallback (without dynamic data)
+        MAIN = _HEADER + _TREE_STRUCTURE + _FOOTER
+```
+
+#### Visual Style Guidelines
+
+| Element | Style | Length | Emoji Position |
+|---------|-------|--------|----------------|
+| Header | `double` (`═`) | 13 (TELEGRAM_MOBILE_WIDTH) | None |
+| Section divider | `simple` (`─`) | 13 | None |
+| Decorative | `bold` (`━`) | 9 | `both` |
+| Tree structure | Use `│ ├─ └─` symbols | - | - |
+
+#### Style Presets
+- **Modern/Tech**: Use tree structures (`│ ├─ └─`) + double headers
+- **Elegant/Luxury**: Use decorative separators with emojis
+- **Minimalist**: Simple separators only, no tree
+
+### Import Order
+When using separators, imports go in standard order:
+```python
+from utils.message_separators import (
+    MessageSeparatorBuilder,
+    TELEGRAM_MOBILE_WIDTH,
+    section_separator,
+)
+```
+
 ## Notes
 - Clean Architecture / Hexagonal Architecture patterns
 - Write tests for new functionality
 - Run `pytest`, `flake8`, `black`, `mypy` before committing
 - Follow existing code conventions strictly
+- **For UI messages**: Always check `utils/message_separators.py` and follow patterns in `telegram_bot/features/operations/messages_operations.py`
