@@ -5,7 +5,7 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from domain.entities.admin import (
@@ -341,7 +341,7 @@ class AdminService(IAdminService):
             key_type = str(key.key_type).lower() if key.key_type else ""
 
             if key_type == "wireguard":
-                result = await self.wireguard_client.disable_client(
+                result = await self.wireguard_client.disable_peer(
                     key.name or key.external_id
                 )
                 if not result:
@@ -365,7 +365,7 @@ class AdminService(IAdminService):
             key_type = str(key.key_type).lower() if key.key_type else ""
 
             if key_type == "wireguard":
-                result = await self.wireguard_client.enable_client(
+                result = await self.wireguard_client.enable_peer(
                     key.name or key.external_id
                 )
                 if not result:
@@ -461,7 +461,7 @@ class AdminService(IAdminService):
 
             if key.key_type.lower() == "wireguard":
                 try:
-                    metrics = await self.wireguard_client.get_peer_metrics(key.key_name)
+                    metrics = await self.wireguard_client.get_peer_metrics(key.external_id)
                     data_used = metrics.get("transfer_total", 0)
                     server_status = "active" if data_used > 0 else "inactive"
                 except Exception as e:
@@ -504,7 +504,6 @@ class AdminService(IAdminService):
 
             user_keys = await self.key_repository.get_user_keys(user_id)
             active_keys = [k for k in user_keys if k.is_active]
-            balance = await self.payment_repository.get_balance(user_id)
 
             return {
                 "user_id": user.telegram_id,
@@ -682,13 +681,12 @@ class AdminService(IAdminService):
 
             # Calcular offset
             offset = (page - 1) * per_page
-            paginated_users = all_users[offset : offset + per_page]
+            paginated_users = all_users[offset:offset + per_page]
 
             user_list = []
             for user in paginated_users:
                 user_keys = await self.key_repository.get_user_keys(user.telegram_id)
                 active_keys = [k for k in user_keys if k.is_active]
-                balance = await self.payment_repository.get_balance(user.telegram_id)
 
                 user_list.append(
                     {

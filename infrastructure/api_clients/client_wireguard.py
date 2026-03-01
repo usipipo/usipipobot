@@ -252,22 +252,37 @@ PersistentKeepalive = 15
             match = re.search(pk_pattern, content, flags=re.DOTALL)
 
             if not match:
-                logger.debug(f"Cliente {client_name} no encontrado en configuración")
+                logger.warning(
+                    f"WireGuard: Cliente '{client_name}' no encontrado en configuración "
+                    f"({self.conf_path})"
+                )
                 return {"transfer_total": 0}
 
             target_pub_key = match.group(1).strip()
+            logger.debug(
+                f"WireGuard: Cliente '{client_name}' encontrado con PK {target_pub_key[:16]}..."
+            )
 
             all_usage = await self.get_usage()
 
             for peer in all_usage:
                 if peer["public_key"] == target_pub_key:
+                    logger.info(
+                        f"WireGuard: Métricas para '{client_name}' - "
+                        f"RX: {peer['rx']/(1024**2):.2f}MB, "
+                        f"TX: {peer['tx']/(1024**2):.2f}MB, "
+                        f"Total: {peer['total']/(1024**2):.2f}MB"
+                    )
                     return {
                         "transfer_rx": peer["rx"],
                         "transfer_tx": peer["tx"],
                         "transfer_total": peer["total"],
                     }
 
-            logger.debug(f"Public key {target_pub_key[:20]}... no encontrada en uso")
+            logger.warning(
+                f"WireGuard: Public key de '{client_name}' no encontrada en wg show "
+                f"(posiblemente no hay tráfico aún)"
+            )
             return {"transfer_total": 0}
 
         except Exception as e:
