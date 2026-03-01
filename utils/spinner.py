@@ -102,14 +102,36 @@ class SpinnerManager:
             # Luego mostrar el mensaje final usando el método apropiado
             if update.callback_query:
                 # Para callbacks, editar el mensaje original
-                await update.callback_query.edit_message_text(
-                    text=text, reply_markup=reply_markup, parse_mode=parse_mode
-                )
+                try:
+                    await update.callback_query.edit_message_text(
+                        text=text, reply_markup=reply_markup, parse_mode=parse_mode
+                    )
+                except Exception as e:
+                    if "Can't parse entities" in str(e):
+                        logger.warning(
+                            f"⚠️  Error de parsing Markdown, reintentando sin parse_mode: {e}"
+                        )
+                        await update.callback_query.edit_message_text(
+                            text=text, reply_markup=reply_markup
+                        )
+                    else:
+                        raise
             elif update.message:
                 # Para mensajes normales, responder
-                await update.message.reply_text(
-                    text=text, reply_markup=reply_markup, parse_mode=parse_mode
-                )
+                try:
+                    await update.message.reply_text(
+                        text=text, reply_markup=reply_markup, parse_mode=parse_mode
+                    )
+                except Exception as e:
+                    if "Can't parse entities" in str(e):
+                        logger.warning(
+                            f"⚠️  Error de parsing Markdown, reintentando sin parse_mode: {e}"
+                        )
+                        await update.message.reply_text(
+                            text=text, reply_markup=reply_markup
+                        )
+                    else:
+                        raise
 
         except Exception as e:
             logger.error(f"❌ Error reemplazando spinner: {e}")
