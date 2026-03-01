@@ -226,11 +226,8 @@ class CryptoPaymentService:
                 from domain.interfaces.idata_package_repository import (
                     IDataPackageRepository,
                 )
-                from infrastructure.persistence.postgresql.data_package_repository import (
-                    PostgresDataPackageRepository,
-                )
 
-                package_repo = get_service(PostgresDataPackageRepository)
+                package_repo = get_service(IDataPackageRepository)
                 await package_repo.save(adjusted_package, user_id)
 
             logger.info(
