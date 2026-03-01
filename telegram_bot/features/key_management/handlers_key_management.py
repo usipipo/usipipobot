@@ -16,6 +16,11 @@ from telegram.ext import (
     filters,
 )
 
+from typing import Optional
+
+from application.services.consumption_billing_service import (
+    ConsumptionBillingService,
+)
 from application.services.vpn_service import VpnService
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
@@ -29,16 +34,43 @@ from .messages_key_management import KeyManagementMessages
 class KeyManagementHandler(BaseHandler):
     """Handler para gestión avanzada de llaves VPN."""
 
-    def __init__(self, vpn_service: VpnService):
+    def __init__(
+        self,
+        vpn_service: VpnService,
+        billing_service: Optional[ConsumptionBillingService] = None,
+    ):
         """
         Inicializa el handler de gestión de llaves.
 
         Args:
             vpn_service: Servicio de VPN
+            billing_service: Servicio de facturación por consumo (opcional)
         """
         super().__init__(vpn_service, "VpnService")
         self.vpn_service = vpn_service
+        self.billing_service = billing_service
         logger.info("🔑 KeyManagementHandler inicializado")
+
+    async def _get_consumption_status(self, user_id: int) -> bool:
+        """
+        Verifica si el usuario tiene tarifa por consumo activa.
+
+        Args:
+            user_id: ID del usuario de Telegram
+
+        Returns:
+            bool: True si tiene consumo activo, False en caso contrario
+        """
+        if self.billing_service is None:
+            return False
+        try:
+            summary = await self.billing_service.get_current_consumption(
+                user_id, user_id
+            )
+            return summary is not None and summary.is_active
+        except Exception as e:
+            logger.error(f"Error verificando estado de consumo: {e}")
+            return False
 
     async def show_key_submenu(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -69,18 +101,27 @@ class KeyManagementHandler(BaseHandler):
                     )
                     keys_summary[f"{protocol}_count"] = count
 
+                # Verificar estado de consumo
+                has_consumption_active = await self._get_consumption_status(user_id)
+
                 if keys_summary["total_count"] == 0:
                     message = KeyManagementMessages.NO_KEYS
                 else:
                     message = KeyManagementMessages.MAIN_MENU.format(
                         total_keys=escape_markdown(str(keys_summary["total_count"])),
-                        outline_count=escape_markdown(str(keys_summary.get("outline_count", 0))),
-                        wireguard_count=escape_markdown(str(keys_summary.get("wireguard_count", 0))),
+                        outline_count=escape_markdown(
+                            str(keys_summary.get("outline_count", 0))
+                        ),
+                        wireguard_count=escape_markdown(
+                            str(keys_summary.get("wireguard_count", 0))
+                        ),
                     )
 
                 await update.message.reply_text(
                     text=message,
-                    reply_markup=KeyManagementKeyboards.main_menu(keys_summary),
+                    reply_markup=KeyManagementKeyboards.main_menu(
+                        keys_summary, has_consumption_active
+                    ),
                     parse_mode="Markdown",
                 )
 
@@ -112,20 +153,29 @@ class KeyManagementHandler(BaseHandler):
                     )
                     keys_summary[f"{protocol}_count"] = count
 
+                # Verificar estado de consumo
+                has_consumption_active = await self._get_consumption_status(user_id)
+
                 if keys_summary["total_count"] == 0:
                     message = KeyManagementMessages.NO_KEYS
                 else:
                     message = KeyManagementMessages.MAIN_MENU.format(
                         total_keys=escape_markdown(str(keys_summary["total_count"])),
-                        outline_count=escape_markdown(str(keys_summary.get("outline_count", 0))),
-                        wireguard_count=escape_markdown(str(keys_summary.get("wireguard_count", 0))),
+                        outline_count=escape_markdown(
+                            str(keys_summary.get("outline_count", 0))
+                        ),
+                        wireguard_count=escape_markdown(
+                            str(keys_summary.get("wireguard_count", 0))
+                        ),
                     )
 
                 await self._safe_edit_message(
                     query,
                     context,
                     text=message,
-                    reply_markup=KeyManagementKeyboards.main_menu(keys_summary),
+                    reply_markup=KeyManagementKeyboards.main_menu(
+                        keys_summary, has_consumption_active
+                    ),
                     parse_mode="Markdown",
                 )
 
@@ -183,7 +233,11 @@ class KeyManagementHandler(BaseHandler):
                 for key in filtered_keys:
                     status = "🟢 Activa" if key.is_active else "🔴 Inactiva"
                     escaped_name = escape_markdown(key.name)
-                    message += f"\n🔑 {escaped_name}\n   📊 {key.used_gb:.2f}/{key.data_limit_gb:.2f} GB\n   {status}\n"
+                    message += (
+                        f"\n🔑 {escaped_name}\n"
+                        f"   📊 {key.used_gb:.2f}/{key.data_limit_gb:.2f} GB\n"
+                        f"   {status}\n"
+                    )
 
             await self._safe_edit_message(
                 query,
@@ -275,7 +329,9 @@ class KeyManagementHandler(BaseHandler):
                 parse_mode="Markdown",
             )
 
-    def _generate_cyberpunk_progress_bar(self, percentage: float, width: int = 10) -> str:
+    def _generate_cyberpunk_progress_bar(
+        self, percentage: float, width: int = 10
+    ) -> str:
         """Genera una barra de progreso estilo cyberpunk."""
         filled = int((percentage / 100) * width)
         empty = width - filled
@@ -335,8 +391,12 @@ class KeyManagementHandler(BaseHandler):
                     usage_bar=usage_bar,  # No escapar - usa caracteres seguros
                     outline_count=escape_markdown(str(len(outline_keys))),
                     wireguard_count=escape_markdown(str(len(wireguard_keys))),
-                    outline_usage=escape_markdown(f"{sum(k.used_gb for k in outline_keys):.1f}"),
-                    wireguard_usage=escape_markdown(f"{sum(k.used_gb for k in wireguard_keys):.1f}"),
+                    outline_usage=escape_markdown(
+                        f"{sum(k.used_gb for k in outline_keys):.1f}"
+                    ),
+                    wireguard_usage=escape_markdown(
+                        f"{sum(k.used_gb for k in wireguard_keys):.1f}"
+                    ),
                 )
 
             keyboard = KeyManagementKeyboards.back_to_submenu()
@@ -407,7 +467,10 @@ class KeyManagementHandler(BaseHandler):
                     # Iniciar flujo de renombrado
                     if context.user_data is not None:
                         context.user_data["rename_key_id"] = key_id
-                    message = "✏️ Renombrar Llave\n\nPor favor, escribe el nuevo nombre para tu llave:"
+                    message = (
+                        "✏️ Renombrar Llave\n\n"
+                        "Por favor, escribe el nuevo nombre para tu llave:"
+                    )
                     keyboard = KeyManagementKeyboards.cancel_rename()
                     await self._safe_edit_message(
                         query,
@@ -442,10 +505,12 @@ class KeyManagementHandler(BaseHandler):
             await self._safe_edit_message(
                 query,
                 context,
-                text=KeyManagementMessages.Error.OPERATION_FAILED.format(error=escape_markdown(str(e))),
-            reply_markup=KeyManagementKeyboards.back_to_submenu(),
-            parse_mode="Markdown",
-        )
+                text=KeyManagementMessages.Error.OPERATION_FAILED.format(
+                    error=escape_markdown(str(e))
+                ),
+                reply_markup=KeyManagementKeyboards.back_to_submenu(),
+                parse_mode="Markdown",
+            )
 
     async def download_wireguard_config(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -489,10 +554,15 @@ class KeyManagementHandler(BaseHandler):
                 chat_id=update.effective_chat.id,
                 document=bio,
                 filename=f"{key_name}.conf",
-                caption=f"📄 Configuración WireGuard: *{key_name}*\n\nImporta este archivo en tu aplicación WireGuard.",
+                caption=(
+                    f"📄 Configuración WireGuard: *{key_name}*\n\n"
+                    "Importa este archivo en tu aplicación WireGuard."
+                ),
                 parse_mode="Markdown",
             )
-            logger.info(f"User {user_id} successfully downloaded WireGuard config for key {key_id}")
+            logger.info(
+                f"User {user_id} successfully downloaded WireGuard config for key {key_id}"
+            )
 
         except Exception as e:
             logger.error(f"Error descargando config WireGuard: {e}")
@@ -549,7 +619,9 @@ class KeyManagementHandler(BaseHandler):
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
                 parse_mode="Markdown",
             )
-            logger.info(f"User {user_id} successfully retrieved Outline link for key {key_id}")
+            logger.info(
+                f"User {user_id} successfully retrieved Outline link for key {key_id}"
+            )
 
         except Exception as e:
             logger.error(f"Error obteniendo enlace Outline: {e}")
@@ -624,7 +696,9 @@ class KeyManagementHandler(BaseHandler):
         user_id = update.effective_user.id
 
         try:
-            logger.info(f"User {user_id} attempting to rename key {key_id} to '{new_name}'")
+            logger.info(
+                f"User {user_id} attempting to rename key {key_id} to '{new_name}'"
+            )
             # Limpiar estado
             del context.user_data["rename_key_id"]
 
@@ -659,9 +733,12 @@ class KeyManagementHandler(BaseHandler):
                 )
 
 
-def get_key_management_handlers(vpn_service: VpnService):
+def get_key_management_handlers(
+    vpn_service: VpnService,
+    billing_service: Optional[ConsumptionBillingService] = None,
+):
     """Retorna los handlers de gestión de llaves."""
-    handler = KeyManagementHandler(vpn_service)
+    handler = KeyManagementHandler(vpn_service, billing_service)
     return [
         MessageHandler(filters.Regex("^🛡️ Mis Llaves$"), handler.show_key_submenu),
         CommandHandler("keys", handler.show_key_submenu),
@@ -669,9 +746,12 @@ def get_key_management_handlers(vpn_service: VpnService):
     ]
 
 
-def get_key_management_callback_handlers(vpn_service: VpnService):
+def get_key_management_callback_handlers(
+    vpn_service: VpnService,
+    billing_service: Optional[ConsumptionBillingService] = None,
+):
     """Retorna los handlers de callbacks para gestión de llaves."""
-    handler = KeyManagementHandler(vpn_service)
+    handler = KeyManagementHandler(vpn_service, billing_service)
     return [
         CallbackQueryHandler(handler.show_key_submenu, pattern="^key_management$"),
         CallbackQueryHandler(handler.back_to_main_menu, pattern="^main_menu$"),
