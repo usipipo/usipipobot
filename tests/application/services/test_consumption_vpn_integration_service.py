@@ -159,7 +159,7 @@ class TestBlockUserKeys:
         assert result["success"] is True
         assert result["keys_blocked"] == 0
         user.mark_as_has_debt.assert_called_once()
-        service.user_repo.update.assert_called_once()
+        service.user_repo.save.assert_called_once()
 
 
 class TestUnblockUserKeys:
@@ -214,7 +214,7 @@ class TestUnblockUserKeys:
         assert result["keys_failed"] == 0
         assert len(result["errors"]) == 0
         user.mark_debt_as_paid.assert_called_once()
-        service.user_repo.update.assert_called_once_with(user, 123)
+        service.user_repo.save.assert_called_once_with(user, 123)
 
     @pytest.mark.asyncio
     async def test_unblock_user_keys_partial_failure(
@@ -241,7 +241,7 @@ class TestUnblockUserKeys:
         assert result["keys_failed"] == 1
         assert len(result["errors"]) == 1
         user.mark_debt_as_paid.assert_called_once()
-        service.user_repo.update.assert_called_once_with(user, 123)
+        service.user_repo.save.assert_called_once_with(user, 123)
 
     @pytest.mark.asyncio
     async def test_unblock_user_keys_no_keys(self, service):
@@ -256,7 +256,7 @@ class TestUnblockUserKeys:
         assert result["keys_unblocked"] == 0
         assert result["keys_failed"] == 0
         user.mark_debt_as_paid.assert_called_once()
-        service.user_repo.update.assert_called_once_with(user, 123)
+        service.user_repo.save.assert_called_once_with(user, 123)
 
 
 class TestRouteUsageToBilling:
