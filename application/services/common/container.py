@@ -430,7 +430,10 @@ def _configure_handlers(container: punq.Container) -> None:
         return get_vpn_keys_handler(container.resolve(VpnService))
 
     def create_key_submenu_handlers() -> object:
-        return get_key_management_handlers(container.resolve(VpnService))
+        return get_key_management_handlers(
+            container.resolve(VpnService),
+            container.resolve(ConsumptionBillingService)
+        )
 
     def create_admin_handlers() -> list:
         handlers = get_admin_handlers(container.resolve(AdminService))
@@ -451,7 +454,8 @@ def _configure_handlers(container: punq.Container) -> None:
         )
         handlers.extend(
             get_key_management_callback_handlers(
-                cast(VpnService, container.resolve(VpnService))
+                cast(VpnService, container.resolve(VpnService)),
+                cast(ConsumptionBillingService, container.resolve(ConsumptionBillingService))
             )
         )
         handlers.extend(

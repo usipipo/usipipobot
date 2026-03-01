@@ -115,13 +115,13 @@ def _get_consumption_handlers(container) -> List[BaseHandler]:
 
 
 def _get_core_handlers(
-    vpn_service, referral_service, data_package_service, user_profile_service, crypto_order_repo
+    vpn_service, referral_service, data_package_service, user_profile_service, crypto_order_repo, billing_service
 ) -> List[BaseHandler]:
     """Initialize and return core feature handlers."""
     handlers = []
 
-    handlers.extend(get_key_management_handlers(vpn_service))
-    handlers.extend(get_key_management_callback_handlers(vpn_service))
+    handlers.extend(get_key_management_handlers(vpn_service, billing_service))
+    handlers.extend(get_key_management_callback_handlers(vpn_service, billing_service))
     logger.info("Key management handlers configured")
 
     handlers.extend(get_operations_handlers(vpn_service, referral_service, crypto_order_repo))
@@ -164,6 +164,7 @@ def initialize_handlers(
         handlers.extend(_get_referral_handlers(container))
         handlers.extend(_get_ticket_handlers(container))
         handlers.extend(_get_consumption_handlers(container))
+        billing_service = container.resolve(ConsumptionBillingService)
         handlers.extend(
             _get_core_handlers(
                 vpn_service,
@@ -171,6 +172,7 @@ def initialize_handlers(
                 data_package_service,
                 user_profile_service,
                 crypto_order_repo,
+                billing_service,
             )
         )
 

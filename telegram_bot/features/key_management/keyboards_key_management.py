@@ -12,26 +12,38 @@ class KeyManagementKeyboards:
     """Teclados para gestión de llaves VPN."""
 
     @staticmethod
-    def main_menu(keys_summary: dict) -> InlineKeyboardMarkup:
+    def main_menu(
+        keys_summary: dict, has_consumption_active: bool = False
+    ) -> InlineKeyboardMarkup:
         """
         Teclado del menú principal de gestión de llaves.
 
         Args:
             keys_summary: Resumen de llaves por tipo
+            has_consumption_active: Si el usuario tiene tarifa por consumo activa
 
         Returns:
             InlineKeyboardMarkup: Teclado del menú principal
         """
         keyboard = []
 
-        # Botón de activación de tarifa por consumo (siempre visible)
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "⚡ Activar Consumo", callback_data="consumption_activate"
-                )
-            ]
-        )
+        # Botón de consumo: Ver Consumo si está activo, Activar si no
+        if has_consumption_active:
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "📊 Ver Mi Consumo", callback_data="consumption_view_status"
+                    )
+                ]
+            )
+        else:
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "⚡ Activar Consumo", callback_data="consumption_activate"
+                    )
+                ]
+            )
 
         if keys_summary.get("total_count", 0) == 0:
             keyboard.extend(
