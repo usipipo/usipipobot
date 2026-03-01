@@ -55,7 +55,7 @@ class OperationsHandler:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
             credits = stats.referral_credits
 
-            message = OperationsMessages.Menu.MAIN
+            message = OperationsMessages.Menu.main_with_credits(credits)
             keyboard = OperationsKeyboards.operations_menu(credits=credits)
 
             if update.message:

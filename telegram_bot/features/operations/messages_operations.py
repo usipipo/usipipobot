@@ -2,7 +2,7 @@
 Mensajes para operaciones del usuario de uSipipo.
 
 Author: uSipipo Team
-Version: 3.0.0 - Creditos + Shop
+Version: 3.1.0 - Elegant UI
 """
 
 from utils.message_separators import (
@@ -12,18 +12,77 @@ from utils.message_separators import (
 )
 
 
+# Separadores predefinidos para consistencia visual
+_SEP_HEADER = (
+    MessageSeparatorBuilder()
+    .compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
+)
+_SEP_DIVIDER = (
+    MessageSeparatorBuilder()
+    .compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
+)
+_SEP_DECORATIVE = (
+    MessageSeparatorBuilder()
+    .compact().style("bold").length(9).with_emoji("🔹", "both").build()
+)
+
+
 class OperationsMessages:
     """Mensajes para operaciones del usuario."""
 
     class Menu:
+        """Mensajes para el menú principal de operaciones."""
+
+        # Header del menú con estructura moderna/tech
+        _HEADER = (
+            f"{_SEP_HEADER}\n"
+            "🔧 *CENTRO DE OPERACIONES*\n"
+            f"{_SEP_HEADER}\n"
+        )
+
+        _CREDITS_INDICATOR = (
+            "\n"
+            "💎 *Créditos disponibles:* `{credits}`\n"
+            f"{_SEP_DIVIDER}\n"
+        )
+
+        _TREE_STRUCTURE = (
+            "\n"
+            "*Gestiona tu cuenta:*\n"
+            "│\n"
+            "├─ 🎁 *Créditos*\n"
+            "│  └─ Canjea por beneficios especiales\n"
+            "│\n"
+            "├─ 👥 *Referidos*\n"
+            "│  └─ Invita amigos y gana recompensas\n"
+            "│\n"
+            "├─ 🛒 *Shop*\n"
+            "│  └─ Compra paquetes de datos y slots\n"
+            "│\n"
+            "└─ 📜 *Historial*\n"
+            "   └─ Revisa todas tus transacciones\n"
+        )
+
+        _FOOTER = (
+            f"\n{_SEP_DIVIDER}\n"
+            "👇 *Selecciona una opción:*"
+        )
+
+        @classmethod
+        def main_with_credits(cls, credits: int = 0) -> str:
+            """Genera mensaje principal con indicador de créditos."""
+            message = cls._HEADER
+            if credits > 0:
+                message += cls._CREDITS_INDICATOR.format(credits=credits)
+            message += cls._TREE_STRUCTURE
+            message += cls._FOOTER
+            return message
+
+        # Mensaje legacy para compatibilidad (sin créditos)
         MAIN = (
-            "⚙️ **Operaciones**\n\n"
-            "Gestiona tu cuenta y servicios:\n\n"
-            "🎁 **Créditos** - Canjea por beneficios especiales\n"
-            "👥 **Referidos** - Invita amigos y gana recompensas\n"
-            "🛒 **Shop** - Compra paquetes de datos y slots\n"
-            "📜 **Historial** - Revisa todas tus transacciones\n\n"
-            "Selecciona una opción:"
+            _HEADER +
+            _TREE_STRUCTURE +
+            _FOOTER
         )
 
     class Credits:
