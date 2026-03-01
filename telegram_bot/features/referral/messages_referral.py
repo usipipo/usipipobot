@@ -118,3 +118,20 @@ Continuar?
         @staticmethod
         def credits_required_for_slot() -> int:
             return settings.REFERRAL_CREDITS_PER_SLOT
+
+    class Share:
+        @staticmethod
+        def get_share_text(code: str, bot_username: str) -> str:
+            return (
+                f"¡Usa mi código de referido y obtén {settings.REFERRAL_BONUS_NEW_USER} créditos "
+                f"gratis para uSipipo VPN! 🚀\n\n"
+                f"👉 https://t.me/{bot_username}?start={code}"
+            )
+
+        @staticmethod
+        def get_share_url(code: str, bot_username: str) -> str:
+            share_text = ReferralMessages.Share.get_share_text(code, bot_username)
+            encoded_text = (
+                share_text.replace(" ", "%20").replace("\n", "%0A").replace("!", "%21")
+            )
+            return f"https://t.me/share/url?url=&text={encoded_text}"

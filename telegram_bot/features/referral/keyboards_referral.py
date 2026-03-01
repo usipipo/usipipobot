@@ -14,7 +14,7 @@ class ReferralKeyboards:
     """Teclados para el sistema de referidos."""
 
     @staticmethod
-    def main_menu(credits: int) -> InlineKeyboardMarkup:
+    def main_menu(credits: int, share_url: str = "") -> InlineKeyboardMarkup:
         keyboard = [
             [
                 InlineKeyboardButton(
@@ -27,8 +27,17 @@ class ReferralKeyboards:
                 ),
                 InlineKeyboardButton("🔄 Actualizar", callback_data="referral_refresh"),
             ],
+            (
+                [
+                    InlineKeyboardButton("📤 Compartir", url=share_url),
+                ]
+                if share_url
+                else []
+            ),
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
         ]
+        # Filter out empty rows
+        keyboard = [row for row in keyboard if row]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
