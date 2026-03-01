@@ -593,18 +593,30 @@ class ConsumptionHandler:
 
                 cost_formatted = f"${result.total_cost_usd:.2f} USD"
 
-                message = ConsumptionMessages.Cancellation.SUCCESS + "\n\n" + \
-                    f"📊 **Resumen del ciclo cancelado:**\n" + \
-                    f"📅 Días activos: {result.days_active}/30\n" + \
-                    f"📈 Consumo: {consumption_formatted}\n" + \
-                    f"💰 Costo: {cost_formatted}"
+                # Mensaje diferenciado según haya deuda o no
+                if result.had_debt:
+                    # Hay deuda - mostrar mensaje con resumen y bloqueo
+                    message = ConsumptionMessages.Cancellation.SUCCESS + "\n\n" + \
+                        f"📊 **Resumen del ciclo cancelado:**\n" + \
+                        f"📅 Días activos: {result.days_active}/30\n" + \
+                        f"📈 Consumo: {consumption_formatted}\n" + \
+                        f"💰 Costo: {cost_formatted}"
+                else:
+                    # No hay deuda - mensaje simplificado sin bloqueo
+                    message = (
+                        "✅ **Modo Consumo Cancelado**\n\n"
+                        "Se ha cerrado tu ciclo de consumo.\n"
+                        "Como no realizaste ningún consumo, no hay nada que pagar.\n\n"
+                        "🔓 **Tus claves VPN siguen activas** y puedes seguir navegando "
+                        "con tu plan gratuito."
+                    )
 
                 await query.edit_message_text(
                     text=message,
                     reply_markup=ConsumptionKeyboards.cancel_success_keyboard(),
                     parse_mode="Markdown"
                 )
-                logger.info(f"✅ Usuario {user_id} canceló modo consumo")
+                logger.info(f"✅ Usuario {user_id} canceló modo consumo (had_debt={result.had_debt})")
             else:
                 message = ConsumptionMessages.Cancellation.CANNOT_CANCEL.format(
                     reason=result.error_message or "Error desconocido"
