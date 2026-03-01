@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [0;32m[INFO][0m FASE 4: Generando changelog...
 ## [v3.6.0] - 2026-03-01
 
@@ -101,6 +102,8 @@
 - estandarizar parse_mode a Markdown en todos los mensajes
 - add migration notes and plan for bonus system columns (#223)
 
+=======
+>>>>>>> develop
 ## [v3.6.0] - 2026-02-28
 
 ### Features

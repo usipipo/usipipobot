@@ -6,6 +6,7 @@ Version: 1.0.0
 """
 
 from config import settings
+from utils.message_separators import compact_separator
 
 
 class ReferralMessages:
@@ -118,3 +119,50 @@ Continuar?
         @staticmethod
         def credits_required_for_slot() -> int:
             return settings.REFERRAL_CREDITS_PER_SLOT
+
+    class Share:
+        @staticmethod
+        def get_share_text(code: str, bot_username: str) -> str:
+            return (
+                f"¡Usa mi código de referido y obtén {settings.REFERRAL_BONUS_NEW_USER} créditos "
+                f"gratis para uSipipo VPN! 🚀\n\n"
+                f"👉 https://t.me/{bot_username}?start={code}"
+            )
+
+        @staticmethod
+        def get_share_url(code: str, bot_username: str) -> str:
+            share_text = ReferralMessages.Share.get_share_text(code, bot_username)
+            encoded_text = (
+                share_text.replace(" ", "%20").replace("\n", "%0A").replace("!", "%21")
+            )
+            return f"https://t.me/share/url?url=&text={encoded_text}"
+
+    class Credits:
+        """Mensajes de tarjeta premium para créditos."""
+
+        _SEP_HEADER = compact_separator("bold", 9, "💎")
+        _SEP_FOOTER = compact_separator("bold", 9, "✨")
+
+        @staticmethod
+        def balance_card(available_credits: int) -> str:
+            """
+            Tarjeta premium con saldo de créditos.
+
+            Args:
+                available_credits: Cantidad de créditos disponibles
+
+            Returns:
+                str: Mensaje formateado estilo tarjeta premium
+            """
+            header = ReferralMessages.Credits._SEP_HEADER
+            footer = ReferralMessages.Credits._SEP_FOOTER
+
+            return f"""{header}
+
+*{available_credits} créditos disponibles*
+
+Canjea por GB extra o slots adicionales
+
+{footer}
+
+💡 Gana más refiriendo amigos"""

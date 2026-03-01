@@ -55,7 +55,7 @@ class OperationsHandler:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
             credits = stats.referral_credits
 
-            message = OperationsMessages.Menu.MAIN
+            message = OperationsMessages.Menu.main_with_credits(credits)
             keyboard = OperationsKeyboards.operations_menu(credits=credits)
 
             if update.message:
@@ -275,26 +275,40 @@ class OperationsHandler:
 
     def _format_orders_list(self, orders: List[CryptoOrder]) -> str:
         """Formatear lista de órdenes para mostrar al usuario."""
+        # Mapeo de estados: (emoji_color, emoji_icon, texto)
         status_map = {
-            CryptoOrderStatus.PENDING: ("⏳", "Pendiente"),
-            CryptoOrderStatus.COMPLETED: ("✅", "Completada"),
-            CryptoOrderStatus.FAILED: ("❌", "Fallida"),
-            CryptoOrderStatus.EXPIRED: ("⏰", "Expirada"),
+            CryptoOrderStatus.PENDING: ("🟡", "⏳", "Pendiente"),
+            CryptoOrderStatus.COMPLETED: ("🟢", "✅", "Completada"),
+            CryptoOrderStatus.FAILED: ("🔴", "❌", "Fallida"),
+            CryptoOrderStatus.EXPIRED: ("🔴", "⚠️", "Expirada"),
         }
 
         lines = []
+        total_usdt = 0.0
+
         for order in orders:
-            emoji, text = status_map.get(order.status, ("❓", str(order.status)))
+            color_emoji, icon, text = status_map.get(
+                order.status, ("⚪", "❓", str(order.status))
+            )
             date_str = order.created_at.strftime("%d/%m/%Y %H:%M")
             lines.append(
                 OperationsMessages.Transactions.ORDER_ITEM.format(
-                    status_emoji=emoji,
+                    status_emoji=color_emoji,
                     package_type=order.package_type.upper(),
                     amount_usdt=order.amount_usdt,
                     date=date_str,
+                    status_icon=icon,
                     status_text=text,
                 )
             )
+            total_usdt += float(order.amount_usdt)
+
+        # Agregar footer con totales
+        lines.append(
+            OperationsMessages.Transactions.HISTORY_FOOTER.format(
+                total_usdt=round(total_usdt, 2), total_count=len(orders)
+            )
+        )
 
         return "".join(lines)
 
