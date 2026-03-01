@@ -259,7 +259,7 @@ class VpnKeysHandler:
         is_admin = telegram_id == int(settings.ADMIN_ID)
 
         await query.edit_message_text(
-            text=VpnKeysMessages.CANCELLED + "\n\nHas vuelto al menú principal.",
+            text=VpnKeysMessages.CANCELLED + "\n\nHas vuelto al menú principal",
             reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
         )
         return ConversationHandler.END
