@@ -7,6 +7,12 @@ Version: 2.0.0 - Feature-based architecture
 
 from datetime import datetime, timezone
 
+from utils.message_separators import (
+    MessageSeparatorBuilder,
+    TELEGRAM_MOBILE_WIDTH,
+    compact_separator,
+)
+
 
 def _progress_bar(percentage: float, width: int = 10) -> str:
     """Genera barra de progreso ASCII estilo cyberpunk."""
@@ -24,6 +30,24 @@ def _format_key_slots(used: int, total: int) -> str:
         else:
             slots.append("○")
     return "".join(slots)
+
+
+# ============================================
+# SEPARADORES VISUALES
+# ============================================
+
+_SEP_HEADER = (
+    MessageSeparatorBuilder()
+    .compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
+)
+_SEP_DIVIDER = (
+    MessageSeparatorBuilder()
+    .compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
+)
+_SEP_BOLD = (
+    MessageSeparatorBuilder()
+    .compact().style("bold").length(9).build()
+)
 
 
 class UserManagementMessages:
@@ -117,45 +141,83 @@ class UserManagementMessages:
             "Estado: 🟡 Pendiente"
         )
 
-        BONUSES_INFO = (
-            "🎁 *Sistema de Bonos uSipipo*\n\n"
-            "*💫 Bono de Bienvenida*\n"
-            "└ \+20% de datos en tu *primera compra*\\.\n"
-            "└ Ejemplo: Compra 10GB → Recibes 12GB\\.\n\n"
-            "*⭐ Bono de Fidelidad*\n"
-            "└ Acumulativo permanente\\.\n"
-            "└ 3ra compra: \+10%\\.\n"
-            "└ 5ta compra: \+15% adicional\\.\n"
-            "└ 10ma compra: \+25% adicional\\.\n"
-            "└ Total máximo: \+50% de bonus\\.\n\n"
-            "*⚡ Bono de Recarga Rápida*\n"
-            "└ \+15% si renuevas *7 días antes* de vencer\\.\n"
-            "└ Ideal para no perder tus datos\\.\n\n"
-            "*👥 Bono por Referidos*\n"
-            "└ \+5GB por cada referido que *realice una compra*\\.\n"
-            "└ Sin límite de referidos\\.\n\n"
-            "*💡 Tip:* ¡Combina bonos para obtener hasta \+85% de datos extra\!"
-        )
+        class Bonuses:
+            """Mensajes del sistema de bonos con diseño visual mejorado."""
 
-        BONUSES_INFO = (
-            "🎁 *Sistema de Bonos uSipipo*\n\n"
-            "*💫 Bono de Bienvenida*\n"
-            "└ \+20% de datos en tu *primera compra*\\.\n"
-            "└ Ejemplo: Compra 10GB → Recibes 12GB\\.\n\n"
-            "*⭐ Bono de Fidelidad*\n"
-            "└ Acumulativo permanente\\.\n"
-            "└ 3ra compra: \+10%\\.\n"
-            "└ 5ta compra: \+15% adicional\\.\n"
-            "└ 10ma compra: \+25% adicional\\.\n"
-            "└ Total máximo: \+50% de bonus\\.\n\n"
-            "*⚡ Bono de Recarga Rápida*\n"
-            "└ \+15% si renuevas *7 días antes* de vencer\\.\n"
-            "└ Ideal para no perder tus datos\\.\n\n"
-            "*👥 Bono por Referidos*\n"
-            "└ \+5GB por cada referido que *realice una compra*\\.\n"
-            "└ Sin límite de referidos\\.\n\n"
-            "*💡 Tip:* ¡Combina bonos para obtener hasta \+85% de datos extra\!"
-        )
+            _SEP_CROWN = compact_separator("bold", 7, "👑")
+            _SEP_GIFT = compact_separator("double", 7, "🎁")
+            _SEP_STAR = compact_separator("double", 7, "⭐")
+            _SEP_BOLT = compact_separator("double", 7, "⚡")
+            _SEP_USERS = compact_separator("double", 7, "👥")
+            _SEP_TIP = compact_separator("bold", 7, "💡")
+            _SEP_DIV = (
+                MessageSeparatorBuilder()
+                .compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
+            )
+
+            @classmethod
+            def info(cls) -> str:
+                """Mensaje completo del sistema de bonos."""
+                return (
+                    f"{cls._SEP_CROWN}\n"
+                    "*SISTEMA DE BONOS*\n"
+                    f"{cls._SEP_CROWN}\n"
+                    "\n"
+                    f"{cls._SEP_GIFT}\n"
+                    "*💫 Bono de Bienvenida*\n"
+                    f"{cls._SEP_GIFT}\n"
+                    "\n"
+                    "│\n"
+                    "├─ 🆕 *+20%* datos primera compra\n"
+                    "│   └─ Ej: 10GB → *12GB*\n"
+                    "│\n"
+                    f"{cls._SEP_DIV}\n"
+                    "\n"
+                    f"{cls._SEP_STAR}\n"
+                    "*⭐ Bono de Fidelidad*\n"
+                    f"{cls._SEP_STAR}\n"
+                    "\n"
+                    "│\n"
+                    "├─ 🥉 *3ra* compra: +10%\n"
+                    "│\n"
+                    "├─ 🥈 *5ta* compra: +15%\n"
+                    "│\n"
+                    "├─ 🥇 *10ma* compra: +25%\n"
+                    "│\n"
+                    "└─ 📊 *Total máximo:* +50%\n"
+                    "\n"
+                    f"{cls._SEP_DIV}\n"
+                    "\n"
+                    f"{cls._SEP_BOLT}\n"
+                    "*⚡ Bono Recarga Rápida*\n"
+                    f"{cls._SEP_BOLT}\n"
+                    "\n"
+                    "│\n"
+                    "├─ 🗓️ Renueva *7 días antes*\n"
+                    "│\n"
+                    "└─ 🎁 Obtén *+15%* extra\n"
+                    "\n"
+                    f"{cls._SEP_DIV}\n"
+                    "\n"
+                    f"{cls._SEP_USERS}\n"
+                    "*👥 Bono por Referidos*\n"
+                    f"{cls._SEP_USERS}\n"
+                    "\n"
+                    "│\n"
+                    "├─ 👤 *+5GB* por referido\n"
+                    "│   └─ Que realice una compra\n"
+                    "│\n"
+                    "└─ ♾️ *Sin límite* de referidos\n"
+                    "\n"
+                    f"{cls._SEP_TIP}\n"
+                    "*💡 COMBINA BONOS*\n"
+                    f"{cls._SEP_TIP}\n"
+                    "\n"
+                    "🚀 *Hasta +85%* datos extra\n"
+                    "_¡Aprovecha todos los bonos!_"
+                )
+
+        BONUSES_INFO = Bonuses.info()
 
     # ============================================
     # STATUS
