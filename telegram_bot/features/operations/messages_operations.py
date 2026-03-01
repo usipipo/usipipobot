@@ -68,21 +68,27 @@ class OperationsMessages:
         """Mensajes para historial de transacciones."""
 
         HISTORY_HEADER = (
-            "📜 **Historial de Transacciones**\n\n"
-            "Aquí están todas tus transacciones de crypto:\n\n"
+            "📜 *Historial de Transacciones*\n\n"
+            "═══════════════════════════════════\n"
         )
 
         NO_TRANSACTIONS = (
-            "📭 **Sin Transacciones**\n\n"
+            "📭 *Sin Transacciones*\n\n"
             "Aún no tienes transacciones registradas.\n\n"
-            "💡 Ve al 🛒 **Shop** para hacer tu primera compra."
+            "💡 Ve al 🛒 *Shop* para hacer tu primera compra."
         )
 
         ORDER_ITEM = (
-            "{status_emoji} **{package_type}**\n"
-            "💰 {amount_usdt} USDT | 📅 {date}\n"
-            "Estado: {status_text}\n"
-            "───────────────\n"
+            "{status_emoji} *{package_type}*\n"
+            "   ├ 💰 {amount_usdt} USDT\n"
+            "   ├ 📅 {date}\n"
+            "   └ {status_icon} Estado: {status_text}\n"
+            "───────────────────────────────────\n"
+        )
+
+        HISTORY_FOOTER = (
+            "═══════════════════════════════════\n\n"
+            "💵 Total: {total_usdt} USDT | 📦 {total_count} transacciones"
         )
 
         PAGE_FOOTER = "\n📄 Página {page}"
