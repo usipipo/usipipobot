@@ -105,37 +105,6 @@ class VpnKeysKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def main_menu(is_admin: bool = False) -> InlineKeyboardMarkup:
-        """
-        Teclado del menú principal contextual - Estilo Cyberpunk.
-
-        Args:
-            is_admin: Si es True, incluye opciones de administrador
-
-        Returns:
-            InlineKeyboardMarkup: Teclado del menú principal
-        """
-        keyboard = [
-            [
-                InlineKeyboardButton("🛡️ Mis Llaves", callback_data="key_management"),
-                InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
-            ],
-            [
-                InlineKeyboardButton("📊 Estado", callback_data="status"),
-                InlineKeyboardButton("🏆 Logros", callback_data="achievements"),
-            ],
-            [InlineKeyboardButton("⚙️ Ayuda", callback_data="help")],
-        ]
-
-        # Agregar opciones de administrador si corresponde
-        if is_admin:
-            keyboard.insert(
-                0, [InlineKeyboardButton("🔧 Panel Admin", callback_data="admin")]
-            )
-
-        return InlineKeyboardMarkup(keyboard)
-
-    @staticmethod
     def key_list(keys: list, is_admin: bool = False) -> InlineKeyboardMarkup:
         """
         Genera teclado dinámico para lista de llaves - Estilo Cyberpunk.
