@@ -198,6 +198,76 @@ run_full_setup() {
 }
 
 # =============================================================================
+# Setup Outline Auto-Updates
+# =============================================================================
+setup_outline_autoupdates() {
+    clear
+    echo -e "${CYAN}${SEPARATOR}${NC}"
+    echo -e "${WHITE}        ${HEADER_ICON} Setup Outline Auto-Updates ${HEADER_ICON}${NC}"
+    echo -e "${CYAN}${SEPARATOR}${NC}"
+    echo ""
+    
+    log "This will configure automatic monthly updates for Outline VPN."
+    echo ""
+    echo "What it does:"
+    echo "  - Checks for new shadowbox image monthly"
+    echo "  - Updates container if new version available"
+    echo "  - Runs on first Sunday of each month at 3:00 AM"
+    echo "  - Logs to: /var/log/outline-update.log"
+    echo ""
+    
+    if ! command -v docker &>/dev/null; then
+        log_err "Docker is not installed. Please install Docker first (option 1)."
+        return 1
+    fi
+    
+    if ! confirm "Proceed with setting up auto-updates?"; then
+        log "Auto-update setup cancelled"
+        return 1
+    fi
+    
+    local SCRIPT_PATH="$PROJECT_DIR/scripts/update-outline.sh"
+    
+    # Check if script exists
+    if [[ ! -f "$SCRIPT_PATH" ]]; then
+        log_err "Update script not found: $SCRIPT_PATH"
+        return 1
+    fi
+    
+    # Make script executable
+    chmod +x "$SCRIPT_PATH"
+    log "Update script ready: $SCRIPT_PATH"
+    
+    # Check if cron job already exists
+    if crontab -l 2>/dev/null | grep -q "update-outline.sh"; then
+        log_warn "Cron job for Outline updates already exists."
+        if confirm "Replace existing cron job?"; then
+            # Remove existing job
+            crontab -l 2>/dev/null | grep -v "update-outline.sh" | crontab -
+        else
+            log "Keeping existing cron job."
+            return 0
+        fi
+    fi
+    
+    # Add cron job
+    (crontab -l 2>/dev/null; echo "# uSipipo: Outline VPN monthly auto-update - first Sunday at 3:00 AM"; echo "0 3 1-7 * 0 $SCRIPT_PATH") | crontab -
+    
+    if [[ $? -eq 0 ]]; then
+        log_ok "✅ Auto-updates configured successfully!"
+        echo ""
+        log "Schedule: First Sunday of each month at 3:00 AM"
+        log "Log file: /var/log/outline-update.log"
+        log "Manual run: sudo $SCRIPT_PATH"
+    else
+        log_err "Failed to configure cron job"
+        return 1
+    fi
+    
+    echo ""
+}
+
+# =============================================================================
 # Main Menu
 # =============================================================================
 show_menu() {
@@ -208,17 +278,18 @@ show_menu() {
     echo ""
     echo -e "  ${GREEN}1)${NC} 🐳 Install Docker"
     echo -e "  ${GREEN}2)${NC} ⚙️  Install Outline Server (VPN)"
-    echo -e "  ${GREEN}3)${NC} ⚙️  Install WireGuard Server (VPN)"
-    echo -e "  ${BLUE}4)${NC} 🗄️  Install/Configure PostgreSQL"
-    echo -e "  ${BLUE}5)${NC} 🐍 Setup Python Environment (venv + deps)"
-    echo -e "  ${PURPLE}6)${NC} 🔄 Run Database Migrations (Alembic)"
-    echo -e "  ${PURPLE}7)${NC} 🚀 Create Systemd Service"
-    echo -e "  ${WHITE}8)${NC} ▶️  Start Bot (main.py)"
-    echo -e "  ${YELLOW}9)${NC} 🔁 Full Setup (1-7 automated)"
-    echo -e "  ${WHITE}10)${NC} 📊 System Status"
+    echo -e "  ${GREEN}3)${NC} 🔄 Setup Outline Auto-Updates"
+    echo -e "  ${GREEN}4)${NC} ⚙️  Install WireGuard Server (VPN)"
+    echo -e "  ${BLUE}5)${NC} 🗄️  Install/Configure PostgreSQL"
+    echo -e "  ${BLUE}6)${NC} 🐍 Setup Python Environment (venv + deps)"
+    echo -e "  ${PURPLE}7)${NC} 🔄 Run Database Migrations (Alembic)"
+    echo -e "  ${PURPLE}8)${NC} 🚀 Create Systemd Service"
+    echo -e "  ${WHITE}9)${NC} ▶️  Start Bot (main.py)"
+    echo -e "  ${YELLOW}10)${NC} 🔁 Full Setup (1-8 automated)"
+    echo -e "  ${WHITE}11)${NC} 📊 System Status"
     echo -e "  ${RED}0)${NC} Exit"
     echo ""
-    read -r -p "$(echo -e "${WHITE}Select option [0-10]:${NC}")" choice
+    read -r -p "$(echo -e "${WHITE}Select option [0-11]:${NC}")" choice
 
     case "$choice" in
         1)
@@ -232,41 +303,44 @@ show_menu() {
             install_outline
             ;;
         3)
+            setup_outline_autoupdates
+            ;;
+        4)
             # shellcheck source=./modules/vpn.sh
             source "${MODULES_DIR}/vpn.sh"
             install_wireguard
             fix_wireguard_mtu
             configure_bot_permissions
             ;;
-        4)
+        5)
             # shellcheck source=./modules/database.sh
             source "${MODULES_DIR}/database.sh"
             setup_database
             ;;
-        5)
+        6)
             # shellcheck source=./modules/python.sh
             source "${MODULES_DIR}/python.sh"
             setup_python
             ;;
-        6)
+        7)
             # shellcheck source=./modules/bot.sh
             source "${MODULES_DIR}/bot.sh"
             run_migrations "$PROJECT_DIR/.env"
             ;;
-        7)
+        8)
             # shellcheck source=./modules/systemd.sh
             source "${MODULES_DIR}/systemd.sh"
             setup_systemd "$PROJECT_DIR"
             ;;
-        8)
+        9)
             # shellcheck source=./modules/bot.sh
             source "${MODULES_DIR}/bot.sh"
             setup_bot
             ;;
-        9)
+        10)
             run_full_setup
             ;;
-        10)
+        11)
             show_system_status
             ;;
         0)
