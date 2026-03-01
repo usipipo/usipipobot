@@ -498,6 +498,127 @@ class ConsumptionHandler:
                 parse_mode="Markdown"
             )
 
+    async def start_cancellation(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Inicia el flujo de cancelación del modo consumo."""
+        query = update.callback_query
+        if not query:
+            return
+        await query.answer()
+
+        if not update.effective_user:
+            return
+
+        user_id = update.effective_user.id
+
+        try:
+            # Verificar que puede cancelar
+            can_cancel, error_msg = await self.billing_service.can_cancel_consumption(
+                user_id, user_id
+            )
+
+            if not can_cancel:
+                await query.edit_message_text(
+                    text=ConsumptionMessages.Cancellation.CANNOT_CANCEL.format(
+                        reason=error_msg or "No puedes cancelar el modo consumo"
+                    ),
+                    reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
+                    parse_mode="Markdown"
+                )
+                return
+
+            # Obtener resumen de consumo actual
+            summary = await self.billing_service.get_current_consumption(
+                user_id, user_id
+            )
+
+            if not summary:
+                await query.edit_message_text(
+                    text=ConsumptionMessages.Cancellation.CANNOT_CANCEL.format(
+                        reason="No se pudo obtener tu información de consumo"
+                    ),
+                    reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
+                    parse_mode="Markdown"
+                )
+                return
+
+            # Mostrar confirmación con resumen
+            message = (
+                ConsumptionMessages.Cancellation.CONFIRMATION_HEADER + "\n\n" +
+                ConsumptionMessages.Cancellation.get_cancellation_summary(
+                    days_active=summary.days_active,
+                    consumption_formatted=summary.formatted_consumption,
+                    cost_formatted=summary.formatted_cost
+                )
+            )
+
+            await query.edit_message_text(
+                text=message,
+                reply_markup=ConsumptionKeyboards.cancellation_confirmation(),
+                parse_mode="Markdown"
+            )
+
+        except Exception as e:
+            logger.error(f"Error en start_cancellation: {e}")
+            await self._send_error_message(update, context)
+
+    async def confirm_cancellation(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Confirma la cancelación del modo consumo."""
+        query = update.callback_query
+        if not query:
+            return
+        await query.answer()
+
+        if not update.effective_user:
+            return
+
+        user_id = update.effective_user.id
+
+        try:
+            result = await self.billing_service.cancel_consumption_mode(
+                user_id, user_id
+            )
+
+            if result.success:
+                # Formatear consumo y costo para el mensaje
+                from decimal import Decimal
+                if result.mb_consumed < Decimal("1024"):
+                    consumption_formatted = f"{result.mb_consumed:.2f} MB"
+                else:
+                    gb_consumed = result.mb_consumed / Decimal("1024")
+                    consumption_formatted = f"{gb_consumed:.2f} GB"
+
+                cost_formatted = f"${result.total_cost_usd:.2f} USD"
+
+                message = ConsumptionMessages.Cancellation.SUCCESS + "\n\n" + \
+                    f"📊 **Resumen del ciclo cancelado:**\n" + \
+                    f"📅 Días activos: {result.days_active}/30\n" + \
+                    f"📈 Consumo: {consumption_formatted}\n" + \
+                    f"💰 Costo: {cost_formatted}"
+
+                await query.edit_message_text(
+                    text=message,
+                    reply_markup=ConsumptionKeyboards.cancel_success_keyboard(),
+                    parse_mode="Markdown"
+                )
+                logger.info(f"✅ Usuario {user_id} canceló modo consumo")
+            else:
+                message = ConsumptionMessages.Cancellation.CANNOT_CANCEL.format(
+                    reason=result.error_message or "Error desconocido"
+                )
+                await query.edit_message_text(
+                    text=message,
+                    reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
+                    parse_mode="Markdown"
+                )
+
+        except Exception as e:
+            logger.error(f"Error en confirm_cancellation: {e}")
+            await self._send_error_message(update, context)
+
     async def _send_error_message(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ):
@@ -562,5 +683,11 @@ def get_consumption_callback_handlers(
         ),
         CallbackQueryHandler(
             handler.show_info, pattern="^consumption_info$"
+        ),
+        CallbackQueryHandler(
+            handler.start_cancellation, pattern="^consumption_cancel$"
+        ),
+        CallbackQueryHandler(
+            handler.confirm_cancellation, pattern="^consumption_confirm_cancel$"
         ),
     ]
