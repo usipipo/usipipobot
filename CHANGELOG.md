@@ -1,4 +1,121 @@
 [0;32m[INFO][0m FASE 4: Generando changelog...
+## [v3.6.0] - 2026-03-01
+
+### Features
+- conditional consumption button in VPN keys menu
+- implementar cancelación del modo de consumo (#cancel-consumption-mode_20250301)
+- actualizar tarifa de consumo de $0.45 a $0.25 por GB
+- rediseñar menú de gestión de llaves con Opción B
+- eliminar botones Ajustes, Estadísticas y Suspender del menú WireGuard
+- registro de servicios de consumo billing en contenedor DI
+- cancelación automática de órdenes crypto y reutilización de wallets
+- complete VPN integration for pay-as-you-go
+- check pending debt before creating VPN keys
+- integrate key unblocking in process payment
+- integrate key blocking in close billing cycle
+- register ConsumptionVpnIntegrationService in DI container
+- implement route_usage_to_billing method
+- implement unblock_user_keys method
+- implement block_user_keys method for ConsumptionVpnIntegrationService
+- implement check_can_create_key method
+- add ConsumptionVpnIntegrationService skeleton
+- Fase 5 VPN Server Management Center + Pay-as-you-go consumption
+- add ghost key cleanup job
+- add VPN server management handlers
+- create VpnInfrastructureService
+- add disable_key() and enable_key() methods
+- add enable_peer() method
+- add disable_peer() method
+- Phase 6 - Cron Job Script
+- Phase 4 - Telegram Handlers
+- Phase 3 - Application Services
+- Complete Phase 2 - PostgresConsumptionInvoiceRepository
+- Phase 2 - Infrastructure Layer (Models & Config)
+- Phase 1 - Domain Layer entities and interfaces
+- redesign operations menu and add transaction history
+- Add Diagnostics section with real-time logs viewer for admin (#234)
+- implement comprehensive logging across all bot features (#233)
+- add comprehensive logging to referral_service.py
+- add comprehensive logging to VpnService
+- add comprehensive logging to basic commands handlers
+- add comprehensive logging to key management handlers
+- add logs to VPN keys handlers
+- add logs to operations handlers
+- add comprehensive logs to referral handlers
+- remove key deletion option for users (#229)
+- restrict key deletion endpoint to admins only
+- remove delete button and function from miniapp
+- remove delete button from vpn key actions keyboard
+- update messages to remove delete key references
+- remove delete key handler for users
+- remove delete button from user key management keyboard
+- add days since join info and key management improvements
+- show days since join in /info command
+
+### Bug Fixes
+- show inactive keys in admin panel
+- handle 'no text in message' error gracefully
+- replace obsolete VpnKeysKeyboards.main_menu with CommonKeyboards.main_menu
+- reordena handlers para priorizar ConversationHandler y corrige mensaje de cancelación (#245)
+- filter inactive keys from admin server key list (#244)
+- telegram callback_data 64 bytes limit in admin VPN handlers
+- corrige errores en eliminación de claves y parsing Markdown
+- pass billing_service to KeyManagementHandler for consumption button (#243)
+- WireGuard usage always shows 0.0GB (#242)
+- cancelación modo consumo sin deuda no bloquea claves (#241)
+- usar billing como fuente de verdad para cancelación (#240)
+- registrar ConsumptionInvoiceService en contenedor de dependencias
+- registrar handlers de consumo en handler_initializer (#239)
+- include changelog in annotated tag message
+- implement order expiration and wallet reuse
+- 'There is no text in the message to edit' error in handlers
+- resolve invalid escape sequence warnings
+- resolve LSP type error in show_buy_slots_menu
+- improve TronDealer HTTP client error handling and logging
+- Crear usuario en BD al autenticar desde Mini App (#231)
+- Mejorar logging y manejo de errores en pagos Mini App (#231)
+- validación product_type y product_id en pagos (#230)
+- Admin ticket response not working + Missing close ticket button
+- Mejora mensaje de límite de claves alcanzado
+- preserve created_at when loading existing users
+
+### Chores
+- cleanup development files and update scripts
+- add merge to main script
+- remove completed markdown standardization track files
+
+### Other Changes
+- add tests for spinner error handling
+- update plan - wireguard usage bug fix completed
+- update plan.md with Task 5.4 completion - conditional consumption button
+- cancelación modo consumo desde feat/cancel-consumption-mode
+- eliminar botones Ajustes, Estadísticas y Suspender del menú WireGuard
+- cancelación automática de órdenes crypto y reutilización de wallets
+- improve consumption billing and invoice services
+- update track status after VPN integration completion
+- fix flake8 line length in ghost_key_cleanup_job
+- complete integration testing
+- mark transactions-menu track as completed
+- fix linting issues in payment files
+- actualizar plan.md con checkpoint SHA
+- estandarizar parse_mode a Markdown en todos los mensajes
+- add migration notes and plan for bonus system columns (#223)
+
+## [v3.6.0] - 2026-02-28
+
+### Features
+- Rediseño del menú de operaciones con mejor layout visual
+- Nuevo botón "📜 Historial" en menú de operaciones
+- Implementación de historial completo de transacciones crypto
+- Visualización de estados con emojis (⏳ Pendiente, ✅ Completada, ❌ Fallida, ⏰ Expirada)
+- Paginación para historial de transacciones (10 por página)
+- Métodos paginados en CryptoOrderRepository (`get_by_user_paginated`, `count_by_user`)
+
+### Technical
+- Corrección de errores de tipo mypy en inyección de dependencias
+- Tests unitarios para nuevos handlers y keyboards
+- Limpieza de imports no utilizados
+
 ## [v3.5.0] - 2026-02-28
 
 ### Features

@@ -2,8 +2,10 @@
 Handlers para operaciones del usuario de uSipipo.
 
 Author: uSipipo Team
-Version: 3.0.0 - Creditos + Shop
+Version: 3.1.0 - Creditos + Shop + Historial
 """
+
+from typing import List, Optional
 
 from telegram import Update
 from telegram.ext import (
@@ -17,6 +19,10 @@ from telegram.ext import (
 from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
 from config import settings
+from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
+from infrastructure.persistence.postgresql.crypto_order_repository import (
+    PostgresCryptoOrderRepository,
+)
 from utils.logger import logger
 from utils.telegram_utils import TelegramUtils
 
@@ -27,9 +33,15 @@ from .messages_operations import OperationsMessages
 class OperationsHandler:
     """Handler para operaciones del usuario."""
 
-    def __init__(self, vpn_service: VpnService, referral_service: ReferralService):
+    def __init__(
+        self,
+        vpn_service: VpnService,
+        referral_service: ReferralService,
+        crypto_order_repo: Optional[PostgresCryptoOrderRepository] = None,
+    ):
         self.vpn_service = vpn_service
         self.referral_service = referral_service
+        self.crypto_order_repo = crypto_order_repo
         logger.info("⚙️ OperationsHandler inicializado")
 
     async def operations_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -53,11 +65,17 @@ class OperationsHandler:
             elif update.callback_query:
                 await update.callback_query.answer()
                 await TelegramUtils.safe_edit_message(
-                    update.callback_query, context, text=message, reply_markup=keyboard, parse_mode="Markdown"
+                    update.callback_query,
+                    context,
+                    text=message,
+                    reply_markup=keyboard,
+                    parse_mode="Markdown",
                 )
         except Exception as e:
             logger.error(f"Error en operations_menu: {e}")
-            await self._send_error(update, context, OperationsMessages.Error.SYSTEM_ERROR)
+            await self._send_error(
+                update, context, OperationsMessages.Error.SYSTEM_ERROR
+            )
 
     async def show_credits(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not update.callback_query or not update.effective_user:
@@ -79,12 +97,19 @@ class OperationsHandler:
             keyboard = OperationsKeyboards.credits_menu(stats.referral_credits)
 
             await TelegramUtils.safe_edit_message(
-                query, context, text=message, reply_markup=keyboard, parse_mode="Markdown"
+                query,
+                context,
+                text=message,
+                reply_markup=keyboard,
+                parse_mode="Markdown",
             )
         except Exception as e:
             logger.error(f"Error en show_credits: {e}")
             await TelegramUtils.safe_edit_message(
-                query, context, text=OperationsMessages.Error.SYSTEM_ERROR, parse_mode="Markdown"
+                query,
+                context,
+                text=OperationsMessages.Error.SYSTEM_ERROR,
+                parse_mode="Markdown",
             )
 
     async def show_shop(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -176,12 +201,125 @@ class OperationsHandler:
         is_admin = update.effective_user.id == int(settings.ADMIN_ID)
 
         await TelegramUtils.safe_edit_message(
-            query, context, text=CommonMessages.Menu.WELCOME_BACK,
+            query,
+            context,
+            text=CommonMessages.Menu.WELCOME_BACK,
             reply_markup=CommonKeyboards.main_menu(is_admin=is_admin),
             parse_mode="Markdown",
         )
 
-    async def _send_error(self, update: Update, context: ContextTypes.DEFAULT_TYPE, message: str):
+    async def show_transactions_history(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE, page: int = 0
+    ):
+        """Mostrar historial de transacciones crypto del usuario."""
+        if not update.callback_query or not update.effective_user:
+            return
+        query = update.callback_query
+        await query.answer()
+
+        user_id = update.effective_user.id
+        logger.info(f"📜 User {user_id} viewing transaction history (page {page})")
+
+        if not self.crypto_order_repo:
+            logger.error("CryptoOrderRepository not available")
+            await TelegramUtils.safe_edit_message(
+                query,
+                context,
+                text=OperationsMessages.Error.SYSTEM_ERROR,
+                parse_mode="Markdown",
+            )
+            return
+
+        try:
+            # Obtener órdenes paginadas
+            limit = 10
+            offset = page * limit
+            orders = await self.crypto_order_repo.get_by_user_paginated(
+                user_id, limit=limit + 1, offset=offset  # +1 para saber si hay más
+            )
+
+            if not orders:
+                message = OperationsMessages.Transactions.NO_TRANSACTIONS
+                keyboard = OperationsKeyboards.transactions_history_menu()
+            else:
+                has_more = len(orders) > limit
+                orders_to_show = orders[:limit]
+
+                message = OperationsMessages.Transactions.HISTORY_HEADER
+                message += self._format_orders_list(orders_to_show)
+
+                if has_more or page > 0:
+                    message += OperationsMessages.Transactions.PAGE_FOOTER.format(
+                        page=page + 1
+                    )
+
+                keyboard = OperationsKeyboards.transactions_history_menu(
+                    has_more=has_more, page=page
+                )
+
+            await TelegramUtils.safe_edit_message(
+                query,
+                context,
+                text=message,
+                reply_markup=keyboard,
+                parse_mode="Markdown",
+            )
+        except Exception as e:
+            logger.error(f"Error showing transaction history: {e}")
+            await TelegramUtils.safe_edit_message(
+                query,
+                context,
+                text=OperationsMessages.Error.SYSTEM_ERROR,
+                parse_mode="Markdown",
+            )
+
+    def _format_orders_list(self, orders: List[CryptoOrder]) -> str:
+        """Formatear lista de órdenes para mostrar al usuario."""
+        status_map = {
+            CryptoOrderStatus.PENDING: ("⏳", "Pendiente"),
+            CryptoOrderStatus.COMPLETED: ("✅", "Completada"),
+            CryptoOrderStatus.FAILED: ("❌", "Fallida"),
+            CryptoOrderStatus.EXPIRED: ("⏰", "Expirada"),
+        }
+
+        lines = []
+        for order in orders:
+            emoji, text = status_map.get(order.status, ("❓", str(order.status)))
+            date_str = order.created_at.strftime("%d/%m/%Y %H:%M")
+            lines.append(
+                OperationsMessages.Transactions.ORDER_ITEM.format(
+                    status_emoji=emoji,
+                    package_type=order.package_type.upper(),
+                    amount_usdt=order.amount_usdt,
+                    date=date_str,
+                    status_text=text,
+                )
+            )
+
+        return "".join(lines)
+
+    async def _handle_transactions_pagination(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Handler para paginación del historial."""
+        if not update.callback_query:
+            return
+        query = update.callback_query
+        await query.answer()
+
+        # Extraer número de página del callback_data
+        # Format: transactions_page_N
+        data = query.data
+        if data and data.startswith("transactions_page_"):
+            try:
+                page = int(data.split("_")[-1])
+                await self.show_transactions_history(update, context, page=page)
+            except ValueError:
+                logger.error(f"Invalid pagination data: {data}")
+
+    async def _send_error(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE, message: str
+    ):
         if update.message:
             await update.message.reply_text(text=message, parse_mode="Markdown")
         elif update.callback_query:
@@ -190,8 +328,12 @@ class OperationsHandler:
             )
 
 
-def get_operations_handlers(vpn_service: VpnService, referral_service: ReferralService):
-    handler = OperationsHandler(vpn_service, referral_service)
+def get_operations_handlers(
+    vpn_service: VpnService,
+    referral_service: ReferralService,
+    crypto_order_repo: Optional[PostgresCryptoOrderRepository] = None,
+):
+    handler = OperationsHandler(vpn_service, referral_service, crypto_order_repo)
 
     return [
         MessageHandler(filters.Regex("^⚙️ Operaciones$"), handler.operations_menu),
@@ -200,9 +342,11 @@ def get_operations_handlers(vpn_service: VpnService, referral_service: ReferralS
 
 
 def get_operations_callback_handlers(
-    vpn_service: VpnService, referral_service: ReferralService
+    vpn_service: VpnService,
+    referral_service: ReferralService,
+    crypto_order_repo: Optional[PostgresCryptoOrderRepository] = None,
 ):
-    handler = OperationsHandler(vpn_service, referral_service)
+    handler = OperationsHandler(vpn_service, referral_service, crypto_order_repo)
 
     return [
         CallbackQueryHandler(handler.operations_menu, pattern="^operations_menu$"),
@@ -216,4 +360,10 @@ def get_operations_callback_handlers(
             handler.redeem_credits_for_slot, pattern="^credits_redeem_slot$"
         ),
         CallbackQueryHandler(handler.show_buy_slots_menu, pattern="^buy_slots_menu$"),
+        CallbackQueryHandler(
+            handler.show_transactions_history, pattern="^transactions_history$"
+        ),
+        CallbackQueryHandler(
+            handler._handle_transactions_pagination, pattern="^transactions_page_"
+        ),
     ]

@@ -416,9 +416,33 @@ class TelegramUtils:
             err = str(e)
             logger.warning(f"safe_edit_message: edit failed: {err}")
 
+            err_lower = err.lower()
+
+            # Handle "no text in message" error - send new message instead
+            if "there is no text in the message" in err_lower:
+                logger.warning(
+                    "safe_edit_message: message has no text, sending new message"
+                )
+                try:
+                    await context.bot.send_message(
+                        chat_id=query.message.chat.id,
+                        text=text,
+                        reply_markup=reply_markup,
+                        parse_mode=parse_mode,
+                    )
+                    return True
+                except Exception as ex:
+                    logger.error(f"safe_edit_message: send_message fallback failed: {ex}")
+                    return False
+
+            # Handle "message not modified" - not an error, just return True
+            if "message is not modified" in err_lower:
+                logger.debug("safe_edit_message: message not modified (same content)")
+                return True
+
             # If the error is due to entity parsing, retry without parse_mode
-            if "Can't parse entities" in err or (
-                "character" in err and "reserved" in err
+            if "can't parse entities" in err_lower or (
+                "character" in err_lower and "reserved" in err_lower
             ):
                 try:
                     await query.edit_message_text(text=text, reply_markup=reply_markup)
@@ -445,7 +469,7 @@ class TelegramUtils:
                 return True
             except BadRequest as ex:
                 # If the fallback failed due to parsing errors, retry without parse_mode
-                if "Can't parse entities" in str(ex) or (
+                if "can't parse entities" in str(ex).lower() or (
                     "character" in str(ex) and "reserved" in str(ex)
                 ):
                     try:
