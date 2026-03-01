@@ -238,7 +238,10 @@ class AdminVpnHandler(BaseHandler):
             context.user_data["vpn_server_type"] = server_type
 
         try:
-            keys = await self.vpn_service.list_server_keys(server_type)
+            # Panel admin muestra todas las claves incluyendo inactivas
+            keys = await self.vpn_service.list_server_keys(
+                server_type, include_inactive=True
+            )
 
             if not keys:
                 await SpinnerManager.replace_spinner_with_message(
@@ -256,9 +259,17 @@ class AdminVpnHandler(BaseHandler):
             offset = (page - 1) * KEYS_PER_PAGE
             page_keys = keys[offset:offset + KEYS_PER_PAGE]
 
+            # Contar activas e inactivas para mostrar estadísticas
+            active_count = sum(1 for k in keys if k.get("is_active", False))
+            inactive_count = len(keys) - active_count
+
             message = AdminVpnMessages.KEYS_LIST_HEADER.format(
                 server_type=server_type.upper()
-            ) + f"📊 Total: {len(keys)} claves\n\n"
+            )
+            message += f"📊 Total: {len(keys)} claves"
+            if inactive_count > 0:
+                message += f" (✅ {active_count} activas, ⏸️ {inactive_count} inactivas)"
+            message += "\n\n"
 
             await SpinnerManager.replace_spinner_with_message(
                 update,
@@ -301,7 +312,9 @@ class AdminVpnHandler(BaseHandler):
             context.user_data["vpn_keys_page"] = page
 
         try:
-            keys = await self.vpn_service.list_server_keys(server_type)
+            keys = await self.vpn_service.list_server_keys(
+                server_type, include_inactive=True
+            )
 
             if not keys:
                 await self._safe_edit_message(
@@ -317,9 +330,17 @@ class AdminVpnHandler(BaseHandler):
             offset = (page - 1) * KEYS_PER_PAGE
             page_keys = keys[offset:offset + KEYS_PER_PAGE]
 
+            # Contar activas e inactivas para mostrar estadísticas
+            active_count = sum(1 for k in keys if k.get("is_active", False))
+            inactive_count = len(keys) - active_count
+
             message = AdminVpnMessages.KEYS_LIST_HEADER.format(
                 server_type=server_type.upper()
-            ) + f"📊 Total: {len(keys)} claves\n\n"
+            )
+            message += f"📊 Total: {len(keys)} claves"
+            if inactive_count > 0:
+                message += f" (✅ {active_count} activas, ⏸️ {inactive_count} inactivas)"
+            message += "\n\n"
 
             await self._safe_edit_message(
                 query,
@@ -357,7 +378,7 @@ class AdminVpnHandler(BaseHandler):
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type)
+            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
             key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
 
             if not key:
@@ -430,7 +451,7 @@ class AdminVpnHandler(BaseHandler):
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type)
+            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
             key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
             if not key:
                 await SpinnerManager.replace_spinner_with_message(
@@ -493,7 +514,7 @@ class AdminVpnHandler(BaseHandler):
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type)
+            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
             key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
             if not key:
                 await SpinnerManager.replace_spinner_with_message(
@@ -552,7 +573,7 @@ class AdminVpnHandler(BaseHandler):
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type)
+            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
             key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
             if not key:
                 await self._safe_edit_message(
@@ -604,7 +625,7 @@ class AdminVpnHandler(BaseHandler):
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type)
+            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
             key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
             if not key:
                 await SpinnerManager.replace_spinner_with_message(

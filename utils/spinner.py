@@ -101,21 +101,57 @@ class SpinnerManager:
 
             # Luego mostrar el mensaje final usando el método apropiado
             if update.callback_query:
-                # Para callbacks, editar el mensaje original
+                # Para callbacks, intentar editar el mensaje original
                 try:
                     await update.callback_query.edit_message_text(
                         text=text, reply_markup=reply_markup, parse_mode=parse_mode
                     )
                 except Exception as e:
-                    if "Can't parse entities" in str(e):
+                    error_msg = str(e).lower()
+                    # Manejar caso cuando no hay texto en el mensaje para editar
+                    if "there is no text in the message" in error_msg:
+                        logger.warning(
+                            f"⚠️  Mensaje original no tiene texto, enviando nuevo mensaje: {e}"
+                        )
+                        # Enviar nuevo mensaje como fallback
+                        await context.bot.send_message(
+                            chat_id=chat_id,
+                            text=text,
+                            reply_markup=reply_markup,
+                            parse_mode=parse_mode,
+                        )
+                    elif "can't parse entities" in error_msg:
                         logger.warning(
                             f"⚠️  Error de parsing Markdown, reintentando sin parse_mode: {e}"
                         )
-                        await update.callback_query.edit_message_text(
-                            text=text, reply_markup=reply_markup
-                        )
+                        try:
+                            await update.callback_query.edit_message_text(
+                                text=text, reply_markup=reply_markup
+                            )
+                        except Exception as e2:
+                            # Si sigue fallando, enviar como mensaje nuevo
+                            logger.warning(
+                                f"⚠️  Edit falló de nuevo, enviando mensaje nuevo: {e2}"
+                            )
+                            await context.bot.send_message(
+                                chat_id=chat_id,
+                                text=text,
+                                reply_markup=reply_markup,
+                            )
+                    elif "message is not modified" in error_msg:
+                        # El mensaje ya tiene el mismo contenido, ignorar
+                        logger.debug("ℹ️  Mensaje no modificado (mismo contenido)")
                     else:
-                        raise
+                        # Otros errores, intentar enviar mensaje nuevo como fallback
+                        logger.warning(
+                            f"⚠️  Error editando mensaje, enviando nuevo: {e}"
+                        )
+                        await context.bot.send_message(
+                            chat_id=chat_id,
+                            text=text,
+                            reply_markup=reply_markup,
+                            parse_mode=parse_mode,
+                        )
             elif update.message:
                 # Para mensajes normales, responder
                 try:
@@ -123,7 +159,7 @@ class SpinnerManager:
                         text=text, reply_markup=reply_markup, parse_mode=parse_mode
                     )
                 except Exception as e:
-                    if "Can't parse entities" in str(e):
+                    if "can't parse entities" in str(e).lower():
                         logger.warning(
                             f"⚠️  Error de parsing Markdown, reintentando sin parse_mode: {e}"
                         )

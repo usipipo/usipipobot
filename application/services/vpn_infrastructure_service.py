@@ -327,23 +327,47 @@ class VpnInfrastructureService:
 
         return last_seen < cutoff_date
 
-    async def list_server_keys(self, server_type: str) -> List[Dict[str, Any]]:
+    async def list_server_keys(
+        self, server_type: str, include_inactive: bool = False
+    ) -> List[Dict[str, Any]]:
         """
         Lista todas las claves de un tipo de servidor.
 
         Args:
             server_type: Tipo de servidor ('wireguard' o 'outline')
+            include_inactive: Si True, incluye claves inactivas (para panel admin)
 
         Returns:
             Lista de dicts con {"id": str, "name": str, "is_active": bool, ...}
         """
         try:
             all_keys = await self.key_repository.get_all_keys(settings.ADMIN_ID)
-            type_keys = [
-                k
-                for k in all_keys
-                if k.key_type.value == server_type.lower() and k.is_active
-            ]
+            server_type_lower = server_type.lower()
+
+            logger.debug(
+                f"list_server_keys: Total keys in DB: {len(all_keys)}, "
+                f"looking for type: {server_type_lower}"
+            )
+
+            # Log sample keys for debugging
+            if all_keys:
+                sample = all_keys[0]
+                logger.debug(
+                    f"Sample key - type: {sample.key_type.value}, "
+                    f"is_active: {sample.is_active}"
+                )
+
+            type_keys = []
+            for k in all_keys:
+                key_type_value = k.key_type.value if hasattr(k.key_type, "value") else str(k.key_type)
+                if key_type_value.lower() == server_type_lower:
+                    if include_inactive or k.is_active:
+                        type_keys.append(k)
+
+            logger.debug(
+                f"list_server_keys: Found {len(type_keys)} keys for {server_type_lower} "
+                f"(include_inactive={include_inactive})"
+            )
 
             result = []
             for key in type_keys:
