@@ -291,7 +291,7 @@ class TestListServerKeys:
     async def test_list_server_keys_filters_inactive_keys(
         self, vpn_infra_service, mock_key_repo, sample_outline_key
     ):
-        """Test that inactive (soft-deleted) keys are not shown in admin list."""
+        """Test that inactive (soft-deleted) keys are not shown by default."""
         inactive_key = VpnKey(
             id=str(uuid.uuid4()),
             user_id=123456789,
@@ -314,6 +314,37 @@ class TestListServerKeys:
         # Verify inactive key is not in results
         inactive_ids = [k["id"] for k in result if not k["is_active"]]
         assert len(inactive_ids) == 0
+
+    @pytest.mark.asyncio
+    async def test_list_server_keys_include_inactive(
+        self, vpn_infra_service, mock_key_repo, sample_outline_key
+    ):
+        """Test that include_inactive=True includes inactive keys for admin panel."""
+        inactive_key = VpnKey(
+            id=str(uuid.uuid4()),
+            user_id=123456789,
+            key_type=KeyType.OUTLINE,
+            name="Deleted Outline Key",
+            key_data="ss://test@server:1234#DeletedKey",
+            external_id="outline-key-deleted",
+            is_active=False,  # Soft deleted
+            used_bytes=1024,
+            last_seen_at=datetime.now(timezone.utc) - timedelta(days=30),
+        )
+
+        mock_key_repo.get_all_keys.return_value = [sample_outline_key, inactive_key]
+
+        result = await vpn_infra_service.list_server_keys(
+            server_type="outline", include_inactive=True
+        )
+
+        # Both keys should be included
+        assert len(result) == 2
+        active_keys = [k for k in result if k["is_active"]]
+        inactive_keys = [k for k in result if not k["is_active"]]
+        assert len(active_keys) == 1
+        assert len(inactive_keys) == 1
+        assert inactive_keys[0]["id"] == str(inactive_key.id)
 
 
 class TestIsGhostKey:
