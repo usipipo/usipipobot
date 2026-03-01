@@ -53,7 +53,9 @@ class VpnInfrastructureService:
             server_success = False
 
             if key_type.lower() == "wireguard" and self.wireguard_client:
-                server_success = await self.wireguard_client.enable_peer(key.external_id)
+                server_success = await self.wireguard_client.enable_peer(
+                    key.external_id
+                )
             elif key_type.lower() == "outline" and self.outline_client:
                 server_success = await self.outline_client.enable_key(key.external_id)
             else:
@@ -94,7 +96,9 @@ class VpnInfrastructureService:
             server_success = False
 
             if key_type.lower() == "wireguard" and self.wireguard_client:
-                server_success = await self.wireguard_client.disable_peer(key.external_id)
+                server_success = await self.wireguard_client.disable_peer(
+                    key.external_id
+                )
             elif key_type.lower() == "outline" and self.outline_client:
                 server_success = await self.outline_client.disable_key(key.external_id)
             else:
@@ -141,7 +145,9 @@ class VpnInfrastructureService:
             server_success = False
 
             if key_type.lower() == "wireguard" and self.wireguard_client:
-                server_success = await self.wireguard_client.delete_client(key.external_id)
+                server_success = await self.wireguard_client.delete_client(
+                    key.external_id
+                )
             elif key_type.lower() == "outline" and self.outline_client:
                 server_success = await self.outline_client.delete_key(key.external_id)
             else:
@@ -237,7 +243,9 @@ class VpnInfrastructureService:
         """
         try:
             cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_inactive)
-            all_active_keys = await self.key_repository.get_all_active(settings.ADMIN_ID)
+            all_active_keys = await self.key_repository.get_all_active(
+                settings.ADMIN_ID
+            )
 
             total_checked = len(all_active_keys)
             ghosts_found = 0
@@ -250,9 +258,15 @@ class VpnInfrastructureService:
 
                     try:
                         if key.key_type == KeyType.OUTLINE and self.outline_client:
-                            success = await self.outline_client.disable_key(key.external_id)
-                        elif key.key_type == KeyType.WIREGUARD and self.wireguard_client:
-                            success = await self.wireguard_client.disable_peer(key.external_id)
+                            success = await self.outline_client.disable_key(
+                                key.external_id
+                            )
+                        elif (
+                            key.key_type == KeyType.WIREGUARD and self.wireguard_client
+                        ):
+                            success = await self.wireguard_client.disable_peer(
+                                key.external_id
+                            )
                         else:
                             continue
 
@@ -325,20 +339,28 @@ class VpnInfrastructureService:
         """
         try:
             all_keys = await self.key_repository.get_all_keys(settings.ADMIN_ID)
-            type_keys = [k for k in all_keys if k.key_type.value == server_type.lower()]
+            type_keys = [
+                k
+                for k in all_keys
+                if k.key_type.value == server_type.lower() and k.is_active
+            ]
 
             result = []
             for key in type_keys:
-                result.append({
-                    "id": str(key.id) if key.id else None,
-                    "name": key.name,
-                    "is_active": key.is_active,
-                    "key_type": key.key_type.value,
-                    "user_id": key.user_id,
-                    "external_id": key.external_id,
-                    "last_seen_at": key.last_seen_at.isoformat() if key.last_seen_at else None,
-                    "used_bytes": key.used_bytes,
-                })
+                result.append(
+                    {
+                        "id": str(key.id) if key.id else None,
+                        "name": key.name,
+                        "is_active": key.is_active,
+                        "key_type": key.key_type.value,
+                        "user_id": key.user_id,
+                        "external_id": key.external_id,
+                        "last_seen_at": (
+                            key.last_seen_at.isoformat() if key.last_seen_at else None
+                        ),
+                        "used_bytes": key.used_bytes,
+                    }
+                )
 
             return result
 
