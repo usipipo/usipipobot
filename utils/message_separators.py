@@ -14,6 +14,18 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Self
 
+# Longitud óptima para visualización en móviles (Telegram)
+# Basado en análisis de BitBread IA: 13 caracteres es el punto
+# óptimo para pantallas pequeñas sin romper la línea
+TELEGRAM_MOBILE_WIDTH = 13
+
+# Longitud alternativa para más énfasis visual
+TELEGRAM_WIDE_WIDTH = 17
+
+# Límites generales
+MAX_SEPARATOR_LENGTH = 30
+MIN_SEPARATOR_LENGTH = 5
+
 
 class SeparatorStyle(Enum):
     """Estilos de separadores lineales."""
@@ -67,10 +79,10 @@ class MessageSeparatorBuilder:
             .build()
     """
 
-    # Longitud recomendada para móviles (13-15 caracteres)
-    DEFAULT_LENGTH = 13
-    MAX_LENGTH = 30
-    MIN_LENGTH = 5
+    # Referencias a constantes del módulo para compatibilidad
+    DEFAULT_LENGTH = TELEGRAM_MOBILE_WIDTH
+    MAX_LENGTH = MAX_SEPARATOR_LENGTH
+    MIN_LENGTH = MIN_SEPARATOR_LENGTH
 
     def __init__(self):
         self._mode: Optional[str] = None
