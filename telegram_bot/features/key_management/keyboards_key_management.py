@@ -24,6 +24,15 @@ class KeyManagementKeyboards:
         """
         keyboard = []
 
+        # Botón de activación de tarifa por consumo (siempre visible)
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "⚡ Activar Consumo", callback_data="consumption_activate"
+                )
+            ]
+        )
+
         if keys_summary.get("total_count", 0) == 0:
             keyboard.extend(
                 [
@@ -41,25 +50,26 @@ class KeyManagementKeyboards:
             )
             return InlineKeyboardMarkup(keyboard)
 
+        # Fila de tipos de llaves (Opción B)
+        keys_row = []
         if keys_summary.get("outline_count", 0) > 0:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        f"🌐 Outline ({keys_summary['outline_count']})",
-                        callback_data="keys_outline",
-                    )
-                ]
+            keys_row.append(
+                InlineKeyboardButton(
+                    f"🌐 Outline ({keys_summary['outline_count']})",
+                    callback_data="keys_outline",
+                )
             )
 
         if keys_summary.get("wireguard_count", 0) > 0:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        f"🔒 WireGuard ({keys_summary['wireguard_count']})",
-                        callback_data="keys_wireguard",
-                    )
-                ]
+            keys_row.append(
+                InlineKeyboardButton(
+                    f"🔒 WireGuard ({keys_summary['wireguard_count']})",
+                    callback_data="keys_wireguard",
+                )
             )
+
+        if keys_row:
+            keyboard.append(keys_row)
 
         keyboard.extend(
             [
