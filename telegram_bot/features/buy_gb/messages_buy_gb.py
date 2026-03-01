@@ -118,14 +118,52 @@ class BuyGbMessages:
         )
 
     class Info:
-        DATA_SUMMARY = (
-            "📊 **Resumen de Datos**\n\n"
-            "📦 **Paquetes Activos:** {active_packages}\n"
-            "📈 **Total Disponible:** {total_gb:.2f} GB\n"
-            "📉 **Usado:** {used_gb:.2f} GB\n"
-            "✅ **Restante:** {remaining_gb:.2f} GB\n\n"
-            "💡 *Compra mas paquetes si necesitas mas datos*"
-        )
+        @staticmethod
+        def DATA_SUMMARY(
+            active_packages: int,
+            total_gb: float,
+            used_gb: float,
+            remaining_gb: float
+        ) -> str:
+            """Genera resumen de datos con diseño minimalista y visual."""
+            percentage = (used_gb / total_gb * 100) if total_gb > 0 else 0
+            progress = _progress_bar(percentage)
+
+            # Determinar color/estado visual basado en porcentaje
+            if percentage >= 90:
+                status_icon = "🔴"
+                status_text = "Crítico"
+            elif percentage >= 70:
+                status_icon = "🟡"
+                status_text = "Alto"
+            else:
+                status_icon = "🟢"
+                status_text = "Normal"
+
+            lines = [
+                "📊 *Tus Datos*",
+                "",
+                f"`{progress}` *{percentage:.0f}%*",
+                "",
+                f"├─ 📦 Paquetes: *{active_packages}*",
+                f"├─ 💾 Total: *{total_gb:.1f} GB*",
+                f"├─ 📉 Usado: *{used_gb:.1f} GB*",
+                f"└─ ✅ Libre: *{remaining_gb:.1f} GB*",
+                "",
+                f"{status_icon} Estado: {status_text}",
+            ]
+
+            # Agregar CTA contextual basado en uso
+            if percentage >= 90:
+                lines.append("\n⚠️ *Datos casi agotados*")
+                lines.append("💳 `/buy` para recargar")
+            elif percentage >= 70:
+                lines.append("\n💡 *Considera recargar pronto*")
+            elif active_packages == 0:
+                lines.append("\n🎁 *5GB gratis en cada clave*")
+                lines.append("💳 `/buy` para más datos")
+
+            return "\n".join(lines)
 
     class Data:
         """Mensajes para comando /data - Estilo Cyberpunk Mobile-First."""
