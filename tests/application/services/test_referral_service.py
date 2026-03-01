@@ -207,6 +207,38 @@ class TestRedeemCreditsForData:
         assert result["success"] is False
         assert result["error"] == "insufficient_credits"
 
+    @pytest.mark.asyncio
+    async def test_redeem_credits_deducts_from_user_object(
+        self, service, mock_user_repo, mock_transaction_repo
+    ):
+        """Test que verifica que los créditos se descuentan del objeto user en memoria.
+
+        Este test asegura que el bug de créditos no se repita:
+        https://github.com/usipipo/usipipobot/issues/249
+        """
+        from unittest.mock import patch
+        from config import settings
+
+        user = User(
+            telegram_id=123,
+            referral_credits=100,
+            free_data_limit_bytes=5 * 1024**3,
+        )
+        mock_user_repo.get_by_id.return_value = user
+
+        # Canjear 100 créditos (1 GB)
+        with patch.object(settings, 'REFERRAL_CREDITS_PER_GB', 100):
+            result = await service.redeem_credits_for_data(123, 100, 123)
+
+        assert result["success"] is True
+        assert result["remaining_credits"] == 0
+        # El objeto user debe tener los créditos actualizados
+        assert user.referral_credits == 0
+        # Verificar que save fue llamado con el usuario actualizado
+        mock_user_repo.save.assert_called_once()
+        saved_user = mock_user_repo.save.call_args[0][0]
+        assert saved_user.referral_credits == 0
+
 
 class TestRedeemCreditsForSlot:
     """Tests para redeem_credits_for_slot."""
@@ -261,6 +293,34 @@ class TestRedeemCreditsForSlot:
 
         assert result["success"] is False
         assert result["error"] == "insufficient_credits"
+
+    @pytest.mark.asyncio
+    async def test_redeem_slot_deducts_from_user_object(
+        self, service, mock_user_repo, mock_transaction_repo
+    ):
+        """Test que verifica que los créditos se descuentan del objeto user en memoria.
+
+        Este test asegura que el bug de créditos no se repita:
+        https://github.com/usipipo/usipipobot/issues/249
+        """
+        from unittest.mock import patch
+        from config import settings
+
+        user = User(
+            telegram_id=123,
+            referral_credits=500,
+            max_keys=2,
+        )
+        mock_user_repo.get_by_id.return_value = user
+
+        # Canjear 500 créditos (1 slot)
+        with patch.object(settings, 'REFERRAL_CREDITS_PER_SLOT', 500):
+            result = await service.redeem_credits_for_slot(123, 123)
+
+        assert result["success"] is True
+        assert result["remaining_credits"] == 0
+        # El objeto user debe tener los créditos actualizados
+        assert user.referral_credits == 0
 
 
 class TestRecordReferredUserPurchase:
