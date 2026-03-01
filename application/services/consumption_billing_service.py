@@ -45,6 +45,7 @@ class CancellationResult:
     mb_consumed: Decimal = Decimal("0")
     total_cost_usd: Decimal = Decimal("0")
     days_active: int = 0
+    had_debt: bool = False
     error_message: Optional[str] = None
 
 
@@ -491,6 +492,9 @@ class ConsumptionBillingService:
             mb_consumed = billing.mb_consumed
             total_cost = billing.total_cost_usd
 
+            # Determinar si hay deuda real
+            has_debt = mb_consumed > 0 or total_cost > 0
+
             # Cerrar ciclo (misma lógica que close_billing_cycle)
             billing.close_cycle()
             success = await self.billing_repo.update_status(
@@ -503,55 +507,71 @@ class ConsumptionBillingService:
                     error_message="Error al cerrar el ciclo de facturación"
                 )
 
-            # Actualizar usuario
-            user = await self.user_repo.get_by_id(user_id, current_user_id)
-            if user:
-                user.mark_as_has_debt()
-                await self.user_repo.save(user, current_user_id)
+            # Solo bloquear claves y marcar deuda si realmente hay algo que cobrar
+            if has_debt:
+                # Actualizar usuario como deudor
+                user = await self.user_repo.get_by_id(user_id, current_user_id)
+                if user:
+                    user.mark_as_has_debt()
+                    await self.user_repo.save(user, current_user_id)
 
-                # Bloquear todas las claves del usuario
-                from application.services.consumption_vpn_integration_service import (
-                    ConsumptionVpnIntegrationService,
-                )
-                from application.services.common.container import get_container
-
-                container = get_container()
-                if container:
-                    vpn_integration = container.resolve(
-                        ConsumptionVpnIntegrationService
+                    # Bloquear todas las claves del usuario
+                    from application.services.consumption_vpn_integration_service import (
+                        ConsumptionVpnIntegrationService,
                     )
-                    if vpn_integration:
-                        block_result = await vpn_integration.block_user_keys(  # type: ignore
-                            user_id, current_user_id
-                        )
+                    from application.services.common.container import get_container
 
-                        if not block_result["success"]:
+                    container = get_container()
+                    if container:
+                        vpn_integration = container.resolve(
+                            ConsumptionVpnIntegrationService
+                        )
+                        if vpn_integration:
+                            block_result = await vpn_integration.block_user_keys(  # type: ignore
+                                user_id, current_user_id
+                            )
+
+                            if not block_result["success"]:
+                                logger.error(
+                                    f"Failed to block keys for user {user_id}: "
+                                    f"{block_result['errors']}"
+                                )
+                        else:
                             logger.error(
-                                f"Failed to block keys for user {user_id}: "
-                                f"{block_result['errors']}"
+                                "VPN integration service not available"
                             )
                     else:
-                        logger.error(
-                            "VPN integration service not available"
-                        )
-                else:
-                    logger.error("Container not available for blocking keys")
-                    # Continuar de todos modos
+                        logger.error("Container not available for blocking keys")
+                        # Continuar de todos modos
 
-            logger.info(
-                f"🔒 Modo consumo cancelado - billing_id={billing_id}, "
-                f"user_id={user_id}, "
-                f"mb_consumed={mb_consumed:.2f}, "
-                f"cost=${total_cost:.2f}, "
-                f"days_active={days_active}"
-            )
+                logger.info(
+                    f"🔒 Modo consumo cancelado con deuda - billing_id={billing_id}, "
+                    f"user_id={user_id}, "
+                    f"mb_consumed={mb_consumed:.2f}, "
+                    f"cost=${total_cost:.2f}, "
+                    f"days_active={days_active}"
+                )
+            else:
+                # No hay deuda - solo desactivar modo consumo del usuario
+                user = await self.user_repo.get_by_id(user_id, current_user_id)
+                if user:
+                    user.deactivate_consumption_mode()
+                    await self.user_repo.save(user, current_user_id)
+
+                logger.info(
+                    f"✅ Modo consumo cancelado sin deuda - billing_id={billing_id}, "
+                    f"user_id={user_id}, "
+                    f"days_active={days_active}. "
+                    f"Claves VPN NO bloqueadas."
+                )
 
             return CancellationResult(
                 success=True,
                 billing_id=billing_id,
                 mb_consumed=mb_consumed,
                 total_cost_usd=total_cost,
-                days_active=days_active
+                days_active=days_active,
+                had_debt=has_debt
             )
 
         except Exception as e:

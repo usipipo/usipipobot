@@ -52,7 +52,7 @@ class ConsumptionVpnIntegrationService:
                 logger.info(f"User {user_id} has no keys to block")
                 # Still mark user as having debt
                 user.mark_as_has_debt()
-                await self.user_repo.update(user, current_user_id)
+                await self.user_repo.save(user, current_user_id)
                 return {
                     "success": True,
                     "keys_blocked": 0,
@@ -88,7 +88,7 @@ class ConsumptionVpnIntegrationService:
 
             # Mark user as having debt
             user.mark_as_has_debt()
-            await self.user_repo.update(user, current_user_id)
+            await self.user_repo.save(user, current_user_id)
 
             return {
                 "success": keys_failed == 0,
@@ -131,7 +131,7 @@ class ConsumptionVpnIntegrationService:
                 logger.info(f"User {user_id} has no keys to unblock")
                 # Still mark debt as paid
                 user.mark_debt_as_paid()
-                await self.user_repo.update(user, current_user_id)
+                await self.user_repo.save(user, current_user_id)
                 return {
                     "success": True,
                     "keys_unblocked": 0,
@@ -167,7 +167,7 @@ class ConsumptionVpnIntegrationService:
 
             # Clear user's debt flag
             user.mark_debt_as_paid()
-            await self.user_repo.update(user, current_user_id)
+            await self.user_repo.save(user, current_user_id)
 
             return {
                 "success": keys_failed == 0,

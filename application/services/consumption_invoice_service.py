@@ -270,12 +270,12 @@ class ConsumptionInvoiceService:
                     container = get_container()
                     vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
                     unblock_result = await vpn_integration.unblock_user_keys(
-                        user.id, current_user_id
+                        user.telegram_id, current_user_id
                     )
 
                     if not unblock_result["success"]:
                         logger.error(
-                            f"Failed to unblock keys for user {user.id}: "
+                            f"Failed to unblock keys for user {user.telegram_id}: "
                             f"{unblock_result['errors']}"
                         )
 
@@ -363,12 +363,12 @@ class ConsumptionInvoiceService:
                     container = get_container()
                     vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
                     unblock_result = await vpn_integration.unblock_user_keys(
-                        user.id, current_user_id
+                        user.telegram_id, current_user_id
                     )
 
                     if not unblock_result["success"]:
                         logger.error(
-                            f"Failed to unblock keys for user {user.id}: "
+                            f"Failed to unblock keys for user {user.telegram_id}: "
                             f"{unblock_result['errors']}"
                         )
 
