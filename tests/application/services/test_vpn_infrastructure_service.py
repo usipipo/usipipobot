@@ -56,7 +56,11 @@ def sample_outline_key():
 class TestEnableKey:
     @pytest.mark.asyncio
     async def test_enable_key_wireguard_success(
-        self, vpn_infra_service, mock_key_repo, mock_wireguard_client, sample_wireguard_key
+        self,
+        vpn_infra_service,
+        mock_key_repo,
+        mock_wireguard_client,
+        sample_wireguard_key,
     ):
         mock_key_repo.get_by_id.return_value = sample_wireguard_key
         mock_wireguard_client.enable_peer.return_value = True
@@ -102,7 +106,11 @@ class TestEnableKey:
 
     @pytest.mark.asyncio
     async def test_enable_key_server_failure(
-        self, vpn_infra_service, mock_key_repo, mock_wireguard_client, sample_wireguard_key
+        self,
+        vpn_infra_service,
+        mock_key_repo,
+        mock_wireguard_client,
+        sample_wireguard_key,
     ):
         mock_key_repo.get_by_id.return_value = sample_wireguard_key
         mock_wireguard_client.enable_peer.return_value = False
@@ -118,7 +126,11 @@ class TestEnableKey:
 class TestDisableKey:
     @pytest.mark.asyncio
     async def test_disable_key_wireguard(
-        self, vpn_infra_service, mock_key_repo, mock_wireguard_client, sample_wireguard_key
+        self,
+        vpn_infra_service,
+        mock_key_repo,
+        mock_wireguard_client,
+        sample_wireguard_key,
     ):
         mock_key_repo.get_by_id.return_value = sample_wireguard_key
         mock_wireguard_client.disable_peer.return_value = True
@@ -156,7 +168,11 @@ class TestDisableKey:
 class TestDeleteKeyComplete:
     @pytest.mark.asyncio
     async def test_delete_key_complete_success(
-        self, vpn_infra_service, mock_key_repo, mock_wireguard_client, sample_wireguard_key
+        self,
+        vpn_infra_service,
+        mock_key_repo,
+        mock_wireguard_client,
+        sample_wireguard_key,
     ):
         mock_key_repo.get_by_id.return_value = sample_wireguard_key
         mock_wireguard_client.delete_client.return_value = True
@@ -175,7 +191,11 @@ class TestDeleteKeyComplete:
 
     @pytest.mark.asyncio
     async def test_delete_key_complete_partial_failure(
-        self, vpn_infra_service, mock_key_repo, mock_wireguard_client, sample_wireguard_key
+        self,
+        vpn_infra_service,
+        mock_key_repo,
+        mock_wireguard_client,
+        sample_wireguard_key,
     ):
         mock_key_repo.get_by_id.return_value = sample_wireguard_key
         mock_wireguard_client.delete_client.return_value = False
@@ -266,6 +286,34 @@ class TestListServerKeys:
         assert result[0]["name"] == "Test Outline Key"
         assert result[0]["is_active"] is True
         assert result[0]["key_type"] == "outline"
+
+    @pytest.mark.asyncio
+    async def test_list_server_keys_filters_inactive_keys(
+        self, vpn_infra_service, mock_key_repo, sample_outline_key
+    ):
+        """Test that inactive (soft-deleted) keys are not shown in admin list."""
+        inactive_key = VpnKey(
+            id=str(uuid.uuid4()),
+            user_id=123456789,
+            key_type=KeyType.OUTLINE,
+            name="Deleted Outline Key",
+            key_data="ss://test@server:1234#DeletedKey",
+            external_id="outline-key-deleted",
+            is_active=False,  # Soft deleted
+            used_bytes=1024,
+            last_seen_at=datetime.now(timezone.utc) - timedelta(days=30),
+        )
+
+        mock_key_repo.get_all_keys.return_value = [sample_outline_key, inactive_key]
+
+        result = await vpn_infra_service.list_server_keys(server_type="outline")
+
+        assert len(result) == 1
+        assert result[0]["id"] == str(sample_outline_key.id)
+        assert result[0]["is_active"] is True
+        # Verify inactive key is not in results
+        inactive_ids = [k["id"] for k in result if not k["is_active"]]
+        assert len(inactive_ids) == 0
 
 
 class TestIsGhostKey:
