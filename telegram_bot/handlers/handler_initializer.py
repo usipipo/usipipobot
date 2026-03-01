@@ -117,12 +117,29 @@ def _get_consumption_handlers(container) -> List[BaseHandler]:
 def _get_core_handlers(
     vpn_service, referral_service, data_package_service, user_profile_service, crypto_order_repo, billing_service
 ) -> List[BaseHandler]:
-    """Initialize and return core feature handlers."""
+    """Initialize and return core feature handlers.
+
+    IMPORTANTE: Los ConversationHandler deben registrarse PRIMERO para que
+    sus estados funcionen correctamente. Los MessageHandler genéricos que
+    capturan texto (filters.TEXT & ~filters.COMMAND) deben ir DESPUÉS para
+    no interferir con los flujos de conversación activos.
+    """
     handlers = []
 
-    handlers.extend(get_key_management_handlers(vpn_service, billing_service))
-    handlers.extend(get_key_management_callback_handlers(vpn_service, billing_service))
-    logger.info("Key management handlers configured")
+    # 1. ConversationHandler primero (tienen prioridad por estados internos)
+    handlers.extend(get_vpn_keys_handlers(vpn_service))
+    handlers.extend(get_vpn_keys_callback_handlers(vpn_service))
+    logger.info("VPN keys handlers configured (ConversationHandler)")
+
+    # 2. Handlers con filtros específicos (Regex)
+    handlers.extend(get_buy_gb_handlers(data_package_service))
+    handlers.extend(get_buy_gb_callback_handlers(data_package_service))
+    handlers.extend(get_buy_gb_payment_handlers(data_package_service))
+    logger.info("Buy GB handlers configured")
+
+    handlers.extend(get_basic_handlers())
+    handlers.extend(get_basic_callback_handlers())
+    logger.info("Basic commands handlers configured")
 
     handlers.extend(get_operations_handlers(vpn_service, referral_service, crypto_order_repo))
     handlers.extend(get_operations_callback_handlers(vpn_service, referral_service, crypto_order_repo))
@@ -132,18 +149,11 @@ def _get_core_handlers(
     handlers.extend(get_user_callback_handlers(vpn_service, user_profile_service, billing_service))
     logger.info("User management handlers configured")
 
-    handlers.extend(get_vpn_keys_handlers(vpn_service))
-    handlers.extend(get_vpn_keys_callback_handlers(vpn_service))
-    logger.info("VPN keys handlers configured")
-
-    handlers.extend(get_buy_gb_handlers(data_package_service))
-    handlers.extend(get_buy_gb_callback_handlers(data_package_service))
-    handlers.extend(get_buy_gb_payment_handlers(data_package_service))
-    logger.info("Buy GB handlers configured")
-
-    handlers.extend(get_basic_handlers())
-    handlers.extend(get_basic_callback_handlers())
-    logger.info("Basic commands handlers configured")
+    # 3. Handlers con MessageHandler genéricos (TEXT) al final
+    # Estos capturan cualquier mensaje de texto, deben ir después de los ConversationHandler
+    handlers.extend(get_key_management_handlers(vpn_service, billing_service))
+    handlers.extend(get_key_management_callback_handlers(vpn_service, billing_service))
+    logger.info("Key management handlers configured")
 
     return handlers
 
