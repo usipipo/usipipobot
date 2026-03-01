@@ -31,7 +31,7 @@ class ConsumptionBilling:
     ended_at: Optional[datetime] = None
     mb_consumed: Decimal = Decimal("0.00")
     total_cost_usd: Decimal = Decimal("0.00")
-    price_per_mb_usd: Decimal = Decimal("0.000439453125")  # Default: $0.45/GB
+    price_per_mb_usd: Decimal = Decimal("0.000244140625")  # Default: $0.25/GB
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self):

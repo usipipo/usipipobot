@@ -2,12 +2,18 @@
 Mensajes para el módulo de tarifa por consumo (Pay-as-You-Go).
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 1.1.0
 """
+
+from config import settings
 
 
 class ConsumptionMessages:
     """Mensajes para el sistema de tarifa por consumo."""
+
+    # Precios dinámicos desde configuración
+    PRICE_PER_GB = settings.CONSUMPTION_PRICE_PER_GB_USD
+    PRICE_PER_MB = settings.CONSUMPTION_PRICE_PER_MB_USD
 
     class Activation:
         """Mensajes relacionados con la activación del modo consumo."""
@@ -18,35 +24,48 @@ class ConsumptionMessages:
             "Lee cuidadosamente los términos antes de continuar.\n"
         )
 
-        TERMS_AND_CONDITIONS = (
-            "📋 **TÉRMINOS Y CONDICIONES**\n\n"
-            "1️⃣ **Consumo Ilimitado:**\n"
-            "   • Navegarás sin límites de velocidad ni de datos\n"
-            "   • Los 5GB gratuitos mensuales se pausan temporalmente\n\n"
-            "2️⃣ **Facturación Postpago:**\n"
-            "   • En **30 días** recibirás una factura por el consumo total\n"
-            "   • Precio: **$0.45 USD por GB** (10% más barato que plan estándar)\n"
-            "   • Pagas exactamente lo que consumes, al centavo\n\n"
-            "3️⃣ **Consecuencias de No Pagar:**\n"
-            "   • Si no pagas la factura, **TODAS tus claves VPN serán bloqueadas**\n"
-            "   • Incluye las claves con datos gratuitos\n"
-            "   • No podrás usar el servicio hasta pagar la deuda\n\n"
-            "4️⃣ **Desactivación Automática:**\n"
-            "   • Al pagar, el modo consumo se desactiva automáticamente\n"
-            "   • Debes reactivarlo manualmente si deseas otro ciclo\n\n"
-            "⚠️ **Este es un sistema de crédito basado en confianza.**\n"
-            "Al activar este modo, asumes toda la responsabilidad del consumo."
-        )
+        @classmethod
+        def get_terms_and_conditions(cls) -> str:
+            price_gb = ConsumptionMessages.PRICE_PER_GB
+            return (
+                "📋 **TÉRMINOS Y CONDICIONES**\n\n"
+                "1️⃣ **Consumo Ilimitado:**\n"
+                "   • Navegarás sin límites de velocidad ni de datos\n"
+                "   • Los 5GB gratuitos mensuales se pausan temporalmente\n\n"
+                "2️⃣ **Facturación Postpago:**\n"
+                "   • En **30 días** recibirás una factura por el consumo total\n"
+                f"   • Precio: **${price_gb:.2f} USD por GB**\n"
+                "   • Pagas exactamente lo que consumes, al centavo\n\n"
+                "3️⃣ **Consecuencias de No Pagar:**\n"
+                "   • Si no pagas la factura, **TODAS tus claves VPN serán bloqueadas**\n"
+                "   • Incluye las claves con datos gratuitos\n"
+                "   • No podrás usar el servicio hasta pagar la deuda\n\n"
+                "4️⃣ **Desactivación Automática:**\n"
+                "   • Al pagar, el modo consumo se desactiva automáticamente\n"
+                "   • Debes reactivarlo manualmente si deseas otro ciclo\n\n"
+                "⚠️ **Este es un sistema de crédito basado en confianza.**\n"
+                "Al activar este modo, asumes toda la responsabilidad del consumo."
+            )
 
-        PRICE_EXAMPLE = (
-            "💰 **EJEMPLO DE COSTOS**\n\n"
-            "Si consumes:\n"
-            "• 1 GB = $0.45 USD\n"
-            "• 5 GB = $2.25 USD\n"
-            "• 10 GB = $4.50 USD (vs $5.00 en plan estándar)\n\n"
-            "💡 *Si usas menos de 10GB, pagas menos. Si usas más, sigues pagando "
-            "solo $0.45/GB sin límites.*"
-        )
+        TERMS_AND_CONDITIONS = property(get_terms_and_conditions)
+
+        @classmethod
+        def get_price_example(cls) -> str:
+            price_gb = ConsumptionMessages.PRICE_PER_GB
+            price_5gb = price_gb * 5
+            price_10gb = price_gb * 10
+            standard_10gb = 5.00  # Plan estándar referencia
+            return (
+                "💰 **EJEMPLO DE COSTOS**\n\n"
+                "Si consumes:\n"
+                f"• 1 GB = ${price_gb:.2f} USD\n"
+                f"• 5 GB = ${price_5gb:.2f} USD\n"
+                f"• 10 GB = ${price_10gb:.2f} USD (vs ${standard_10gb:.2f} en plan estándar)\n\n"
+                f"💡 *Si usas menos de 10GB, pagas menos. Si usas más, sigues pagando "
+                f"solo ${price_gb:.2f}/GB sin límites.*"
+            )
+
+        PRICE_EXAMPLE = property(get_price_example)
 
         CONFIRMATION_PROMPT = (
             "❓ **¿Aceptas activar la tarifa por consumo bajo tu propia "
@@ -57,14 +76,19 @@ class ConsumptionMessages:
             "• Has leído y comprendido todos los términos"
         )
 
-        SUCCESS = (
-            "✅ **¡Modo Consumo Activado!**\n\n"
-            "🚀 Ahora puedes navegar **sin límites**\n"
-            "📅 Tu ciclo de 30 días comenzó hoy\n"
-            "💰 Pagas solo por lo que consumes: $0.45/GB\n\n"
-            "📊 Usa `/mi_consumo` para ver tu consumo actual\n"
-            "ℹ️ En 30 días recibirás tu factura"
-        )
+        @classmethod
+        def get_success_message(cls) -> str:
+            price_gb = ConsumptionMessages.PRICE_PER_GB
+            return (
+                "✅ **¡Modo Consumo Activado!**\n\n"
+                "🚀 Ahora puedes navegar **sin límites**\n"
+                "📅 Tu ciclo de 30 días comenzó hoy\n"
+                f"💰 Pagas solo por lo que consumes: ${price_gb:.2f}/GB\n\n"
+                "📊 Usa `/mi_consumo` para ver tu consumo actual\n"
+                "ℹ️ En 30 días recibirás tu factura"
+            )
+
+        SUCCESS = property(get_success_message)
 
         ALREADY_ACTIVE = (
             "ℹ️ **Ya tienes el modo consumo activo**\n\n"
@@ -218,4 +242,43 @@ class ConsumptionMessages:
             "💰 **Total a pagar:** {cost_formatted}\n\n"
             "🔒 **Tus claves VPN han sido bloqueadas**\n\n"
             "💳 Genera tu factura y paga para desbloquear el servicio"
+        )
+
+    class Cancellation:
+        """Mensajes para cancelación del modo consumo."""
+
+        CONFIRMATION_HEADER = (
+            "⚠️ **CANCELAR MODO CONSUMO** ⚠️\n\n"
+            "Estás a punto de cancelar tu ciclo de consumo anticipadamente."
+        )
+
+        @classmethod
+        def get_cancellation_summary(
+            cls, days_active: int, consumption_formatted: str, cost_formatted: str
+        ) -> str:
+            price_gb = ConsumptionMessages.PRICE_PER_GB
+            return (
+                "📊 **Resumen de tu ciclo actual:**\n\n"
+                f"📅 **Días transcurridos:** {days_active}/30\n"
+                f"📈 **Consumo acumulado:** {consumption_formatted}\n"
+                f"💰 **Costo actual:** {cost_formatted}\n\n"
+                "⚠️ **Al cancelar:**\n"
+                "• Tu ciclo se cerrará inmediatamente\n"
+                "• Todas tus claves VPN serán bloqueadas\n"
+                f"• Deberás pagar ${price_gb:.2f}/GB consumido para desbloquear\n\n"
+                "¿Deseas proceder con la cancelación?"
+            )
+
+        SUCCESS = (
+            "✅ **Modo Consumo Cancelado**\n\n"
+            "🚫 Tu ciclo de consumo ha sido cerrado anticipadamente.\n"
+            "🔒 Todas tus claves VPN han sido bloqueadas.\n\n"
+            "💳 **Próximo paso:**\n"
+            "Genera tu factura y realiza el pago para desbloquear el servicio."
+        )
+
+        CANNOT_CANCEL = (
+            "❌ **No puedes cancelar el modo consumo**\n\n"
+            "{reason}\n\n"
+            "💡 Resuelve este problema antes de intentar nuevamente."
         )

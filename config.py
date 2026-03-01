@@ -267,14 +267,14 @@ class Settings(BaseSettings):
     # SISTEMA DE TARIFA POR CONSUMO (PAY-AS-YOU-GO)
     # =========================================================================
     CONSUMPTION_PRICE_PER_GB_USD: float = Field(
-        default=0.45,
+        default=0.25,
         ge=0.01,
         le=10.0,
         description="Precio por GB consumido en modo consumo (USD)"
     )
 
     CONSUMPTION_PRICE_PER_MB_USD: float = Field(
-        default=0.000439453125,  # 0.45 / 1024
+        default=0.000244140625,  # 0.25 / 1024
         ge=0.000001,
         le=1.0,
         description="Precio por MB consumido en modo consumo (USD)"

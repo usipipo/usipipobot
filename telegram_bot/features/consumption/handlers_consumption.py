@@ -132,8 +132,8 @@ class ConsumptionHandler:
             # Mostrar advertencia y términos
             message = (
                 ConsumptionMessages.Activation.WARNING_HEADER + "\n\n" +
-                ConsumptionMessages.Activation.TERMS_AND_CONDITIONS + "\n\n" +
-                ConsumptionMessages.Activation.PRICE_EXAMPLE + "\n\n" +
+                ConsumptionMessages.Activation.get_terms_and_conditions() + "\n\n" +
+                ConsumptionMessages.Activation.get_price_example() + "\n\n" +
                 ConsumptionMessages.Activation.CONFIRMATION_PROMPT
             )
 
@@ -168,7 +168,7 @@ class ConsumptionHandler:
 
             if result.success:
                 await query.edit_message_text(
-                    text=ConsumptionMessages.Activation.SUCCESS,
+                    text=ConsumptionMessages.Activation.get_success_message(),
                     reply_markup=ConsumptionKeyboards.activation_success(),
                     parse_mode="Markdown"
                 )
@@ -481,8 +481,8 @@ class ConsumptionHandler:
             await query.answer()
 
         message = (
-            ConsumptionMessages.Activation.TERMS_AND_CONDITIONS + "\n\n" +
-            ConsumptionMessages.Activation.PRICE_EXAMPLE
+            ConsumptionMessages.Activation.get_terms_and_conditions() + "\n\n" +
+            ConsumptionMessages.Activation.get_price_example()
         )
 
         if query:
