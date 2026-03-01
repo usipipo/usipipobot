@@ -6,6 +6,7 @@ Version: 1.0.0
 """
 
 from telegram import Update
+from telegram.error import BadRequest
 from telegram.ext import (
     CallbackQueryHandler,
     CommandHandler,
@@ -48,15 +49,25 @@ class ReferralHandler:
                 bot_username=settings.BOT_USERNAME,
             )
 
-            keyboard = ReferralKeyboards.main_menu(stats.referral_credits)
+            share_url = ReferralMessages.Share.get_share_url(
+                code=stats.referral_code,
+                bot_username=settings.BOT_USERNAME,
+            )
+            keyboard = ReferralKeyboards.main_menu(stats.referral_credits, share_url)
 
             if query:
                 await query.answer()
-                await query.edit_message_text(
-                    text=message,
-                    reply_markup=keyboard,
-                    parse_mode="Markdown",
-                )
+                try:
+                    await query.edit_message_text(
+                        text=message,
+                        reply_markup=keyboard,
+                        parse_mode="Markdown",
+                    )
+                except BadRequest as e:
+                    if "Message is not modified" in str(e):
+                        await query.answer("✅ Datos actualizados")
+                    else:
+                        raise
             elif update.message:
                 await update.message.reply_text(
                     text=message,
@@ -126,7 +137,9 @@ class ReferralHandler:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
 
             if stats.referral_credits < settings.REFERRAL_CREDITS_PER_GB:
-                logger.warning(f"⚠️ User {user_id} has insufficient credits for data redemption")
+                logger.warning(
+                    f"⚠️ User {user_id} has insufficient credits for data redemption"
+                )
                 message = ReferralMessages.Redeem.INSUFFICIENT_CREDITS
                 keyboard = ReferralKeyboards.redeem_menu(stats.referral_credits)
             else:
@@ -177,7 +190,9 @@ class ReferralHandler:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
 
             if stats.referral_credits < settings.REFERRAL_CREDITS_PER_SLOT:
-                logger.warning(f"⚠️ User {user_id} has insufficient credits for slot redemption")
+                logger.warning(
+                    f"⚠️ User {user_id} has insufficient credits for slot redemption"
+                )
                 message = ReferralMessages.Redeem.insufficient_for_slot(
                     required=settings.REFERRAL_CREDITS_PER_SLOT,
                     current=stats.referral_credits,
@@ -223,7 +238,9 @@ class ReferralHandler:
             else settings.REFERRAL_CREDITS_PER_GB
         )
 
-        logger.info(f"🎁 User {user_id} executing data redemption: {gb}GB for {credits} credits")
+        logger.info(
+            f"🎁 User {user_id} executing data redemption: {gb}GB for {credits} credits"
+        )
 
         try:
             result = await self.referral_service.redeem_credits_for_data(
@@ -235,7 +252,9 @@ class ReferralHandler:
             if result.get("success"):
                 gb_added = result.get("gb_added") or gb
                 remaining = result.get("remaining_credits") or 0
-                logger.info(f"✅ User {user_id} redeemed {gb_added}GB for {credits} credits (remaining: {remaining})")
+                logger.info(
+                    f"✅ User {user_id} redeemed {gb_added}GB for {credits} credits (remaining: {remaining})"
+                )
 
                 message = ReferralMessages.Success.data_redeemed(
                     gb=gb_added,
@@ -247,7 +266,9 @@ class ReferralHandler:
                     context.user_data.pop("redeem_gb", None)
                     context.user_data.pop("redeem_credits", None)
             else:
-                logger.warning(f"⚠️ Data redemption failed for user {user_id}: insufficient credits")
+                logger.warning(
+                    f"⚠️ Data redemption failed for user {user_id}: insufficient credits"
+                )
                 message = ReferralMessages.Error.INSUFFICIENT_CREDITS
                 keyboard = ReferralKeyboards.redeem_menu(0)
 
@@ -286,14 +307,18 @@ class ReferralHandler:
 
             if result.get("success"):
                 remaining = result.get("remaining_credits", 0)
-                logger.info(f"✅ User {user_id} redeemed 1 slot for {settings.REFERRAL_CREDITS_PER_SLOT} credits (remaining: {remaining})")
+                logger.info(
+                    f"✅ User {user_id} redeemed 1 slot for {settings.REFERRAL_CREDITS_PER_SLOT} credits (remaining: {remaining})"
+                )
 
                 message = ReferralMessages.Success.slot_redeemed(
                     remaining=remaining,
                 )
                 keyboard = ReferralKeyboards.success_back()
             else:
-                logger.warning(f"⚠️ Slot redemption failed for user {user_id}: {result.get('error', 'unknown')}")
+                logger.warning(
+                    f"⚠️ Slot redemption failed for user {user_id}: {result.get('error', 'unknown')}"
+                )
                 error = result.get("error", "unknown")
                 if error == "insufficient_credits":
                     message = ReferralMessages.Redeem.insufficient_for_slot(
