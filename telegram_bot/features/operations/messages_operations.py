@@ -5,7 +5,11 @@ Author: uSipipo Team
 Version: 3.0.0 - Creditos + Shop
 """
 
-from utils.message_separators import MessageSeparatorBuilder, section_separator
+from utils.message_separators import (
+    MessageSeparatorBuilder,
+    TELEGRAM_MOBILE_WIDTH,
+    section_separator,
+)
 
 
 class OperationsMessages:
@@ -69,14 +73,14 @@ class OperationsMessages:
     class Transactions:
         """Mensajes para historial de transacciones."""
 
-        # Separadores reutilizables
+        # Separadores reutilizables - usando ancho óptimo para móviles
         _SEP_DOUBLE = (
             MessageSeparatorBuilder()
-            .compact().style("double").length(17).build()
+            .compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
         )
         _SEP_SIMPLE = (
             MessageSeparatorBuilder()
-            .compact().style("simple").length(17).build()
+            .compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
         )
 
         HISTORY_HEADER = (
