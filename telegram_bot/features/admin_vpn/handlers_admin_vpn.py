@@ -43,18 +43,18 @@ class AdminVpnHandler(BaseHandler):
             CallbackQueryHandler(self.list_server_keys, pattern="^vpn_list_keys_wireguard$"),
             CallbackQueryHandler(self.list_server_keys, pattern="^vpn_list_keys_outline$"),
             CallbackQueryHandler(self.cleanup_ghost_keys, pattern="^vpn_cleanup_ghosts$"),
-            CallbackQueryHandler(self.show_key_details, pattern="^vpn_key_details_wireguard_"),
-            CallbackQueryHandler(self.show_key_details, pattern="^vpn_key_details_outline_"),
-            CallbackQueryHandler(self.handle_key_enable, pattern="^vpn_key_enable_wireguard_"),
-            CallbackQueryHandler(self.handle_key_enable, pattern="^vpn_key_enable_outline_"),
-            CallbackQueryHandler(self.handle_key_disable, pattern="^vpn_key_disable_wireguard_"),
-            CallbackQueryHandler(self.handle_key_disable, pattern="^vpn_key_disable_outline_"),
-            CallbackQueryHandler(self.confirm_delete_key, pattern="^vpn_key_delete_wireguard_"),
-            CallbackQueryHandler(self.confirm_delete_key, pattern="^vpn_key_delete_outline_"),
-            CallbackQueryHandler(self.execute_delete_key, pattern="^vpn_confirm_delete_wireguard_"),
-            CallbackQueryHandler(self.execute_delete_key, pattern="^vpn_confirm_delete_outline_"),
-            CallbackQueryHandler(self.cancel_key_action, pattern="^vpn_cancel_delete_wireguard_"),
-            CallbackQueryHandler(self.cancel_key_action, pattern="^vpn_cancel_delete_outline_"),
+            CallbackQueryHandler(self.show_key_details, pattern="^vkdet_wireguard_"),
+            CallbackQueryHandler(self.show_key_details, pattern="^vkdet_outline_"),
+            CallbackQueryHandler(self.handle_key_enable, pattern="^vke_wireguard_"),
+            CallbackQueryHandler(self.handle_key_enable, pattern="^vke_outline_"),
+            CallbackQueryHandler(self.handle_key_disable, pattern="^vkdis_wireguard_"),
+            CallbackQueryHandler(self.handle_key_disable, pattern="^vkdis_outline_"),
+            CallbackQueryHandler(self.confirm_delete_key, pattern="^vkdel_wireguard_"),
+            CallbackQueryHandler(self.confirm_delete_key, pattern="^vkdel_outline_"),
+            CallbackQueryHandler(self.execute_delete_key, pattern="^vc_delete_wireguard_"),
+            CallbackQueryHandler(self.execute_delete_key, pattern="^vc_delete_outline_"),
+            CallbackQueryHandler(self.cancel_key_action, pattern="^vx_delete_wireguard_"),
+            CallbackQueryHandler(self.cancel_key_action, pattern="^vx_delete_outline_"),
             CallbackQueryHandler(self.keys_page, pattern="^vpn_keys_page_wireguard_"),
             CallbackQueryHandler(self.keys_page, pattern="^vpn_keys_page_outline_"),
         ]
@@ -354,11 +354,11 @@ class AdminVpnHandler(BaseHandler):
 
         parts = query.data.split("_")
         key_type = parts[-2]
-        key_id = parts[-1]
+        key_id_short = parts[-1]
 
         try:
             keys = await self.vpn_service.list_server_keys(key_type)
-            key = next((k for k in keys if k.get("id") == key_id), None)
+            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
 
             if not key:
                 await SpinnerManager.replace_spinner_with_message(
@@ -374,8 +374,9 @@ class AdminVpnHandler(BaseHandler):
             last_seen = key.get("last_seen_at") or "Nunca"
             created_at = key.get("created_at") or "N/A"
 
+            full_key_id = str(key.get("id", ""))
             message = AdminVpnMessages.KEY_DETAILS.format(
-                key_id=key_id[:8],
+                key_id=full_key_id[:8],
                 name=key.get("name", "N/A"),
                 user_id=key.get("user_id", "N/A"),
                 key_type=key_type.upper(),
@@ -391,7 +392,7 @@ class AdminVpnHandler(BaseHandler):
                 spinner_message_id,
                 text=message,
                 reply_markup=AdminVpnKeyboards.key_actions(
-                    key_id, key.get("is_active", False), key_type
+                    full_key_id, key.get("is_active", False), key_type
                 ),
                 parse_mode="Markdown",
             )
@@ -426,10 +427,23 @@ class AdminVpnHandler(BaseHandler):
 
         parts = query.data.split("_")
         key_type = parts[-2]
-        key_id = parts[-1]
+        key_id_short = parts[-1]
 
         try:
-            result = await self.vpn_service.enable_key(key_id, key_type)
+            keys = await self.vpn_service.list_server_keys(key_type)
+            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
+            if not key:
+                await SpinnerManager.replace_spinner_with_message(
+                    update,
+                    context,
+                    spinner_message_id,
+                    text=AdminVpnMessages.ERROR_KEY_NOT_FOUND,
+                    reply_markup=AdminVpnKeyboards.back_to_server(key_type),
+                    parse_mode="Markdown",
+                )
+                return None
+            full_key_id = str(key.get("id", ""))
+            result = await self.vpn_service.enable_key(full_key_id, key_type)
 
             if result.get("success"):
                 message = AdminVpnMessages.KEY_ENABLED
@@ -476,10 +490,23 @@ class AdminVpnHandler(BaseHandler):
 
         parts = query.data.split("_")
         key_type = parts[-2]
-        key_id = parts[-1]
+        key_id_short = parts[-1]
 
         try:
-            result = await self.vpn_service.disable_key(key_id, key_type)
+            keys = await self.vpn_service.list_server_keys(key_type)
+            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
+            if not key:
+                await SpinnerManager.replace_spinner_with_message(
+                    update,
+                    context,
+                    spinner_message_id,
+                    text=AdminVpnMessages.ERROR_KEY_NOT_FOUND,
+                    reply_markup=AdminVpnKeyboards.back_to_server(key_type),
+                    parse_mode="Markdown",
+                )
+                return None
+            full_key_id = str(key.get("id", ""))
+            result = await self.vpn_service.disable_key(full_key_id, key_type)
 
             if result.get("success"):
                 message = AdminVpnMessages.KEY_DISABLED
@@ -522,17 +549,39 @@ class AdminVpnHandler(BaseHandler):
 
         parts = query.data.split("_")
         key_type = parts[-2]
-        key_id = parts[-1]
+        key_id_short = parts[-1]
 
-        message = AdminVpnMessages.CONFIRM_DELETE_KEY.format(key_id=key_id[:8])
+        try:
+            keys = await self.vpn_service.list_server_keys(key_type)
+            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
+            if not key:
+                await self._safe_edit_message(
+                    query,
+                    context,
+                    text=AdminVpnMessages.ERROR_KEY_NOT_FOUND,
+                    reply_markup=AdminVpnKeyboards.back_to_server(key_type),
+                    parse_mode="Markdown",
+                )
+                return None
+            full_key_id = str(key.get("id", ""))
+            message = AdminVpnMessages.CONFIRM_DELETE_KEY.format(key_id=key_id_short)
 
-        await self._safe_edit_message(
-            query,
-            context,
-            text=message,
-            reply_markup=AdminVpnKeyboards.confirmation("delete", key_id, key_type),
-            parse_mode="Markdown",
-        )
+            await self._safe_edit_message(
+                query,
+                context,
+                text=message,
+                reply_markup=AdminVpnKeyboards.confirmation("delete", full_key_id, key_type),
+                parse_mode="Markdown",
+            )
+        except Exception as e:
+            logger.error(f"Error confirming delete: {e}")
+            await self._safe_edit_message(
+                query,
+                context,
+                text=AdminVpnMessages.ERROR_OPERATION_FAILED.format(error=str(e)),
+                reply_markup=AdminVpnKeyboards.back_to_server(key_type),
+                parse_mode="Markdown",
+            )
         return None
 
     @admin_required
@@ -552,10 +601,23 @@ class AdminVpnHandler(BaseHandler):
 
         parts = query.data.split("_")
         key_type = parts[-2]
-        key_id = parts[-1]
+        key_id_short = parts[-1]
 
         try:
-            result = await self.vpn_service.delete_key_complete(key_id, key_type)
+            keys = await self.vpn_service.list_server_keys(key_type)
+            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
+            if not key:
+                await SpinnerManager.replace_spinner_with_message(
+                    update,
+                    context,
+                    spinner_message_id,
+                    text=AdminVpnMessages.ERROR_KEY_NOT_FOUND,
+                    reply_markup=AdminVpnKeyboards.back_to_server(key_type),
+                    parse_mode="Markdown",
+                )
+                return None
+            full_key_id = str(key.get("id", ""))
+            result = await self.vpn_service.delete_key_complete(full_key_id, key_type)
 
             if result.get("success"):
                 message = AdminVpnMessages.KEY_DELETED
