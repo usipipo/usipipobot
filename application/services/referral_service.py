@@ -188,6 +188,9 @@ class ReferralService:
                 user_id, -actual_credits, current_user_id
             )
 
+            # Actualizar objeto en memoria para reflejar el descuento
+            user.referral_credits -= actual_credits
+
             user.free_data_limit_bytes += gb_to_add * (1024**3)
             await self.user_repo.save(user, current_user_id)
 
@@ -195,12 +198,12 @@ class ReferralService:
                 user_id=user_id,
                 transaction_type="credit_redemption_data",
                 amount=-actual_credits,
-                balance_after=user.referral_credits - actual_credits,
+                balance_after=user.referral_credits,
                 description=f"Canje de créditos: +{gb_to_add}GB",
                 reference_id=f"redeem_data_{user_id}",
             )
 
-            remaining_credits = user.referral_credits - actual_credits
+            remaining_credits = user.referral_credits
             logger.info(
                 f"Credit redemption for data successful: user={user_id}, "
                 f"credits_spent={actual_credits}, gb_added={gb_to_add}, "
@@ -252,18 +255,21 @@ class ReferralService:
                 user_id, -credits_per_slot, current_user_id
             )
 
+            # Actualizar objeto en memoria para reflejar el descuento
+            user.referral_credits -= credits_per_slot
+
             await self.user_repo.increment_max_keys(user_id, 1, current_user_id)
 
             await self.transaction_repo.record_transaction(
                 user_id=user_id,
                 transaction_type="credit_redemption_slot",
                 amount=-credits_per_slot,
-                balance_after=user.referral_credits - credits_per_slot,
+                balance_after=user.referral_credits,
                 description="Canje de créditos: +1 slot de clave",
                 reference_id=f"redeem_slot_{user_id}",
             )
 
-            remaining_credits = user.referral_credits - credits_per_slot
+            remaining_credits = user.referral_credits
             logger.info(
                 f"Credit redemption for slot successful: user={user_id}, "
                 f"credits_spent={credits_per_slot}, slots_added=1, "
