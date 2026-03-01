@@ -14,6 +14,8 @@ from telegram.ext import BaseHandler
 
 from application.services.admin_service import AdminService
 from application.services.common.container import get_container
+from application.services.consumption_billing_service import ConsumptionBillingService
+from application.services.consumption_invoice_service import ConsumptionInvoiceService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
 from application.services.ticket_service import TicketService
@@ -35,6 +37,10 @@ from telegram_bot.features.buy_gb.handlers_buy_gb import (
     get_buy_gb_callback_handlers,
     get_buy_gb_handlers,
     get_buy_gb_payment_handlers,
+)
+from telegram_bot.features.consumption.handlers_consumption import (
+    get_consumption_callback_handlers,
+    get_consumption_handlers,
 )
 from telegram_bot.features.key_management.handlers_key_management import (
     get_key_management_callback_handlers,
@@ -97,6 +103,17 @@ def _get_ticket_handlers(container) -> List[BaseHandler]:
     return handlers
 
 
+def _get_consumption_handlers(container) -> List[BaseHandler]:
+    """Initialize and return consumption handlers."""
+    billing_service = container.resolve(ConsumptionBillingService)
+    invoice_service = container.resolve(ConsumptionInvoiceService)
+    handlers = []
+    handlers.extend(get_consumption_handlers(billing_service, invoice_service))
+    handlers.extend(get_consumption_callback_handlers(billing_service, invoice_service))
+    logger.info("✅ Handlers de consumo configurados")
+    return handlers
+
+
 def _get_core_handlers(
     vpn_service, referral_service, data_package_service, user_profile_service, crypto_order_repo
 ) -> List[BaseHandler]:
@@ -146,6 +163,7 @@ def initialize_handlers(
         handlers.extend(_get_admin_handlers(container))
         handlers.extend(_get_referral_handlers(container))
         handlers.extend(_get_ticket_handlers(container))
+        handlers.extend(_get_consumption_handlers(container))
         handlers.extend(
             _get_core_handlers(
                 vpn_service,
