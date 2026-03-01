@@ -84,12 +84,16 @@ Plan detallado para implementar el sistema de tarifa por consumo postpago, inclu
   - Check for pending debt before creating keys
 - [x] **Task 5.3**: Create `ConsumptionUsageTracker` `4c26a9f`
   - Route consumption to billing service when mode active
+- [x] **Task 5.4**: Conditional consumption button in keys menu `4ddc0c2`
+  - Show "Ver Mi Consumo" when user has active consumption
+  - Show "Activar Consumo" when user doesn't have consumption active
 
 ### Verification
 
 - [x] **Verify 5.1**: Keys block/unblock correctly (tested)
 - [x] **Verify 5.2**: Usage tracking is accurate (tested)
 - [x] **Verify 5.3**: No interference with normal mode (tested)
+- [x] **Verify 5.4**: Button shows correct state based on user consumption status (tested)
 
 ## Phase 6: Cron Job and Automation
 
@@ -144,7 +148,7 @@ Plan detallado para implementar el sistema de tarifa por consumo postpago, inclu
 | Phase 2 | eb842d3        | 2025-03-01 | verified |
 | Phase 3 | 90c2397        | 2025-03-01 | verified |
 | Phase 4 | ab40111        | 2025-03-01 | verified |
-| Phase 5 | 6143979        | 2025-02-28 | verified |
+| Phase 5 | 4ddc0c2        | 2025-02-28 | verified |
 | Phase 6 | eeff0d1        | 2025-02-28 | partial  |
 | Phase 7 | 6143979        | 2025-02-28 | partial  |
 | Phase 8 | -              | -          | pending  |
