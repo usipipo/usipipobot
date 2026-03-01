@@ -219,7 +219,7 @@ class AdminService(IAdminService):
 
             if key_type.lower() == "wireguard":
                 # Eliminar de WireGuard
-                wg_result = await self.wireguard_client.delete_client(key.key_name)
+                wg_result = await self.wireguard_client.delete_client(key.name)
                 if not wg_result:
                     logger.error(f"Error eliminando clave {key_id} de WireGuard")
                     success = False
@@ -279,7 +279,7 @@ class AdminService(IAdminService):
                 "server_deleted": server_deleted,
                 "db_deleted": db_deleted,
                 "key_type": key.key_type,
-                "key_name": key.key_name,
+                "key_name": key.name,
             }
 
             if success:
@@ -461,7 +461,9 @@ class AdminService(IAdminService):
 
             if key.key_type.lower() == "wireguard":
                 try:
-                    metrics = await self.wireguard_client.get_peer_metrics(key.external_id)
+                    metrics = await self.wireguard_client.get_peer_metrics(
+                        key.external_id
+                    )
                     data_used = metrics.get("transfer_total", 0)
                     server_status = "active" if data_used > 0 else "inactive"
                 except Exception as e:
@@ -681,7 +683,7 @@ class AdminService(IAdminService):
 
             # Calcular offset
             offset = (page - 1) * per_page
-            paginated_users = all_users[offset:offset + per_page]
+            paginated_users = all_users[offset : offset + per_page]
 
             user_list = []
             for user in paginated_users:
