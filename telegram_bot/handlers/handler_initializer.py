@@ -128,8 +128,8 @@ def _get_core_handlers(
     handlers.extend(get_operations_callback_handlers(vpn_service, referral_service, crypto_order_repo))
     logger.info("Operations handlers configured")
 
-    handlers.extend(get_user_management_handlers(vpn_service, user_profile_service))
-    handlers.extend(get_user_callback_handlers(vpn_service, user_profile_service))
+    handlers.extend(get_user_management_handlers(vpn_service, user_profile_service, billing_service))
+    handlers.extend(get_user_callback_handlers(vpn_service, user_profile_service, billing_service))
     logger.info("User management handlers configured")
 
     handlers.extend(get_vpn_keys_handlers(vpn_service))
