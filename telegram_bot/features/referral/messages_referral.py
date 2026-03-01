@@ -6,6 +6,7 @@ Version: 1.0.0
 """
 
 from config import settings
+from utils.message_separators import compact_separator
 
 
 class ReferralMessages:
@@ -135,3 +136,33 @@ Continuar?
                 share_text.replace(" ", "%20").replace("\n", "%0A").replace("!", "%21")
             )
             return f"https://t.me/share/url?url=&text={encoded_text}"
+
+    class Credits:
+        """Mensajes de tarjeta premium para créditos."""
+
+        _SEP_HEADER = compact_separator("bold", 9, "💎")
+        _SEP_FOOTER = compact_separator("bold", 9, "✨")
+
+        @staticmethod
+        def balance_card(available_credits: int) -> str:
+            """
+            Tarjeta premium con saldo de créditos.
+
+            Args:
+                available_credits: Cantidad de créditos disponibles
+
+            Returns:
+                str: Mensaje formateado estilo tarjeta premium
+            """
+            header = ReferralMessages.Credits._SEP_HEADER
+            footer = ReferralMessages.Credits._SEP_FOOTER
+
+            return f"""{header}
+
+*{available_credits} créditos disponibles*
+
+Canjea por GB extra o slots adicionales
+
+{footer}
+
+💡 Gana más refiriendo amigos"""
