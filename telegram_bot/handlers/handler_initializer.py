@@ -5,7 +5,7 @@ Centralizes the initialization and registration of all Telegram handlers
 across different features following the hexagonal architecture pattern.
 
 Author: uSipipo Team
-Version: 2.0.0
+Version: 2.1.0 - Added admin VPN handlers
 """
 
 from typing import List
@@ -14,16 +14,21 @@ from telegram.ext import BaseHandler
 
 from application.services.admin_service import AdminService
 from application.services.common.container import get_container
+from application.services.consumption_billing_service import ConsumptionBillingService
+from application.services.consumption_invoice_service import ConsumptionInvoiceService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
 from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
+from application.services.vpn_infrastructure_service import VpnInfrastructureService
 from application.services.vpn_service import VpnService
+from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
 from telegram_bot.features.admin.handlers_admin import (
     get_admin_callback_handlers,
     get_admin_conversation_handler,
     get_admin_handlers,
 )
+from telegram_bot.features.admin_vpn.handlers_admin_vpn import get_admin_vpn_handlers
 from telegram_bot.features.basic_commands.handlers_basic import (
     get_basic_callback_handlers,
     get_basic_handlers,
@@ -32,6 +37,10 @@ from telegram_bot.features.buy_gb.handlers_buy_gb import (
     get_buy_gb_callback_handlers,
     get_buy_gb_handlers,
     get_buy_gb_payment_handlers,
+)
+from telegram_bot.features.consumption.handlers_consumption import (
+    get_consumption_callback_handlers,
+    get_consumption_handlers,
 )
 from telegram_bot.features.key_management.handlers_key_management import (
     get_key_management_callback_handlers,
@@ -64,10 +73,12 @@ def _get_admin_handlers(container) -> List[BaseHandler]:
     """Initialize and return admin handlers."""
     admin_service = container.resolve(AdminService)
     ticket_service = container.resolve(TicketService)
+    vpn_infrastructure_service = container.resolve(VpnInfrastructureService)
     handlers = []
     handlers.extend(get_admin_handlers(admin_service))
     handlers.extend(get_admin_callback_handlers(admin_service, ticket_service))
     handlers.append(get_admin_conversation_handler(admin_service, ticket_service))
+    handlers.extend(get_admin_vpn_handlers(vpn_infrastructure_service))
     logger.info("✅ Handlers de administracion configurados")
     return handlers
 
@@ -92,28 +103,35 @@ def _get_ticket_handlers(container) -> List[BaseHandler]:
     return handlers
 
 
+def _get_consumption_handlers(container) -> List[BaseHandler]:
+    """Initialize and return consumption handlers."""
+    billing_service = container.resolve(ConsumptionBillingService)
+    invoice_service = container.resolve(ConsumptionInvoiceService)
+    handlers = []
+    handlers.extend(get_consumption_handlers(billing_service, invoice_service))
+    handlers.extend(get_consumption_callback_handlers(billing_service, invoice_service))
+    logger.info("✅ Handlers de consumo configurados")
+    return handlers
+
+
 def _get_core_handlers(
-    vpn_service, referral_service, data_package_service, user_profile_service
+    vpn_service, referral_service, data_package_service, user_profile_service, crypto_order_repo, billing_service
 ) -> List[BaseHandler]:
-    """Initialize and return core feature handlers."""
+    """Initialize and return core feature handlers.
+
+    IMPORTANTE: Los ConversationHandler deben registrarse PRIMERO para que
+    sus estados funcionen correctamente. Los MessageHandler genéricos que
+    capturan texto (filters.TEXT & ~filters.COMMAND) deben ir DESPUÉS para
+    no interferir con los flujos de conversación activos.
+    """
     handlers = []
 
-    handlers.extend(get_key_management_handlers(vpn_service))
-    handlers.extend(get_key_management_callback_handlers(vpn_service))
-    logger.info("Key management handlers configured")
-
-    handlers.extend(get_operations_handlers(vpn_service, referral_service))
-    handlers.extend(get_operations_callback_handlers(vpn_service, referral_service))
-    logger.info("Operations handlers configured")
-
-    handlers.extend(get_user_management_handlers(vpn_service, user_profile_service))
-    handlers.extend(get_user_callback_handlers(vpn_service, user_profile_service))
-    logger.info("User management handlers configured")
-
+    # 1. ConversationHandler primero (tienen prioridad por estados internos)
     handlers.extend(get_vpn_keys_handlers(vpn_service))
     handlers.extend(get_vpn_keys_callback_handlers(vpn_service))
-    logger.info("VPN keys handlers configured")
+    logger.info("VPN keys handlers configured (ConversationHandler)")
 
+    # 2. Handlers con filtros específicos (Regex)
     handlers.extend(get_buy_gb_handlers(data_package_service))
     handlers.extend(get_buy_gb_callback_handlers(data_package_service))
     handlers.extend(get_buy_gb_payment_handlers(data_package_service))
@@ -122,6 +140,20 @@ def _get_core_handlers(
     handlers.extend(get_basic_handlers())
     handlers.extend(get_basic_callback_handlers())
     logger.info("Basic commands handlers configured")
+
+    handlers.extend(get_operations_handlers(vpn_service, referral_service, crypto_order_repo))
+    handlers.extend(get_operations_callback_handlers(vpn_service, referral_service, crypto_order_repo))
+    logger.info("Operations handlers configured")
+
+    handlers.extend(get_user_management_handlers(vpn_service, user_profile_service, billing_service))
+    handlers.extend(get_user_callback_handlers(vpn_service, user_profile_service, billing_service))
+    logger.info("User management handlers configured")
+
+    # 3. Handlers con MessageHandler genéricos (TEXT) al final
+    # Estos capturan cualquier mensaje de texto, deben ir después de los ConversationHandler
+    handlers.extend(get_key_management_handlers(vpn_service, billing_service))
+    handlers.extend(get_key_management_callback_handlers(vpn_service, billing_service))
+    logger.info("Key management handlers configured")
 
     return handlers
 
@@ -136,16 +168,21 @@ def initialize_handlers(
         container = get_container()
         data_package_service = container.resolve(DataPackageService)
         user_profile_service = container.resolve(UserProfileService)
+        crypto_order_repo = container.resolve(ICryptoOrderRepository)
 
         handlers.extend(_get_admin_handlers(container))
         handlers.extend(_get_referral_handlers(container))
         handlers.extend(_get_ticket_handlers(container))
+        handlers.extend(_get_consumption_handlers(container))
+        billing_service = container.resolve(ConsumptionBillingService)
         handlers.extend(
             _get_core_handlers(
                 vpn_service,
                 referral_service,
                 data_package_service,
                 user_profile_service,
+                crypto_order_repo,
+                billing_service,
             )
         )
 

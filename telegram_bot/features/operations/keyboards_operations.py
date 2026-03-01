@@ -14,17 +14,21 @@ class OperationsKeyboards:
     @staticmethod
     def operations_menu(credits: int = 0) -> InlineKeyboardMarkup:
         keyboard = [
+            # Sección de Beneficios y Referidos
             [
                 InlineKeyboardButton(
-                    f"🎁 Creditos ({credits})", callback_data="credits_menu"
+                    f"🎁 Créditos ({credits})", callback_data="credits_menu"
                 ),
-            ],
-            [
-                InlineKeyboardButton("🛒 Shop", callback_data="shop_menu"),
-            ],
-            [
                 InlineKeyboardButton("👥 Referidos", callback_data="referral_menu"),
             ],
+            # Sección de Compras e Historial
+            [
+                InlineKeyboardButton("🛒 Shop", callback_data="shop_menu"),
+                InlineKeyboardButton(
+                    "📜 Historial", callback_data="transactions_history"
+                ),
+            ],
+            # Volver
             [InlineKeyboardButton("🔙 Volver", callback_data="main_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -69,4 +73,35 @@ class OperationsKeyboards:
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
         ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def transactions_history_menu(
+        has_more: bool = False, page: int = 0
+    ) -> InlineKeyboardMarkup:
+        """Teclado para el historial de transacciones."""
+        keyboard = []
+
+        # Botones de paginación si hay más páginas
+        if page > 0 or has_more:
+            nav_buttons = []
+            if page > 0:
+                prev_callback = f"transactions_page_{page - 1}"
+                nav_buttons.append(
+                    InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback)
+                )
+            if has_more:
+                next_callback = f"transactions_page_{page + 1}"
+                nav_buttons.append(
+                    InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback)
+                )
+            keyboard.append(nav_buttons)
+
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "🔙 Volver a Operaciones", callback_data="operations_menu"
+                )
+            ]
+        )
         return InlineKeyboardMarkup(keyboard)

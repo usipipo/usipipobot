@@ -18,6 +18,7 @@ from telegram.ext import (
 )
 
 from application.services.admin_service import AdminService
+from application.services.consumption_billing_service import ConsumptionBillingService
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from config import settings
@@ -38,6 +39,7 @@ class UserManagementHandler(BaseHandler):
         self,
         vpn_service: VpnService,
         user_profile_service: Optional[UserProfileService] = None,
+        billing_service: Optional[ConsumptionBillingService] = None,
     ):
         """
         Inicializa el handler de gestión de usuarios.
@@ -45,10 +47,12 @@ class UserManagementHandler(BaseHandler):
         Args:
             vpn_service: Servicio de VPN
             user_profile_service: Servicio de perfil de usuario (opcional)
+            billing_service: Servicio de facturación por consumo (opcional)
         """
         super().__init__(vpn_service, "VpnService")
         self.vpn_service = vpn_service
         self.user_profile_service = user_profile_service
+        self.billing_service = billing_service
         logger.info("👤 UserManagementHandler inicializado")
 
     @registration_spinner
@@ -166,7 +170,7 @@ class UserManagementHandler(BaseHandler):
                 KeyManagementHandler,
             )
 
-            key_mgmt_handler = KeyManagementHandler(self.vpn_service)
+            key_mgmt_handler = KeyManagementHandler(self.vpn_service, self.billing_service)
             await key_mgmt_handler.show_key_submenu(update, _context)
 
         elif callback_data == "create_key":
@@ -525,6 +529,7 @@ class UserManagementHandler(BaseHandler):
 def get_user_management_handlers(
     vpn_service: VpnService,
     user_profile_service: Optional[UserProfileService] = None,
+    billing_service: Optional[ConsumptionBillingService] = None,
 ):
     """
     Retorna los handlers de gestión de usuarios.
@@ -532,11 +537,12 @@ def get_user_management_handlers(
     Args:
         vpn_service: Servicio de VPN
         user_profile_service: Servicio de perfil de usuario (opcional)
+        billing_service: Servicio de facturación por consumo (opcional)
 
     Returns:
         list: Lista de handlers
     """
-    handler = UserManagementHandler(vpn_service, user_profile_service)
+    handler = UserManagementHandler(vpn_service, user_profile_service, billing_service)
 
     return [
         CommandHandler("start", handler.start_handler),
@@ -550,6 +556,7 @@ def get_user_management_handlers(
 def get_user_callback_handlers(
     vpn_service: VpnService,
     user_profile_service: Optional[UserProfileService] = None,
+    billing_service: Optional[ConsumptionBillingService] = None,
 ):
     """
     Retorna los handlers de callbacks para gestión de usuarios.
@@ -557,11 +564,12 @@ def get_user_callback_handlers(
     Args:
         vpn_service: Servicio de VPN
         user_profile_service: Servicio de perfil de usuario (opcional)
+        billing_service: Servicio de facturación por consumo (opcional)
 
     Returns:
         list: Lista de CallbackQueryHandler
     """
-    handler = UserManagementHandler(vpn_service, user_profile_service)
+    handler = UserManagementHandler(vpn_service, user_profile_service, billing_service)
 
     return [
         CallbackQueryHandler(

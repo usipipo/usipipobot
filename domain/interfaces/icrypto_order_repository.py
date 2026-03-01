@@ -39,3 +39,22 @@ class ICryptoOrderRepository(ABC):
     @abstractmethod
     async def mark_expired(self, order_id: uuid.UUID) -> bool:
         pass
+
+    @abstractmethod
+    async def get_expired_orders_with_wallets(
+        self, limit: int = 100
+    ) -> List[CryptoOrder]:
+        """Obtiene órdenes expiradas que tienen wallets asignadas."""
+        pass
+
+    @abstractmethod
+    async def get_reusable_wallet_for_user(
+        self, user_id: int
+    ) -> Optional[str]:
+        """Busca una wallet reutilizable de una orden expirada del usuario."""
+        pass
+
+    @abstractmethod
+    async def get_any_reusable_wallet(self) -> Optional[str]:
+        """Busca cualquier wallet reutilizable de órdenes expiradas."""
+        pass

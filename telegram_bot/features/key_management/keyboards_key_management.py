@@ -5,8 +5,6 @@ Author: uSipipo Team
 Version: 2.0.0 - Feature-based architecture
 """
 
-from typing import Optional
-
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
@@ -14,17 +12,38 @@ class KeyManagementKeyboards:
     """Teclados para gestión de llaves VPN."""
 
     @staticmethod
-    def main_menu(keys_summary: dict) -> InlineKeyboardMarkup:
+    def main_menu(
+        keys_summary: dict, has_consumption_active: bool = False
+    ) -> InlineKeyboardMarkup:
         """
         Teclado del menú principal de gestión de llaves.
 
         Args:
             keys_summary: Resumen de llaves por tipo
+            has_consumption_active: Si el usuario tiene tarifa por consumo activa
 
         Returns:
             InlineKeyboardMarkup: Teclado del menú principal
         """
         keyboard = []
+
+        # Botón de consumo: Ver Consumo si está activo, Activar si no
+        if has_consumption_active:
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "📊 Ver Mi Consumo", callback_data="consumption_view_status"
+                    )
+                ]
+            )
+        else:
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "⚡ Activar Consumo", callback_data="consumption_activate"
+                    )
+                ]
+            )
 
         if keys_summary.get("total_count", 0) == 0:
             keyboard.extend(
@@ -43,25 +62,26 @@ class KeyManagementKeyboards:
             )
             return InlineKeyboardMarkup(keyboard)
 
+        # Fila de tipos de llaves (Opción B)
+        keys_row = []
         if keys_summary.get("outline_count", 0) > 0:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        f"🌐 Outline ({keys_summary['outline_count']})",
-                        callback_data="keys_outline",
-                    )
-                ]
+            keys_row.append(
+                InlineKeyboardButton(
+                    f"🌐 Outline ({keys_summary['outline_count']})",
+                    callback_data="keys_outline",
+                )
             )
 
         if keys_summary.get("wireguard_count", 0) > 0:
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        f"🔒 WireGuard ({keys_summary['wireguard_count']})",
-                        callback_data="keys_wireguard",
-                    )
-                ]
+            keys_row.append(
+                InlineKeyboardButton(
+                    f"🔒 WireGuard ({keys_summary['wireguard_count']})",
+                    callback_data="keys_wireguard",
+                )
             )
+
+        if keys_row:
+            keyboard.append(keys_row)
 
         keyboard.extend(
             [
@@ -149,27 +169,9 @@ class KeyManagementKeyboards:
                 ]
             )
 
-        # 2. Información y Ajustes - Fila secundaria
-        keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "📊 Estadísticas", callback_data=f"key_stats_{key_id}"
-                ),
-                InlineKeyboardButton(
-                    "⚙️ Ajustes", callback_data=f"key_config_{key_id}"
-                ),
-            ]
-        )
-
-        # 3. Acciones de Gestión (Estado y Nombre)
+        # 2. Acciones de Gestión (Estado y Nombre)
         management_row = []
-        if is_active:
-            management_row.append(
-                InlineKeyboardButton(
-                    "⏸️ Suspender", callback_data=f"key_suspend_{key_id}"
-                )
-            )
-        else:
+        if not is_active:
             management_row.append(
                 InlineKeyboardButton(
                     "✅ Reactivar", callback_data=f"key_reactivate_{key_id}"
@@ -272,106 +274,4 @@ class KeyManagementKeyboards:
                 InlineKeyboardButton("❌ Cancelar", callback_data=f"cancel_{action}"),
             ]
         ]
-        return InlineKeyboardMarkup(keyboard)
-
-    @staticmethod
-    def key_config(key_id: str) -> InlineKeyboardMarkup:
-        """
-        Teclado de configuración para una llave.
-
-        Args:
-            key_id: ID de la llave
-
-        Returns:
-            InlineKeyboardMarkup: Teclado de configuración
-        """
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "📋 Ver Configuración", callback_data=f"key_view_config_{key_id}"
-                ),
-                InlineKeyboardButton(
-                    "📱 Descargar QR", callback_data=f"key_qr_{key_id}"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    "🔄 Cambiar Servidor", callback_data=f"key_change_server_{key_id}"
-                ),
-                InlineKeyboardButton(
-                    "⏰ Extender Tiempo", callback_data=f"key_extend_{key_id}"
-                ),
-            ],
-            [InlineKeyboardButton("🔙 Volver", callback_data=f"key_details_{key_id}")],
-        ]
-        return InlineKeyboardMarkup(keyboard)
-
-    @staticmethod
-    def statistics_options(key_id: Optional[str] = None) -> InlineKeyboardMarkup:
-        """
-        Teclado de opciones de estadísticas.
-
-        Args:
-            key_id: ID de la llave (opcional)
-
-        Returns:
-            InlineKeyboardMarkup: Teclado de estadísticas
-        """
-        keyboard = []
-
-        if key_id:
-            # Estadísticas de una llave específica
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "📈 Uso Diario", callback_data=f"stats_daily_{key_id}"
-                    ),
-                    InlineKeyboardButton(
-                        "📊 Uso Semanal", callback_data=f"stats_weekly_{key_id}"
-                    ),
-                ]
-            )
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "📋 Historial", callback_data=f"stats_history_{key_id}"
-                    ),
-                    InlineKeyboardButton(
-                        "🔄 Comparar", callback_data=f"stats_compare_{key_id}"
-                    ),
-                ]
-            )
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "🔙 Volver", callback_data=f"key_details_{key_id}"
-                    )
-                ]
-            )
-        else:
-            # Estadísticas generales
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "📈 Por Protocolo", callback_data="stats_by_protocol"
-                    ),
-                    InlineKeyboardButton(
-                        "📊 Por Servidor", callback_data="stats_by_server"
-                    ),
-                ]
-            )
-            keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "📋 Historial Completo", callback_data="stats_full_history"
-                    ),
-                    InlineKeyboardButton(
-                        "🔄 Comparar Llaves", callback_data="stats_compare_all"
-                    ),
-                ]
-            )
-            keyboard.append(
-                [InlineKeyboardButton("🔙 Volver", callback_data="back_to_keys")]
-            )
-
         return InlineKeyboardMarkup(keyboard)

@@ -27,6 +27,8 @@ from utils.qr_generator import QrGenerator
 from utils.spinner import vpn_spinner
 from utils.telegram_utils import escape_markdown
 
+from telegram_bot.common.keyboards import CommonKeyboards
+
 from .keyboards_vpn_keys import VpnKeysKeyboards
 from .messages_vpn_keys import VpnKeysMessages
 
@@ -184,7 +186,7 @@ class VpnKeysHandler:
                         photo=photo,
                         caption=caption,
                         parse_mode="Markdown",
-                        reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+                        reply_markup=CommonKeyboards.main_menu(is_admin=is_admin),
                     )
 
             elif key_type == "wireguard":
@@ -211,7 +213,7 @@ class VpnKeysHandler:
                         filename=f"{key_name}.conf",
                         caption="📁 *Configuración WireGuard*\n\n🔑 Tu nueva llave VPN está lista para usar\n\n⚠️ *Guarda este archivo en un lugar seguro*",
                         parse_mode="Markdown",
-                        reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+                        reply_markup=CommonKeyboards.main_menu(is_admin=is_admin),
                     )
 
             logger.info(f"✅ Llave {key_type} creada para usuario {telegram_id}")
@@ -221,7 +223,7 @@ class VpnKeysHandler:
             is_admin = telegram_id == int(settings.ADMIN_ID)
             await update.message.reply_text(
                 text=VpnKeysMessages.Error.CREATION_FAILED.format(error=str(e)),
-                reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+                reply_markup=CommonKeyboards.main_menu(is_admin=is_admin),
             )
 
         return ConversationHandler.END
@@ -237,7 +239,7 @@ class VpnKeysHandler:
 
         await update.message.reply_text(
             text=VpnKeysMessages.CANCELLED,
-            reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+            reply_markup=CommonKeyboards.main_menu(is_admin=is_admin),
         )
         return ConversationHandler.END
 
@@ -259,8 +261,8 @@ class VpnKeysHandler:
         is_admin = telegram_id == int(settings.ADMIN_ID)
 
         await query.edit_message_text(
-            text=VpnKeysMessages.CANCELLED + "\n\nHas vuelto al menú principal.",
-            reply_markup=VpnKeysKeyboards.main_menu(is_admin=is_admin),
+            text=VpnKeysMessages.CANCELLED + "\n\nHas vuelto al menú principal",
+            reply_markup=CommonKeyboards.main_menu(is_admin=is_admin),
         )
         return ConversationHandler.END
 
