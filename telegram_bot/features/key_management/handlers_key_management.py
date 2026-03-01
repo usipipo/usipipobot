@@ -403,14 +403,6 @@ class KeyManagementHandler(BaseHandler):
                     message = KeyManagementMessages.Actions.KEY_REACTIVATED
                     logger.info(f"User {user_id} successfully reactivated key {key_id}")
 
-                elif action == "config":
-                    await self.show_key_config(update, context)
-                    return
-
-                elif action == "stats":
-                    await self.show_key_statistics(update, context)
-                    return
-
                 elif action == "rename":
                     # Iniciar flujo de renombrado
                     if context.user_data is not None:
@@ -451,58 +443,9 @@ class KeyManagementHandler(BaseHandler):
                 query,
                 context,
                 text=KeyManagementMessages.Error.OPERATION_FAILED.format(error=escape_markdown(str(e))),
-                reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
-            )
-
-    async def show_key_config(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """
-        Muestra la configuración de una llave específica.
-        """
-        query = update.callback_query
-        if query is None or query.data is None:
-            return
-        await self._safe_answer_query(query)
-
-        key_id = query.data.split("_")[-1]
-        if update.effective_user is None:
-            return
-        user_id = update.effective_user.id
-
-        try:
-            key = await self.vpn_service.get_key_by_id(key_id, current_user_id=user_id)
-
-            if not key or key.user_id != user_id:
-                message = KeyManagementMessages.KEY_NOT_FOUND
-                keyboard = KeyManagementKeyboards.back_to_submenu()
-            else:
-                message = (
-                    f"⚙️ **Configuración de {key.name}**\n\n"
-                    f"📡 **Protocolo:** {key.key_type.upper()}\n"
-                    f"🖥️ **Servidor:** {key.server or 'N/A'}\n"
-                    f"📊 **Límite:** {key.data_limit_gb:.2f} GB\n"
-                    f"🔄 **Reseteo:** {key.billing_reset_at.strftime('%d/%m/%Y')}\n\n"
-                    "Selecciona una opción:"
-                )
-                keyboard = KeyManagementKeyboards.key_config(key_id)
-
-            await self._safe_edit_message(
-                query,
-                context,
-                text=message,
-                reply_markup=keyboard,
-                parse_mode="Markdown",
-            )
-
-        except Exception as e:
-            logger.error(f"Error mostrando configuración: {e}")
-            await self._safe_edit_message(
-                query,
-                context,
-                text=KeyManagementMessages.Error.SYSTEM_ERROR,
-                reply_markup=KeyManagementKeyboards.back_to_submenu(),
-                parse_mode="Markdown",
-            )
+            reply_markup=KeyManagementKeyboards.back_to_submenu(),
+            parse_mode="Markdown",
+        )
 
     async def download_wireguard_config(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
@@ -737,11 +680,8 @@ def get_key_management_callback_handlers(vpn_service: VpnService):
         CallbackQueryHandler(handler.show_key_statistics, pattern="^key_stats$"),
         CallbackQueryHandler(handler.back_to_main_menu, pattern="^back_to_main$"),
         CallbackQueryHandler(handler.back_to_keys, pattern="^back_to_keys$"),
-        CallbackQueryHandler(handler.handle_key_action, pattern="^key_suspend_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_reactivate_"),
         # CallbackQueryHandler(handler.handle_key_action, pattern="^key_delete_"),  # Removed - prevent 5GB abuse
-        CallbackQueryHandler(handler.handle_key_action, pattern="^key_config_"),
-        CallbackQueryHandler(handler.show_key_config, pattern="^key_view_config_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_rename_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_qr_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_change_server_"),

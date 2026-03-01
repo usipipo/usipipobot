@@ -54,14 +54,6 @@ class VpnKeysKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "📊 Estadísticas", callback_data="key_stats_{key_id}"
-                ),
-                InlineKeyboardButton(
-                    "📋 Configuración", callback_data="key_config_{key_id}"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
                     "✏️ Renombrar", callback_data="key_rename_{key_id}"
                 ),
                 # Delete button removed - prevents abuse of free 5GB
