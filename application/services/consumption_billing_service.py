@@ -36,6 +36,18 @@ class ActivationResult:
     error_message: Optional[str] = None
 
 
+@dataclass
+class CancellationResult:
+    """DTO para resultado de cancelación del modo consumo."""
+
+    success: bool
+    billing_id: Optional[uuid.UUID] = None
+    mb_consumed: Decimal = Decimal("0")
+    total_cost_usd: Decimal = Decimal("0")
+    days_active: int = 0
+    error_message: Optional[str] = None
+
+
 class ConsumptionBillingService:
     """
     Servicio de aplicación para gestionar ciclos de facturación por consumo.
@@ -295,16 +307,26 @@ class ConsumptionBillingService:
                     from application.services.common.container import get_container
 
                     container = get_container()
-                    vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
-                    block_result = await vpn_integration.block_user_keys(
-                        billing.user_id, current_user_id
-                    )
-
-                    if not block_result["success"]:
-                        logger.error(
-                            f"Failed to block keys for user {billing.user_id}: "
-                            f"{block_result['errors']}"
+                    if container:
+                        vpn_integration = container.resolve(
+                            ConsumptionVpnIntegrationService
                         )
+                        if vpn_integration:
+                            block_result = await vpn_integration.block_user_keys(  # type: ignore
+                                billing.user_id, current_user_id
+                            )
+
+                            if not block_result["success"]:
+                                logger.error(
+                                    f"Failed to block keys for user {billing.user_id}: "
+                                    f"{block_result['errors']}"
+                                )
+                        else:
+                            logger.error(
+                                "VPN integration service not available"
+                            )
+                    else:
+                        logger.error("Container not available for blocking keys")
                         # Continue anyway, don't fail the billing cycle
 
                 logger.info(
@@ -387,3 +409,157 @@ class ConsumptionBillingService:
             Lista de ciclos de facturación
         """
         return await self.billing_repo.get_by_user(user_id, current_user_id)
+
+    async def can_cancel_consumption(
+        self, user_id: int, current_user_id: int
+    ) -> Tuple[bool, Optional[str]]:
+        """
+        Verifica si un usuario puede cancelar el modo consumo.
+
+        Args:
+            user_id: ID del usuario
+            current_user_id: ID del usuario actual (para auditoría)
+
+        Returns:
+            Tuple de (puede_cancelar, mensaje_error)
+        """
+        user = await self.user_repo.get_by_id(user_id, current_user_id)
+        if not user:
+            return False, "Usuario no encontrado"
+
+        if not user.consumption_mode_enabled:
+            return False, "No tienes el modo consumo activo"
+
+        if user.has_pending_debt:
+            return (
+                False,
+                "Ya tienes una deuda pendiente. "
+                "Debes pagarla antes de cancelar."
+            )
+
+        # Verificar que tiene un ciclo activo
+        billing = await self.billing_repo.get_active_by_user(
+            user_id, current_user_id
+        )
+        if not billing:
+            return False, "No tienes un ciclo de consumo activo"
+
+        return True, None
+
+    async def cancel_consumption_mode(
+        self, user_id: int, current_user_id: int
+    ) -> CancellationResult:
+        """
+        Cancela el modo consumo para un usuario, cerrando el ciclo anticipadamente.
+
+        Args:
+            user_id: ID del usuario
+            current_user_id: ID del usuario actual (para auditoría)
+
+        Returns:
+            CancellationResult con éxito o error y detalles del ciclo
+        """
+        logger.info(f"🔄 Cancelando modo consumo para usuario {user_id}")
+
+        try:
+            # Validar que puede cancelar
+            can_cancel, error_msg = await self.can_cancel_consumption(
+                user_id, current_user_id
+            )
+            if not can_cancel:
+                logger.warning(f"⚠️ No se puede cancelar modo consumo: {error_msg}")
+                return CancellationResult(
+                    success=False, error_message=error_msg
+                )
+
+            # Obtener ciclo activo
+            billing = await self.billing_repo.get_active_by_user(
+                user_id, current_user_id
+            )
+            if not billing or billing.id is None:
+                return CancellationResult(
+                    success=False,
+                    error_message="No se encontró el ciclo de consumo activo"
+                )
+
+            billing_id = billing.id
+
+            # Calcular días activos antes de cerrar
+            days_active = 0
+            if billing.started_at:
+                delta = datetime.now(timezone.utc) - billing.started_at
+                days_active = delta.days
+
+            # Guardar datos antes de cerrar
+            mb_consumed = billing.mb_consumed
+            total_cost = billing.total_cost_usd
+
+            # Cerrar ciclo (misma lógica que close_billing_cycle)
+            billing.close_cycle()
+            success = await self.billing_repo.update_status(
+                billing_id, BillingStatus.CLOSED, current_user_id
+            )
+
+            if not success:
+                return CancellationResult(
+                    success=False,
+                    error_message="Error al cerrar el ciclo de facturación"
+                )
+
+            # Actualizar usuario
+            user = await self.user_repo.get_by_id(user_id, current_user_id)
+            if user:
+                user.mark_as_has_debt()
+                await self.user_repo.save(user, current_user_id)
+
+                # Bloquear todas las claves del usuario
+                from application.services.consumption_vpn_integration_service import (
+                    ConsumptionVpnIntegrationService,
+                )
+                from application.services.common.container import get_container
+
+                container = get_container()
+                if container:
+                    vpn_integration = container.resolve(
+                        ConsumptionVpnIntegrationService
+                    )
+                    if vpn_integration:
+                        block_result = await vpn_integration.block_user_keys(  # type: ignore
+                            user_id, current_user_id
+                        )
+
+                        if not block_result["success"]:
+                            logger.error(
+                                f"Failed to block keys for user {user_id}: "
+                                f"{block_result['errors']}"
+                            )
+                    else:
+                        logger.error(
+                            "VPN integration service not available"
+                        )
+                else:
+                    logger.error("Container not available for blocking keys")
+                    # Continuar de todos modos
+
+            logger.info(
+                f"🔒 Modo consumo cancelado - billing_id={billing_id}, "
+                f"user_id={user_id}, "
+                f"mb_consumed={mb_consumed:.2f}, "
+                f"cost=${total_cost:.2f}, "
+                f"days_active={days_active}"
+            )
+
+            return CancellationResult(
+                success=True,
+                billing_id=billing_id,
+                mb_consumed=mb_consumed,
+                total_cost_usd=total_cost,
+                days_active=days_active
+            )
+
+        except Exception as e:
+            logger.error(f"❌ Error cancelando modo consumo: {e}")
+            return CancellationResult(
+                success=False,
+                error_message="Error interno al cancelar el modo consumo"
+            )

@@ -36,11 +36,17 @@ class ConsumptionKeyboards:
                 )
             ])
         elif has_active_cycle:
-            # Usuario con ciclo activo - ver consumo
+            # Usuario con ciclo activo - ver consumo y opción de cancelar
             keyboard.append([
                 InlineKeyboardButton(
                     "📊 Ver Mi Consumo",
                     callback_data="consumption_view_status"
+                )
+            ])
+            keyboard.append([
+                InlineKeyboardButton(
+                    "🚫 Cancelar Modo Consumo",
+                    callback_data="consumption_cancel"
                 )
             ])
         elif can_activate:
@@ -206,6 +212,44 @@ class ConsumptionKeyboards:
             [
                 InlineKeyboardButton(
                     "🔙 Volver",
+                    callback_data="main_menu"
+                )
+            ],
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def cancellation_confirmation() -> InlineKeyboardMarkup:
+        """Teclado de confirmación para cancelar modo consumo."""
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "✅ Sí, Cancelar Modo Consumo",
+                    callback_data="consumption_confirm_cancel"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "❌ No, Mantener Activo",
+                    callback_data="consumption_menu"
+                )
+            ],
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def cancel_success_keyboard() -> InlineKeyboardMarkup:
+        """Teclado tras cancelación exitosa."""
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "💳 Generar Factura",
+                    callback_data="consumption_generate_invoice"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "🔙 Menú Principal",
                     callback_data="main_menu"
                 )
             ],
