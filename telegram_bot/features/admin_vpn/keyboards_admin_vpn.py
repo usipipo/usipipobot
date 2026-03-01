@@ -67,13 +67,14 @@ class AdminVpnKeyboards:
     def key_actions(key_id: str, is_active: bool, key_type: str) -> InlineKeyboardMarkup:
         """Enable/Disable/Delete buttons for a key."""
         keyboard = []
+        key_id_short = key_id[:8] if len(key_id) > 8 else key_id
 
         if is_active:
             keyboard.append(
                 [
                     InlineKeyboardButton(
                         "⏸️ Deshabilitar",
-                        callback_data=f"vpn_key_disable_{key_type}_{key_id}",
+                        callback_data=f"vkdis_{key_type}_{key_id_short}",
                     ),
                 ]
             )
@@ -82,7 +83,7 @@ class AdminVpnKeyboards:
                 [
                     InlineKeyboardButton(
                         "✅ Habilitar",
-                        callback_data=f"vpn_key_enable_{key_type}_{key_id}",
+                        callback_data=f"vke_{key_type}_{key_id_short}",
                     ),
                 ]
             )
@@ -91,7 +92,7 @@ class AdminVpnKeyboards:
             [
                 InlineKeyboardButton(
                     "🗑️ Eliminar Clave",
-                    callback_data=f"vpn_key_delete_{key_type}_{key_id}",
+                    callback_data=f"vkdel_{key_type}_{key_id_short}",
                 ),
             ]
         )
@@ -109,15 +110,16 @@ class AdminVpnKeyboards:
     @staticmethod
     def confirmation(action: str, key_id: str, key_type: str) -> InlineKeyboardMarkup:
         """Confirm/cancel buttons for dangerous actions."""
+        key_id_short = key_id[:8] if len(key_id) > 8 else key_id
         keyboard = [
             [
                 InlineKeyboardButton(
                     "✅ Confirmar",
-                    callback_data=f"vpn_confirm_{action}_{key_type}_{key_id}",
+                    callback_data=f"vc_{action}_{key_type}_{key_id_short}",
                 ),
                 InlineKeyboardButton(
                     "❌ Cancelar",
-                    callback_data=f"vpn_cancel_{action}_{key_type}_{key_id}",
+                    callback_data=f"vx_{action}_{key_type}_{key_id_short}",
                 ),
             ],
         ]
@@ -132,14 +134,16 @@ class AdminVpnKeyboards:
 
         for key in keys:
             status_icon = "✅" if key.get("is_active") else "❌"
-            key_name = key.get("name") or f"Key {str(key.get('id', ''))[:8]}"
+            key_id = str(key.get('id', ''))
+            key_id_short = key_id[:8] if len(key_id) > 8 else key_id
+            key_name = key.get("name") or f"Key {key_id_short}"
             if len(key_name) > 20:
                 key_name = key_name[:20] + "..."
             keyboard.append(
                 [
                     InlineKeyboardButton(
                         f"{status_icon} {key_name}",
-                        callback_data=f"vpn_key_details_{server_type}_{key.get('id')}",
+                        callback_data=f"vkdet_{server_type}_{key_id_short}",
                     )
                 ]
             )
