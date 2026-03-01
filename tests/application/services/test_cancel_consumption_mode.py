@@ -47,14 +47,23 @@ class TestCanCancelConsumption:
         assert "No tienes un ciclo de consumo activo" in error
 
     @pytest.mark.asyncio
-    async def test_user_with_pending_debt_cannot_cancel(self, service, mock_user_repo):
+    async def test_user_with_pending_debt_cannot_cancel(
+        self, service, mock_user_repo, mock_billing_repo
+    ):
         """Usuario con deuda pendiente no puede cancelar."""
         user = User(
             telegram_id=123,
             consumption_mode_enabled=True,
             has_pending_debt=True
         )
+        billing = ConsumptionBilling(
+            user_id=123,
+            started_at=datetime.now(timezone.utc),
+            status=BillingStatus.ACTIVE,
+            id=uuid.uuid4()
+        )
         mock_user_repo.get_by_id.return_value = user
+        mock_billing_repo.get_active_by_user.return_value = billing
 
         can_cancel, error = await service.can_cancel_consumption(123, 123)
 
@@ -62,15 +71,29 @@ class TestCanCancelConsumption:
         assert "deuda pendiente" in error
 
     @pytest.mark.asyncio
-    async def test_user_without_consumption_mode_cannot_cancel(self, service, mock_user_repo):
-        """Usuario sin modo consumo activo no puede cancelar."""
-        user = User(telegram_id=123, consumption_mode_enabled=False)
+    async def test_user_with_active_cycle_can_cancel_even_without_flag(
+        self, service, mock_user_repo, mock_billing_repo
+    ):
+        """Usuario con ciclo activo puede cancelar aunque el flag esté desactivado."""
+        user = User(
+            telegram_id=123,
+            consumption_mode_enabled=False,  # Flag desactivado
+            has_pending_debt=False
+        )
+        billing = ConsumptionBilling(
+            user_id=123,
+            started_at=datetime.now(timezone.utc),
+            status=BillingStatus.ACTIVE,
+            id=uuid.uuid4()
+        )
         mock_user_repo.get_by_id.return_value = user
+        mock_billing_repo.get_active_by_user.return_value = billing
 
         can_cancel, error = await service.can_cancel_consumption(123, 123)
 
-        assert can_cancel is False
-        assert "No tienes el modo consumo activo" in error
+        # Ahora usa el billing como fuente de verdad, no el flag
+        assert can_cancel is True
+        assert error is None
 
     @pytest.mark.asyncio
     async def test_user_not_found_cannot_cancel(self, service, mock_user_repo):
@@ -217,7 +240,7 @@ class TestCancelConsumptionMode:
 
     @pytest.mark.asyncio
     async def test_cancel_consumption_mode_already_has_debt(
-        self, service, mock_user_repo
+        self, service, mock_user_repo, mock_billing_repo
     ):
         """Error cuando usuario ya tiene deuda."""
         user = User(
@@ -225,7 +248,14 @@ class TestCancelConsumptionMode:
             consumption_mode_enabled=True,
             has_pending_debt=True
         )
+        billing = ConsumptionBilling(
+            user_id=123,
+            started_at=datetime.now(timezone.utc),
+            status=BillingStatus.ACTIVE,
+            id=uuid.uuid4()
+        )
         mock_user_repo.get_by_id.return_value = user
+        mock_billing_repo.get_active_by_user.return_value = billing
 
         result = await service.cancel_consumption_mode(123, 123)
 

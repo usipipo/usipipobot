@@ -427,8 +427,12 @@ class ConsumptionBillingService:
         if not user:
             return False, "Usuario no encontrado"
 
-        if not user.consumption_mode_enabled:
-            return False, "No tienes el modo consumo activo"
+        # Verificar que tiene un ciclo activo (fuente de verdad principal)
+        billing = await self.billing_repo.get_active_by_user(
+            user_id, current_user_id
+        )
+        if not billing:
+            return False, "No tienes un ciclo de consumo activo"
 
         if user.has_pending_debt:
             return (
@@ -436,13 +440,6 @@ class ConsumptionBillingService:
                 "Ya tienes una deuda pendiente. "
                 "Debes pagarla antes de cancelar."
             )
-
-        # Verificar que tiene un ciclo activo
-        billing = await self.billing_repo.get_active_by_user(
-            user_id, current_user_id
-        )
-        if not billing:
-            return False, "No tienes un ciclo de consumo activo"
 
         return True, None
 
