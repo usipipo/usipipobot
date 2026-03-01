@@ -36,14 +36,10 @@ class KeyManagementMessages:
 
     KEYS_LIST_HEADER = "🔑 *Tus llaves {type}*\n\n"
 
-    NO_KEYS_TYPE = (
-        "📭 Sin llaves {type}\n\n"
-        "💡 Crea una nueva llave para comenzar."
-    )
+    NO_KEYS_TYPE = "📭 Sin llaves {type}\n\n" "💡 Crea una nueva llave para comenzar."
 
     NO_KEYS_STATS = (
-        "📭 *Sin estadísticas*\n\n"
-        "No hay llaves para mostrar datos de consumo."
+        "📭 *Sin estadísticas*\n\n" "No hay llaves para mostrar datos de consumo."
     )
 
     # ============================================
@@ -61,8 +57,7 @@ class KeyManagementMessages:
     )
 
     KEY_NOT_FOUND = (
-        "❌ *Llave no encontrada*\n\n"
-        "No existe o no te pertenece a tu cuenta."
+        "❌ *Llave no encontrada*\n\n" "No existe o no te pertenece a tu cuenta."
     )
 
     # ============================================
@@ -95,9 +90,7 @@ class KeyManagementMessages:
         )
 
         KEY_REACTIVATED = (
-            "✅ *Llave activada*\n\n"
-            "🚀 Conexión lista\n\n"
-            "🌐 ¡A navegar seguro! 🔥"
+            "✅ *Llave activada*\n\n" "🚀 Conexión lista\n\n" "🌐 ¡A navegar seguro! 🔥"
         )
 
         KEY_REACTIVATED = (
@@ -112,11 +105,7 @@ class KeyManagementMessages:
             "🔌 Dispositivos desconectados ⚡"
         )
 
-        KEY_RENAMED = (
-            "✏️ *Renombrada*\n\n"
-            "✨ {new_name}\n\n"
-            "✅ Cambio guardado 🎯"
-        )
+        KEY_RENAMED = "✏️ *Renombrada*\n\n" "✨ {new_name}\n\n" "✅ Cambio guardado 🎯"
 
         CONFIG_UPDATED = (
             "⚙️ *Configuración actualizada*\n\n"
@@ -138,14 +127,11 @@ class KeyManagementMessages:
         )
 
         KEY_NOT_ACCESSIBLE = (
-            "🚫 *Acceso denegado*\n\n"
-            "🔒 No tienes permisos para esta llave 🔐"
+            "🚫 *Acceso denegado*\n\n" "🔒 No tienes permisos para esta llave 🔐"
         )
 
         OPERATION_FAILED = (
-            "❌ *Operación fallida*\n\n"
-            "💥 No se pudo completar\n\n"
-            "📟 {error}"
+            "❌ *Operación fallida*\n\n" "💥 No se pudo completar\n\n" "📟 {error}"
         )
 
         DELETE_NOT_ALLOWED = (
@@ -154,10 +140,7 @@ class KeyManagementMessages:
             "📍 Ve a 💳 *Depositar* 🗝️"
         )
 
-        INVALID_ACTION = (
-            "⛔ *Acción inválida*\n\n"
-            "🚫 No disponible en este momento"
-        )
+        INVALID_ACTION = "⛔ *Acción inválida*\n\n" "🚫 No disponible en este momento"
 
         QUOTA_EXCEEDED = (
             "⚠️ *Cuota excedida*\n\n"
@@ -172,18 +155,10 @@ class KeyManagementMessages:
     class Success:
         """Mensajes de éxito."""
 
-        OPERATION_COMPLETED = (
-            "✅ *Listo*\n\n"
-            "⚡ Operación completada 🎯"
-        )
+        OPERATION_COMPLETED = "✅ *Listo*\n\n" "⚡ Operación completada 🎯"
 
-        CHANGES_SAVED = (
-            "💾 *Guardado*\n\n"
-            "✨ Cambios actualizados"
-        )
+        CHANGES_SAVED = "💾 *Guardado*\n\n" "✨ Cambios actualizados"
 
         BACKUP_CREATED = (
-            "📦 *Backup creado*\n\n"
-            "💾 Copia segura guardada\n\n"
-            "📁 {filename}"
+            "📦 *Backup creado*\n\n" "💾 Copia segura guardada\n\n" "📁 {filename}"
         )
