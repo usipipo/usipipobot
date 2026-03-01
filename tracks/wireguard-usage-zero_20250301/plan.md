@@ -2,7 +2,7 @@
 
 Track ID: `wireguard-usage-zero_20250301`
 Created: 2025-03-01
-Status: in-progress
+Status: completed
 
 ## Overview
 Corregir el bug donde el consumo de WireGuard siempre muestra 0.0GB debido a que se usa `key_name` en lugar de `external_id` al consultar métricas.
@@ -33,17 +33,17 @@ Corregir el bug donde el consumo de WireGuard siempre muestra 0.0GB debido a que
 
 ### Tasks
 
-- [ ] **Task 2.1**: Commit de los cambios
-- [ ] **Task 2.2**: Actualizar plan.md con SHAs
-- [ ] **Task 2.3**: Cerrar Issue en GitHub
+- [x] **Task 2.1**: Commit de los cambios `fbe0e70`
+- [x] **Task 2.2**: Actualizar plan.md con SHAs
+- [x] **Task 2.3**: Cerrar Issue en GitHub
 
 ### Verification
 
-- [ ] **Verify 2.1**: Todos los acceptance criteria cumplidos
+- [x] **Verify 2.1**: Todos los acceptance criteria cumplidos
 
 ## Checkpoints
 
-| Phase   | Checkpoint SHA | Date       | Status   |
-| ------- | -------------- | ---------- | -------- |
-| Phase 1 |                |            | pending  |
-| Phase 2 |                |            | pending  |
+| Phase   | Checkpoint SHA                           | Date       | Status    |
+| ------- | ---------------------------------------- | ---------- | --------- |
+| Phase 1 | fbe0e70                                  | 2025-03-01 | completed |
+| Phase 2 | fbe0e70                                  | 2025-03-01 | completed |
