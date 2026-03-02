@@ -2,7 +2,7 @@
 Handlers para panel administrativo de uSipipo.
 
 Author: uSipipo Team
-Version: 3.1.0 - Fixed ticket response functionality
+Version: 4.0.0 - Removed ticket system
 """
 
 import uuid
@@ -20,7 +20,6 @@ from telegram.ext import (
 )
 
 from application.services.admin_service import AdminService
-from application.services.ticket_service import TicketService
 from config import settings
 from telegram_bot.common.base_handler import BaseConversationHandler
 from telegram_bot.common.decorators import admin_required
@@ -40,23 +39,16 @@ CONFIRMING_USER_DELETE = 5
 CONFIRMING_KEY_DELETE = 6
 VIEWING_SETTINGS = 7
 VIEWING_MAINTENANCE = 8
-VIEWING_TICKETS = 9
-VIEWING_TICKET_DETAILS = 10
-AWAITING_TICKET_RESPONSE = 11
 
 USERS_PER_PAGE = 10
 KEYS_PER_PAGE = 10
-TICKETS_PER_PAGE = 10
 
 
 class AdminHandler(BaseConversationHandler):
     """Handler para funciones administrativas."""
 
-    def __init__(
-        self, admin_service: AdminService, ticket_service: TicketService | None = None
-    ):
+    def __init__(self, admin_service: AdminService):
         super().__init__(admin_service, "AdminService")
-        self.ticket_service = ticket_service
         logger.info("🔧 AdminHandler inicializado")
 
     def _is_admin(self, user_id: int) -> bool:
@@ -974,536 +966,6 @@ class AdminHandler(BaseConversationHandler):
             await self._handle_error(update, context, e, "show_dashboard")
             return ADMIN_MENU
 
-    @admin_required
-    @admin_spinner_callback
-    async def show_tickets(
-        self,
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int | None = None,
-    ):
-        """Muestra lista de tickets para administración."""
-        query = update.callback_query
-        await self._safe_answer_query(query)
-
-        user = update.effective_user
-        if user is None:
-            return ADMIN_MENU
-        admin_id = user.id
-
-        if not self.ticket_service:
-            await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
-                text="❌ **Servicio de tickets no disponible**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        try:
-            tickets = await self.ticket_service.get_all_open_tickets(admin_id)
-
-            if not tickets:
-                await SpinnerManager.replace_spinner_with_message(
-                    update,
-                    context,
-                    spinner_message_id,
-                    text="📭 **No hay tickets pendientes**\n\nTodos los tickets han sido resueltos.",
-                    reply_markup=AdminKeyboards.back_to_menu(),
-                    parse_mode="Markdown",
-                )
-                return ADMIN_MENU
-
-            message = "🎫 **Tickets Pendientes**\n\n"
-            keyboard = []
-
-            for ticket in tickets[:TICKETS_PER_PAGE]:
-                status_emoji = ticket.status_emoji
-                subject = (
-                    ticket.subject[:30] + "..."
-                    if len(ticket.subject) > 30
-                    else ticket.subject
-                )
-                keyboard.append(
-                    [
-                        InlineKeyboardButton(
-                            f"{status_emoji} [{ticket.user_id}] {subject}",
-                            callback_data=f"admin_view_ticket_{ticket.id}",
-                        )
-                    ]
-                )
-
-            keyboard.append(
-                [InlineKeyboardButton("🔙 Menú Admin", callback_data="admin")]
-            )
-
-            await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
-                text=message,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode="Markdown",
-            )
-            return VIEWING_TICKETS
-
-        except Exception as e:
-            await self._handle_error(update, context, e, "show_tickets")
-            return ADMIN_MENU
-
-    @admin_required
-    @admin_spinner_callback
-    async def admin_view_ticket(
-        self,
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int | None = None,
-    ):
-        """Muestra los detalles de un ticket específico."""
-        query = update.callback_query
-        await self._safe_answer_query(query)
-
-        user = update.effective_user
-        if user is None:
-            return ADMIN_MENU
-        admin_id = user.id
-
-        if query is None or query.data is None:
-            return ADMIN_MENU
-        ticket_id_str = query.data.replace("admin_view_ticket_", "")
-        try:
-            ticket_id = uuid.UUID(ticket_id_str)
-        except ValueError:
-            await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
-                text="❌ **ID de ticket inválido**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        if not self.ticket_service:
-            await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
-                text="❌ **Servicio de tickets no disponible**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        try:
-            ticket = await self.ticket_service.get_ticket(ticket_id, admin_id)
-
-            if not ticket:
-                await SpinnerManager.replace_spinner_with_message(
-                    update,
-                    context,
-                    spinner_message_id,
-                    text="❌ **Ticket no encontrado**",
-                    reply_markup=AdminKeyboards.back_to_menu(),
-                    parse_mode="Markdown",
-                )
-                return ADMIN_MENU
-
-            response_section = ""
-            if ticket.response:
-                resolved_at = (
-                    escape_markdown(ticket.resolved_at.strftime("%Y-%m-%d %H:%M"))
-                    if ticket.resolved_at
-                    else "N/A"
-                )
-                escaped_response = escape_markdown(ticket.response)
-                response_section = f"\n\n✅ *Respuesta:*\n{escaped_response}\n_Respondido: {resolved_at}_"
-
-            message = (
-                f"🎫 *Ticket \\#{str(ticket.id)[:8]}*\n\n"
-                f"👤 *Usuario:* `{ticket.user_id}`\n"
-                f"📝 *Asunto:* {escape_markdown(ticket.subject)}\n"
-                f"📊 *Estado:* {ticket.status_emoji} {escape_markdown(ticket.status.value)}\n"
-                f"📅 *Creado:* {escape_markdown(ticket.created_at.strftime('%Y-%m-%d %H:%M'))}\n\n"
-                f"💬 *Mensaje:*\n{escape_markdown(ticket.message)}"
-                f"{response_section}"
-            )
-
-            keyboard = [
-                [
-                    InlineKeyboardButton(
-                        "✍️ Responder", callback_data=f"ticket_respond_{ticket.id}"
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        "🔄 En Progreso", callback_data=f"ticket_progress_{ticket.id}"
-                    ),
-                    InlineKeyboardButton(
-                        "❌ Cerrar", callback_data=f"ticket_close_{ticket.id}"
-                    ),
-                ],
-                [InlineKeyboardButton("🔙 Volver", callback_data="admin_tickets")],
-            ]
-
-            await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
-                text=message,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode="Markdown",
-            )
-            if context.user_data is not None:
-                context.user_data["viewing_ticket_id"] = str(ticket.id)
-            return VIEWING_TICKET_DETAILS
-
-        except Exception as e:
-            await self._handle_error(update, context, e, "admin_view_ticket")
-            return ADMIN_MENU
-
-    @admin_required
-    async def admin_respond_prompt(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
-        """Muestra el prompt para responder un ticket."""
-        query = update.callback_query
-        await self._safe_answer_query(query)
-
-        user = update.effective_user
-        if user is None:
-            return ADMIN_MENU
-
-        if query is None or query.data is None:
-            return ADMIN_MENU
-        ticket_id_str = query.data.replace("ticket_respond_", "")
-        try:
-            ticket_id = uuid.UUID(ticket_id_str)
-        except ValueError:
-            await self._safe_edit_message(
-                query,
-                context,
-                text="❌ **ID de ticket inválido**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        if context.user_data is not None:
-            context.user_data["responding_to_ticket"] = str(ticket_id)
-
-        message = (
-            f"✍️ *Responder Ticket \\#{str(ticket_id)[:8]}*\n\n"
-            "Por favor, escribe tu respuesta a continuación\\."
-        )
-
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "❌ Cancelar", callback_data="cancel_ticket_response"
-                )
-            ]
-        ]
-
-        await self._safe_edit_message(
-            query,
-            context,
-            text=message,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown",
-        )
-        return AWAITING_TICKET_RESPONSE
-
-    async def handle_admin_response(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
-        """Procesa la respuesta del administrador a un ticket."""
-        if context.user_data is None:
-            return ADMIN_MENU
-        ticket_id_str = context.user_data.get("responding_to_ticket")
-        if not ticket_id_str:
-            return ADMIN_MENU
-
-        context.user_data["responding_to_ticket"] = None
-
-        user = update.effective_user
-        if user is None:
-            return ADMIN_MENU
-        admin_id = user.id
-
-        if not update.message:
-            return ADMIN_MENU
-        response_text = update.message.text
-
-        if not response_text:
-            return ADMIN_MENU
-
-        if not self._is_admin(admin_id):
-            return ADMIN_MENU
-
-        if not self.ticket_service:
-            await update.message.reply_text(
-                text="❌ **Servicio de tickets no disponible**",
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        try:
-            ticket_id = uuid.UUID(ticket_id_str)
-
-            await self.ticket_service.respond_to_ticket(
-                ticket_id=ticket_id,
-                response=response_text,
-                admin_id=admin_id,
-                current_user_id=admin_id,
-            )
-
-            await update.message.reply_text(
-                text="✅ **Respuesta enviada correctamente**",
-                parse_mode="Markdown",
-            )
-
-            logger.info(f"🎫 Admin {admin_id} responded to ticket {ticket_id}")
-
-            tickets = await self.ticket_service.get_all_open_tickets(admin_id)
-            if not tickets:
-                await update.message.reply_text(
-                    text="📭 **No hay más tickets pendientes**",
-                    reply_markup=AdminKeyboards.back_to_menu(),
-                    parse_mode="Markdown",
-                )
-                return ADMIN_MENU
-
-            message = "🎫 **Tickets Pendientes**\n\n"
-            keyboard = []
-
-            for ticket in tickets[:TICKETS_PER_PAGE]:
-                status_emoji = ticket.status_emoji
-                subject = (
-                    ticket.subject[:30] + "..."
-                    if len(ticket.subject) > 30
-                    else ticket.subject
-                )
-                keyboard.append(
-                    [
-                        InlineKeyboardButton(
-                            f"{status_emoji} [{ticket.user_id}] {subject}",
-                            callback_data=f"admin_view_ticket_{ticket.id}",
-                        )
-                    ]
-                )
-
-            keyboard.append(
-                [InlineKeyboardButton("🔙 Menú Admin", callback_data="admin")]
-            )
-
-            await update.message.reply_text(
-                text=message,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode="Markdown",
-            )
-            return VIEWING_TICKETS
-
-        except Exception as e:
-            logger.error(f"❌ Error responding to ticket: {e}")
-            await update.message.reply_text(
-                text=f"❌ **Error al enviar respuesta:** {str(e)}",
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-    async def cancel_admin_response(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
-        """Cancela la respuesta a un ticket."""
-        query = update.callback_query
-        if query:
-            await self._safe_answer_query(query)
-
-        if context.user_data is not None:
-            context.user_data.pop("responding_to_ticket", None)
-
-        if query:
-            await self._safe_edit_message(
-                query,
-                context,
-                text="❌ **Respuesta cancelada**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-        return ADMIN_MENU
-
-    @admin_required
-    async def ticket_set_in_progress(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
-        """Marca un ticket como en progreso."""
-        query = update.callback_query
-        await self._safe_answer_query(query)
-
-        user = update.effective_user
-        if user is None:
-            return ADMIN_MENU
-        admin_id = user.id
-
-        if query is None or query.data is None:
-            return ADMIN_MENU
-        ticket_id_str = query.data.replace("ticket_progress_", "")
-        try:
-            ticket_id = uuid.UUID(ticket_id_str)
-        except ValueError:
-            await self._safe_edit_message(
-                query,
-                context,
-                text="❌ **ID de ticket inválido**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        if not self.ticket_service:
-            await self._safe_edit_message(
-                query,
-                context,
-                text="❌ **Servicio de tickets no disponible**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        try:
-            await self.ticket_service.set_in_progress(ticket_id, admin_id)
-
-            ticket = await self.ticket_service.get_ticket(ticket_id, admin_id)
-
-            if not ticket:
-                await self._safe_edit_message(
-                    query,
-                    context,
-                    text="❌ **Ticket no encontrado**",
-                    reply_markup=AdminKeyboards.back_to_menu(),
-                    parse_mode="Markdown",
-                )
-                return ADMIN_MENU
-
-            response_section = ""
-            if ticket.response:
-                resolved_at = (
-                    escape_markdown(ticket.resolved_at.strftime("%Y-%m-%d %H:%M"))
-                    if ticket.resolved_at
-                    else "N/A"
-                )
-                escaped_response = escape_markdown(ticket.response)
-                response_section = f"\n\n✅ *Respuesta:*\n{escaped_response}\n_Respondido: {resolved_at}_"
-
-            message = (
-                f"🎫 *Ticket \\#{str(ticket.id)[:8]}*\n\n"
-                f"👤 *Usuario:* `{ticket.user_id}`\n"
-                f"📝 *Asunto:* {escape_markdown(ticket.subject)}\n"
-                f"📊 *Estado:* {ticket.status_emoji} {escape_markdown(ticket.status.value)}\n"
-                f"📅 *Creado:* {escape_markdown(ticket.created_at.strftime('%Y-%m-%d %H:%M'))}\n\n"
-                f"💬 *Mensaje:*\n{escape_markdown(ticket.message)}"
-                f"{response_section}"
-            )
-
-            keyboard = [
-                [
-                    InlineKeyboardButton(
-                        "✍️ Responder", callback_data=f"ticket_respond_{ticket.id}"
-                    )
-                ],
-                [InlineKeyboardButton("🔙 Volver", callback_data="admin_tickets")],
-            ]
-
-            await self._safe_edit_message(
-                query,
-                context,
-                text=message,
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode="Markdown",
-            )
-            return VIEWING_TICKET_DETAILS
-
-        except Exception as e:
-            await self._handle_error(update, context, e, "ticket_set_in_progress")
-            return ADMIN_MENU
-
-    @admin_required
-    @admin_spinner_callback
-    async def close_ticket(
-        self,
-        update: Update,
-        context: ContextTypes.DEFAULT_TYPE,
-        spinner_message_id: int | None = None,
-    ):
-        """Cierra un ticket."""
-        query = update.callback_query
-        await self._safe_answer_query(query)
-
-        user = update.effective_user
-        if user is None:
-            return ADMIN_MENU
-        admin_id = user.id
-
-        if query is None or query.data is None:
-            return ADMIN_MENU
-        ticket_id_str = query.data.replace("ticket_close_", "")
-        try:
-            ticket_id = uuid.UUID(ticket_id_str)
-        except ValueError:
-            await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
-                text="❌ **ID de ticket inválido**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        if not self.ticket_service:
-            await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
-                text="❌ **Servicio de tickets no disponible**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        try:
-            ticket = await self.ticket_service.close_ticket(ticket_id, admin_id)
-
-            if not ticket:
-                await SpinnerManager.replace_spinner_with_message(
-                    update,
-                    context,
-                    spinner_message_id,
-                    text="❌ **Ticket no encontrado**",
-                    reply_markup=AdminKeyboards.back_to_menu(),
-                    parse_mode="Markdown",
-                )
-                return ADMIN_MENU
-
-            logger.info(f"🎫 Admin {admin_id} closed ticket {ticket_id}")
-
-            await SpinnerManager.replace_spinner_with_message(
-                update,
-                context,
-                spinner_message_id,
-                text="✅ **Ticket cerrado correctamente**",
-                reply_markup=AdminKeyboards.back_to_menu(),
-                parse_mode="Markdown",
-            )
-            return ADMIN_MENU
-
-        except Exception as e:
-            await self._handle_error(update, context, e, "close_ticket")
-            return ADMIN_MENU
-
     @with_spinner()
     async def logs_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra los logs del sistema."""
@@ -1784,18 +1246,15 @@ def get_admin_handlers(admin_service: AdminService):
     ]
 
 
-def get_admin_callback_handlers(
-    admin_service: AdminService, ticket_service: TicketService | None = None
-):
+def get_admin_callback_handlers(admin_service: AdminService):
     """Retorna los handlers de callbacks para administración."""
-    handler = AdminHandler(admin_service, ticket_service)
+    handler = AdminHandler(admin_service)
 
     return [
         CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
         CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
         CallbackQueryHandler(handler.show_dashboard, pattern="^admin_server_status$"),
-        CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
-        CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
+                CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
         CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
         CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
         CallbackQueryHandler(handler.users_page, pattern=r"^users_page_\d+$"),
@@ -1835,29 +1294,14 @@ def get_admin_callback_handlers(
         CallbackQueryHandler(handler.show_limits_settings, pattern="^settings_limits$"),
         CallbackQueryHandler(handler.clear_logs, pattern="^clear_logs$"),
         CallbackQueryHandler(handler.backup_database, pattern="^backup_db$"),
-        CallbackQueryHandler(
-            handler.admin_view_ticket, pattern=r"^admin_view_ticket_[a-f0-9\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.admin_respond_prompt, pattern=r"^ticket_respond_[a-f0-9\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.ticket_set_in_progress, pattern=r"^ticket_progress_[a-f0-9\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.close_ticket, pattern=r"^ticket_close_[a-f0-9\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.cancel_admin_response, pattern="^cancel_ticket_response$"
-        ),
     ]
 
 
 def get_admin_conversation_handler(
-    admin_service: AdminService, ticket_service: TicketService | None = None
+    admin_service: AdminService, 
 ) -> ConversationHandler:
     """Retorna el ConversationHandler para administración."""
-    handler = AdminHandler(admin_service, ticket_service)
+    handler = AdminHandler(admin_service)
 
     return ConversationHandler(
         entry_points=[CommandHandler("admin", handler.admin_menu)],
@@ -1868,8 +1312,7 @@ def get_admin_conversation_handler(
                 CallbackQueryHandler(
                     handler.show_dashboard, pattern="^admin_server_status$"
                 ),
-                CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
-                CallbackQueryHandler(handler.show_settings, pattern="^admin_settings$"),
+                                CallbackQueryHandler(handler.show_settings, pattern="^admin_settings$"),
                 CallbackQueryHandler(
                     handler.show_maintenance, pattern="^admin_maintenance$"
                 ),
@@ -1941,41 +1384,6 @@ def get_admin_conversation_handler(
                     handler.cancel_key_action, pattern=r"^cancel_delete_key$"
                 ),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
-            ],
-            VIEWING_TICKETS: [
-                CallbackQueryHandler(
-                    handler.admin_view_ticket,
-                    pattern=r"^admin_view_ticket_[a-f0-9\-]+$",
-                ),
-                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
-                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
-            ],
-            VIEWING_TICKET_DETAILS: [
-                CallbackQueryHandler(
-                    handler.admin_respond_prompt,
-                    pattern=r"^ticket_respond_[a-f0-9\-]+$",
-                ),
-                CallbackQueryHandler(
-                    handler.ticket_set_in_progress,
-                    pattern=r"^ticket_progress_[a-f0-9\-]+$",
-                ),
-                CallbackQueryHandler(
-                    handler.close_ticket,
-                    pattern=r"^ticket_close_[a-f0-9\-]+$",
-                ),
-                CallbackQueryHandler(handler.show_tickets, pattern="^admin_tickets$"),
-                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
-                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
-            ],
-            AWAITING_TICKET_RESPONSE: [
-                MessageHandler(
-                    filters.TEXT & ~filters.COMMAND, handler.handle_admin_response
-                ),
-                CallbackQueryHandler(
-                    handler.cancel_admin_response, pattern="^cancel_ticket_response$"
-                ),
-                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
-                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             VIEWING_SETTINGS: [
                 CallbackQueryHandler(

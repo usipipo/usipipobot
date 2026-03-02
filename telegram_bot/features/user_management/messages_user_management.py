@@ -175,29 +175,6 @@ class UserManagementMessages:
             "└─ 🎉 ¡Ambos reciben *créditos!*\n"
             "\n"
             f"{_SEP_HEADER}\n"
-            "❓ *¿Necesitas más ayuda?*\n"
-            f"{_SEP_HEADER}\n"
-            "\n"
-            "🎫 Crea un *ticket de soporte*\n"
-            "_Te responderemos en menos de 24h_"
-        )
-
-        SUPPORT_PROMPT = (
-            "🎫 *Soporte Técnico*\n\n"
-            "¿Tienes un problema que no puedes resolver?\n\n"
-            "Crea un ticket y nuestro equipo te ayudará:\n"
-            "• Problemas de conexión\n"
-            "• Errores en pagos\n"
-            "• Solicitudes especiales\n"
-            "• Reporte de bugs\n\n"
-            "_Respuesta en menos de 24 horas_"
-        )
-
-        TICKET_CREATED = (
-            "✅ *Ticket Creado*\n\n"
-            "Tu ticket \\#{ticket_id} ha sido enviado\\.\n\n"
-            "Te responderemos lo antes posible\\.\n\n"
-            "Estado: 🟡 Pendiente"
         )
 
         class Bonuses:

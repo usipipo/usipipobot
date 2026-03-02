@@ -76,19 +76,7 @@ class UserManagementKeyboards:
                 InlineKeyboardButton("📚 FAQ", callback_data="help_faq"),
                 InlineKeyboardButton("🎁 Bonos", callback_data="help_bonuses"),
             ],
-            [
-                InlineKeyboardButton("🎫 Soporte", callback_data="help_support"),
-            ],
             [InlineKeyboardButton("🏠 Menú Principal", callback_data="main_menu")],
-        ]
-        return InlineKeyboardMarkup(keyboard)
-
-    @staticmethod
-    def support_menu() -> InlineKeyboardMarkup:
-        keyboard = [
-            [InlineKeyboardButton("🎫 Crear Ticket", callback_data="create_ticket")],
-            [InlineKeyboardButton("📋 Mis Tickets", callback_data="list_my_tickets")],
-            [InlineKeyboardButton("🔙 Volver", callback_data="help")],
         ]
         return InlineKeyboardMarkup(keyboard)
 

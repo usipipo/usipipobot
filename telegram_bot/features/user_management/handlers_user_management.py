@@ -215,13 +215,6 @@ class UserManagementHandler(BaseHandler):
                 parse_mode="Markdown",
             )
 
-        elif callback_data == "help_support":
-            await query.edit_message_text(
-                text=UserManagementMessages.Welcome.SUPPORT_PROMPT,
-                reply_markup=UserManagementKeyboards.support_menu(),
-                parse_mode="Markdown",
-            )
-
         elif callback_data == "admin_panel":
             from application.services.common.container import get_container
             from telegram_bot.features.admin.handlers_admin import AdminHandler
@@ -577,6 +570,6 @@ def get_user_callback_handlers(
         ),
         CallbackQueryHandler(
             handler.main_menu_callback,
-            pattern="^(show_keys|buy_data|operations_menu|show_usage|help|help_faq|help_bonuses|help_support|admin_panel|show_history)$",
+            pattern="^(show_keys|buy_data|operations_menu|show_usage|help|help_faq|help_bonuses|admin_panel|show_history)$",
         ),
     ]
