@@ -81,6 +81,9 @@ class UserModel(Base):
     data_packages: Mapped[List["DataPackageModel"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    tickets: Mapped[list["TicketModel"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class VpnKeyModel(Base):
