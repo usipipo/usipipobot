@@ -1,7 +1,5 @@
-import pytest
-from dataclasses import asdict
 from datetime import datetime, timezone
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from domain.entities.ticket import (
     Ticket, TicketCategory, TicketPriority, TicketStatus
