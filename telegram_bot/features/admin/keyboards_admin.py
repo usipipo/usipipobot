@@ -25,12 +25,11 @@ class AdminKeyboards:
                 InlineKeyboardButton(
                     "📊 Dashboard", callback_data="admin_server_status"
                 ),
-                InlineKeyboardButton("🎫 Tickets", callback_data="admin_tickets"),
-            ],
-            [
                 InlineKeyboardButton(
                     "⚙️ Configuración", callback_data="admin_settings"
                 ),
+            ],
+            [
                 InlineKeyboardButton(
                     "🔧 Mantenimiento", callback_data="admin_maintenance"
                 ),
@@ -315,7 +314,10 @@ class AdminKeyboards:
             ],
             [
                 InlineKeyboardButton(
-                    "👤 Administradores", callback_data="settings_admins"
+                    "⚙️ Configuración", callback_data="admin_settings"
+                ),
+                InlineKeyboardButton(
+                    "🔧 Mantenimiento", callback_data="admin_maintenance"
                 ),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="admin")],

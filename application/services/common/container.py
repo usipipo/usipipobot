@@ -27,7 +27,6 @@ from application.services.consumption_vpn_integration_service import (
 from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
-from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_infrastructure_service import (
     VpnInfrastructureService,
@@ -45,7 +44,6 @@ from domain.interfaces.iconsumption_invoice_repository import (
 from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
-from domain.interfaces.iticket_repository import ITicketRepository
 from domain.interfaces.itransaction_repository import ITransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
@@ -65,9 +63,6 @@ from infrastructure.persistence.postgresql.data_package_repository import (
 from infrastructure.persistence.postgresql.key_repository import (
     PostgresKeyRepository,
 )
-from infrastructure.persistence.postgresql.ticket_repository import (
-    PostgresTicketRepository,
-)
 from infrastructure.persistence.postgresql.transaction_repository import (
     PostgresTransactionRepository,
 )
@@ -82,7 +77,6 @@ from telegram_bot.features.key_management import (
     get_key_management_callback_handlers,
     get_key_management_handlers,
 )
-from telegram_bot.features.tickets import get_ticket_callback_handlers
 from telegram_bot.features.vpn_keys import (
     get_vpn_keys_callback_handlers,
     get_vpn_keys_handler,
@@ -184,10 +178,6 @@ def _configure_repositories(container: punq.Container) -> None:
         session = session_factory()
         return PostgresTransactionRepository(session)
 
-    def create_ticket_repo() -> PostgresTicketRepository:
-        session = session_factory()
-        return PostgresTicketRepository(session)
-
     def create_crypto_order_repo() -> PostgresCryptoOrderRepository:
         session = session_factory()
         return PostgresCryptoOrderRepository(session)
@@ -214,7 +204,6 @@ def _configure_repositories(container: punq.Container) -> None:
     container.register(
         ITransactionRepository, factory=create_transaction_repo
     )
-    container.register(ITicketRepository, factory=create_ticket_repo)
     container.register(
         ICryptoOrderRepository, factory=create_crypto_order_repo
     )
@@ -311,13 +300,6 @@ def _configure_application_services(container: punq.Container) -> None:
             ),
         )
 
-    def create_ticket_repo_inner() -> PostgresTicketRepository:
-        session = session_factory()
-        return PostgresTicketRepository(session)
-
-    def create_ticket_service() -> TicketService:
-        return TicketService(ticket_repo=create_ticket_repo_inner())
-
     def create_wallet_management_service() -> WalletManagementService:
         return WalletManagementService(
             tron_dealer_client=cast(
@@ -404,7 +386,6 @@ def _configure_application_services(container: punq.Container) -> None:
         UserProfileService,
         factory=create_user_profile_service,
     )
-    container.register(TicketService, factory=create_ticket_service)
     container.register(
         WalletManagementService,
         factory=create_wallet_management_service,
@@ -444,7 +425,6 @@ def _configure_handlers(container: punq.Container) -> None:
         handlers.extend(
             get_admin_callback_handlers(
                 cast(AdminService, container.resolve(AdminService)),
-                cast(TicketService, container.resolve(TicketService)),
             )
         )
         handlers.extend(
@@ -456,11 +436,6 @@ def _configure_handlers(container: punq.Container) -> None:
             get_key_management_callback_handlers(
                 cast(VpnService, container.resolve(VpnService)),
                 cast(ConsumptionBillingService, container.resolve(ConsumptionBillingService))
-            )
-        )
-        handlers.extend(
-            get_ticket_callback_handlers(
-                cast(TicketService, container.resolve(TicketService))
             )
         )
         return handlers
