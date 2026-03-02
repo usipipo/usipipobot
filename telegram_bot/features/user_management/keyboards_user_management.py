@@ -76,6 +76,9 @@ class UserManagementKeyboards:
                 InlineKeyboardButton("📚 FAQ", callback_data="help_faq"),
                 InlineKeyboardButton("🎁 Bonos", callback_data="help_bonuses"),
             ],
+            [
+                InlineKeyboardButton("🎫 Soporte/Tickets", callback_data="tickets_menu"),
+            ],
             [InlineKeyboardButton("🏠 Menú Principal", callback_data="main_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)

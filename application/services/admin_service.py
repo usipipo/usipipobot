@@ -17,6 +17,7 @@ from domain.entities.admin import (
 from domain.entities.user import UserRole, UserStatus
 from domain.entities.vpn_key import VpnKey as Key
 from domain.interfaces.iadmin_service import IAdminService
+from domain.interfaces.iticket_repository import ITicketRepository
 from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
 from utils.logger import logger
@@ -25,10 +26,17 @@ from utils.logger import logger
 class AdminService(IAdminService):
     """Implementación del servicio de administración."""
 
-    def __init__(self, key_repository, user_repository, payment_repository):
+    def __init__(
+        self,
+        key_repository,
+        user_repository,
+        payment_repository,
+        ticket_repo: ITicketRepository | None = None,
+    ):
         self.key_repository = key_repository
         self.user_repository = user_repository
         self.payment_repository = payment_repository
+        self.ticket_repo = ticket_repo
         self.wireguard_client = WireGuardClient()
         self.outline_client = OutlineClient()
 

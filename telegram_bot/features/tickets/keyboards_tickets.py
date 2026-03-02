@@ -28,7 +28,7 @@ class TicketKeyboards:
                 ),
             ],
             [
-                InlineKeyboardButton("🔙 Volver", callback_data="main_menu"),
+                InlineKeyboardButton("🔙 Volver", callback_data="admin"),
             ],
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -184,7 +184,7 @@ class TicketKeyboards:
                 ),
             ],
             [
-                InlineKeyboardButton("🔙 Volver", callback_data="admin_menu"),
+                InlineKeyboardButton("🔙 Volver", callback_data="admin"),
             ],
         ]
         return InlineKeyboardMarkup(keyboard)
