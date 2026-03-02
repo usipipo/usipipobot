@@ -27,6 +27,9 @@ from utils.logger import logger
 from utils.spinner import SpinnerManager, admin_spinner_callback, with_spinner
 from utils.telegram_utils import escape_markdown
 
+from telegram_bot.features.tickets.keyboards_tickets import TicketKeyboards
+from telegram_bot.features.tickets.messages_tickets import TicketMessages
+
 from .keyboards_admin import AdminKeyboards
 from .messages_admin import AdminMessages
 
@@ -39,6 +42,7 @@ CONFIRMING_USER_DELETE = 5
 CONFIRMING_KEY_DELETE = 6
 VIEWING_SETTINGS = 7
 VIEWING_MAINTENANCE = 8
+VIEWING_TICKETS = 9
 
 USERS_PER_PAGE = 10
 KEYS_PER_PAGE = 10
@@ -1214,6 +1218,24 @@ class AdminHandler(BaseConversationHandler):
         )
         return ADMIN_MENU
 
+    @admin_required
+    async def show_tickets_menu(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ):
+        """Muestra el menú de gestión de tickets."""
+        query = update.callback_query
+        await self._safe_answer_query(query)
+
+        open_count = 0
+        await self._safe_edit_message(
+            query,
+            context,
+            text=TicketMessages.Admin.menu(open_count),
+            reply_markup=TicketKeyboards.admin_menu(open_count),
+            parse_mode="Markdown",
+        )
+        return VIEWING_TICKETS
+
     async def end_admin(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Finaliza la sesión administrativa."""
         if context.user_data is not None:
@@ -1254,7 +1276,7 @@ def get_admin_callback_handlers(admin_service: AdminService):
         CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
         CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
         CallbackQueryHandler(handler.show_dashboard, pattern="^admin_server_status$"),
-                CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
+        CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
         CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
         CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
         CallbackQueryHandler(handler.users_page, pattern=r"^users_page_\d+$"),
@@ -1288,6 +1310,7 @@ def get_admin_callback_handlers(admin_service: AdminService):
         CallbackQueryHandler(handler.cancel_key_action, pattern=r"^cancel_delete_key$"),
         CallbackQueryHandler(handler.show_settings, pattern="^admin_settings$"),
         CallbackQueryHandler(handler.show_maintenance, pattern="^admin_maintenance$"),
+        CallbackQueryHandler(handler.show_tickets_menu, pattern="^admin_tickets_menu$"),
         CallbackQueryHandler(
             handler.show_server_settings, pattern="^settings_servers$"
         ),
@@ -1298,7 +1321,7 @@ def get_admin_callback_handlers(admin_service: AdminService):
 
 
 def get_admin_conversation_handler(
-    admin_service: AdminService, 
+    admin_service: AdminService,
 ) -> ConversationHandler:
     """Retorna el ConversationHandler para administración."""
     handler = AdminHandler(admin_service)
@@ -1312,9 +1335,12 @@ def get_admin_conversation_handler(
                 CallbackQueryHandler(
                     handler.show_dashboard, pattern="^admin_server_status$"
                 ),
-                                CallbackQueryHandler(handler.show_settings, pattern="^admin_settings$"),
+                CallbackQueryHandler(handler.show_settings, pattern="^admin_settings$"),
                 CallbackQueryHandler(
                     handler.show_maintenance, pattern="^admin_maintenance$"
+                ),
+                CallbackQueryHandler(
+                    handler.show_tickets_menu, pattern="^admin_tickets_menu$"
                 ),
                 CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
@@ -1398,6 +1424,10 @@ def get_admin_conversation_handler(
             VIEWING_MAINTENANCE: [
                 CallbackQueryHandler(handler.clear_logs, pattern="^clear_logs$"),
                 CallbackQueryHandler(handler.backup_database, pattern="^backup_db$"),
+                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
+                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
+            ],
+            VIEWING_TICKETS: [
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
