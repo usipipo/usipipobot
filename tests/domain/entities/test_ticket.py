@@ -1,9 +1,8 @@
 from datetime import datetime, timezone
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from domain.entities.ticket import (
-    Ticket, TicketCategory, TicketPriority, TicketStatus
-)
+from domain.entities.ticket import Ticket, TicketCategory, TicketPriority, TicketStatus
+from domain.entities.ticket_message import TicketMessage
 
 
 class TestTicketEnums:
@@ -32,7 +31,7 @@ class TestTicketEntity:
             category=TicketCategory.VPN_FAIL,
             priority=TicketPriority.HIGH,
             status=TicketStatus.OPEN,
-            subject="VPN no conecta"
+            subject="VPN no conecta",
         )
 
         assert ticket.user_id == 123456
@@ -49,7 +48,7 @@ class TestTicketEntity:
             user_id=123456,
             category=TicketCategory.PAYMENT,
             priority=TicketPriority.MEDIUM,
-            subject="Problema con pago"
+            subject="Problema con pago",
         )
         assert ticket.status == TicketStatus.OPEN
 
@@ -59,7 +58,7 @@ class TestTicketEntity:
             category=TicketCategory.ACCOUNT,
             priority=TicketPriority.LOW,
             status=TicketStatus.OPEN,
-            subject="Cambiar nombre"
+            subject="Cambiar nombre",
         )
 
         # Can transition to responded
@@ -77,9 +76,36 @@ class TestTicketEntity:
             user_id=123456,
             category=TicketCategory.OTHER,
             priority=TicketPriority.LOW,
-            subject="Consulta"
+            subject="Consulta",
         )
 
         ticket_number = f"T-{str(ticket.id)[:8].upper()}"
         assert ticket_number.startswith("T-")
         assert len(ticket_number) == 10  # T- + 8 chars
+
+
+class TestTicketMessageEntity:
+    def test_ticket_message_creation(self):
+        message = TicketMessage(
+            ticket_id=uuid4(),
+            from_user_id=123456,
+            message="No puedo conectar la VPN",
+            is_from_admin=False,
+        )
+
+        assert isinstance(message.id, UUID)
+        assert isinstance(message.ticket_id, UUID)
+        assert message.from_user_id == 123456
+        assert message.message == "No puedo conectar la VPN"
+        assert message.is_from_admin is False
+        assert message.created_at is not None
+
+    def test_ticket_message_from_admin(self):
+        message = TicketMessage(
+            ticket_id=uuid4(),
+            from_user_id=999999,
+            message="Por favor intenta reiniciar",
+            is_from_admin=True,
+        )
+
+        assert message.is_from_admin is True
