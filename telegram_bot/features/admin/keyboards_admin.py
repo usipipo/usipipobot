@@ -14,8 +14,13 @@ class AdminKeyboards:
     """Teclados para panel administrativo."""
 
     @staticmethod
-    def main_menu() -> InlineKeyboardMarkup:
+    def main_menu(open_ticket_count: int = 0) -> InlineKeyboardMarkup:
         """Teclado del menú principal administrativo."""
+        tickets_text = (
+            f"🎫 Gestionar Tickets ({open_ticket_count})"
+            if open_ticket_count > 0
+            else "🎫 Gestionar Tickets"
+        )
         keyboard = [
             [
                 InlineKeyboardButton("👥 Usuarios", callback_data="admin_show_users"),
@@ -28,6 +33,9 @@ class AdminKeyboards:
                 InlineKeyboardButton(
                     "⚙️ Configuración", callback_data="admin_settings"
                 ),
+            ],
+            [
+                InlineKeyboardButton(tickets_text, callback_data="admin_tickets_menu"),
             ],
             [
                 InlineKeyboardButton(
