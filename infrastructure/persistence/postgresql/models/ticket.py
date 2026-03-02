@@ -66,7 +66,10 @@ class TicketModel(Base):
     )
     
     # Relationships
-    user: Mapped["UserModel"] = relationship(back_populates="tickets")
+    user: Mapped["UserModel"] = relationship(
+        back_populates="tickets",
+        foreign_keys="TicketModel.user_id"
+    )
     messages: Mapped[list["TicketMessageModel"]] = relationship(
         back_populates="ticket",
         cascade="all, delete-orphan",
