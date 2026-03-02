@@ -75,6 +75,7 @@ class UserModel(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # Relationships - defined after all models loaded via imports at bottom
     keys: Mapped[List["VpnKeyModel"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )
@@ -82,7 +83,9 @@ class UserModel(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     tickets: Mapped[list["TicketModel"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="TicketModel.user_id"
     )
 
 
@@ -181,3 +184,13 @@ class TransactionModel(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+# Import ticket models after all models defined to resolve forward references
+from infrastructure.persistence.postgresql.models.ticket import TicketModel  # noqa: E402, F401
+from infrastructure.persistence.postgresql.models.ticket_message import TicketMessageModel  # noqa: E402, F401
+
+
+# Import ticket models after all models defined to resolve forward references
+from infrastructure.persistence.postgresql.models.ticket import TicketModel  # noqa: E402, F401
+from infrastructure.persistence.postgresql.models.ticket_message import TicketMessageModel  # noqa: E402, F401
