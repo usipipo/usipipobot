@@ -63,6 +63,9 @@ from infrastructure.persistence.postgresql.data_package_repository import (
 from infrastructure.persistence.postgresql.key_repository import (
     PostgresKeyRepository,
 )
+from infrastructure.persistence.postgresql.ticket_repository import (
+    TicketRepository,
+)
 from infrastructure.persistence.postgresql.transaction_repository import (
     PostgresTransactionRepository,
 )
@@ -247,6 +250,10 @@ def _configure_application_services(container: punq.Container) -> None:
         session = session_factory()
         return PostgresConsumptionBillingRepository(session)
 
+    def create_ticket_repo() -> TicketRepository:
+        session = session_factory()
+        return TicketRepository(session)
+
     def create_vpn_service() -> VpnService:
         return VpnService(
             user_repo=create_user_repo(),
@@ -269,6 +276,7 @@ def _configure_application_services(container: punq.Container) -> None:
             key_repository=create_key_repo(),
             user_repository=create_user_repo(),
             payment_repository=create_transaction_repo(),
+            ticket_repo=create_ticket_repo(),
         )
 
     def create_data_package_service() -> DataPackageService:
