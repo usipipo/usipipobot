@@ -5,28 +5,14 @@ Este módulo contiene toda la funcionalidad relacionada con la gestión de llave
 generación, validación y administración de acceso.
 
 Author: uSipipo Team
-Version: 2.0.0 - Feature-based architecture
+Version: 3.0.0 - Refactored into mixins
 """
 
-import importlib.util
-import sys
-
-# Importar el módulo con nombre de archivo con puntos usando importlib
-spec = importlib.util.spec_from_file_location(
-    "handlers_key_management",
-    "telegram_bot/features/key_management/handlers_key_management.py",
+from telegram_bot.features.key_management.handlers_key_management import (
+    KeyManagementHandler,
+    get_key_management_handlers,
+    get_key_management_callback_handlers,
 )
-if spec is None or spec.loader is None:
-    raise ImportError("Could not find module: handlers_key_management")
-module = importlib.util.module_from_spec(spec)
-module.__package__ = "telegram_bot.features.key_management"
-sys.modules["handlers_key_management"] = module
-spec.loader.exec_module(module)
-
-# Importar los símbolos específicos desde el módulo cargado
-KeyManagementHandler = module.KeyManagementHandler
-get_key_management_handlers = module.get_key_management_handlers
-get_key_management_callback_handlers = module.get_key_management_callback_handlers
 
 __all__ = [
     "KeyManagementHandler",
