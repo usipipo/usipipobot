@@ -5,26 +5,45 @@ Este módulo contiene toda la funcionalidad relacionada con la administración d
 incluyendo gestión de usuarios, llaves, estadísticas y configuración del sistema.
 
 Author: uSipipo Team
-Version: 2.0.0 - Feature-based architecture
+Version: 3.0.0 - Refactored into mixins
 """
 
-import importlib.util
-import sys
-
-# Importar el módulo con nombre de archivo con puntos usando importlib
-spec = importlib.util.spec_from_file_location(
-    "handlers_admin", "telegram_bot/features/admin/handlers_admin.py"
+from .handlers_admin import (
+    AdminHandler,
+    ADMIN_MENU,
+    VIEWING_USERS,
+    VIEWING_USER_DETAILS,
+    VIEWING_KEYS,
+    VIEWING_KEY_DETAILS,
+    CONFIRMING_USER_DELETE,
+    CONFIRMING_KEY_DELETE,
+    VIEWING_SETTINGS,
+    VIEWING_MAINTENANCE,
+    VIEWING_TICKETS,
 )
-if spec is None or spec.loader is None:
-    raise ImportError("Could not find module: handlers_admin")
-module = importlib.util.module_from_spec(spec)
-module.__package__ = "telegram_bot.features.admin"
-sys.modules["handlers_admin"] = module
-spec.loader.exec_module(module)
+from .handlers_registry import (
+    get_admin_handlers,
+    get_admin_callback_handlers,
+    get_admin_conversation_handler,
+)
+from .handlers_users_list import USERS_PER_PAGE
+from .handlers_keys_actions import KEYS_PER_PAGE
 
-# Importar los símbolos específicos desde el módulo cargado
-AdminHandler = module.AdminHandler
-get_admin_handlers = module.get_admin_handlers
-get_admin_callback_handlers = module.get_admin_callback_handlers
-
-__all__ = ["AdminHandler", "get_admin_handlers", "get_admin_callback_handlers"]
+__all__ = [
+    "AdminHandler",
+    "get_admin_handlers",
+    "get_admin_callback_handlers",
+    "get_admin_conversation_handler",
+    "ADMIN_MENU",
+    "VIEWING_USERS",
+    "VIEWING_USER_DETAILS",
+    "VIEWING_KEYS",
+    "VIEWING_KEY_DETAILS",
+    "CONFIRMING_USER_DELETE",
+    "CONFIRMING_KEY_DELETE",
+    "VIEWING_SETTINGS",
+    "VIEWING_MAINTENANCE",
+    "VIEWING_TICKETS",
+    "USERS_PER_PAGE",
+    "KEYS_PER_PAGE",
+]
