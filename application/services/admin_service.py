@@ -1,30 +1,37 @@
 """
-Servicio de administración para el bot uSipipo.
+Servicio de administración para el bot uSipipo (Facade).
+
+⚠️ DEPRECATED: Este servicio se mantiene por compatibilidad.
+Usar los servicios especializados:
+- AdminStatsService
+- AdminUserService
+- AdminKeyService
+- AdminServerService
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 2.0.0
 """
 
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from domain.entities.admin import (
-    AdminKeyInfo,
-    AdminOperationResult,
-    AdminUserInfo,
-    ServerStatus,
-)
-from domain.entities.user import UserRole, UserStatus
+from domain.entities.admin import AdminOperationResult
 from domain.entities.vpn_key import VpnKey as Key
 from domain.interfaces.iadmin_service import IAdminService
 from domain.interfaces.iticket_repository import ITicketRepository
-from infrastructure.api_clients.client_outline import OutlineClient
-from infrastructure.api_clients.client_wireguard import WireGuardClient
-from utils.logger import logger
+
+from .admin_key_service import AdminKeyService
+from .admin_server_service import AdminServerService
+from .admin_stats_service import AdminStatsService
+from .admin_user_service import AdminUserService
 
 
 class AdminService(IAdminService):
-    """Implementación del servicio de administración."""
+    """
+    Implementación del servicio de administración (Facade).
+    
+    Delega operaciones a servicios especializados para mantener
+    SRP (Single Responsibility Principle).
+    """
 
     def __init__(
         self,
@@ -33,811 +40,108 @@ class AdminService(IAdminService):
         payment_repository,
         ticket_repo: ITicketRepository | None = None,
     ):
-        self.key_repository = key_repository
-        self.user_repository = user_repository
-        self.payment_repository = payment_repository
+        self._stats_service = AdminStatsService(
+            user_repository, key_repository, payment_repository
+        )
+        self._user_service = AdminUserService(
+            user_repository, key_repository, payment_repository
+        )
+        self._key_service = AdminKeyService(key_repository, user_repository)
+        self._server_service = AdminServerService(user_repository, key_repository)
         self.ticket_repo = ticket_repo
-        self.wireguard_client = WireGuardClient()
-        self.outline_client = OutlineClient()
+
+    # ============================================
+    # DELEGACIÓN A AdminStatsService
+    # ============================================
 
     async def get_dashboard_stats(self, current_user_id: int) -> Dict:
-        """
-        Genera estadísticas completas para el panel de control administrativo.
-        Centraliza la lógica de negocio para respetar arquitectura hexagonal.
-        """
-        try:
-            users = await self.user_repository.get_all_users(current_user_id)
-            all_keys = await self.key_repository.get_all_keys(current_user_id)
-            server_status = await self.get_server_status()
+        """Genera estadísticas completas para el panel de control administrativo."""
+        return await self._stats_service.get_dashboard_stats(current_user_id)
 
-            total_users = len(users)
-            active_users = sum(
-                1
-                for u in users
-                if getattr(u, "status", "").lower() == "active"
-                or getattr(u, "is_active", False)
-            )
-
-            total_keys = len(all_keys)
-            active_keys = sum(1 for k in all_keys if k.is_active)
-            wireguard_keys = sum(
-                1
-                for k in all_keys
-                if hasattr(k.key_type, "value")
-                and k.key_type.value.lower() == "wireguard"
-                or str(k.key_type).lower() == "wireguard"
-            )
-            outline_keys = sum(
-                1
-                for k in all_keys
-                if hasattr(k.key_type, "value")
-                and k.key_type.value.lower() == "outline"
-                or str(k.key_type).lower() == "outline"
-            )
-
-            wireguard_pct = round(
-                (wireguard_keys / total_keys * 100) if total_keys > 0 else 0, 1
-            )
-            outline_pct = round(
-                (outline_keys / total_keys * 100) if total_keys > 0 else 0, 1
-            )
-
-            total_usage_gb = 0
-
-            avg_usage = round(total_usage_gb / total_users, 2) if total_users > 0 else 0
-
-            wireguard_healthy = server_status.get("wireguard", {}).get(
-                "is_healthy", False
-            )
-            outline_healthy = server_status.get("outline", {}).get("is_healthy", False)
-            server_status_text = (
-                "✅ Saludable"
-                if wireguard_healthy and outline_healthy
-                else "⚠️ Problemas"
-            )
-
-            total_revenue = await self._calculate_total_revenue()
-            new_users_today = await self._calculate_new_users_today(current_user_id)
-            keys_created_today = await self._calculate_keys_created_today(
-                current_user_id
-            )
-
-            return {
-                "total_users": total_users,
-                "active_users": active_users,
-                "total_deposited": 0,
-                "total_keys": total_keys,
-                "active_keys": active_keys,
-                "wireguard_keys": wireguard_keys,
-                "wireguard_pct": wireguard_pct,
-                "outline_keys": outline_keys,
-                "outline_pct": outline_pct,
-                "total_usage_gb": total_usage_gb,
-                "avg_usage_gb": avg_usage,
-                "total_revenue": total_revenue,
-                "new_users_today": new_users_today,
-                "keys_created_today": keys_created_today,
-                "server_status_text": server_status_text,
-                "server_status_details": server_status,
-                "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            }
-
-        except Exception as e:
-            logger.error(f"Error generando estadísticas de dashboard: {e}")
-            raise e
+    # ============================================
+    # DELEGACIÓN A AdminUserService
+    # ============================================
 
     async def get_all_users(self, current_user_id: int) -> List[Dict]:
         """Obtener lista de todos los usuarios registrados."""
-        try:
-            users = await self.user_repository.get_all_users(current_user_id)
-
-            user_list = []
-            for user in users:
-                user_keys = await self.key_repository.get_by_user(
-                    user.telegram_id, current_user_id
-                )
-                active_keys = [k for k in user_keys if k.is_active]
-
-                balance = await self.payment_repository.get_balance(user.telegram_id)
-
-                name_parts = (user.full_name or "").split(" ", 1)
-                first_name = (
-                    name_parts[0] if name_parts and name_parts[0] else "Unknown"
-                )
-                last_name = name_parts[1] if len(name_parts) > 1 else None
-
-                user_info = AdminUserInfo(
-                    user_id=user.telegram_id,
-                    username=user.username,
-                    first_name=first_name,
-                    last_name=last_name,
-                    total_keys=len(user_keys),
-                    active_keys=len(active_keys),
-                    stars_balance=balance.stars if balance else 0,
-                    total_deposited=getattr(user, "referral_credits", 0) or 0,
-                    referral_credits=getattr(user, "referral_credits", 0) or 0,
-                    registration_date=user.created_at,
-                    last_activity=getattr(user, "last_activity", None),
-                )
-                user_list.append(user_info.__dict__)
-
-            return user_list
-
-        except Exception as e:
-            logger.error(f"Error obteniendo todos los usuarios: {e}")
-            return []
-
-    async def get_user_keys(self, user_id: int) -> List[Key]:
-        """Obtener todas las claves de un usuario específico."""
-        try:
-            return await self.key_repository.get_user_keys(user_id)
-        except Exception as e:
-            logger.error(f"Error obteniendo claves del usuario {user_id}: {e}")
-            return []
-
-    async def get_all_keys(self, current_user_id: int) -> List[Dict]:
-        """Obtener todas las claves de todos los usuarios."""
-        try:
-            all_keys = await self.key_repository.get_all_keys(current_user_id)
-
-            key_list = []
-            for key in all_keys:
-                user = await self.user_repository.get_by_id(
-                    key.user_id, current_user_id
-                )
-                user_name = user.full_name or "Unknown" if user else "Unknown"
-
-                usage_stats = await self.get_key_usage_stats(str(key.id))
-
-                key_info = AdminKeyInfo(
-                    key_id=str(key.id),
-                    user_id=key.user_id,
-                    user_name=user_name,
-                    key_type=(
-                        key.key_type.value
-                        if hasattr(key.key_type, "value")
-                        else str(key.key_type)
-                    ),
-                    key_name=key.name,
-                    access_url=key.key_data,
-                    created_at=key.created_at,
-                    last_used=key.last_seen_at,
-                    data_limit=key.data_limit_bytes,
-                    data_used=usage_stats.get("data_used", 0),
-                    is_active=key.is_active,
-                    server_status=usage_stats.get("server_status", "unknown"),
-                )
-                key_list.append(key_info.__dict__)
-
-            return key_list
-
-        except Exception as e:
-            logger.error(f"Error obteniendo todas las claves: {e}")
-            return []
-
-    async def delete_key_from_servers(self, key_id: str, key_type: str) -> bool:
-        """Eliminar una clave de los servidores VPN (WireGuard y Outline)."""
-        try:
-            key = await self.key_repository.get_key(key_id)
-            if not key:
-                logger.error(f"Clave {key_id} no encontrada en BD")
-                return False
-
-            success = True
-
-            if key_type.lower() == "wireguard":
-                # Eliminar de WireGuard
-                wg_result = await self.wireguard_client.delete_client(key.name)
-                if not wg_result:
-                    logger.error(f"Error eliminando clave {key_id} de WireGuard")
-                    success = False
-                else:
-                    logger.info(f"Clave {key_id} eliminada de WireGuard")
-
-            elif key_type.lower() == "outline":
-                # Eliminar de Outline
-                outline_result = await self.outline_client.delete_key(key_id)
-                if not outline_result:
-                    logger.error(f"Error eliminando clave {key_id} de Outline")
-                    success = False
-                else:
-                    logger.info(f"Clave {key_id} eliminada de Outline")
-
-            return success
-
-        except Exception as e:
-            logger.error(f"Error eliminando clave {key_id} de servidores: {e}")
-            return False
-
-    async def delete_key_from_db(self, key_id: str) -> bool:
-        """Eliminar una clave de la base de datos."""
-        try:
-            result = await self.key_repository.delete_key(key_id)
-            if result:
-                logger.info(f"Clave {key_id} eliminada de la base de datos")
-            else:
-                logger.error(f"Error eliminando clave {key_id} de la base de datos")
-            return result
-        except Exception as e:
-            logger.error(f"Error eliminando clave {key_id} de BD: {e}")
-            return False
-
-    async def delete_user_key_complete(self, key_id: str) -> Dict[str, Any]:
-        """Eliminar completamente una clave (servidores + BD)."""
-        try:
-            key = await self.key_repository.get_key(key_id)
-            if not key:
-                return {
-                    "success": False,
-                    "server_deleted": False,
-                    "db_deleted": False,
-                    "error": "Clave no encontrada",
-                }
-
-            # Eliminar de servidores
-            server_deleted = await self.delete_key_from_servers(key_id, key.key_type)
-
-            # Eliminar de BD
-            db_deleted = await self.delete_key_from_db(key_id)
-
-            success = server_deleted and db_deleted
-
-            result = {
-                "success": success,
-                "server_deleted": server_deleted,
-                "db_deleted": db_deleted,
-                "key_type": key.key_type,
-                "key_name": key.name,
-            }
-
-            if success:
-                logger.info(f"Clave {key_id} eliminada completamente")
-            else:
-                logger.error(
-                    f"Error en eliminación completa de clave {key_id}: {result}"
-                )
-
-            return result
-
-        except Exception as e:
-            logger.error(f"Error en eliminación completa de clave {key_id}: {e}")
-            return {
-                "success": False,
-                "server_deleted": False,
-                "db_deleted": False,
-                "error": str(e),
-            }
-
-    async def toggle_key_status(
-        self, key_id: str, active: bool = True
-    ) -> Dict[str, Any]:
-        """Activa o desactiva una llave VPN sin eliminarla."""
-        try:
-            key = await self.key_repository.get_key(key_id)
-            if not key:
-                return {
-                    "success": False,
-                    "error": "Clave no encontrada",
-                }
-
-            if active:
-                success = await self._reactivate_key_on_servers(key)
-            else:
-                success = await self._suspend_key_on_servers(key)
-
-            if success:
-                key.is_active = active
-                await self.key_repository.save(key, key.user_id or 1)
-                logger.info(
-                    f"Clave {key_id} {'reactivada' if active else 'suspendida'}"
-                )
-                return {"success": True}
-            else:
-                return {
-                    "success": False,
-                    "error": f"Error al {'reactivar' if active else 'suspender'} en servidores",
-                }
-
-        except Exception as e:
-            logger.error(f"Error al cambiar estado de clave {key_id}: {e}")
-            return {"success": False, "error": str(e)}
-
-    async def _suspend_key_on_servers(self, key) -> bool:
-        """Suspende una llave en los servidores VPN."""
-        try:
-            success = True
-            key_type = str(key.key_type).lower() if key.key_type else ""
-
-            if key_type == "wireguard":
-                result = await self.wireguard_client.disable_peer(
-                    key.name or key.external_id
-                )
-                if not result:
-                    success = False
-            elif key_type == "outline":
-                result = await self.outline_client.disable_key(
-                    key.id or key.external_id
-                )
-                if not result:
-                    success = False
-
-            return success
-        except Exception as e:
-            logger.error(f"Error suspendiendo llave en servidores: {e}")
-            return False
-
-    async def _reactivate_key_on_servers(self, key) -> bool:
-        """Reactiva una llave en los servidores VPN."""
-        try:
-            success = True
-            key_type = str(key.key_type).lower() if key.key_type else ""
-
-            if key_type == "wireguard":
-                result = await self.wireguard_client.enable_peer(
-                    key.name or key.external_id
-                )
-                if not result:
-                    success = False
-            elif key_type == "outline":
-                result = await self.outline_client.enable_key(key.id or key.external_id)
-                if not result:
-                    success = False
-
-            return success
-        except Exception as e:
-            logger.error(f"Error reactivando llave en servidores: {e}")
-            return False
-
-    async def get_server_status(self) -> Dict[str, Dict]:
-        """Obtener estado de los servidores VPN."""
-        try:
-            status = {}
-
-            # Estado de WireGuard
-            try:
-                wg_usage = await self.wireguard_client.get_usage()
-                wg_status = ServerStatus(
-                    server_type="wireguard",
-                    is_healthy=True,
-                    total_keys=len(wg_usage),
-                    active_keys=len([u for u in wg_usage if u.get("total", 0) > 0]),
-                    version="1.0.0",
-                    uptime="Unknown",
-                    error_message=None,
-                )
-                status["wireguard"] = wg_status.__dict__
-            except Exception as e:
-                wg_status = ServerStatus(
-                    server_type="wireguard",
-                    is_healthy=False,
-                    total_keys=0,
-                    active_keys=0,
-                    version=None,
-                    uptime=None,
-                    error_message=str(e),
-                )
-                status["wireguard"] = wg_status.__dict__
-                logger.error(f"Error obteniendo estado de WireGuard: {e}")
-
-            # Estado de Outline
-            try:
-                outline_info = await self.outline_client.get_server_info()
-                outline_status = ServerStatus(
-                    server_type="outline",
-                    is_healthy=outline_info.get("is_healthy", False),
-                    total_keys=outline_info.get("total_keys", 0),
-                    active_keys=outline_info.get(
-                        "total_keys", 0
-                    ),  # Outline no distingue activas/inactivas fácilmente
-                    version=outline_info.get("version"),
-                    uptime="Unknown",
-                    error_message=(
-                        outline_info.get("error")
-                        if not outline_info.get("is_healthy")
-                        else None
-                    ),
-                )
-                status["outline"] = outline_status.__dict__
-            except Exception as e:
-                outline_status = ServerStatus(
-                    server_type="outline",
-                    is_healthy=False,
-                    total_keys=0,
-                    active_keys=0,
-                    version=None,
-                    uptime=None,
-                    error_message=str(e),
-                )
-                status["outline"] = outline_status.__dict__
-                logger.error(f"Error obteniendo estado de Outline: {e}")
-
-            return status
-
-        except Exception as e:
-            logger.error(f"Error obteniendo estado de servidores: {e}")
-            return {}
-
-    async def get_key_usage_stats(self, key_id: str) -> Dict:
-        """Obtener estadísticas de uso de una clave."""
-        try:
-            key = await self.key_repository.get_key(key_id)
-            if not key:
-                return {"data_used": 0, "server_status": "not_found"}
-
-            data_used = 0
-            server_status = "unknown"
-
-            if key.key_type.lower() == "wireguard":
-                try:
-                    metrics = await self.wireguard_client.get_peer_metrics(
-                        key.external_id
-                    )
-                    data_used = metrics.get("transfer_total", 0)
-                    server_status = "active" if data_used > 0 else "inactive"
-                except Exception as e:
-                    logger.error(
-                        f"Error obteniendo métricas WireGuard para {key_id}: {e}"
-                    )
-                    server_status = "error"
-
-            elif key.key_type.lower() == "outline":
-                try:
-                    metrics = await self.outline_client.get_key_usage(key_id)
-                    data_used = metrics.get("bytes", 0)
-                    server_status = "active" if data_used > 0 else "inactive"
-                except Exception as e:
-                    logger.error(
-                        f"Error obteniendo métricas Outline para {key_id}: {e}"
-                    )
-                    server_status = "error"
-
-            return {
-                "data_used": data_used,
-                "server_status": server_status,
-                "last_updated": datetime.now(),
-            }
-
-        except Exception as e:
-            logger.error(f"Error obteniendo estadísticas de uso para {key_id}: {e}")
-            return {"data_used": 0, "server_status": "error"}
-
-    # ============================================
-    # MÉTODOS DE GESTIÓN DE USUARIOS
-    # ============================================
-
-    async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
-        """Obtener información detallada de un usuario."""
-        try:
-            user = await self.user_repository.get_by_id(user_id, user_id)
-            if not user:
-                return None
-
-            user_keys = await self.key_repository.get_user_keys(user_id)
-            active_keys = [k for k in user_keys if k.is_active]
-
-            return {
-                "user_id": user.telegram_id,
-                "username": user.username,
-                "full_name": user.full_name,
-                "status": user.status.value,
-                "role": user.role.value,
-                "total_keys": len(user_keys),
-                "active_keys": len(active_keys),
-                "balance_stars": 0,  # Eliminado del modelo
-                "total_deposited": getattr(user, "referral_credits", 0) or 0,
-                "referral_credits": user.referral_credits,
-                "created_at": user.created_at,
-            }
-        except Exception as e:
-            logger.error(f"Error obteniendo usuario {user_id}: {e}")
-            return None
-
-    async def update_user_status(
-        self, user_id: int, status: str
-    ) -> AdminOperationResult:
-        """Actualizar estado del usuario (ACTIVE, SUSPENDED, BLOCKED)."""
-        try:
-            user = await self.user_repository.get_by_id(user_id, user_id)
-            if not user:
-                return AdminOperationResult(
-                    success=False,
-                    operation="update_user_status",
-                    target_id=str(user_id),
-                    message="Usuario no encontrado",
-                )
-
-            # Validar estado
-            valid_statuses = [s.value for s in UserStatus]
-            if status not in valid_statuses:
-                return AdminOperationResult(
-                    success=False,
-                    operation="update_user_status",
-                    target_id=str(user_id),
-                    message=f"Estado inválido. Válidos: {valid_statuses}",
-                )
-
-            user.status = UserStatus(status)
-            await self.user_repository.update_user(user)
-
-            logger.info(f"Usuario {user_id} actualizado a estado: {status}")
-            return AdminOperationResult(
-                success=True,
-                operation="update_user_status",
-                target_id=str(user_id),
-                message=f"Usuario actualizado a estado: {status}",
-                details={"new_status": status},
-            )
-        except Exception as e:
-            logger.error(f"Error actualizando estado de usuario {user_id}: {e}")
-            return AdminOperationResult(
-                success=False,
-                operation="update_user_status",
-                target_id=str(user_id),
-                message=f"Error: {str(e)}",
-            )
-
-    async def assign_role_to_user(
-        self, user_id: int, role: str, duration_days: Optional[int] = None
-    ) -> AdminOperationResult:
-        """Asignar rol a un usuario."""
-        try:
-            user = await self.user_repository.get_by_id(user_id, user_id)
-            if not user:
-                return AdminOperationResult(
-                    success=False,
-                    operation="assign_role",
-                    target_id=str(user_id),
-                    message="Usuario no encontrado",
-                )
-
-            # Validar rol
-            valid_roles = [r.value for r in UserRole]
-            if role not in valid_roles:
-                return AdminOperationResult(
-                    success=False,
-                    operation="assign_role",
-                    target_id=str(user_id),
-                    message=f"Rol inválido. Válidos: {valid_roles}",
-                )
-
-            user.role = UserRole(role)
-
-            await self.user_repository.update_user(user)
-
-            message = f'Rol "{role}" asignado a usuario {user_id}'
-
-            logger.info(message)
-            return AdminOperationResult(
-                success=True,
-                operation="assign_role",
-                target_id=str(user_id),
-                message=message,
-                details={"role": role},
-            )
-        except Exception as e:
-            logger.error(f"Error asignando rol a usuario {user_id}: {e}")
-            return AdminOperationResult(
-                success=False,
-                operation="assign_role",
-                target_id=str(user_id),
-                message=f"Error: {str(e)}",
-            )
-
-    async def block_user(self, user_id: int) -> AdminOperationResult:
-        """Bloquear un usuario."""
-        return await self.update_user_status(user_id, UserStatus.BLOCKED.value)
-
-    async def unblock_user(self, user_id: int) -> AdminOperationResult:
-        """Desbloquear un usuario."""
-        return await self.update_user_status(user_id, UserStatus.ACTIVE.value)
-
-    async def delete_user(self, user_id: int) -> AdminOperationResult:
-        """Eliminar un usuario y sus claves asociadas."""
-        try:
-            user = await self.user_repository.get_by_id(user_id, user_id)
-            if not user:
-                return AdminOperationResult(
-                    success=False,
-                    operation="delete_user",
-                    target_id=str(user_id),
-                    message="Usuario no encontrado",
-                )
-
-            # Obtener todas las claves del usuario
-            user_keys = await self.key_repository.get_user_keys(user_id)
-
-            # Eliminar todas las claves
-            deleted_keys_count = 0
-            for key in user_keys:
-                try:
-                    result = await self.delete_user_key_complete(key.key_id)
-                    if result["success"]:
-                        deleted_keys_count += 1
-                except Exception as e:
-                    logger.error(f"Error eliminando clave {key.key_id}: {e}")
-
-            # Eliminar el usuario
-            await self.user_repository.delete_user(user_id)
-
-            message = (
-                f"Usuario {user_id} eliminado junto con {deleted_keys_count} claves"
-            )
-            logger.info(message)
-            return AdminOperationResult(
-                success=True,
-                operation="delete_user",
-                target_id=str(user_id),
-                message=message,
-                details={"deleted_keys": deleted_keys_count},
-            )
-        except Exception as e:
-            logger.error(f"Error eliminando usuario {user_id}: {e}")
-            return AdminOperationResult(
-                success=False,
-                operation="delete_user",
-                target_id=str(user_id),
-                message=f"Error: {str(e)}",
-            )
+        return await self._user_service.get_all_users(current_user_id)
 
     async def get_users_paginated(
         self, page: int = 1, per_page: int = 10, current_user_id: int | None = None
     ) -> Dict:
         """Obtener usuarios paginados."""
-        try:
-            if current_user_id is None:
-                current_user_id = 1
-            all_users = await self.user_repository.get_all_users(current_user_id)
-            total_users = len(all_users)
+        return await self._user_service.get_users_paginated(page, per_page, current_user_id)
 
-            # Calcular offset
-            offset = (page - 1) * per_page
-            paginated_users = all_users[offset : offset + per_page]
+    async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
+        """Obtener información detallada de un usuario."""
+        return await self._user_service.get_user_by_id(user_id)
 
-            user_list = []
-            for user in paginated_users:
-                user_keys = await self.key_repository.get_user_keys(user.telegram_id)
-                active_keys = [k for k in user_keys if k.is_active]
+    async def update_user_status(
+        self, user_id: int, status: str
+    ) -> AdminOperationResult:
+        """Actualizar estado del usuario (ACTIVE, SUSPENDED, BLOCKED)."""
+        return await self._user_service.update_user_status(user_id, status)
 
-                user_list.append(
-                    {
-                        "user_id": user.telegram_id,
-                        "username": user.username,
-                        "full_name": user.full_name,
-                        "status": user.status.value,
-                        "role": user.role.value,
-                        "total_keys": len(user_keys),
-                        "active_keys": len(active_keys),
-                        "balance_stars": getattr(user, "referral_credits", 0) or 0,
-                        "created_at": user.created_at.isoformat(),
-                    }
-                )
+    async def assign_role_to_user(
+        self, user_id: int, role: str, duration_days: Optional[int] = None
+    ) -> AdminOperationResult:
+        """Asignar rol a un usuario."""
+        return await self._user_service.assign_role_to_user(user_id, role, duration_days)
 
-            total_pages = (total_users + per_page - 1) // per_page
+    async def block_user(self, user_id: int) -> AdminOperationResult:
+        """Bloquear un usuario."""
+        return await self._user_service.block_user(user_id)
 
-            return {
-                "users": user_list,
-                "total_users": total_users,
-                "page": page,
-                "per_page": per_page,
-                "total_pages": total_pages,
-            }
-        except Exception as e:
-            logger.error(f"Error obteniendo usuarios paginados: {e}")
-            return {
-                "users": [],
-                "total_users": 0,
-                "page": page,
-                "per_page": per_page,
-                "total_pages": 0,
-            }
+    async def unblock_user(self, user_id: int) -> AdminOperationResult:
+        """Desbloquear un usuario."""
+        return await self._user_service.unblock_user(user_id)
+
+    async def delete_user(self, user_id: int) -> AdminOperationResult:
+        """Eliminar un usuario y sus claves asociadas."""
+        return await self._user_service.delete_user(user_id, self._key_service)
 
     # ============================================
-    # MÉTODOS AUXILIARES PARA ESTADÍSTICAS
+    # DELEGACIÓN A AdminKeyService
     # ============================================
 
-    async def _calculate_total_revenue(self) -> float:
-        """
-        Calcula los ingresos totales del sistema.
-        Implementa lógica de negocio para calcular ingresos basados en transacciones.
-        """
-        try:
-            # Obtener todas las transacciones de tipo 'deposit' o similares
-            # que representen ingresos reales
-            deposit_transactions = (
-                await self.payment_repository.get_transactions_by_type("deposit")
-            )
+    async def get_user_keys(self, user_id: int) -> List[Key]:
+        """Obtener todas las claves de un usuario específico."""
+        return await self._key_service.get_user_keys(user_id)
 
-            # Sumar todos los montos de transacciones de ingresos
-            # Asumimos que amount está en la unidad más pequeña (ej: centavos)
-            total_amount = sum(t["amount"] for t in deposit_transactions)
+    async def get_all_keys(self, current_user_id: int) -> List[Dict]:
+        """Obtener todas las claves de todos los usuarios."""
+        return await self._key_service.get_all_keys(current_user_id)
 
-            # Convertir a la unidad monetaria principal (ej: dólares)
-            # Si amount está en centavos, dividimos por 100
-            total_revenue = total_amount / 100.0
+    async def delete_key_from_servers(self, key_id: str, key_type: str) -> bool:
+        """Eliminar una clave de los servidores VPN (WireGuard y Outline)."""
+        return await self._key_service.delete_key_from_servers(key_id, key_type)
 
-            return round(total_revenue, 2)
+    async def delete_key_from_db(self, key_id: str) -> bool:
+        """Eliminar una clave de la base de datos."""
+        return await self._key_service.delete_key_from_db(key_id)
 
-        except Exception as e:
-            logger.error(f"Error calculando ingresos totales: {e}")
-            return 0.00
+    async def delete_user_key_complete(self, key_id: str) -> Dict[str, Any]:
+        """Eliminar completamente una clave (servidores + BD)."""
+        return await self._key_service.delete_user_key_complete(key_id)
 
-    async def _calculate_new_users_today(self, current_user_id: int) -> int:
-        """
-        Calcula la cantidad de nuevos usuarios registrados hoy.
-        """
-        try:
-            all_users = await self.user_repository.get_all_users(current_user_id)
+    async def toggle_key_status(
+        self, key_id: str, active: bool = True
+    ) -> Dict[str, Any]:
+        """Activa o desactiva una llave VPN sin eliminarla."""
+        return await self._key_service.toggle_key_status(key_id, active)
 
-            today = datetime.now(timezone.utc).date()
-            new_users_today = sum(
-                1
-                for user in all_users
-                if user.created_at and user.created_at.date() == today
-            )
+    async def get_key_usage_stats(self, key_id: str) -> Dict:
+        """Obtener estadísticas de uso de una clave."""
+        return await self._key_service.get_key_usage_stats(key_id)
 
-            return new_users_today
+    # ============================================
+    # DELEGACIÓN A AdminServerService
+    # ============================================
 
-        except Exception as e:
-            logger.error(f"Error calculando nuevos usuarios hoy: {e}")
-            return 0
-
-    async def _calculate_keys_created_today(self, current_user_id: int) -> int:
-        """
-        Calcula la cantidad de llaves VPN creadas hoy.
-        """
-        try:
-            all_keys = await self.key_repository.get_all_keys(current_user_id)
-
-            today = datetime.now(timezone.utc).date()
-            keys_created_today = sum(
-                1
-                for key in all_keys
-                if key.created_at and key.created_at.date() == today
-            )
-
-            return keys_created_today
-
-        except Exception as e:
-            logger.error(f"Error calculando llaves creadas hoy: {e}")
-            return 0
+    async def get_server_status(self) -> Dict[str, Dict]:
+        """Obtener estado de los servidores VPN."""
+        return await self._server_service.get_server_status()
 
     async def get_server_stats(self, current_user_id: int) -> Dict:
         """Obtener estadísticas del servidor para el panel admin."""
-        try:
-            users = await self.user_repository.get_all_users(current_user_id)
-            all_keys = await self.key_repository.get_all_keys(current_user_id)
-            server_status = await self.get_server_status()
-
-            total_users = len(users)
-            active_users = sum(
-                1
-                for u in users
-                if getattr(u, "status", "").lower() == "active"
-                or getattr(u, "is_active", False)
-            )
-
-            total_keys = len(all_keys)
-            active_keys = sum(1 for k in all_keys if k.is_active)
-
-            return {
-                "total_users": total_users,
-                "active_users": active_users,
-                "total_keys": total_keys,
-                "active_keys": active_keys,
-                "storage_usage": "N/A",
-                "cpu_usage": "N/A",
-                "network_usage": "N/A",
-                "server_status": server_status,
-            }
-
-        except Exception as e:
-            logger.error(f"Error obteniendo estadísticas del servidor: {e}")
-            return {
-                "total_users": 0,
-                "active_users": 0,
-                "total_keys": 0,
-                "active_keys": 0,
-                "storage_usage": "N/A",
-                "cpu_usage": "N/A",
-                "network_usage": "N/A",
-            }
+        return await self._server_service.get_server_stats(current_user_id)

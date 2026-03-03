@@ -6,14 +6,23 @@ Version: 2.0.0
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from domain.entities.admin import AdminOperationResult
 from domain.entities.vpn_key import VpnKey as Key
 
 
-class IAdminService(ABC):
-    """Interfaz del servicio de administración para gestión de usuarios y claves."""
+class IAdminStatsService(ABC):
+    """Interfaz para servicio de estadísticas administrativas."""
+
+    @abstractmethod
+    async def get_dashboard_stats(self, current_user_id: int) -> Dict:
+        """Genera estadísticas completas para el panel de control administrativo."""
+        pass
+
+
+class IAdminUserService(ABC):
+    """Interfaz para servicio de gestión de usuarios administrativos."""
 
     @abstractmethod
     async def get_all_users(self, current_user_id: int) -> List[Dict]:
@@ -33,16 +42,6 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
-    async def get_user_keys(self, user_id: int) -> List[Key]:
-        """Obtener todas las claves de un usuario específico."""
-        pass
-
-    @abstractmethod
-    async def get_all_keys(self, current_user_id: int) -> List[Dict]:
-        """Obtener todas las claves de todos los usuarios."""
-        pass
-
-    @abstractmethod
     async def update_user_status(
         self, user_id: int, status: str
     ) -> AdminOperationResult:
@@ -50,8 +49,39 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
-    async def delete_user(self, user_id: int) -> AdminOperationResult:
+    async def delete_user(self, user_id: int, **kwargs) -> AdminOperationResult:
         """Eliminar un usuario y sus claves asociadas."""
+        pass
+
+    @abstractmethod
+    async def assign_role_to_user(
+        self, user_id: int, role: str, duration_days: Optional[int] = None
+    ) -> AdminOperationResult:
+        """Asignar rol a un usuario."""
+        pass
+
+    @abstractmethod
+    async def block_user(self, user_id: int) -> AdminOperationResult:
+        """Bloquear un usuario."""
+        pass
+
+    @abstractmethod
+    async def unblock_user(self, user_id: int) -> AdminOperationResult:
+        """Desbloquear un usuario."""
+        pass
+
+
+class IAdminKeyService(ABC):
+    """Interfaz para servicio de gestión de claves administrativas."""
+
+    @abstractmethod
+    async def get_user_keys(self, user_id: int) -> List[Key]:
+        """Obtener todas las claves de un usuario específico."""
+        pass
+
+    @abstractmethod
+    async def get_all_keys(self, current_user_id: int) -> List[Dict]:
+        """Obtener todas las claves de todos los usuarios."""
         pass
 
     @abstractmethod
@@ -65,7 +95,7 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
-    async def delete_user_key_complete(self, key_id: str) -> Dict[str, bool]:
+    async def delete_user_key_complete(self, key_id: str) -> Dict[str, Any]:
         """Eliminar completamente una clave (servidores + BD)."""
         pass
 
@@ -75,21 +105,35 @@ class IAdminService(ABC):
         pass
 
     @abstractmethod
-    async def get_server_status(self) -> Dict[str, Dict]:
-        """Obtener estado de los servidores VPN."""
-        pass
-
-    @abstractmethod
     async def get_key_usage_stats(self, key_id: str) -> Dict:
         """Obtener estadísticas de uso de una clave."""
         pass
 
+
+class IAdminServerService(ABC):
+    """Interfaz para servicio de gestión de servidores administrativos."""
+
     @abstractmethod
-    async def get_dashboard_stats(self, current_user_id: int) -> Dict:
-        """Genera estadísticas completas para el panel de control administrativo."""
+    async def get_server_status(self) -> Dict[str, Dict]:
+        """Obtener estado de los servidores VPN."""
         pass
 
     @abstractmethod
     async def get_server_stats(self, current_user_id: int) -> Dict:
         """Obtener estadísticas del servidor para el panel admin."""
         pass
+
+
+class IAdminService(
+    IAdminStatsService,
+    IAdminUserService,
+    IAdminKeyService,
+    IAdminServerService,
+):
+    """
+    Interfaz combinada del servicio de administración.
+    
+    Mantiene compatibilidad hacia atrás con código existente.
+    Las nuevas implementaciones deben usar las interfaces especializadas.
+    """
+    pass
