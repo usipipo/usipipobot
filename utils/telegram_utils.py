@@ -3,619 +3,74 @@ Telegram Handler Utilities
 
 This module provides Telegram-specific utilities for handlers.
 
+Nota: Este módulo ha sido refactorizado. Las implementaciones se han
+movido a submódulos especializados para mantener archivos bajo 300 líneas:
+- telegram_format_utils.py: Funciones de formato (bytes, fechas, moneda, etc.)
+- telegram_validation_utils.py: Validación y sanitización de texto
+- telegram_callback_utils.py: Helpers de callback data y utilidades generales
+- telegram_message_handler.py: Clase TelegramUtils para manejo seguro de mensajes
+
+Este archivo mantiene las exportaciones para compatibilidad hacia atrás.
+
 Author: uSipipo Team
-Version: 2.0.0 - Enhanced with Telegram Utils
+Version: 3.0.0 - Refactored into sub-modules
 """
 
-import re
-from datetime import datetime
-from typing import Any, Dict, List, Optional
-
-# Telegram-specific imports
-from telegram import Update
-from telegram.error import BadRequest
-from telegram.ext import ContextTypes
-
-from telegram_bot.common.keyboards import CommonKeyboards
-from telegram_bot.common.messages import CommonMessages
-from utils.logger import logger
-
-
-def format_bytes(bytes_count: int) -> str:
-    """
-    Format bytes into human readable format.
-
-    Args:
-        bytes_count: Number of bytes
-
-    Returns:
-        str: Formatted string (e.g., "1.5 GB")
-    """
-    if bytes_count == 0:
-        return "0 B"
-
-    units = ["B", "KB", "MB", "GB", "TB"]
-    unit_index = 0
-    value = float(bytes_count)
-
-    while value >= 1024 and unit_index < len(units) - 1:
-        value /= 1024.0
-        unit_index += 1
-
-    return f"{value:.1f} {units[unit_index]}"
-
-
-def format_datetime(dt: datetime, include_time: bool = True) -> str:
-    """
-    Format datetime in user-friendly format.
-
-    Args:
-        dt: DateTime object
-        include_time: Whether to include time
-
-    Returns:
-        str: Formatted datetime string
-    """
-    if include_time:
-        return dt.strftime("%d/%m/%Y %H:%M")
-    return dt.strftime("%d/%m/%Y")
-
-
-def format_relative_time(dt: datetime) -> str:
-    """
-    Format datetime as relative time (e.g., "hace 2 horas").
-
-    Args:
-        dt: DateTime object
-
-    Returns:
-        str: Relative time string
-    """
-    now = datetime.now()
-    delta = now - dt
-
-    if delta.days > 0:
-        if delta.days == 1:
-            return "ayer"
-        elif delta.days < 7:
-            return f"hace {delta.days} días"
-        elif delta.days < 30:
-            weeks = delta.days // 7
-            return f"hace {weeks} semana{'s' if weeks > 1 else ''}"
-        else:
-            months = delta.days // 30
-            return f"hace {months} mes{'es' if months > 1 else ''}"
-
-    hours = delta.seconds // 3600
-    if hours > 0:
-        return f"hace {hours} hora{'s' if hours > 1 else ''}"
-
-    minutes = (delta.seconds % 3600) // 60
-    if minutes > 0:
-        return f"hace {minutes} minuto{'s' if minutes > 1 else ''}"
-
-    return "ahora mismo"
-
-
-def format_currency(amount: float, currency: str = "USD") -> str:
-    """
-    Format currency amount.
-
-    Args:
-        amount: Amount to format
-        currency: Currency code
-
-    Returns:
-        str: Formatted currency string
-    """
-    symbols = {"USD": "$", "EUR": "€", "GBP": "£", "JPY": "¥"}
-
-    symbol = symbols.get(currency, currency)
-    return f"{symbol}{amount:.2f}"
-
-
-def format_percentage(value: float, total: float) -> str:
-    """
-    Format percentage with progress bar.
-
-    Args:
-        value: Current value
-        total: Total value
-
-    Returns:
-        str: Formatted percentage with progress bar
-    """
-    if total == 0:
-        percentage = 0.0
-    else:
-        percentage = min(100.0, (value / total) * 100)
-
-    # Create progress bar
-    bar_length = 10
-    filled_length = int(bar_length * percentage / 100)
-    bar = "█" * filled_length + "░" * (bar_length - filled_length)
-
-    return f"{bar} {percentage:.1f}%"
-
-
-def sanitize_text(text: str, max_length: int | None = None) -> str:
-    """
-    Sanitize text for Telegram messages.
-
-    Args:
-        text: Text to sanitize
-        max_length: Maximum length (optional)
-
-    Returns:
-        str: Sanitized text
-    """
-    # Remove excessive whitespace
-    text = re.sub(r"\s+", " ", text.strip())
-
-    # Escape markdown special characters if needed
-    # text = text.replace('*', '\\*').replace('_', '\\_').replace('`', '\\`')
-
-    if max_length and len(text) > max_length:
-        text = text[: max_length - 3] + "..."
-
-    return text
-
-
-def validate_phone_number(phone: str) -> bool:
-    """
-    Validate phone number format.
-
-    Args:
-        phone: Phone number string
-
-    Returns:
-        bool: True if valid
-    """
-    # Remove all non-digit characters
-    digits = re.sub(r"\D", "", phone)
-
-    # Check if it has reasonable length (10-15 digits)
-    return 10 <= len(digits) <= 15
-
-
-def validate_email(email: str) -> bool:
-    """
-    Validate email format.
-
-    Args:
-        email: Email string
-
-    Returns:
-        bool: True if valid
-    """
-    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    return re.match(pattern, email) is not None
-
-
-def extract_id_from_callback(callback_data: str, prefix: str) -> Optional[int]:
-    """
-    Extract ID from callback data.
-
-    Args:
-        callback_data: Callback data string
-        prefix: Prefix to look for
-
-    Returns:
-        int or None: Extracted ID
-    """
-    pattern = f"^{prefix}_(\\d+)$"
-    match = re.match(pattern, callback_data)
-
-    if match:
-        return int(match.group(1))
-
-    return None
-
-
-def create_callback_data(prefix: str, *args) -> str:
-    """
-    Create callback data from parts.
-
-    Args:
-        prefix: Prefix for the callback
-        *args: Additional parts
-
-    Returns:
-        str: Callback data string
-    """
-    parts = [prefix] + [str(arg) for arg in args]
-    return "_".join(parts)
-
-
-def parse_callback_data(callback_data: str) -> List[str]:
-    """
-    Parse callback data into parts.
-
-    Args:
-        callback_data: Callback data string
-
-    Returns:
-        list: Parts of the callback data
-    """
-    return callback_data.split("_")
-
-
-def safe_get(dictionary: Dict[str, Any], key: str, default: Any = None) -> Any:
-    """
-    Safely get value from dictionary.
-
-    Args:
-        dictionary: Dictionary to get value from
-        key: Key to look for
-        default: Default value if key not found
-
-    Returns:
-        Any: Value or default
-    """
-    return dictionary.get(key, default)
-
-
-def chunk_list(items: List[Any], chunk_size: int) -> List[List[Any]]:
-    """
-    Split list into chunks.
-
-    Args:
-        items: List to chunk
-        chunk_size: Size of each chunk
-
-    Returns:
-        list: List of chunks
-    """
-    return [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
-
-
-def generate_unique_id() -> str:
-    """
-    Generate a unique ID.
-
-    Returns:
-        str: Unique ID
-    """
-    import uuid
-
-    return str(uuid.uuid4())[:8]
-
-
-def truncate_string(text: str, max_length: int, suffix: str = "...") -> str:
-    """
-    Truncate string to maximum length.
-
-    Args:
-        text: Text to truncate
-        max_length: Maximum length
-        suffix: Suffix to add if truncated
-
-    Returns:
-        str: Truncated string
-    """
-    if len(text) <= max_length:
-        return text
-
-    return text[: max_length - len(suffix)] + suffix
-
-
-def escape_markdown(text: str) -> str:
-    """
-    Escape markdown special characters for Telegram Markdown (legacy).
-
-    For standard Markdown mode, only backticks and backslashes within
-    inline code contexts need escaping. This function maintains compatibility
-    with existing code while supporting the standardized Markdown mode.
-
-    Args:
-        text: Text to escape
-
-    Returns:
-        str: Text safe for Markdown (minimal escaping)
-    """
-    # For standard Markdown, we only need to handle edge cases
-    # Most characters (_, *, [, ], etc.) are only parsed in specific contexts
-    # This function now returns text mostly unchanged for Markdown compatibility
-    if not text:
-        return text
-
-    # Only escape backticks to prevent breaking inline code formatting
-    # and backslashes only when they precede special characters
-    text = text.replace("`", "\\`")
-
-    return text
-
-
-def is_admin(user_id: int) -> bool:
-    """
-    Check if user is admin.
-
-    Args:
-        user_id: User ID to check
-
-    Returns:
-        bool: True if admin
-    """
-    from config import settings
-
-    return user_id == int(settings.ADMIN_ID)
-
-
-def format_user_name(user) -> str:
-    """
-    Format user name for display.
-
-    Args:
-        user: Telegram user object
-
-    Returns:
-        str: Formatted name
-    """
-    if user.full_name:
-        return user.full_name
-    elif user.username:
-        return f"@{user.username}"
-    else:
-        return f"Usuario {user.id}"
-
-
-def calculate_page_bounds(
-    total_items: int, page: int, items_per_page: int = 10
-) -> tuple:
-    """
-    Calculate page bounds for pagination.
-
-    Args:
-        total_items: Total number of items
-        page: Current page (0-based)
-        items_per_page: Items per page
-
-    Returns:
-        tuple: (start_idx, end_idx, total_pages)
-    """
-    total_pages = (total_items + items_per_page - 1) // items_per_page
-    start_idx = page * items_per_page
-    end_idx = min(start_idx + items_per_page, total_items)
-
-    return start_idx, end_idx, total_pages
-
-
-class TelegramUtils:
-    """Telegram-specific utilities for handlers."""
-
-    @staticmethod
-    async def safe_edit_message(
-        query,
-        context: ContextTypes.DEFAULT_TYPE,
-        text: str,
-        reply_markup=None,
-        parse_mode: Optional[str] = None,
-    ) -> bool:
-        """
-        Safely edit message with multiple fallback strategies.
-
-        This enhanced version integrates with CommonMessages and CommonKeyboards
-        for consistent error handling and navigation.
-
-        Args:
-            query: Callback query object
-            context: Application context
-            text: Message text
-            reply_markup: Message keyboard markup
-            parse_mode: Parse mode (Markdown, HTML, etc.)
-
-        Returns:
-            bool: True if successful, False if failed
-        """
-        try:
-            await query.edit_message_text(
-                text=text, reply_markup=reply_markup, parse_mode=parse_mode
-            )
-            return True
-        except BadRequest as e:
-            err = str(e)
-            logger.warning(f"safe_edit_message: edit failed: {err}")
-
-            err_lower = err.lower()
-
-            # Handle "no text in message" error - send new message instead
-            if "there is no text in the message" in err_lower:
-                logger.warning(
-                    "safe_edit_message: message has no text, sending new message"
-                )
-                try:
-                    await context.bot.send_message(
-                        chat_id=query.message.chat.id,
-                        text=text,
-                        reply_markup=reply_markup,
-                        parse_mode=parse_mode,
-                    )
-                    return True
-                except Exception as ex:
-                    logger.error(f"safe_edit_message: send_message fallback failed: {ex}")
-                    return False
-
-            # Handle "message not modified" - not an error, just return True
-            if "message is not modified" in err_lower:
-                logger.debug("safe_edit_message: message not modified (same content)")
-                return True
-
-            # If the error is due to entity parsing, retry without parse_mode
-            if "can't parse entities" in err_lower or (
-                "character" in err_lower and "reserved" in err_lower
-            ):
-                try:
-                    await query.edit_message_text(text=text, reply_markup=reply_markup)
-                    return True
-                except BadRequest as e2:
-                    logger.warning(
-                        f"safe_edit_message: retry without parse_mode failed: {e2}"
-                    )
-
-            try:
-                # If the message has caption, try to edit caption
-                if getattr(query.message, "caption", None) is not None:
-                    await query.edit_message_caption(
-                        caption=text, reply_markup=reply_markup, parse_mode=parse_mode
-                    )
-                else:
-                    # Send new message as fallback
-                    await context.bot.send_message(
-                        chat_id=query.message.chat.id,
-                        text=text,
-                        reply_markup=reply_markup,
-                        parse_mode=parse_mode,
-                    )
-                return True
-            except BadRequest as ex:
-                # If the fallback failed due to parsing errors, retry without parse_mode
-                if "can't parse entities" in str(ex).lower() or (
-                    "character" in str(ex) and "reserved" in str(ex)
-                ):
-                    try:
-                        await context.bot.send_message(
-                            chat_id=query.message.chat.id,
-                            text=text,
-                            reply_markup=reply_markup,
-                        )
-                        return True
-                    except Exception as ex2:
-                        logger.error(f"safe_edit_message fallback failed: {ex2}")
-                else:
-                    logger.error(f"safe_edit_message fallback failed: {ex}")
-                return False
-        except Exception as e:
-            logger.error(f"safe_edit_message: unexpected error: {e}")
-            return False
-
-    @staticmethod
-    async def safe_answer_query(query) -> bool:
-        """
-        Safely answer callback query.
-
-        Args:
-            query: Callback query object
-
-        Returns:
-            bool: True if successful, False if failed
-        """
-        if query is None:
-            return False
-
-        try:
-            await query.answer()
-            return True
-        except Exception as e:
-            logger.warning(f"safe_answer_query: failed to answer: {e}")
-            return False
-
-    @staticmethod
-    def get_user_id(update: Update) -> Optional[int]:
-        """
-        Get user ID from update.
-
-        Args:
-            update: Telegram Update object
-
-        Returns:
-            Optional[int]: User ID or None if cannot be obtained
-        """
-        try:
-            return update.effective_user.id if update.effective_user else None
-        except Exception as e:
-            logger.error(f"get_user_id: error getting user ID: {e}")
-            return None
-
-    @staticmethod
-    def get_chat_id(update: Update) -> Optional[int]:
-        """
-        Get chat ID from update.
-
-        Args:
-            update: Telegram Update object
-
-        Returns:
-            Optional[int]: Chat ID or None if cannot be obtained
-        """
-        try:
-            return update.effective_chat.id if update.effective_chat else None
-        except Exception as e:
-            logger.error(f"get_chat_id: error getting chat ID: {e}")
-            return None
-
-    @staticmethod
-    async def validate_callback_query(
-        query, context: ContextTypes.DEFAULT_TYPE, update: Update
-    ) -> bool:
-        """
-        Validate callback query and handle errors.
-
-        This enhanced version uses CommonMessages and CommonKeyboards for
-        consistent error handling and navigation.
-
-        Args:
-            query: Callback query object to validate
-            context: Application context
-            update: Telegram Update object
-
-        Returns:
-            bool: True if query is valid, False if None
-        """
-        if query is None:
-            logger.error("Error: query es None")
-            try:
-                chat_id = update.effective_chat.id if update.effective_chat else None
-                if chat_id is None:
-                    return False
-                await context.bot.send_message(
-                    chat_id=chat_id,
-                    text=CommonMessages.Error.SYSTEM_ERROR,
-                    reply_markup=CommonKeyboards.back_to_main_menu(),
-                )
-            except Exception as e:
-                logger.error(f"Error al enviar mensaje de fallback: {e}")
-            return False
-        return True
-
-    @staticmethod
-    async def handle_generic_error(
-        context: ContextTypes.DEFAULT_TYPE,
-        update: Update,
-        error: Exception,
-        custom_message: Optional[str] = None,
-    ) -> bool:
-        """
-        Handle generic errors consistently.
-
-        This enhanced version uses CommonMessages and CommonKeyboards for
-        standardized error responses.
-
-        Args:
-            context: Application context
-            update: Telegram Update object
-            error: Exception that occurred
-            custom_message: Optional custom error message
-
-        Returns:
-            bool: True if successful, False if failed
-        """
-        try:
-            chat_id = TelegramUtils.get_chat_id(update)
-            if chat_id is None:
-                logger.error(f"handle_generic_error: cannot get chat_id")
-                return False
-
-            error_text = custom_message or str(error)
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=CommonMessages.Error.SYSTEM_ERROR,
-                reply_markup=CommonKeyboards.back_to_main_menu(),
-            )
-            return True
-        except Exception as e:
-            logger.error(f"handle_generic_error: failed to handle error: {e}")
-            return False
-
-
-# Create TelegramHandlerUtils as an alias for backward compatibility
-TelegramHandlerUtils = TelegramUtils
+# Re-exportar todo desde los submódulos para mantener compatibilidad
+from utils.telegram_format_utils import (
+    format_bytes,
+    format_currency,
+    format_datetime,
+    format_percentage,
+    format_relative_time,
+    format_user_name,
+)
+from utils.telegram_validation_utils import (
+    escape_markdown,
+    sanitize_text,
+    truncate_string,
+    validate_email,
+    validate_phone_number,
+)
+from utils.telegram_callback_utils import (
+    calculate_page_bounds,
+    chunk_list,
+    create_callback_data,
+    extract_id_from_callback,
+    generate_unique_id,
+    is_admin,
+    parse_callback_data,
+    safe_get,
+)
+from utils.telegram_message_handler import (
+    TelegramHandlerUtils,
+    TelegramUtils,
+)
+
+__all__ = [
+    # Format utilities
+    "format_bytes",
+    "format_datetime",
+    "format_relative_time",
+    "format_currency",
+    "format_percentage",
+    "format_user_name",
+    # Validation utilities
+    "sanitize_text",
+    "validate_phone_number",
+    "validate_email",
+    "escape_markdown",
+    "truncate_string",
+    # Callback & general utilities
+    "extract_id_from_callback",
+    "create_callback_data",
+    "parse_callback_data",
+    "safe_get",
+    "chunk_list",
+    "generate_unique_id",
+    "is_admin",
+    "calculate_page_bounds",
+    # Telegram message handler
+    "TelegramUtils",
+    "TelegramHandlerUtils",
+]
