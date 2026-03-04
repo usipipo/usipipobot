@@ -36,7 +36,7 @@ async def client():
     mock_user.max_keys = 2
 
     with patch(
-        "miniapp.router.PostgresUserRepository"
+        "miniapp.routes_payments.PostgresUserRepository"
     ) as mock_repo_class:
         mock_repo = AsyncMock()
         mock_repo.get_by_id.return_value = mock_user
