@@ -5,8 +5,6 @@ Author: uSipipo Team
 Version: 2.0.0 - Feature-based architecture
 """
 
-from datetime import datetime, timezone
-
 from utils.message_separators import (
     MessageSeparatorBuilder,
     TELEGRAM_MOBILE_WIDTH,
@@ -317,13 +315,14 @@ class UserManagementMessages:
             key_slots = _format_key_slots(keys_used, keys_total)
 
             date_display = f"{join_date} ({days_since_join}d)"
+            status_line = f"{status_icon} {status}"
 
             return (
                 f"┌──────────────────────────┐\n"
                 f"│ 👤 {name[:18]:<18} │\n"
                 f"│ 🆔 `{user_id}`{' ' * (18 - len(str(user_id)))}│\n"
                 f"│ 📅 {date_display}{' ' * (16 - len(date_display))}│\n"
-                f"│ 🔰 {status_icon} {status}{' ' * (15 - len(f'{status_icon} {status}'))}│\n"
+                f"│ 🔰 {status_line}{' ' * (15 - len(status_line))}│\n"
                 f"└──────────────────────────┘\n"
                 f"\n"
                 f"📊 *DATA METRICS*\n"
