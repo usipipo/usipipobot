@@ -16,6 +16,10 @@ class ITicketRepository(Protocol):
         """Obtiene un ticket por su ID."""
         ...
 
+    async def get_by_simple_id(self, simple_id: int) -> Optional[Ticket]:
+        """Obtiene un ticket por su ID simplificado (int)."""
+        ...
+
     async def get_by_user(self, user_id: int) -> List[Ticket]:
         """Obtiene todos los tickets de un usuario."""
         ...

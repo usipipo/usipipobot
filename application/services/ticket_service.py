@@ -72,6 +72,13 @@ class TicketService:
         messages = await self.ticket_repo.get_messages(ticket_id)
         return (ticket, messages)
 
+    async def get_ticket_by_simple_id(
+        self, 
+        simple_id: int
+    ) -> Optional[Ticket]:
+        """Obtiene ticket por ID simplificado."""
+        return await self.ticket_repo.get_by_simple_id(simple_id)
+
     async def add_user_message(
         self,
         ticket_id: UUID,
@@ -154,14 +161,32 @@ class TicketService:
         ticket = await self.ticket_repo.get_by_id(ticket_id)
         if not ticket:
             return None
-        
+
         # User can only close their own tickets
         if not is_admin and ticket.user_id != user_id:
             return None
-        
+
         ticket.update_status(TicketStatus.CLOSED, user_id if is_admin else None)
         updated = await self.ticket_repo.update(ticket)
         logger.info(f"Ticket {ticket.ticket_number} closed by {'admin' if is_admin else 'user'} {user_id}")
+        return updated
+
+    async def reopen_ticket(
+        self,
+        ticket_id: UUID,
+        admin_id: int
+    ) -> Optional[Ticket]:
+        """Reabre un ticket cerrado (solo admin)."""
+        ticket = await self.ticket_repo.get_by_id(ticket_id)
+        if not ticket:
+            return None
+
+        if ticket.status != TicketStatus.CLOSED:
+            return None
+
+        ticket.update_status(TicketStatus.OPEN)
+        updated = await self.ticket_repo.update(ticket)
+        logger.info(f"Ticket {ticket.ticket_number} reopened by admin {admin_id}")
         return updated
 
     async def get_pending_tickets(self) -> List[Ticket]:

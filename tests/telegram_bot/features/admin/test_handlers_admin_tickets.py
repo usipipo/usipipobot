@@ -12,7 +12,7 @@ from telegram import Update, User, CallbackQuery, Message
 from telegram.ext import ContextTypes
 
 from domain.entities.ticket import Ticket, TicketCategory, TicketPriority, TicketStatus
-from telegram_bot.features.admin.handlers_admin import AdminHandler, VIEWING_TICKETS
+from telegram_bot.features.admin.handlers_admin import AdminHandler, VIEWING_TICKETS, REPLYING_TO_TICKET
 
 
 @pytest.fixture
@@ -139,7 +139,7 @@ class TestTicketReply:
 
         result = await admin_handler.start_ticket_reply(mock_update, mock_context)
 
-        assert result == VIEWING_TICKETS
+        assert result == REPLYING_TO_TICKET
         assert mock_context.user_data.get("admin_replying_ticket_id") == 12345
 
     @pytest.mark.asyncio
