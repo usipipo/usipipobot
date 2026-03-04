@@ -13,6 +13,7 @@ from fastapi import Depends, Form, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from config import settings
+from domain.entities.user import User, UserRole
 from infrastructure.persistence.database import get_session_context
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from miniapp.services.miniapp_auth import (
@@ -33,9 +34,31 @@ class PaymentRequest(BaseModel):
 class MiniAppContext:
     """Contexto de autenticación para Mini App."""
 
-    def __init__(self, user: TelegramUser, query_id: Optional[str] = None):
+    def __init__(
+        self,
+        user: TelegramUser,
+        db_user: Optional[User] = None,
+        query_id: Optional[str] = None
+    ):
         self.user = user
+        self.db_user = db_user
         self.query_id = query_id
+
+    @property
+    def is_admin(self) -> bool:
+        """
+        Verifica si el usuario es administrador.
+
+        Checks:
+        1. User's role in database (if db_user is available)
+        2. Fallback to ADMIN_ID from settings
+        """
+        # Check role from database first
+        if self.db_user and self.db_user.role == UserRole.ADMIN:
+            return True
+
+        # Fallback to ADMIN_ID check
+        return self.user.id == int(settings.ADMIN_ID)
 
 
 async def get_current_user(
@@ -67,19 +90,26 @@ async def get_current_user(
     if not result.success or not result.user:
         raise HTTPException(status_code=401, detail=f"No autorizado: {result.error}")
 
-    # CRITICAL: Verify user is registered in bot first
+    # CRITICAL: Verify user is registered in bot first and load DB user
     # MiniApp only works for users who have already used /start in the bot
     try:
         async with get_session_context() as session:
             user_repo = PostgresUserRepository(session)
-            existing_user = await user_repo.get_by_id(result.user.id, result.user.id)
+            db_user = await user_repo.get_by_id(result.user.id, result.user.id)
 
-            if not existing_user:
+            if not db_user:
                 logger.warning(
                     f"User {result.user.id} tried to access MiniApp but is not registered. "
                     f"They must use /start in the bot first."
                 )
                 raise HTTPException(status_code=403, detail="USER_NOT_REGISTERED")
+
+            # Pass db_user to context so is_admin can check role from database
+            return MiniAppContext(
+                user=result.user,
+                db_user=db_user,
+                query_id=result.query_id
+            )
     except HTTPException:
         raise
     except Exception as e:
@@ -89,12 +119,10 @@ async def get_current_user(
             detail="Error verificando usuario. Por favor intenta nuevamente.",
         )
 
-    return MiniAppContext(user=result.user, query_id=result.query_id)
-
 
 async def require_admin(ctx: MiniAppContext = Depends(get_current_user)) -> MiniAppContext:
     """Dependencia que requiere que el usuario sea administrador."""
-    if ctx.user.id != int(settings.ADMIN_ID):
+    if not ctx.is_admin:
         logger.warning(f"🚫 User {ctx.user.id} attempted admin action without privileges")
         raise HTTPException(status_code=403, detail="Acceso denegado: solo administradores")
     return ctx
