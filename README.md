@@ -3,14 +3,14 @@
 <div align="center">
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat&logo=postgresql&logoColor=white)]
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Python Telegram Bot](https://img.shields.io/badge/python--telegram--bot-21+-2CA5E0?style=flat&logo=telegram&logoColor=white)]
+[![Python Telegram Bot](https://img.shields.io/badge/python--telegram--bot-21+-2CA5E0?style=flat&logo=telegram&logoColor=white)](https://github.com/python-telegram-bot/python-telegram-bot)
 [![CodeQL](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml)
 [![Docker Build](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml)
-[![Tests](https://img.shields.io/badge/Tests-42%20passing-success?style=flat)]
-[![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-purple?style=flat)]
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?style=flat&logo=fastapi&logoColor=white)]
+[![Tests](https://img.shields.io/badge/Tests-42%20passing-success?style=flat)](#testing)
+[![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-purple?style=flat)](#arquitectura)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 
 > Telegram Bot + Mini App para gestión de claves VPN (WireGuard & Outline) con pagos integrados.
 
