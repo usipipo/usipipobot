@@ -17,6 +17,7 @@ from utils.logger import logger
 
 ADMIN_MENU = 0
 VIEWING_TICKETS = 9
+REPLYING_TO_TICKET = 12
 
 
 class TicketsActionsMixin:
@@ -153,7 +154,7 @@ class TicketsActionsMixin:
             reply_markup=TicketKeyboards.cancel_action(),
             parse_mode="Markdown",
         )
-        return VIEWING_TICKETS
+        return REPLYING_TO_TICKET
 
     @admin_required
     async def send_ticket_reply(
@@ -202,13 +203,42 @@ class TicketsActionsMixin:
             )
             return VIEWING_TICKETS
 
-        await update.message.reply_text(
-            "✅ *Respuesta enviada*\n\n"
-            "Tu respuesta ha sido registrada. "
-            "El usuario será notificado.",
-            reply_markup=TicketKeyboards.back_to_menu(),
-            parse_mode="Markdown",
-        )
+        try:
+            from application.services.ticket_service import TicketService
+            ticket_service = TicketService(self.service.ticket_repo)
+
+            # Get ticket by simple ID
+            ticket = await ticket_service.get_ticket_by_simple_id(ticket_id_simple)
+            if not ticket:
+                await update.message.reply_text(
+                    "❌ *Error: Ticket no encontrado*",
+                    reply_markup=TicketKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+                return VIEWING_TICKETS
+
+            # Add admin response
+            await ticket_service.add_admin_response(
+                ticket_id=ticket.id,
+                admin_id=admin_id,
+                message=message_text
+            )
+
+            await update.message.reply_text(
+                "✅ *Respuesta enviada*\n\n"
+                "Tu respuesta ha sido registrada. "
+                "El usuario será notificado.",
+                reply_markup=TicketKeyboards.back_to_menu(),
+                parse_mode="Markdown",
+            )
+
+        except Exception as e:
+            logger.error(f"Error sending ticket reply: {e}")
+            await update.message.reply_text(
+                "❌ *Error al enviar respuesta*\nIntenta nuevamente.",
+                reply_markup=TicketKeyboards.back_to_menu(),
+                parse_mode="Markdown",
+            )
 
         context.user_data.pop("admin_replying_ticket_id", None)
         return VIEWING_TICKETS
@@ -237,16 +267,60 @@ class TicketsActionsMixin:
             )
             return VIEWING_TICKETS
 
-        await self._safe_edit_message(
-            query,
-            context,
-            text=(
-                "🔒 *Ticket Cerrado*\n\n"
-                "El ticket ha sido cerrado exitosamente."
-            ),
-            reply_markup=TicketKeyboards.back_to_menu(),
-            parse_mode="Markdown",
-        )
+        try:
+            from application.services.ticket_service import TicketService
+            ticket_service = TicketService(self.service.ticket_repo)
+
+            # Get ticket by simple ID
+            ticket = await ticket_service.get_ticket_by_simple_id(ticket_id_simple)
+            if not ticket:
+                await self._safe_edit_message(
+                    query,
+                    context,
+                    text="❌ *Error: Ticket no encontrado*",
+                    reply_markup=TicketKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+                return VIEWING_TICKETS
+
+            # Close ticket
+            admin_id = update.effective_user.id if update.effective_user else 0
+            result = await ticket_service.close_ticket(
+                ticket_id=ticket.id,
+                user_id=admin_id,
+                is_admin=True
+            )
+
+            if result:
+                await self._safe_edit_message(
+                    query,
+                    context,
+                    text=(
+                        f"🔒 *Ticket Cerrado*\n\n"
+                        f"Ticket *{ticket.ticket_number}* ha sido cerrado exitosamente."
+                    ),
+                    reply_markup=TicketKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+            else:
+                await self._safe_edit_message(
+                    query,
+                    context,
+                    text="❌ *Error: No se pudo cerrar el ticket*",
+                    reply_markup=TicketKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+
+        except Exception as e:
+            logger.error(f"Error closing ticket: {e}")
+            await self._safe_edit_message(
+                query,
+                context,
+                text="❌ *Error al cerrar ticket*\nIntenta nuevamente.",
+                reply_markup=TicketKeyboards.back_to_menu(),
+                parse_mode="Markdown",
+            )
+
         return VIEWING_TICKETS
 
     @admin_required
@@ -273,14 +347,57 @@ class TicketsActionsMixin:
             )
             return VIEWING_TICKETS
 
-        await self._safe_edit_message(
-            query,
-            context,
-            text=(
-                "🔄 *Ticket Reabierto*\n\n"
-                "El ticket ha sido reabierto exitosamente."
-            ),
-            reply_markup=TicketKeyboards.back_to_menu(),
-            parse_mode="Markdown",
-        )
+        try:
+            from application.services.ticket_service import TicketService
+            ticket_service = TicketService(self.service.ticket_repo)
+
+            # Get ticket by simple ID
+            ticket = await ticket_service.get_ticket_by_simple_id(ticket_id_simple)
+            if not ticket:
+                await self._safe_edit_message(
+                    query,
+                    context,
+                    text="❌ *Error: Ticket no encontrado*",
+                    reply_markup=TicketKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+                return VIEWING_TICKETS
+
+            # Reopen ticket
+            admin_id = update.effective_user.id if update.effective_user else 0
+            result = await ticket_service.reopen_ticket(
+                ticket_id=ticket.id,
+                admin_id=admin_id
+            )
+
+            if result:
+                await self._safe_edit_message(
+                    query,
+                    context,
+                    text=(
+                        f"🔄 *Ticket Reabierto*\n\n"
+                        f"Ticket *{ticket.ticket_number}* ha sido reabierto exitosamente."
+                    ),
+                    reply_markup=TicketKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+            else:
+                await self._safe_edit_message(
+                    query,
+                    context,
+                    text="❌ *Error: No se pudo reabrir el ticket*\nSolo los tickets cerrados pueden reabrirse.",
+                    reply_markup=TicketKeyboards.back_to_menu(),
+                    parse_mode="Markdown",
+                )
+
+        except Exception as e:
+            logger.error(f"Error reopening ticket: {e}")
+            await self._safe_edit_message(
+                query,
+                context,
+                text="❌ *Error al reabrir ticket*\nIntenta nuevamente.",
+                reply_markup=TicketKeyboards.back_to_menu(),
+                parse_mode="Markdown",
+            )
+
         return VIEWING_TICKETS
