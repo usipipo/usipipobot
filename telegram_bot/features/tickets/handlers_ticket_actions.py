@@ -5,6 +5,8 @@ Author: uSipipo Team
 Version: 2.0.0 - Ticket Actions Handlers
 """
 
+from uuid import UUID
+
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -31,6 +33,10 @@ class TicketActionsMixin:
         await self._safe_answer_query(query)
 
         callback_data = query.data
+        if not callback_data:
+            logger.error("❌ No callback data in reply query")
+            return TICKET_MENU
+
         try:
             ticket_id_simple = int(callback_data.replace("tickets_reply_", ""))
         except (ValueError, AttributeError):
@@ -43,11 +49,45 @@ class TicketActionsMixin:
             )
             return TICKET_MENU
 
-        logger.info(f"🎫 User {user_id} starting reply to ticket {ticket_id_simple}")
+        # Obtener UUID desde el mapeo
+        if not context.user_data:
+            await self._safe_edit_message(
+                query,
+                context,
+                text=TicketMessages.Error.TICKET_NOT_FOUND,
+                reply_markup=TicketKeyboards.back_to_menu(),
+            )
+            return TICKET_MENU
+
+        ticket_id_map = context.user_data.get("ticket_id_map")
+        if not ticket_id_map or str(ticket_id_simple) not in ticket_id_map:
+            logger.error(f"❌ Ticket ID {ticket_id_simple} not found in mapping for reply")
+            await self._safe_edit_message(
+                query,
+                context,
+                text=TicketMessages.Error.TICKET_NOT_FOUND,
+                reply_markup=TicketKeyboards.back_to_menu(),
+            )
+            return TICKET_MENU
+
+        try:
+            ticket_id = UUID(ticket_id_map[str(ticket_id_simple)])
+        except (ValueError, KeyError) as e:
+            logger.error(f"❌ Error converting ticket ID for reply: {e}")
+            await self._safe_edit_message(
+                query,
+                context,
+                text=TicketMessages.Error.TICKET_NOT_FOUND,
+                reply_markup=TicketKeyboards.back_to_menu(),
+            )
+            return TICKET_MENU
+
+        logger.info(f"🎫 User {user_id} starting reply to ticket {ticket_id} (simple_id: {ticket_id_simple})")
 
         if context.user_data is None:
             context.user_data = {}
         context.user_data["replying_ticket_id"] = ticket_id_simple
+        context.user_data["replying_ticket_uuid"] = str(ticket_id)
 
         try:
             message = (
@@ -87,7 +127,9 @@ class TicketActionsMixin:
             return TICKET_MENU
 
         ticket_id_simple = context.user_data.get("replying_ticket_id")
-        if not ticket_id_simple:
+        ticket_uuid_str = context.user_data.get("replying_ticket_uuid")
+
+        if not ticket_id_simple or not ticket_uuid_str:
             await update.message.reply_text(
                 "❌ Error: No se encontró el ticket. Intenta nuevamente.",
                 reply_markup=TicketKeyboards.back_to_menu(),
@@ -108,9 +150,14 @@ class TicketActionsMixin:
             )
             return TICKET_REPLYING
 
-        logger.info(f"🎫 User {user_id} sending reply to ticket {ticket_id_simple}")
+        logger.info(f"🎫 User {user_id} sending reply to ticket {ticket_uuid_str}")
 
         try:
+            # Usar el UUID real para la operación en DB
+            ticket_id = UUID(ticket_uuid_str)
+            # TODO: Llamar a service para guardar respuesta real
+            # await self.ticket_service.add_message(ticket_id, user_id, message_text)
+
             await update.message.reply_text(
                 "✅ *Respuesta enviada*\n\n"
                 "Tu mensaje ha sido agregado al ticket. "
@@ -120,6 +167,7 @@ class TicketActionsMixin:
             )
 
             context.user_data.pop("replying_ticket_id", None)
+            context.user_data.pop("replying_ticket_uuid", None)
 
             return TICKET_MENU
 
@@ -144,6 +192,10 @@ class TicketActionsMixin:
         await self._safe_answer_query(query)
 
         callback_data = query.data
+        if not callback_data:
+            logger.error("❌ No callback data in close query")
+            return TICKET_MENU
+
         try:
             ticket_id_simple = int(callback_data.replace("tickets_close_", ""))
         except (ValueError, AttributeError):
@@ -156,9 +208,46 @@ class TicketActionsMixin:
             )
             return TICKET_MENU
 
-        logger.info(f"🎫 User {user_id} closing ticket {ticket_id_simple}")
+        # Obtener UUID desde el mapeo
+        if not context.user_data:
+            await self._safe_edit_message(
+                query,
+                context,
+                text=TicketMessages.Error.TICKET_NOT_FOUND,
+                reply_markup=TicketKeyboards.back_to_menu(),
+            )
+            return TICKET_MENU
+
+        ticket_id_map = context.user_data.get("ticket_id_map")
+        if not ticket_id_map or str(ticket_id_simple) not in ticket_id_map:
+            logger.error(f"❌ Ticket ID {ticket_id_simple} not found in mapping for close")
+            await self._safe_edit_message(
+                query,
+                context,
+                text=TicketMessages.Error.TICKET_NOT_FOUND,
+                reply_markup=TicketKeyboards.back_to_menu(),
+            )
+            return TICKET_MENU
 
         try:
+            ticket_id = UUID(ticket_id_map[str(ticket_id_simple)])
+        except (ValueError, KeyError) as e:
+            logger.error(f"❌ Error converting ticket ID for close: {e}")
+            await self._safe_edit_message(
+                query,
+                context,
+                text=TicketMessages.Error.TICKET_NOT_FOUND,
+                reply_markup=TicketKeyboards.back_to_menu(),
+            )
+            return TICKET_MENU
+
+        logger.info(f"🎫 User {user_id} closing ticket {ticket_id} (simple_id: {ticket_id_simple})")
+
+        try:
+            # Usar UUID real para cerrar ticket en DB
+            # TODO: Llamar a service para cerrar ticket real
+            # await self.ticket_service.close_ticket(ticket_id, user_id)
+
             await self._safe_edit_message(
                 query,
                 context,

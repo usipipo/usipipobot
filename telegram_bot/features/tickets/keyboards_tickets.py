@@ -8,6 +8,7 @@ Version: 3.0.0 - Tickets System
 from typing import List, Optional
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ContextTypes
 
 from domain.entities.ticket import Ticket, TicketStatus
 
@@ -82,18 +83,31 @@ class TicketKeyboards:
     @staticmethod
     def tickets_list(
         tickets: List[Ticket],
+        context: ContextTypes.DEFAULT_TYPE,
         page: int = 0,
         per_page: int = 5,
     ) -> InlineKeyboardMarkup:
         """Lista paginada de tickets del usuario."""
         keyboard = []
 
+        # Crear mapeo de IDs simplificados a UUIDs
+        if context.user_data is None:
+            context.user_data = {}
+
+        ticket_id_map = {}
+
         # Botones para cada ticket
-        for ticket in tickets:
+        for idx, ticket in enumerate(tickets):
+            simple_id = idx  # 0, 1, 2...
+            ticket_id_map[str(simple_id)] = str(ticket.id)  # Guardar como string
+
             status_emoji = TicketKeyboards._get_status_emoji(ticket.status)
-            btn_text = f"{status_emoji} #{ticket.id}: {ticket.subject[:20]}"
-            callback = f"tickets_view_{ticket.id}"
+            btn_text = f"{status_emoji} #{simple_id}: {ticket.subject[:20]}"
+            callback = f"tickets_view_{simple_id}"  # Usar simple_id
             keyboard.append([InlineKeyboardButton(btn_text, callback_data=callback)])
+
+        # Almacenar mapeo en contexto
+        context.user_data["ticket_id_map"] = ticket_id_map
 
         # Botones de paginación
         total_tickets = len(tickets)
@@ -202,7 +216,7 @@ class TicketKeyboards:
         # Botones para cada ticket
         for ticket in tickets:
             status_emoji = TicketKeyboards._get_status_emoji(ticket.status)
-            user_info = f"@{ticket.user_username}" if ticket.user_username else f"User-{ticket.user_id}"
+            user_info = f"User-{ticket.user_id}"
             btn_text = f"{status_emoji} #{ticket.id}: {user_info}"
             callback = f"admin_ticket_{ticket.id}"
             keyboard.append([InlineKeyboardButton(btn_text, callback_data=callback)])
@@ -343,9 +357,8 @@ class TicketKeyboards:
         """Obtiene el emoji correspondiente al estado del ticket."""
         status_emojis = {
             TicketStatus.OPEN: "🟢",
-            TicketStatus.IN_PROGRESS: "🔵",
-            TicketStatus.WAITING_USER: "🟡",
-            TicketStatus.WAITING_ADMIN: "🟠",
+            TicketStatus.RESPONDED: "🔵",
+            TicketStatus.RESOLVED: "🟡",
             TicketStatus.CLOSED: "🔴",
         }
         return status_emojis.get(status, "⚪")
@@ -369,11 +382,12 @@ def confirm_ticket() -> InlineKeyboardMarkup:
 
 def tickets_list(
     tickets: List[Ticket],
+    context: ContextTypes.DEFAULT_TYPE,
     page: int = 0,
     per_page: int = 5,
 ) -> InlineKeyboardMarkup:
     """Lista paginada de tickets del usuario."""
-    return TicketKeyboards.tickets_list(tickets, page, per_page)
+    return TicketKeyboards.tickets_list(tickets, context, page, per_page)
 
 
 def ticket_detail(
