@@ -24,7 +24,7 @@ from application.services.user_profile_service import UserProfileService
 from application.services.vpn_infrastructure_service import VpnInfrastructureService
 from application.services.vpn_service import VpnService
 from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
-from telegram_bot.features.admin.handlers_admin import (
+from telegram_bot.features.admin import (
     get_admin_callback_handlers,
     get_admin_conversation_handler,
     get_admin_handlers,
