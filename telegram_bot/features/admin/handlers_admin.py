@@ -31,6 +31,7 @@ from .handlers_keys_list import VIEWING_KEYS
 from .handlers_keys_actions import VIEWING_KEY_DETAILS, CONFIRMING_KEY_DELETE, KEYS_PER_PAGE
 from .handlers_settings import VIEWING_SETTINGS, VIEWING_MAINTENANCE
 from .handlers_tickets_list import VIEWING_TICKETS
+from .handlers_tickets_actions import REPLYING_TO_TICKET
 
 __all__ = [
     "AdminHandler",
@@ -44,6 +45,7 @@ __all__ = [
     "VIEWING_SETTINGS",
     "VIEWING_MAINTENANCE",
     "VIEWING_TICKETS",
+    "REPLYING_TO_TICKET",
 ]
 
 

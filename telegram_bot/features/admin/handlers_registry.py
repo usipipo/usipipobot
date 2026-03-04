@@ -22,6 +22,7 @@ from .handlers_keys_list import VIEWING_KEYS
 from .handlers_keys_actions import VIEWING_KEY_DETAILS, CONFIRMING_KEY_DELETE
 from .handlers_settings import VIEWING_SETTINGS, VIEWING_MAINTENANCE
 from .handlers_tickets_list import VIEWING_TICKETS
+from .handlers_tickets_actions import REPLYING_TO_TICKET
 
 
 def get_admin_handlers(admin_service: AdminService):
@@ -211,7 +212,12 @@ def get_admin_conversation_handler(
                 CallbackQueryHandler(handler.start_ticket_reply, pattern=r"^admin_ticket_resp_\d+$"),
                 CallbackQueryHandler(handler.close_admin_ticket, pattern=r"^admin_ticket_close_\d+$"),
                 CallbackQueryHandler(handler.reopen_admin_ticket, pattern=r"^admin_ticket_reopen_\d+$"),
+                CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
+                CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
+            ],
+            REPLYING_TO_TICKET: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handler.send_ticket_reply),
+                CallbackQueryHandler(handler.show_tickets_menu, pattern="^admin_tickets_menu$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
