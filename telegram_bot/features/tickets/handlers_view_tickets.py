@@ -42,7 +42,7 @@ class ViewTicketsMixin:
             else:
                 tickets_text = self._format_ticket_list(tickets)
                 message = TicketMessages.List.with_tickets(tickets_text)
-                keyboard = TicketKeyboards.tickets_list(tickets)
+                keyboard = TicketKeyboards.tickets_list(tickets, context)
 
             if query:
                 await self._safe_answer_query(query)
@@ -75,8 +75,8 @@ class ViewTicketsMixin:
 
         callback_data = query.data
         try:
-            ticket_id_str = callback_data.replace("tickets_view_", "")
-            ticket_id = UUID(ticket_id_str)
+            simple_id_str = callback_data.replace("tickets_view_", "")
+            simple_id = int(simple_id_str)
         except (ValueError, AttributeError):
             logger.error(f"❌ Invalid ticket ID in callback: {callback_data}")
             await self._safe_edit_message(
@@ -87,7 +87,41 @@ class ViewTicketsMixin:
             )
             return TICKET_MENU
 
-        logger.info(f"🎫 User {user_id} viewing ticket {ticket_id}")
+        # Obtener UUID desde el mapeo
+        if not context.user_data:
+            logger.error("❌ No user_data available")
+            await self._safe_edit_message(
+                query,
+                context,
+                text=TicketMessages.Error.TICKET_NOT_FOUND,
+                reply_markup=TicketKeyboards.back_to_menu(),
+            )
+            return TICKET_MENU
+
+        ticket_id_map = context.user_data.get("ticket_id_map")
+        if not ticket_id_map or str(simple_id) not in ticket_id_map:
+            logger.error(f"❌ Ticket ID {simple_id} not found in mapping")
+            await self._safe_edit_message(
+                query,
+                context,
+                text=TicketMessages.Error.TICKET_NOT_FOUND,
+                reply_markup=TicketKeyboards.back_to_menu(),
+            )
+            return TICKET_MENU
+
+        try:
+            ticket_id = UUID(ticket_id_map[str(simple_id)])
+        except (ValueError, KeyError) as e:
+            logger.error(f"❌ Error converting ticket ID: {e}")
+            await self._safe_edit_message(
+                query,
+                context,
+                text=TicketMessages.Error.TICKET_NOT_FOUND,
+                reply_markup=TicketKeyboards.back_to_menu(),
+            )
+            return TICKET_MENU
+
+        logger.info(f"🎫 User {user_id} viewing ticket {ticket_id} (simple_id: {simple_id})")
 
         try:
             result = await self.ticket_service.get_ticket_with_messages(ticket_id)
@@ -124,8 +158,12 @@ class ViewTicketsMixin:
             messages_text = self._format_messages(messages)
 
             message = header + info + messages_text
+
+            # Guardar simple_id en contexto para usar en reply/close
+            context.user_data["current_ticket_simple_id"] = simple_id
+
             keyboard = TicketKeyboards.ticket_detail(
-                ticket_id=int(ticket.id.int % 100000000),
+                ticket_id=simple_id,
                 status=ticket.status,
                 can_reply=ticket.status != TicketStatus.CLOSED,
                 can_close=ticket.status != TicketStatus.CLOSED,
