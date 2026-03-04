@@ -3,18 +3,18 @@
 <div align="center">
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat&logo=postgresql&logoColor=white)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat&logo=postgresql&logoColor=white)]
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Python Telegram Bot](https://img.shields.io/badge/python--telegram--bot-21+-2CA5E0?style=flat&logo=telegram&logoColor=white)
+[![Python Telegram Bot](https://img.shields.io/badge/python--telegram--bot-21+-2CA5E0?style=flat&logo=telegram&logoColor=white)]
 [![CodeQL](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml)
 [![Docker Build](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml)
-[![Tests](https://img.shields.io/badge/Tests-42%20passing-success?style=flat)
-[![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-purple?style=flat)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?style=flat&logo=fastapi&logoColor=white)
+[![Tests](https://img.shields.io/badge/Tests-42%20passing-success?style=flat)]
+[![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-purple?style=flat)]
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-009688?style=flat&logo=fastapi&logoColor=white)]
 
 > Telegram Bot + Mini App para gestión de claves VPN (WireGuard & Outline) con pagos integrados.
 
-[Español](#español) · [English](#english) · [Características](#características) · [Arquitectura](#arquitectura) · [Instalación](#instalación) · [Configuración](#configuración)
+[Español](#español) · [Características](#características) · [Arquitectura](#arquitectura) · [Instalación](#instalación) · [Configuración](#configuración)
 
 ---
 
@@ -294,43 +294,6 @@ pytest tests/path/to/test.py::TestClass::test_method
 ### Licencia
 
 Este proyecto está bajo la licencia MIT. Ver [LICENSE](LICENSE) para más detalles.
-
----
-
-<div align="center">
-
-## 🇺🇸 English
-
-</div>
-
-### Overview
-
-**uSipipo VPN Manager** is a complete VPN key management solution combining a Telegram bot with a modern web Mini App.
-
-**Supported Technologies:**
-- 🔐 **WireGuard** - Modern, fast VPN protocol
-- 📊 **Outline** - Shadowsocks-based VPN
-
-**Payment Methods:**
-- ⭐ **Telegram Stars** - Direct payments in Telegram
-- ₿ **Cryptocurrencies** - USDT/BSC via TronDealer
-
-### Quick Start
-
-```bash
-git clone https://github.com/usipipo/usipipobot.git
-cd usipipobot
-python3 -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-cp example.env .env  # Configure your .env
-alembic upgrade head
-python main.py
-```
-
-### Tech Stack
-
-- Python 3.11+ • PostgreSQL 15+ • FastAPI • SQLAlchemy 2.0 (async)
-- python-telegram-bot 21+ • Pydantic v2 • Clean Architecture
 
 ---
 
