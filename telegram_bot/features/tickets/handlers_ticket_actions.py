@@ -155,8 +155,18 @@ class TicketActionsMixin:
         try:
             # Usar el UUID real para la operación en DB
             ticket_id = UUID(ticket_uuid_str)
-            # TODO: Llamar a service para guardar respuesta real
-            # await self.ticket_service.add_message(ticket_id, user_id, message_text)
+
+            # Llamar a service para guardar respuesta real
+            result = await self.ticket_service.add_user_message(
+                ticket_id, user_id, message_text
+            )
+
+            if not result:
+                await update.message.reply_text(
+                    TicketMessages.Error.TICKET_NOT_FOUND,
+                    reply_markup=TicketKeyboards.back_to_menu(),
+                )
+                return TICKET_MENU
 
             await update.message.reply_text(
                 "✅ *Respuesta enviada*\n\n"
@@ -245,8 +255,16 @@ class TicketActionsMixin:
 
         try:
             # Usar UUID real para cerrar ticket en DB
-            # TODO: Llamar a service para cerrar ticket real
-            # await self.ticket_service.close_ticket(ticket_id, user_id)
+            result = await self.ticket_service.close_ticket(ticket_id, user_id)
+
+            if not result:
+                await self._safe_edit_message(
+                    query,
+                    context,
+                    text=TicketMessages.Error.TICKET_NOT_FOUND,
+                    reply_markup=TicketKeyboards.back_to_menu(),
+                )
+                return TICKET_MENU
 
             await self._safe_edit_message(
                 query,
