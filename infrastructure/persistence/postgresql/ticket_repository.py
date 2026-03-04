@@ -71,6 +71,17 @@ class TicketRepository(ITicketRepository):
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
 
+    async def get_by_simple_id(self, simple_id: int) -> Optional[Ticket]:
+        """Obtiene un ticket por su ID simplificado (int)."""
+        result = await self.session.execute(
+            select(TicketModel)
+            .where((func.abs(TicketModel.id.int_value) % 100000000) == simple_id)
+            .order_by(TicketModel.created_at.desc())
+            .limit(1)
+        )
+        model = result.scalar_one_or_none()
+        return self._to_entity(model) if model else None
+
     async def get_by_user(self, user_id: int) -> List[Ticket]:
         """Obtiene todos los tickets de un usuario."""
         result = await self.session.execute(
