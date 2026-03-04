@@ -27,6 +27,10 @@ from application.services.consumption_vpn_integration_service import (
 from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
+from application.services.ticket_notification_service import (
+    TicketNotificationService,
+)
+from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_infrastructure_service import (
     VpnInfrastructureService,
@@ -44,6 +48,7 @@ from domain.interfaces.iconsumption_invoice_repository import (
 from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
+from domain.interfaces.iticket_repository import ITicketRepository
 from domain.interfaces.itransaction_repository import ITransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from infrastructure.api_clients.client_outline import OutlineClient
@@ -197,6 +202,10 @@ def _configure_repositories(container: punq.Container) -> None:
         session = session_factory()
         return PostgresConsumptionInvoiceRepository(session)
 
+    def create_ticket_repo() -> TicketRepository:
+        session = session_factory()
+        return TicketRepository(session)
+
     container.register(
         IUserRepository, factory=create_user_repo
     )
@@ -217,6 +226,9 @@ def _configure_repositories(container: punq.Container) -> None:
     container.register(
         IConsumptionInvoiceRepository,
         factory=create_consumption_invoice_repo,
+    )
+    container.register(
+        ITicketRepository, factory=create_ticket_repo
     )
 
 
@@ -250,10 +262,6 @@ def _configure_application_services(container: punq.Container) -> None:
         session = session_factory()
         return PostgresConsumptionBillingRepository(session)
 
-    def create_ticket_repo() -> TicketRepository:
-        session = session_factory()
-        return TicketRepository(session)
-
     def create_vpn_service() -> VpnService:
         return VpnService(
             user_repo=create_user_repo(),
@@ -276,7 +284,10 @@ def _configure_application_services(container: punq.Container) -> None:
             key_repository=create_key_repo(),
             user_repository=create_user_repo(),
             payment_repository=create_transaction_repo(),
-            ticket_repo=create_ticket_repo(),
+            ticket_repo=cast(
+                ITicketRepository,
+                container.resolve(ITicketRepository),
+            ),
         )
 
     def create_data_package_service() -> DataPackageService:
@@ -362,6 +373,25 @@ def _configure_application_services(container: punq.Container) -> None:
             user_repo=create_user_repo(),
         )
 
+    def create_ticket_service() -> TicketService:
+        return TicketService(
+            ticket_repo=cast(
+                ITicketRepository,
+                container.resolve(ITicketRepository),
+            ),
+        )
+
+    def create_ticket_notification_service() -> TicketNotificationService:
+        from config import settings
+
+        # Importación lazy de Bot para evitar dependencia circular
+        from telegram import Bot
+
+        return TicketNotificationService(
+            bot=Bot(token=settings.TELEGRAM_TOKEN),
+            admin_id=settings.ADMIN_ID,
+        )
+
     def create_consumption_vpn_integration_service() -> (
         ConsumptionVpnIntegrationService
     ):
@@ -409,6 +439,14 @@ def _configure_application_services(container: punq.Container) -> None:
     container.register(
         ConsumptionInvoiceService,
         factory=create_consumption_invoice_service,
+    )
+    container.register(
+        TicketService,
+        factory=create_ticket_service,
+    )
+    container.register(
+        TicketNotificationService,
+        factory=create_ticket_notification_service,
     )
 
 
