@@ -63,7 +63,7 @@ class TicketsActionsMixin:
                 context,
                 spinner_message_id,
                 text="❌ *Ticket no encontrado*",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
             return VIEWING_TICKETS
@@ -79,7 +79,7 @@ class TicketsActionsMixin:
                     context,
                     spinner_message_id,
                     text="❌ *Ticket no encontrado*",
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
                 return VIEWING_TICKETS
@@ -134,7 +134,7 @@ class TicketsActionsMixin:
                 query,
                 context,
                 text="❌ *Error: ID de ticket inválido*",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
             return VIEWING_TICKETS
@@ -172,7 +172,7 @@ class TicketsActionsMixin:
         if not context.user_data:
             await update.message.reply_text(
                 "❌ *Error: Sesión expirada*",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
             return VIEWING_TICKETS
@@ -182,7 +182,7 @@ class TicketsActionsMixin:
         if not ticket_id_simple:
             await update.message.reply_text(
                 "❌ *Error: No se encontró el ticket*",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
             return VIEWING_TICKETS
@@ -212,7 +212,7 @@ class TicketsActionsMixin:
             if not ticket:
                 await update.message.reply_text(
                     "❌ *Error: Ticket no encontrado*",
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
                 return VIEWING_TICKETS
@@ -228,7 +228,7 @@ class TicketsActionsMixin:
                 "✅ *Respuesta enviada*\n\n"
                 "Tu respuesta ha sido registrada. "
                 "El usuario será notificado.",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
 
@@ -236,7 +236,7 @@ class TicketsActionsMixin:
             logger.error(f"Error sending ticket reply: {e}")
             await update.message.reply_text(
                 "❌ *Error al enviar respuesta*\nIntenta nuevamente.",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
 
@@ -262,7 +262,7 @@ class TicketsActionsMixin:
                 query,
                 context,
                 text="❌ *Error: ID de ticket inválido*",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
             return VIEWING_TICKETS
@@ -278,7 +278,7 @@ class TicketsActionsMixin:
                     query,
                     context,
                     text="❌ *Error: Ticket no encontrado*",
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
                 return VIEWING_TICKETS
@@ -299,7 +299,7 @@ class TicketsActionsMixin:
                         f"🔒 *Ticket Cerrado*\n\n"
                         f"Ticket *{ticket.ticket_number}* ha sido cerrado exitosamente."
                     ),
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
             else:
@@ -307,7 +307,7 @@ class TicketsActionsMixin:
                     query,
                     context,
                     text="❌ *Error: No se pudo cerrar el ticket*",
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
 
@@ -317,7 +317,7 @@ class TicketsActionsMixin:
                 query,
                 context,
                 text="❌ *Error al cerrar ticket*\nIntenta nuevamente.",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
 
@@ -342,7 +342,7 @@ class TicketsActionsMixin:
                 query,
                 context,
                 text="❌ *Error: ID de ticket inválido*",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
             return VIEWING_TICKETS
@@ -358,7 +358,7 @@ class TicketsActionsMixin:
                     query,
                     context,
                     text="❌ *Error: Ticket no encontrado*",
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
                 return VIEWING_TICKETS
@@ -378,7 +378,7 @@ class TicketsActionsMixin:
                         f"🔄 *Ticket Reabierto*\n\n"
                         f"Ticket *{ticket.ticket_number}* ha sido reabierto exitosamente."
                     ),
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
             else:
@@ -386,7 +386,7 @@ class TicketsActionsMixin:
                     query,
                     context,
                     text="❌ *Error: No se pudo reabrir el ticket*\nSolo los tickets cerrados pueden reabrirse.",
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
 
@@ -396,7 +396,7 @@ class TicketsActionsMixin:
                 query,
                 context,
                 text="❌ *Error al reabrir ticket*\nIntenta nuevamente.",
-                reply_markup=TicketKeyboards.back_to_menu(),
+                reply_markup=TicketKeyboards.admin_back_to_menu(),
                 parse_mode="Markdown",
             )
 

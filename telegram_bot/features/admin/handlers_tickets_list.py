@@ -68,7 +68,7 @@ class TicketsListMixin:
                     context,
                     spinner_message_id,
                     text="📭 *No hay tickets abiertos*\n\nTodos los tickets han sido atendidos.",
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
                 return VIEWING_TICKETS
@@ -122,7 +122,7 @@ class TicketsListMixin:
                     context,
                     spinner_message_id,
                     text="📭 *No hay tickets*\n\nEl sistema no tiene tickets registrados.",
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
                 return VIEWING_TICKETS
@@ -209,7 +209,7 @@ class TicketsListMixin:
                     context,
                     spinner_message_id,
                     text=f"📭 *No hay tickets en {category_names.get(category, category.value)}*",
-                    reply_markup=TicketKeyboards.back_to_menu(),
+                    reply_markup=TicketKeyboards.admin_back_to_menu(),
                     parse_mode="Markdown",
                 )
                 return VIEWING_TICKETS
