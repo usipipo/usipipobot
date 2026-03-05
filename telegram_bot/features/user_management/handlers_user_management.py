@@ -154,7 +154,7 @@ def get_user_callback_handlers(
             handler.main_menu_callback,
             pattern=(
                 "^(show_keys|buy_data|operations_menu|show_usage|"
-                "help|help_faq|help_bonuses|admin_panel|show_history|main_menu)$"
+                "help|help_faq|help_bonuses|admin_panel|show_history)$"
             ),
         ),
     ]
