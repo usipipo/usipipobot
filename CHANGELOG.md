@@ -1,3 +1,78 @@
+[0;32m[INFO][0m FASE 4: Generando changelog...
+## [v3.8.0] - 2026-03-04
+
+### Features
+- implement real service calls for reply and close actions
+- use ticket_id_map in action handlers (reply/close)
+- use ticket_id_map in view_ticket handler and fix LSP errors
+- add ticket_id_map mapping in keyboards_tickets
+- add tickets button to admin panel
+- export new ticket entities and models
+- add user ticket handlers with conversation flow
+- add ticket keyboards module
+- add ticket messages module with separators
+- add TicketService with full CRUD operations
+- add TicketNotificationService for admin/user notifications
+- add TicketRepository implementation
+- add alembic migration for tickets tables
+- add TicketMessageModel and User relationship
+- add TicketModel SQLAlchemy model
+- add TicketMessage entity
+- add ITicketRepository interface
+- add Ticket entity with status management
+- add ticket enums (category, priority, status)
+- improve bonuses message visual design
+
+### Bug Fixes
+- corregir navegación botón atrás en gestión de tickets
+- navigation from tickets menu to help center
+- navigation from ticket detail to main menu
+- navigation from ticket detail to main menu
+- register missing TicketService dependencies in container
+- recognize user roles from database (Issue #252)
+- agregar estado REPLYING_TO_TICKET en ConversationHandler
+- change back button callback from 'admin' to 'help' for normal users
+- correct admin handlers import path
+- register ticket handlers in handler_initializer.py
+- corregir formato de badges con enlaces
+- corregir corchetes en badges y eliminar sección en inglés
+- add ticket_repo to AdminService and fix ticket menu issues
+- Implementar handlers para botones del menú de tickets admin (#251)
+- corregir descuento de créditos al canjear (#249)
+
+### Chores
+- bump fastapi from 0.133.0 to 0.135.1
+- bump sqlalchemy from 2.0.47 to 2.0.48
+- bump python-dotenv from 1.0.1 to 1.2.2
+- bump pytz from 2025.2 to 2026.1.post1
+- bump cachetools from 7.0.1 to 7.0.2
+- bump pytz from 2025.2 to 2026.1.post1
+- bump python-dotenv from 1.0.1 to 1.2.2
+- bump fastapi from 0.133.0 to 0.135.1
+- bump sqlalchemy[asyncio] from 2.0.47 to 2.0.48
+- bump cachetools from 7.0.1 to 7.0.2
+- mueve archivos de documentación a carpeta docs
+- eliminar sistema de tickets completamente (#250)
+
+### Other Changes
+- split handlers_user_management.py into mixins (#259)
+- update badges to dynamic PyPI versions
+- add agent configuration and project knowledge base
+- update README with professional structure and current features (v3.4.0)
+- split 582-line consumption_billing_service.py into modular components
+- split 621-line telegram_utils.py into modular components
+- split 829-line spinner.py into modular components
+- split handlers_consumption.py using mixin pattern
+- divide router.py en módulos por dominio (#259)
+- divide handlers_admin_vpn.py (751 lines) into mixin modules
+- split handlers_key_management.py into mixins (#259)
+- split handlers_buy_gb.py (944 → 6 files, <300 lines each)
+- dividir handlers_user_tickets.py en 4 archivos especializados
+- dividir handlers_admin.py en 10 archivos especializados
+- dividir admin_service.py en servicios especializados
+- fix flake8 linting issues
+- mejorar diseño visual del mensaje FAQ
+
 <<<<<<< HEAD
 [0;32m[INFO][0m FASE 4: Generando changelog...
 ## [v3.6.0] - 2026-03-01
