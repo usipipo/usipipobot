@@ -6,7 +6,7 @@ Version: 1.0.0
 """
 
 import urllib.parse
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from application.services.data_package_service import (
     PACKAGE_OPTIONS,
@@ -15,6 +15,9 @@ from application.services.data_package_service import (
 )
 from infrastructure.api_clients.client_tron_dealer import TronDealerApiError
 from utils.logger import logger
+
+if TYPE_CHECKING:
+    from application.services.crypto_payment_service import CryptoPaymentService
 
 
 class MiniAppPaymentService:
@@ -134,15 +137,21 @@ class MiniAppPaymentService:
         user_id: int,
         product_type: str,
         product_id: str,
+        payment_service: "CryptoPaymentService",
     ) -> Optional[dict]:
         """
         Create a crypto payment order.
 
-        Returns order details including wallet address and QR code.
+        Args:
+            user_id: Telegram user ID
+            product_type: 'package' or 'slots'
+            product_id: Package type or slots identifier
+            payment_service: CryptoPaymentService instance with session context
+
+        Returns:
+            Order details including wallet address and QR code.
         """
         try:
-            from application.services.common.container import get_service
-            from application.services.crypto_payment_service import CryptoPaymentService
             from application.services.wallet_management_service import (
                 WalletManagementService,
             )
@@ -152,8 +161,9 @@ class MiniAppPaymentService:
                 f"Starting crypto order creation for user {user_id}: {product_type}={product_id}"
             )
 
+            from application.services.common.container import get_service
+
             wallet_service = get_service(WalletManagementService)
-            payment_service = get_service(CryptoPaymentService)
 
             # Assign wallet to user
             logger.debug(f"Assigning wallet for user {user_id}")
