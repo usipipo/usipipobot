@@ -16,13 +16,13 @@ from telegram.ext import (
 from application.services.admin_service import AdminService
 
 from .handlers_admin import AdminHandler
-from .handlers_users_list import ADMIN_MENU, VIEWING_USERS
-from .handlers_users_actions import VIEWING_USER_DETAILS, CONFIRMING_USER_DELETE
+from .handlers_keys_actions import CONFIRMING_KEY_DELETE, VIEWING_KEY_DETAILS
 from .handlers_keys_list import VIEWING_KEYS
-from .handlers_keys_actions import VIEWING_KEY_DETAILS, CONFIRMING_KEY_DELETE
-from .handlers_settings import VIEWING_SETTINGS, VIEWING_MAINTENANCE
-from .handlers_tickets_list import VIEWING_TICKETS
+from .handlers_settings import VIEWING_MAINTENANCE, VIEWING_SETTINGS
 from .handlers_tickets_actions import REPLYING_TO_TICKET
+from .handlers_tickets_list import VIEWING_TICKETS
+from .handlers_users_actions import CONFIRMING_USER_DELETE, VIEWING_USER_DETAILS
+from .handlers_users_list import ADMIN_MENU, VIEWING_USERS
 
 
 def get_admin_handlers(admin_service: AdminService):
@@ -80,12 +80,24 @@ def get_admin_callback_handlers(admin_service: AdminService):
         CallbackQueryHandler(handler.show_tickets_menu, pattern="^admin_tickets_menu$"),
         CallbackQueryHandler(handler.show_open_tickets, pattern="^admin_tickets_open$"),
         CallbackQueryHandler(handler.show_all_tickets, pattern="^admin_tickets$"),
-        CallbackQueryHandler(handler.show_category_filter, pattern="^admin_tickets_filter$"),
-        CallbackQueryHandler(handler.filter_tickets_by_category, pattern="^admin_tickets_filter_"),
-        CallbackQueryHandler(handler.view_admin_ticket, pattern=r"^admin_ticket_[0-9a-f\-]+$"),
-        CallbackQueryHandler(handler.start_ticket_reply, pattern=r"^admin_ticket_resp_\d+$"),
-        CallbackQueryHandler(handler.close_admin_ticket, pattern=r"^admin_ticket_close_\d+$"),
-        CallbackQueryHandler(handler.reopen_admin_ticket, pattern=r"^admin_ticket_reopen_\d+$"),
+        CallbackQueryHandler(
+            handler.show_category_filter, pattern="^admin_tickets_filter$"
+        ),
+        CallbackQueryHandler(
+            handler.filter_tickets_by_category, pattern="^admin_tickets_filter_"
+        ),
+        CallbackQueryHandler(
+            handler.view_admin_ticket, pattern=r"^admin_ticket_[0-9a-f\-]+$"
+        ),
+        CallbackQueryHandler(
+            handler.start_ticket_reply, pattern=r"^admin_ticket_resp_\d+$"
+        ),
+        CallbackQueryHandler(
+            handler.close_admin_ticket, pattern=r"^admin_ticket_close_\d+$"
+        ),
+        CallbackQueryHandler(
+            handler.reopen_admin_ticket, pattern=r"^admin_ticket_reopen_\d+$"
+        ),
         CallbackQueryHandler(
             handler.show_server_settings, pattern="^settings_servers$"
         ),
@@ -203,21 +215,43 @@ def get_admin_conversation_handler(
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             VIEWING_TICKETS: [
-                CallbackQueryHandler(handler.show_open_tickets, pattern="^admin_tickets_open$"),
-                CallbackQueryHandler(handler.show_all_tickets, pattern="^admin_tickets$"),
-                CallbackQueryHandler(handler.show_tickets_menu, pattern="^admin_tickets_menu$"),
-                CallbackQueryHandler(handler.show_category_filter, pattern="^admin_tickets_filter$"),
-                CallbackQueryHandler(handler.filter_tickets_by_category, pattern="^admin_tickets_filter_"),
-                CallbackQueryHandler(handler.view_admin_ticket, pattern=r"^admin_ticket_[0-9a-f\-]+$"),
-                CallbackQueryHandler(handler.start_ticket_reply, pattern=r"^admin_ticket_resp_\d+$"),
-                CallbackQueryHandler(handler.close_admin_ticket, pattern=r"^admin_ticket_close_\d+$"),
-                CallbackQueryHandler(handler.reopen_admin_ticket, pattern=r"^admin_ticket_reopen_\d+$"),
+                CallbackQueryHandler(
+                    handler.show_open_tickets, pattern="^admin_tickets_open$"
+                ),
+                CallbackQueryHandler(
+                    handler.show_all_tickets, pattern="^admin_tickets$"
+                ),
+                CallbackQueryHandler(
+                    handler.show_tickets_menu, pattern="^admin_tickets_menu$"
+                ),
+                CallbackQueryHandler(
+                    handler.show_category_filter, pattern="^admin_tickets_filter$"
+                ),
+                CallbackQueryHandler(
+                    handler.filter_tickets_by_category, pattern="^admin_tickets_filter_"
+                ),
+                CallbackQueryHandler(
+                    handler.view_admin_ticket, pattern=r"^admin_ticket_[0-9a-f\-]+$"
+                ),
+                CallbackQueryHandler(
+                    handler.start_ticket_reply, pattern=r"^admin_ticket_resp_\d+$"
+                ),
+                CallbackQueryHandler(
+                    handler.close_admin_ticket, pattern=r"^admin_ticket_close_\d+$"
+                ),
+                CallbackQueryHandler(
+                    handler.reopen_admin_ticket, pattern=r"^admin_ticket_reopen_\d+$"
+                ),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             REPLYING_TO_TICKET: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, handler.send_ticket_reply),
-                CallbackQueryHandler(handler.show_tickets_menu, pattern="^admin_tickets_menu$"),
+                MessageHandler(
+                    filters.TEXT & ~filters.COMMAND, handler.send_ticket_reply
+                ),
+                CallbackQueryHandler(
+                    handler.show_tickets_menu, pattern="^admin_tickets_menu$"
+                ),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],

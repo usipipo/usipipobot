@@ -61,7 +61,9 @@ class UserModel(Base):
     purchase_count: Mapped[int] = mapped_column(Integer, server_default="0")
     loyalty_bonus_percent: Mapped[int] = mapped_column(Integer, server_default="0")
     welcome_bonus_used: Mapped[bool] = mapped_column(Boolean, server_default="false")
-    referred_users_with_purchase: Mapped[int] = mapped_column(Integer, server_default="0")
+    referred_users_with_purchase: Mapped[int] = mapped_column(
+        Integer, server_default="0"
+    )
 
     # Consumption billing fields
     consumption_mode_enabled: Mapped[bool] = mapped_column(
@@ -85,7 +87,7 @@ class UserModel(Base):
     tickets: Mapped[list["TicketModel"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
-        foreign_keys="TicketModel.user_id"
+        foreign_keys="TicketModel.user_id",
     )
 
 
@@ -187,10 +189,10 @@ class TransactionModel(Base):
 
 
 # Import ticket models after all models defined to resolve forward references
-from infrastructure.persistence.postgresql.models.ticket import TicketModel  # noqa: E402, F401
-from infrastructure.persistence.postgresql.models.ticket_message import TicketMessageModel  # noqa: E402, F401
-
-
 # Import ticket models after all models defined to resolve forward references
-from infrastructure.persistence.postgresql.models.ticket import TicketModel  # noqa: E402, F401
-from infrastructure.persistence.postgresql.models.ticket_message import TicketMessageModel  # noqa: E402, F401
+from infrastructure.persistence.postgresql.models.ticket import (  # noqa: E402, F401
+    TicketModel,
+)
+from infrastructure.persistence.postgresql.models.ticket_message import (  # noqa: E402, F401
+    TicketMessageModel,
+)

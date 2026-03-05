@@ -22,9 +22,7 @@ class VpnKeysMessages:
         "   • 🔒 *WireGuard*"
     )
 
-    CANCELLED = (
-        "❌ *CANCELADO*"
-    )
+    CANCELLED = "❌ *CANCELADO*"
 
     # ============================================
     # ERRORS
@@ -48,9 +46,7 @@ class VpnKeysMessages:
         )
 
         INVALID_NAME = (
-            "⛔ *NOMBRE INVÁLIDO*\n\n"
-            "📝 Solo letras, números\n"
-            "   y espacios 🎯"
+            "⛔ *NOMBRE INVÁLIDO*\n\n" "📝 Solo letras, números\n" "   y espacios 🎯"
         )
 
     # ============================================
@@ -78,13 +74,7 @@ class VpnKeysMessages:
         )
 
         KEY_DELETED = (
-            "🗑️ *ELIMINADA*\n\n"
-            "💥 `{name}` destruida\n\n"
-            "🔌 Devices off ⚡"
+            "🗑️ *ELIMINADA*\n\n" "💥 `{name}` destruida\n\n" "🔌 Devices off ⚡"
         )
 
-        KEY_RENAMED = (
-            "✏️ *RENOMBRADA*\n\n"
-            "✨ {new_name}\n\n"
-            "✅ Listo 🎯"
-        )
+        KEY_RENAMED = "✏️ *RENOMBRADA*\n\n" "✨ {new_name}\n\n" "✅ Listo 🎯"

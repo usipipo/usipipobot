@@ -4,9 +4,9 @@ Tests for spinner utilities.
 Tests the spinner functionality and message replacement.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from telegram.error import BadRequest
 
 from utils.spinner import SpinnerManager
@@ -34,7 +34,9 @@ class TestReplaceSpinnerWithMessage:
         )
 
         # Verify spinner was deleted
-        context.bot.delete_message.assert_called_once_with(chat_id=12345, message_id=999)
+        context.bot.delete_message.assert_called_once_with(
+            chat_id=12345, message_id=999
+        )
         # Verify callback message was edited
         update.callback_query.edit_message_text.assert_called_once_with(
             text="Test message", reply_markup=None, parse_mode="Markdown"
@@ -84,7 +86,9 @@ class TestReplaceSpinnerWithMessage:
         update.callback_query = MagicMock()
         # Simulate "message not modified" error
         update.callback_query.edit_message_text = AsyncMock(
-            side_effect=BadRequest("Message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message")
+            side_effect=BadRequest(
+                "Message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message"
+            )
         )
 
         # Should not raise - message not modified is not an error, just means content is the same
@@ -107,9 +111,7 @@ class TestSafeEditMessage:
         query.edit_message_text = AsyncMock()
         context = MagicMock()
 
-        result = await TelegramUtils.safe_edit_message(
-            query, context, "Test message"
-        )
+        result = await TelegramUtils.safe_edit_message(query, context, "Test message")
 
         assert result is True
         query.edit_message_text.assert_called_once()
@@ -128,9 +130,7 @@ class TestSafeEditMessage:
         context.bot = MagicMock()
         context.bot.send_message = AsyncMock()
 
-        result = await TelegramUtils.safe_edit_message(
-            query, context, "Test message"
-        )
+        result = await TelegramUtils.safe_edit_message(query, context, "Test message")
 
         assert result is True
         # Verify fallback to send_message
@@ -147,9 +147,7 @@ class TestSafeEditMessage:
         )
         context = MagicMock()
 
-        result = await TelegramUtils.safe_edit_message(
-            query, context, "Same content"
-        )
+        result = await TelegramUtils.safe_edit_message(query, context, "Same content")
 
         assert result is True  # Should return True as it's not a real error
 
@@ -159,7 +157,9 @@ class TestSafeEditMessage:
         query = MagicMock()
         query.edit_message_text = AsyncMock(
             side_effect=[
-                BadRequest("Can't parse entities: can't find end of the entity starting at byte offset 10"),
+                BadRequest(
+                    "Can't parse entities: can't find end of the entity starting at byte offset 10"
+                ),
                 None,  # Second call succeeds
             ]
         )

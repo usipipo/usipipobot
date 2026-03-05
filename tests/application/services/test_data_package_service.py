@@ -24,6 +24,7 @@ def mock_user_repo():
 @pytest.fixture
 def mock_bonus_service():
     from application.services.user_bonus_service import UserBonusService
+
     return UserBonusService()
 
 
@@ -32,7 +33,7 @@ def service(mock_package_repo, mock_user_repo, mock_bonus_service):
     return DataPackageService(
         package_repo=mock_package_repo,
         user_repo=mock_user_repo,
-        bonus_service=mock_bonus_service
+        bonus_service=mock_bonus_service,
     )
 
 
@@ -64,11 +65,12 @@ class TestPurchasePackage:
         self, service, mock_package_repo, mock_user_repo
     ):
         from domain.entities.user import User
+
         user = User(
             telegram_id=123,
             purchase_count=0,
             welcome_bonus_used=False,
-            loyalty_bonus_percent=0
+            loyalty_bonus_percent=0,
         )
         mock_user_repo.get_by_id.return_value = user
         mock_package_repo.get_valid_by_user.return_value = []

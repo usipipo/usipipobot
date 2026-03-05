@@ -117,7 +117,9 @@ class TestGetOrAssignWallet:
         assert wallet is not None
         assert wallet.id == "new-wallet-123"
         assert wallet.address == "0xnewwallet123456789012345678901234567890"
-        mock_tron_dealer_client.assign_wallet.assert_called_once_with(label="test-label")
+        mock_tron_dealer_client.assign_wallet.assert_called_once_with(
+            label="test-label"
+        )
 
     @pytest.mark.asyncio
     async def test_returns_none_on_error(

@@ -44,10 +44,7 @@ class ConsumptionCycleService:
         self.cycle_days = cycle_days
 
     async def record_data_usage(
-        self,
-        user_id: int,
-        mb_used: float,
-        current_user_id: int
+        self, user_id: int, mb_used: float, current_user_id: int
     ) -> bool:
         """
         Registra consumo de datos para un usuario en modo consumo.
@@ -138,9 +135,7 @@ class ConsumptionCycleService:
             return None
 
     async def close_billing_cycle(
-        self,
-        billing_id: uuid.UUID,
-        current_user_id: int
+        self, billing_id: uuid.UUID, current_user_id: int
     ) -> bool:
         """
         Cierra un ciclo de facturación.
@@ -178,10 +173,10 @@ class ConsumptionCycleService:
                     await self.user_repo.save(user, current_user_id)
 
                     # Block all user keys
+                    from application.services.common.container import get_container
                     from application.services.consumption_vpn_integration_service import (
                         ConsumptionVpnIntegrationService,
                     )
-                    from application.services.common.container import get_container
 
                     container = get_container()
                     if container:
@@ -199,9 +194,7 @@ class ConsumptionCycleService:
                                     f"{block_result['errors']}"
                                 )
                         else:
-                            logger.error(
-                                "VPN integration service not available"
-                            )
+                            logger.error("VPN integration service not available")
                     else:
                         logger.error("Container not available for blocking keys")
 
@@ -218,9 +211,7 @@ class ConsumptionCycleService:
             return False
 
     async def mark_cycle_as_paid(
-        self,
-        billing_id: uuid.UUID,
-        current_user_id: int
+        self, billing_id: uuid.UUID, current_user_id: int
     ) -> bool:
         """
         Marca un ciclo como pagado.
@@ -238,7 +229,9 @@ class ConsumptionCycleService:
                 return False
 
             if not billing.is_closed:
-                logger.warning(f"No se puede pagar ciclo {billing_id} - no está cerrado")
+                logger.warning(
+                    f"No se puede pagar ciclo {billing_id} - no está cerrado"
+                )
                 return False
 
             # Actualizar estado
@@ -256,8 +249,7 @@ class ConsumptionCycleService:
             return False
 
     async def get_expired_cycles(
-        self,
-        current_user_id: int
+        self, current_user_id: int
     ) -> List[ConsumptionBilling]:
         """
         Obtiene ciclos que han excedido el tiempo límite.
@@ -270,9 +262,7 @@ class ConsumptionCycleService:
         )
 
     async def get_user_billing_history(
-        self,
-        user_id: int,
-        current_user_id: int
+        self, user_id: int, current_user_id: int
     ) -> List[ConsumptionBilling]:
         """
         Obtiene el historial de ciclos de un usuario.

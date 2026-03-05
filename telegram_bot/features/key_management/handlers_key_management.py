@@ -5,6 +5,8 @@ Author: uSipipo Team
 Version: 3.0.0 - Refactored into mixins
 """
 
+from typing import Optional
+
 from telegram import Update
 from telegram.ext import (
     CallbackQueryHandler,
@@ -13,8 +15,6 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-
-from typing import Optional
 
 from application.services.consumption_billing_service import (
     ConsumptionBillingService,
@@ -25,10 +25,10 @@ from telegram_bot.common.base_handler import BaseHandler
 from utils.logger import logger
 from utils.telegram_utils import escape_markdown
 
-from .handlers_view_keys import ViewKeysMixin
 from .handlers_key_actions import KeyActionsMixin
-from .handlers_rename_key import RenameKeyMixin
 from .handlers_key_info import KeyInfoMixin
+from .handlers_rename_key import RenameKeyMixin
+from .handlers_view_keys import ViewKeysMixin
 from .keyboards_key_management import KeyManagementKeyboards
 from .messages_key_management import KeyManagementMessages
 

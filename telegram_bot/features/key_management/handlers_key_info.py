@@ -10,8 +10,12 @@ import io
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram_bot.features.key_management.messages_key_management import KeyManagementMessages
-from telegram_bot.features.key_management.keyboards_key_management import KeyManagementKeyboards
+from telegram_bot.features.key_management.keyboards_key_management import (
+    KeyManagementKeyboards,
+)
+from telegram_bot.features.key_management.messages_key_management import (
+    KeyManagementMessages,
+)
 from utils.logger import logger
 
 

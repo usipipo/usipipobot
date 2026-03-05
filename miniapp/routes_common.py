@@ -28,7 +28,9 @@ class PaymentRequest(BaseModel):
     """Request model for payment endpoints."""
 
     product_type: str = Field(..., description="Type of product: 'package' or 'slots'")
-    product_id: str = Field(..., description="Product identifier (e.g., 'basic', 'slots_3')")
+    product_id: str = Field(
+        ..., description="Product identifier (e.g., 'basic', 'slots_3')"
+    )
 
 
 class MiniAppContext:
@@ -38,7 +40,7 @@ class MiniAppContext:
         self,
         user: TelegramUser,
         db_user: Optional[User] = None,
-        query_id: Optional[str] = None
+        query_id: Optional[str] = None,
     ):
         self.user = user
         self.db_user = db_user
@@ -106,9 +108,7 @@ async def get_current_user(
 
             # Pass db_user to context so is_admin can check role from database
             return MiniAppContext(
-                user=result.user,
-                db_user=db_user,
-                query_id=result.query_id
+                user=result.user, db_user=db_user, query_id=result.query_id
             )
     except HTTPException:
         raise
@@ -120,9 +120,15 @@ async def get_current_user(
         )
 
 
-async def require_admin(ctx: MiniAppContext = Depends(get_current_user)) -> MiniAppContext:
+async def require_admin(
+    ctx: MiniAppContext = Depends(get_current_user),
+) -> MiniAppContext:
     """Dependencia que requiere que el usuario sea administrador."""
     if not ctx.is_admin:
-        logger.warning(f"🚫 User {ctx.user.id} attempted admin action without privileges")
-        raise HTTPException(status_code=403, detail="Acceso denegado: solo administradores")
+        logger.warning(
+            f"🚫 User {ctx.user.id} attempted admin action without privileges"
+        )
+        raise HTTPException(
+            status_code=403, detail="Acceso denegado: solo administradores"
+        )
     return ctx

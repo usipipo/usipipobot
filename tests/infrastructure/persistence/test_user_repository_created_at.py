@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from domain.entities.user import UserStatus, UserRole
+from domain.entities.user import UserRole, UserStatus
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 
 

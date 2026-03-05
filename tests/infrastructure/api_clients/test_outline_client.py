@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from infrastructure.api_clients.client_outline import OutlineClient
 
@@ -7,7 +8,7 @@ from infrastructure.api_clients.client_outline import OutlineClient
 class TestDisableKey:
     @pytest.fixture
     def client(self):
-        with patch.object(OutlineClient, '__init__', lambda x: None):
+        with patch.object(OutlineClient, "__init__", lambda x: None):
             outline_client = OutlineClient.__new__(OutlineClient)
             outline_client.api_url = "https://example.com/api"
             outline_client.brand = "uSipipo VPN"
@@ -26,7 +27,7 @@ class TestDisableKey:
         assert result is True
         client.client.put.assert_called_once_with(
             "https://example.com/api/access-keys/test-key-id/data-limit",
-            json={"limit": {"bytes": 1}}
+            json={"limit": {"bytes": 1}},
         )
 
     @pytest.mark.asyncio
@@ -42,7 +43,7 @@ class TestDisableKey:
 class TestEnableKey:
     @pytest.fixture
     def client(self):
-        with patch.object(OutlineClient, '__init__', lambda x: None):
+        with patch.object(OutlineClient, "__init__", lambda x: None):
             outline_client = OutlineClient.__new__(OutlineClient)
             outline_client.api_url = "https://example.com/api"
             outline_client.brand = "uSipipo VPN"

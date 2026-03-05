@@ -53,7 +53,12 @@ class TestVpnKeyFlow:
 
     @pytest.fixture
     def vpn_service(
-        self, mock_user_repo, mock_key_repo, mock_package_repo, mock_outline_client, mock_wireguard_client
+        self,
+        mock_user_repo,
+        mock_key_repo,
+        mock_package_repo,
+        mock_outline_client,
+        mock_wireguard_client,
     ):
         return VpnService(
             user_repo=mock_user_repo,

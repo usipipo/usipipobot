@@ -120,10 +120,7 @@ class BuyGbMessages:
     class Info:
         @staticmethod
         def DATA_SUMMARY(
-            active_packages: int,
-            total_gb: float,
-            used_gb: float,
-            remaining_gb: float
+            active_packages: int, total_gb: float, used_gb: float, remaining_gb: float
         ) -> str:
             """Genera resumen de datos con diseño minimalista y visual."""
             percentage = (used_gb / total_gb * 100) if total_gb > 0 else 0

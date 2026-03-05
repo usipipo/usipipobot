@@ -126,26 +126,23 @@ class UserProfileMixin:
                     (profile.total_used_gb / total_gb * 100) if total_gb > 0 else 0
                 )
 
-                text = (
-                    self.messages.Info.HEADER
-                    + self.messages.Info.USER_INFO(
-                        name=profile.full_name or "N/A",
-                        user_id=profile.user_id,
-                        username=profile.username or "N/A",
-                        join_date=join_date,
-                        days_since_join=days_since_join,
-                        status=status_text,
-                        data_used=f"{profile.total_used_gb:.2f} GB",
-                        data_total=f"{total_gb:.2f} GB",
-                        data_percentage=data_percentage,
-                        free_data_remaining=f"{profile.free_data_remaining_gb:.2f} GB",
-                        active_packages=profile.active_packages,
-                        keys_used=profile.keys_used,
-                        keys_total=profile.max_keys,
-                        referral_code=profile.referral_code or "N/A",
-                        total_referrals=profile.total_referrals,
-                        credits=profile.referral_credits,
-                    )
+                text = self.messages.Info.HEADER + self.messages.Info.USER_INFO(
+                    name=profile.full_name or "N/A",
+                    user_id=profile.user_id,
+                    username=profile.username or "N/A",
+                    join_date=join_date,
+                    days_since_join=days_since_join,
+                    status=status_text,
+                    data_used=f"{profile.total_used_gb:.2f} GB",
+                    data_total=f"{total_gb:.2f} GB",
+                    data_percentage=data_percentage,
+                    free_data_remaining=f"{profile.free_data_remaining_gb:.2f} GB",
+                    active_packages=profile.active_packages,
+                    keys_used=profile.keys_used,
+                    keys_total=profile.max_keys,
+                    referral_code=profile.referral_code or "N/A",
+                    total_referrals=profile.total_referrals,
+                    credits=profile.referral_credits,
                 )
             else:
                 status_data = await self.vpn_service.get_user_status(
@@ -182,26 +179,23 @@ class UserProfileMixin:
                 keys_used = len([k for k in keys if getattr(k, "is_active", True)])
                 data_used_gb = status_data.get("total_used_gb", 0)
 
-                text = (
-                    self.messages.Info.HEADER
-                    + self.messages.Info.USER_INFO(
-                        name=user_entity.full_name or "N/A",
-                        user_id=telegram_id,
-                        username=user_entity.username or "N/A",
-                        join_date=join_date,
-                        days_since_join=days_since_join,
-                        status=status_text,
-                        data_used=f"{data_used_gb:.2f} GB",
-                        data_total="10.00 GB",
-                        data_percentage=data_used_gb / 10 * 100 if data_used_gb else 0,
-                        free_data_remaining="10.00 GB",
-                        active_packages=0,
-                        keys_used=keys_used,
-                        keys_total=user_entity.max_keys,
-                        referral_code="N/A",
-                        total_referrals=0,
-                        credits=user_entity.referral_credits or 0,
-                    )
+                text = self.messages.Info.HEADER + self.messages.Info.USER_INFO(
+                    name=user_entity.full_name or "N/A",
+                    user_id=telegram_id,
+                    username=user_entity.username or "N/A",
+                    join_date=join_date,
+                    days_since_join=days_since_join,
+                    status=status_text,
+                    data_used=f"{data_used_gb:.2f} GB",
+                    data_total="10.00 GB",
+                    data_percentage=data_used_gb / 10 * 100 if data_used_gb else 0,
+                    free_data_remaining="10.00 GB",
+                    active_packages=0,
+                    keys_used=keys_used,
+                    keys_total=user_entity.max_keys,
+                    referral_code="N/A",
+                    total_referrals=0,
+                    credits=user_entity.referral_credits or 0,
                 )
 
             is_admin_menu = telegram_id == int(self.settings.ADMIN_ID)

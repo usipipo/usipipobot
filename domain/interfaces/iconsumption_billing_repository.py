@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Optional, Protocol
 
-from domain.entities.consumption_billing import ConsumptionBilling, BillingStatus
+from domain.entities.consumption_billing import BillingStatus, ConsumptionBilling
 
 
 class IConsumptionBillingRepository(Protocol):
@@ -53,25 +53,17 @@ class IConsumptionBillingRepository(Protocol):
         ...
 
     async def update_status(
-        self,
-        billing_id: uuid.UUID,
-        status: BillingStatus,
-        current_user_id: int
+        self, billing_id: uuid.UUID, status: BillingStatus, current_user_id: int
     ) -> bool:
         """Actualiza el estado de un ciclo de facturación."""
         ...
 
     async def add_consumption(
-        self,
-        billing_id: uuid.UUID,
-        mb_used: float,
-        current_user_id: int
+        self, billing_id: uuid.UUID, mb_used: float, current_user_id: int
     ) -> bool:
         """Agrega consumo a un ciclo activo."""
         ...
 
-    async def delete(
-        self, billing_id: uuid.UUID, current_user_id: int
-    ) -> bool:
+    async def delete(self, billing_id: uuid.UUID, current_user_id: int) -> bool:
         """Elimina un ciclo de facturación de la base de datos."""
         ...

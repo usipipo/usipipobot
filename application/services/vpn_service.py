@@ -38,7 +38,9 @@ class VpnService:
         self, telegram_id: int, key_type: str, key_name: str, current_user_id: int
     ) -> VpnKey:
         """Orquesta la creación de una llave VPN."""
-        logger.info(f"🔑 Iniciando creación de llave {key_type} para usuario {telegram_id}")
+        logger.info(
+            f"🔑 Iniciando creación de llave {key_type} para usuario {telegram_id}"
+        )
         user = await self.user_repo.get_by_id(telegram_id, current_user_id)
         if not user:
             user = User(telegram_id=telegram_id)
@@ -46,8 +48,10 @@ class VpnService:
 
         # Check for pending debt
         if self.vpn_integration_service is not None:
-            can_create, error_msg = await self.vpn_integration_service.check_can_create_key(
-                telegram_id, current_user_id
+            can_create, error_msg = (
+                await self.vpn_integration_service.check_can_create_key(
+                    telegram_id, current_user_id
+                )
             )
             if not can_create:
                 raise ValueError(error_msg)
@@ -93,7 +97,9 @@ class VpnService:
         )
         await self.key_repo.save(new_key, current_user_id)
 
-        logger.info(f"🔑 Llave creada exitosamente - Tipo: {key_type}, ID: {new_key.id}, Usuario: {telegram_id}, Nombre: '{key_name}'")
+        logger.info(
+            f"🔑 Llave creada exitosamente - Tipo: {key_type}, ID: {new_key.id}, Usuario: {telegram_id}, Nombre: '{key_name}'"
+        )
         return new_key
 
     async def get_all_active_keys(self) -> List[VpnKey]:
@@ -139,7 +145,9 @@ class VpnService:
         self, user: User, current_user_id: int, key_type: Optional[str] = None
     ) -> tuple[bool, str]:
         """Verifica si el usuario puede crear una nueva llave."""
-        logger.debug(f"🔍 Verificando si usuario {user.telegram_id} puede crear llave (tipo: {key_type or 'any'})")
+        logger.debug(
+            f"🔍 Verificando si usuario {user.telegram_id} puede crear llave (tipo: {key_type or 'any'})"
+        )
         keys = await self.key_repo.get_by_user_id(user.telegram_id, current_user_id)
         if len(keys) >= user.max_keys:
             return False, f"Has alcanzado el límite de {user.max_keys} llaves."
@@ -147,11 +155,13 @@ class VpnService:
         # Verificar que no tenga ya una clave del mismo tipo
         if key_type:
             existing_of_type = [
-                k for k in keys
-                if k.key_type.value == key_type.lower() and k.is_active
+                k for k in keys if k.key_type.value == key_type.lower() and k.is_active
             ]
             if existing_of_type:
-                return False, f"Ya tienes una clave {key_type.title()}. Solo se permite una clave por tipo de servidor."
+                return (
+                    False,
+                    f"Ya tienes una clave {key_type.title()}. Solo se permite una clave por tipo de servidor.",
+                )
 
         result = True, ""
         logger.debug(f"✅ Usuario {user.telegram_id} puede crear llave: {result[0]}")
@@ -168,7 +178,9 @@ class VpnService:
         keys_data_limit = sum(k.data_limit_bytes for k in keys)
 
         # Obtener paquetes de datos activos y sumar sus límites
-        packages = await self.package_repo.get_valid_by_user(telegram_id, current_user_id)
+        packages = await self.package_repo.get_valid_by_user(
+            telegram_id, current_user_id
+        )
         packages_data_limit = sum(p.data_limit_bytes for p in packages)
         packages_used_bytes = sum(p.data_used_bytes for p in packages)
 
@@ -182,7 +194,8 @@ class VpnService:
             "keys": keys,
             "total_used_gb": total_used_including_packages / (1024**3),
             "total_limit_gb": total_data_limit / (1024**3),
-            "remaining_gb": max(0, total_data_limit - total_used_including_packages) / (1024**3),
+            "remaining_gb": max(0, total_data_limit - total_used_including_packages)
+            / (1024**3),
             "keys_limit_gb": keys_data_limit / (1024**3),
             "packages_limit_gb": packages_data_limit / (1024**3),
         }
@@ -249,7 +262,9 @@ class VpnService:
             key.name = new_name
             await self.key_repo.save(key, current_user_id)
 
-            logger.info(f"🏷️ Llave renombrada - ID: {key_id}, Usuario: {key.user_id}, '{old_name}' → '{new_name}'")
+            logger.info(
+                f"🏷️ Llave renombrada - ID: {key_id}, Usuario: {key.user_id}, '{old_name}' → '{new_name}'"
+            )
             return True
 
         except (Exception, ValueError) as e:
@@ -344,7 +359,9 @@ class VpnService:
         """Actualiza una llave en la base de datos."""
         try:
             await self.key_repo.save(key, current_user_id)
-            logger.info(f"📝 Llave actualizada - ID: {key.id}, Usuario: {key.user_id}, Tipo: {key.key_type}, Activa: {key.is_active}")
+            logger.info(
+                f"📝 Llave actualizada - ID: {key.id}, Usuario: {key.user_id}, Tipo: {key.key_type}, Activa: {key.is_active}"
+            )
             return True
         except Exception as e:
             logger.error(f"Error actualizando llave {key.id}: {e}")
@@ -352,7 +369,9 @@ class VpnService:
 
     async def delete_key(self, key_id: str, current_user_id: int) -> bool:
         """Elimina una llave (usa revoke_key para consistencia)."""
-        logger.warning(f"⚠️ ELIMINANDO LLAVE PERMANENTEMENTE - ID: {key_id}, Usuario solicitante: {current_user_id}")
+        logger.warning(
+            f"⚠️ ELIMINANDO LLAVE PERMANENTEMENTE - ID: {key_id}, Usuario solicitante: {current_user_id}"
+        )
         try:
             key_uuid = uuid.UUID(key_id)
             result = await self.revoke_key(key_uuid, current_user_id)

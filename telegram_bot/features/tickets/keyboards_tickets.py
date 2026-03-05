@@ -21,12 +21,8 @@ class TicketKeyboards:
         """Menú principal de soporte."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "🎫 Crear Ticket", callback_data="tickets_create"
-                ),
-                InlineKeyboardButton(
-                    "📋 Mis Tickets", callback_data="tickets_list"
-                ),
+                InlineKeyboardButton("🎫 Crear Ticket", callback_data="tickets_create"),
+                InlineKeyboardButton("📋 Mis Tickets", callback_data="tickets_list"),
             ],
             [
                 InlineKeyboardButton("🔙 Volver", callback_data="tickets_menu_exit"),
@@ -70,12 +66,8 @@ class TicketKeyboards:
         """Confirmar creación del ticket."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "✅ Confirmar", callback_data="tickets_confirm"
-                ),
-                InlineKeyboardButton(
-                    "❌ Cancelar", callback_data="tickets_menu"
-                ),
+                InlineKeyboardButton("✅ Confirmar", callback_data="tickets_confirm"),
+                InlineKeyboardButton("❌ Cancelar", callback_data="tickets_menu"),
             ],
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -167,9 +159,7 @@ class TicketKeyboards:
         # Navegación
         keyboard.append(
             [
-                InlineKeyboardButton(
-                    "◀️ Volver a lista", callback_data="tickets_list"
-                ),
+                InlineKeyboardButton("◀️ Volver a lista", callback_data="tickets_list"),
             ]
         )
         keyboard.append(
@@ -181,7 +171,11 @@ class TicketKeyboards:
     @staticmethod
     def admin_menu(open_count: int = 0) -> InlineKeyboardMarkup:
         """Menú principal de administración de tickets."""
-        open_text = f"📂 Tickets Abiertos ({open_count})" if open_count > 0 else "📂 Tickets Abiertos"
+        open_text = (
+            f"📂 Tickets Abiertos ({open_count})"
+            if open_count > 0
+            else "📂 Tickets Abiertos"
+        )
 
         keyboard = [
             [
@@ -291,11 +285,7 @@ class TicketKeyboards:
             ]
         )
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "🏠 Menú Admin", callback_data="admin_tickets_menu"
-                )
-            ]
+            [InlineKeyboardButton("🏠 Menú Admin", callback_data="admin_tickets_menu")]
         )
 
         return InlineKeyboardMarkup(keyboard)
@@ -326,9 +316,7 @@ class TicketKeyboards:
                 ),
             ],
             [
-                InlineKeyboardButton(
-                    "📊 Todos", callback_data="admin_tickets"
-                ),
+                InlineKeyboardButton("📊 Todos", callback_data="admin_tickets"),
             ],
             [
                 InlineKeyboardButton("🔙 Volver", callback_data="admin_tickets_menu"),

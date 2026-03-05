@@ -110,7 +110,7 @@ class ConsumptionActivationService:
             if saved_billing.id is None:
                 return ActivationResult(
                     success=False,
-                    error_message="Error al crear el ciclo de facturación"
+                    error_message="Error al crear el ciclo de facturación",
                 )
 
             billing_id = saved_billing.id  # type: ignore  # ya verificamos que no es None
@@ -126,16 +126,12 @@ class ConsumptionActivationService:
                 f"billing_id={saved_billing.id}"
             )
 
-            return ActivationResult(
-                success=True,
-                billing_id=saved_billing.id
-            )
+            return ActivationResult(success=True, billing_id=saved_billing.id)
 
         except Exception as e:
             logger.error(f"❌ Error activando modo consumo: {e}")
             return ActivationResult(
-                success=False,
-                error_message="Error interno al activar el modo consumo"
+                success=False, error_message="Error interno al activar el modo consumo"
             )
 
     async def can_cancel_consumption(
@@ -156,17 +152,14 @@ class ConsumptionActivationService:
             return False, "Usuario no encontrado"
 
         # Verificar que tiene un ciclo activo (fuente de verdad principal)
-        billing = await self.billing_repo.get_active_by_user(
-            user_id, current_user_id
-        )
+        billing = await self.billing_repo.get_active_by_user(user_id, current_user_id)
         if not billing:
             return False, "No tienes un ciclo de consumo activo"
 
         if user.has_pending_debt:
             return (
                 False,
-                "Ya tienes una deuda pendiente. "
-                "Debes pagarla antes de cancelar."
+                "Ya tienes una deuda pendiente. " "Debes pagarla antes de cancelar.",
             )
 
         return True, None
@@ -193,9 +186,7 @@ class ConsumptionActivationService:
             )
             if not can_cancel:
                 logger.warning(f"⚠️ No se puede cancelar modo consumo: {error_msg}")
-                return CancellationResult(
-                    success=False, error_message=error_msg
-                )
+                return CancellationResult(success=False, error_message=error_msg)
 
             # Obtener ciclo activo
             billing = await self.billing_repo.get_active_by_user(
@@ -204,7 +195,7 @@ class ConsumptionActivationService:
             if not billing or billing.id is None:
                 return CancellationResult(
                     success=False,
-                    error_message="No se encontró el ciclo de consumo activo"
+                    error_message="No se encontró el ciclo de consumo activo",
                 )
 
             billing_id = billing.id
@@ -231,14 +222,18 @@ class ConsumptionActivationService:
             if not success:
                 return CancellationResult(
                     success=False,
-                    error_message="Error al cerrar el ciclo de facturación"
+                    error_message="Error al cerrar el ciclo de facturación",
                 )
 
             # Solo bloquear claves y marcar deuda si realmente hay algo que cobrar
             if has_debt:
                 await self._handle_cancellation_with_debt(
-                    user_id, billing_id, mb_consumed, total_cost,
-                    days_active, current_user_id
+                    user_id,
+                    billing_id,
+                    mb_consumed,
+                    total_cost,
+                    days_active,
+                    current_user_id,
                 )
             else:
                 await self._handle_cancellation_without_debt(
@@ -251,14 +246,13 @@ class ConsumptionActivationService:
                 mb_consumed=mb_consumed,
                 total_cost_usd=total_cost,
                 days_active=days_active,
-                had_debt=has_debt
+                had_debt=has_debt,
             )
 
         except Exception as e:
             logger.error(f"❌ Error cancelando modo consumo: {e}")
             return CancellationResult(
-                success=False,
-                error_message="Error interno al cancelar el modo consumo"
+                success=False, error_message="Error interno al cancelar el modo consumo"
             )
 
     async def _handle_cancellation_with_debt(
@@ -277,16 +271,14 @@ class ConsumptionActivationService:
             await self.user_repo.save(user, current_user_id)
 
             # Bloquear todas las claves del usuario
+            from application.services.common.container import get_container
             from application.services.consumption_vpn_integration_service import (
                 ConsumptionVpnIntegrationService,
             )
-            from application.services.common.container import get_container
 
             container = get_container()
             if container:
-                vpn_integration = container.resolve(
-                    ConsumptionVpnIntegrationService
-                )
+                vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
                 if vpn_integration:
                     block_result = await vpn_integration.block_user_keys(  # type: ignore
                         user_id, current_user_id
@@ -298,9 +290,7 @@ class ConsumptionActivationService:
                             f"{block_result['errors']}"
                         )
                 else:
-                    logger.error(
-                        "VPN integration service not available"
-                    )
+                    logger.error("VPN integration service not available")
             else:
                 logger.error("Container not available for blocking keys")
 

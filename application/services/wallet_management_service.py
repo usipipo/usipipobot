@@ -70,7 +70,9 @@ class WalletManagementService:
             async with self.tron_dealer_client as client:
                 wallet = await client.assign_wallet(label=label)
 
-            logger.info(f"Nueva wallet {wallet.address[:10]}... creada para user {user_id}")
+            logger.info(
+                f"Nueva wallet {wallet.address[:10]}... creada para user {user_id}"
+            )
 
             # Update user's wallet address
             success = await self.user_repo.update_wallet_address(
@@ -85,12 +87,19 @@ class WalletManagementService:
 
         except TronDealerApiError as e:
             if e.status_code == 401:
-                logger.error(f"TronDealer API authentication failed for user {user_id}: API key not configured or invalid")
+                logger.error(
+                    f"TronDealer API authentication failed for user {user_id}: API key not configured or invalid"
+                )
             else:
-                logger.error(f"TronDealer API error {e.status_code} assigning wallet to user {user_id}: {e.message}")
+                logger.error(
+                    f"TronDealer API error {e.status_code} assigning wallet to user {user_id}: {e.message}"
+                )
             return None
         except Exception as e:
-            logger.error(f"Unexpected error assigning wallet to user {user_id}: {e}", exc_info=True)
+            logger.error(
+                f"Unexpected error assigning wallet to user {user_id}: {e}",
+                exc_info=True,
+            )
             return None
 
     async def _try_reuse_wallet(
