@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
+from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import (
     PACKAGE_OPTIONS,
     SLOT_OPTIONS,
@@ -20,6 +21,12 @@ from application.services.data_package_service import (
 )
 from config import settings
 from infrastructure.persistence.database import get_session_context
+from infrastructure.persistence.postgresql.crypto_order_repository import (
+    PostgresCryptoOrderRepository,
+)
+from infrastructure.persistence.postgresql.crypto_transaction_repository import (
+    PostgresCryptoTransactionRepository,
+)
 from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
 )
@@ -203,13 +210,25 @@ async def api_create_crypto_order(
                     },
                 )
 
-            data_package_service = DataPackageService(package_repo, user_repo)
-            payment_service = MiniAppPaymentService(data_package_service)
+            # Create crypto repositories with the same session context
+            crypto_repo = PostgresCryptoTransactionRepository(session)
+            crypto_order_repo = PostgresCryptoOrderRepository(session)
 
-            order_data = await payment_service.create_crypto_order(
+            # Create CryptoPaymentService with session context (fixes session closed error)
+            crypto_payment_service = CryptoPaymentService(
+                crypto_repo=crypto_repo,
+                user_repo=user_repo,
+                crypto_order_repo=crypto_order_repo,
+            )
+
+            data_package_service = DataPackageService(package_repo, user_repo)
+            miniapp_payment_service = MiniAppPaymentService(data_package_service)
+
+            order_data = await miniapp_payment_service.create_crypto_order(
                 user_id=ctx.user.id,
                 product_type=payment_req.product_type,
                 product_id=payment_req.product_id,
+                payment_service=crypto_payment_service,
             )
 
             if not order_data:
