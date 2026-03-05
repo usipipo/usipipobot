@@ -16,7 +16,9 @@ from utils.logger import logger
 from utils.spinner_core import SpinnerManager
 
 
-def _extract_update_context(args: tuple, kwargs: dict) -> tuple[Optional[Update], Optional[Any]]:
+def _extract_update_context(
+    args: tuple, kwargs: dict
+) -> tuple[Optional[Update], Optional[Any]]:
     """Extrae update y context de los argumentos de una función."""
     update = None
     context = None
@@ -38,6 +40,7 @@ def with_spinner(
     show_duration: bool = False,
 ):
     """Decorador para agregar spinner a funciones asíncronas."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs) -> Any:
@@ -65,16 +68,24 @@ def with_spinner(
                         await asyncio.sleep(1.0 - duration)
                 if spinner_message_id and context:
                     if update.callback_query:
-                        logger.info(f"🔄 Spinner para callback será reemplazado por el handler")
+                        logger.info(
+                            f"🔄 Spinner para callback será reemplazado por el handler"
+                        )
                     else:
                         logger.info(f"🗑️  Eliminando spinner ID: {spinner_message_id}")
-                        success = await SpinnerManager.delete_spinner_message(context, chat_id, spinner_message_id)
+                        success = await SpinnerManager.delete_spinner_message(
+                            context, chat_id, spinner_message_id
+                        )
                         logger.info(f"🗑️  Spinner eliminado: {success}")
                 else:
-                    logger.warning(f"⚠️  No se pudo eliminar spinner - ID: {spinner_message_id}, Context: {context is not None}")
+                    logger.warning(
+                        f"⚠️  No se pudo eliminar spinner - ID: {spinner_message_id}, Context: {context is not None}"
+                    )
                 if show_duration and start_time and context:
                     duration = asyncio.get_event_loop().time() - start_time
-                    await SpinnerManager.safe_reply_text(update, f"✅ Operación completada en {duration:.2f}s")
+                    await SpinnerManager.safe_reply_text(
+                        update, f"✅ Operación completada en {duration:.2f}s"
+                    )
                 return result
             except Exception as e:
                 logger.error(f"❌ Error en función con spinner {func.__name__}: {e}")
@@ -82,12 +93,19 @@ def with_spinner(
                 if spinner_message_id and context:
                     try:
                         logger.info(f"🗑️  Intentando eliminar spinner después de error")
-                        await SpinnerManager.delete_spinner_message(context, chat_id, spinner_message_id)
-                        await SpinnerManager.safe_reply_text(update, "❌ Ocurrió un error durante la operación. Por favor, intenta nuevamente.")
+                        await SpinnerManager.delete_spinner_message(
+                            context, chat_id, spinner_message_id
+                        )
+                        await SpinnerManager.safe_reply_text(
+                            update,
+                            "❌ Ocurrió un error durante la operación. Por favor, intenta nuevamente.",
+                        )
                     except Exception as delete_error:
                         logger.error(f"❌ Error eliminando spinner: {delete_error}")
                 raise e
+
         return wrapper
+
     return decorator
 
 
@@ -97,6 +115,7 @@ def with_animated_spinner(
     update_interval: float = 0.5,
 ):
     """Decorador para spinner animado que se actualiza periódicamente."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(*args, **kwargs) -> Any:
@@ -109,13 +128,23 @@ def with_animated_spinner(
             chat_id = chat.id
             spinner_message_id = None
             animation_task = None
+
             async def animate_spinner():
                 while True:
                     if spinner_message_id and context:
-                        await SpinnerManager.update_spinner_message(context, chat_id, spinner_message_id, operation_type, custom_message)
+                        await SpinnerManager.update_spinner_message(
+                            context,
+                            chat_id,
+                            spinner_message_id,
+                            operation_type,
+                            custom_message,
+                        )
                     await asyncio.sleep(update_interval)
+
             try:
-                spinner_message_id = await SpinnerManager.send_spinner_message(update, operation_type, custom_message)
+                spinner_message_id = await SpinnerManager.send_spinner_message(
+                    update, operation_type, custom_message
+                )
                 animation_task = asyncio.create_task(animate_spinner())
                 result = await func(*args, **kwargs)
                 if animation_task:
@@ -125,10 +154,14 @@ def with_animated_spinner(
                     except asyncio.CancelledError:
                         pass
                 if spinner_message_id and context:
-                    await SpinnerManager.delete_spinner_message(context, chat_id, spinner_message_id)
+                    await SpinnerManager.delete_spinner_message(
+                        context, chat_id, spinner_message_id
+                    )
                 return result
             except Exception as e:
-                logger.error(f"Error en función con spinner animado {func.__name__}: {e}")
+                logger.error(
+                    f"Error en función con spinner animado {func.__name__}: {e}"
+                )
                 if animation_task:
                     animation_task.cancel()
                     try:
@@ -137,17 +170,25 @@ def with_animated_spinner(
                         pass
                 if spinner_message_id and context:
                     try:
-                        await SpinnerManager.delete_spinner_message(context, chat_id, spinner_message_id)
-                        await SpinnerManager.safe_reply_text(update, "❌ Ocurrió un error durante la operación. Por favor, intenta nuevamente.")
+                        await SpinnerManager.delete_spinner_message(
+                            context, chat_id, spinner_message_id
+                        )
+                        await SpinnerManager.safe_reply_text(
+                            update,
+                            "❌ Ocurrió un error durante la operación. Por favor, intenta nuevamente.",
+                        )
                     except:
                         pass
                 raise e
+
         return wrapper
+
     return decorator
 
 
 def _create_callback_spinner_decorator(operation_type: str):
     """Factory para crear decoradores de spinner específicos para callbacks."""
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         async def wrapper(self, *args, **kwargs) -> Any:
@@ -161,21 +202,34 @@ def _create_callback_spinner_decorator(operation_type: str):
             spinner_message_id = None
             try:
                 logger.info(f"🌀 Iniciando spinner para {func.__name__}")
-                spinner_message_id = await SpinnerManager.send_spinner_message(update, operation_type)
+                spinner_message_id = await SpinnerManager.send_spinner_message(
+                    update, operation_type
+                )
                 logger.info(f"🌀 Spinner enviado con ID: {spinner_message_id}")
-                result = await func(self, update, context, spinner_message_id, *args[3:], **kwargs)
+                result = await func(
+                    self, update, context, spinner_message_id, *args[3:], **kwargs
+                )
                 return result
             except Exception as e:
-                logger.error(f"❌ Error en función con spinner callback {func.__name__}: {e}")
+                logger.error(
+                    f"❌ Error en función con spinner callback {func.__name__}: {e}"
+                )
                 if spinner_message_id and context:
                     try:
                         logger.info(f"🗑️  Intentando eliminar spinner después de error")
-                        await SpinnerManager.delete_spinner_message(context, chat_id, spinner_message_id)
-                        await SpinnerManager.safe_reply_text(update, "❌ Ocurrió un error durante la operación. Por favor, intenta nuevamente.")
+                        await SpinnerManager.delete_spinner_message(
+                            context, chat_id, spinner_message_id
+                        )
+                        await SpinnerManager.safe_reply_text(
+                            update,
+                            "❌ Ocurrió un error durante la operación. Por favor, intenta nuevamente.",
+                        )
                     except Exception as delete_error:
                         logger.error(f"❌ Error eliminando spinner: {delete_error}")
                 raise e
+
         return wrapper
+
     return decorator
 
 

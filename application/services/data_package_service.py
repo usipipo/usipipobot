@@ -78,7 +78,7 @@ class DataPackageService:
         self,
         package_repo: IDataPackageRepository,
         user_repo: IUserRepository,
-        bonus_service: Optional[UserBonusService] = None
+        bonus_service: Optional[UserBonusService] = None,
     ):
         self.package_repo = package_repo
         self.user_repo = user_repo
@@ -112,7 +112,7 @@ class DataPackageService:
         package_type: str,
         telegram_payment_id: str,
         current_user_id: int,
-        is_referred_first_purchase: bool = False
+        is_referred_first_purchase: bool = False,
     ) -> Tuple[DataPackage, Dict[str, Any]]:
         """
         Compra un paquete aplicando todos los bonos correspondientes.
@@ -135,7 +135,9 @@ class DataPackageService:
                 raise ValueError(f"Usuario no encontrado: {user_id}")
 
             # Get active packages for quick renewal bonus calculation
-            active_packages = await self.package_repo.get_valid_by_user(user_id, current_user_id)
+            active_packages = await self.package_repo.get_valid_by_user(
+                user_id, current_user_id
+            )
 
             # Calculate bonuses
             total_bonus_percent, bonuses = self.bonus_service.calculate_total_bonus(
@@ -149,7 +151,9 @@ class DataPackageService:
             total_multiplier = 1 + (option.bonus_percent + total_bonus_percent) / 100
             actual_data_bytes = int(data_limit_bytes * total_multiplier)
 
-            expires_at = datetime.now(timezone.utc) + timedelta(days=option.duration_days)
+            expires_at = datetime.now(timezone.utc) + timedelta(
+                days=option.duration_days
+            )
 
             new_package = DataPackage(
                 user_id=user_id,
@@ -170,7 +174,9 @@ class DataPackageService:
                 user.welcome_bonus_used = True
 
             # Update loyalty bonus based on new purchase count
-            new_loyalty = self.bonus_service.get_loyalty_bonus_for_purchase_count(user.purchase_count)
+            new_loyalty = self.bonus_service.get_loyalty_bonus_for_purchase_count(
+                user.purchase_count
+            )
             if new_loyalty > user.loyalty_bonus_percent:
                 user.loyalty_bonus_percent = new_loyalty
 
@@ -182,7 +188,7 @@ class DataPackageService:
                 "user_bonuses": bonuses,
                 "total_bonus_percent": option.bonus_percent + total_bonus_percent,
                 "base_gb": option.data_gb,
-                "final_gb": actual_data_bytes / (1024**3)
+                "final_gb": actual_data_bytes / (1024**3),
             }
 
             logger.info(

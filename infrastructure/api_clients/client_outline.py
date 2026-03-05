@@ -124,7 +124,7 @@ class OutlineClient:
         try:
             res = await self.client.put(
                 f"{self.api_url}/access-keys/{key_id}/data-limit",
-                json={"limit": {"bytes": 1}}
+                json={"limit": {"bytes": 1}},
             )
             if res.status_code == 204:
                 logger.info(f"Key {key_id} disabled (data-limit set to 1 byte)")

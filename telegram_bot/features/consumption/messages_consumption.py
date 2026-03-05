@@ -183,8 +183,7 @@ class ConsumptionMessages:
         )
 
         NO_PENDING_DEBT = (
-            "ℹ️ **No tienes deudas pendientes**\n\n"
-            "✅ Estás al día con tus pagos"
+            "ℹ️ **No tienes deudas pendientes**\n\n" "✅ Estás al día con tus pagos"
         )
 
     class Menu:
@@ -198,19 +197,14 @@ class ConsumptionMessages:
         )
 
         STATUS_ACTIVE = (
-            "✅ Modo consumo ACTIVO\n"
-            "📊 Usa `/mi_consumo` para ver detalles"
+            "✅ Modo consumo ACTIVO\n" "📊 Usa `/mi_consumo` para ver detalles"
         )
 
         STATUS_INACTIVE = (
-            "⭕ Modo consumo INACTIVO\n"
-            "📦 Usando plan gratuito (5GB/clave)"
+            "⭕ Modo consumo INACTIVO\n" "📦 Usando plan gratuito (5GB/clave)"
         )
 
-        STATUS_DEBT = (
-            "🔴 TIENES DEUDA PENDIENTE\n"
-            "💳 Genera factura para pagar"
-        )
+        STATUS_DEBT = "🔴 TIENES DEUDA PENDIENTE\n" "💳 Genera factura para pagar"
 
     class Error:
         """Mensajes de error."""

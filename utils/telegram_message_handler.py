@@ -70,7 +70,9 @@ class TelegramUtils:
                     )
                     return True
                 except Exception as ex:
-                    logger.error(f"safe_edit_message: send_message fallback failed: {ex}")
+                    logger.error(
+                        f"safe_edit_message: send_message fallback failed: {ex}"
+                    )
                     return False
 
             # Handle "message not modified" - not an error, just return True

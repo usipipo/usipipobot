@@ -54,7 +54,9 @@ class KeyListingMixin:
                     update,
                     context,
                     spinner_message_id,
-                    text=AdminVpnMessages.NO_KEYS.format(server_type=server_type.upper()),
+                    text=AdminVpnMessages.NO_KEYS.format(
+                        server_type=server_type.upper()
+                    ),
                     reply_markup=AdminVpnKeyboards.back_to_server(server_type),
                     parse_mode="Markdown",
                 )
@@ -63,7 +65,7 @@ class KeyListingMixin:
             page = 1
             total_pages = max(1, (len(keys) + KEYS_PER_PAGE - 1) // KEYS_PER_PAGE)
             offset = (page - 1) * KEYS_PER_PAGE
-            page_keys = keys[offset:offset + KEYS_PER_PAGE]
+            page_keys = keys[offset : offset + KEYS_PER_PAGE]
 
             active_count = sum(1 for k in keys if k.get("is_active", False))
             inactive_count = len(keys) - active_count
@@ -73,7 +75,9 @@ class KeyListingMixin:
             )
             message += f"📊 Total: {len(keys)} claves"
             if inactive_count > 0:
-                message += f" (✅ {active_count} activas, ⏸️ {inactive_count} inactivas)"
+                message += (
+                    f" (✅ {active_count} activas, ⏸️ {inactive_count} inactivas)"
+                )
             message += "\n\n"
 
             await SpinnerManager.replace_spinner_with_message(
@@ -125,7 +129,9 @@ class KeyListingMixin:
                 await self._safe_edit_message(
                     query,
                     context,
-                    text=AdminVpnMessages.NO_KEYS.format(server_type=server_type.upper()),
+                    text=AdminVpnMessages.NO_KEYS.format(
+                        server_type=server_type.upper()
+                    ),
                     reply_markup=AdminVpnKeyboards.back_to_server(server_type),
                     parse_mode="Markdown",
                 )
@@ -133,7 +139,7 @@ class KeyListingMixin:
 
             total_pages = max(1, (len(keys) + KEYS_PER_PAGE - 1) // KEYS_PER_PAGE)
             offset = (page - 1) * KEYS_PER_PAGE
-            page_keys = keys[offset:offset + KEYS_PER_PAGE]
+            page_keys = keys[offset : offset + KEYS_PER_PAGE]
 
             active_count = sum(1 for k in keys if k.get("is_active", False))
             inactive_count = len(keys) - active_count
@@ -143,7 +149,9 @@ class KeyListingMixin:
             )
             message += f"📊 Total: {len(keys)} claves"
             if inactive_count > 0:
-                message += f" (✅ {active_count} activas, ⏸️ {inactive_count} inactivas)"
+                message += (
+                    f" (✅ {active_count} activas, ⏸️ {inactive_count} inactivas)"
+                )
             message += "\n\n"
 
             await self._safe_edit_message(

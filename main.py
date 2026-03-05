@@ -17,7 +17,6 @@ from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
 from config import settings
 from infrastructure.jobs.crypto_order_expiration_job import expire_crypto_orders_job
-from infrastructure.jobs.crypto_order_expiration_job import expire_crypto_orders_job
 from infrastructure.jobs.key_cleanup_job import key_cleanup_job
 from infrastructure.jobs.memory_cleanup_job import memory_cleanup_job
 from infrastructure.jobs.package_expiration_job import expire_packages_job

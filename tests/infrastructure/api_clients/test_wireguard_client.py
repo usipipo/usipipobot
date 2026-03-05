@@ -500,9 +500,7 @@ AllowedIPs = 10.0.0.6/32
 
         wireguard_client.conf_path.read_text.return_value = config_content
 
-        with patch.object(
-            wireguard_client, "_run_cmd", new_callable=AsyncMock
-        ):
+        with patch.object(wireguard_client, "_run_cmd", new_callable=AsyncMock):
             result = await wireguard_client.delete_peer(
                 pub_key="delete_pub_key", client_name="tg_delete_me"
             )
@@ -538,9 +536,7 @@ AllowedIPs = 10.0.0.7/32
         mock_client_file.exists.return_value = True
         wireguard_client.clients_dir.__truediv__.return_value = mock_client_file
 
-        with patch.object(
-            wireguard_client, "_run_cmd", new_callable=AsyncMock
-        ):
+        with patch.object(wireguard_client, "_run_cmd", new_callable=AsyncMock):
             result = await wireguard_client.delete_peer(
                 pub_key="pub_key_789", client_name="tg_789_xyz789"
             )
@@ -573,9 +569,7 @@ AllowedIPs = 10.0.0.8/32
         mock_client_file.exists.return_value = False
         wireguard_client.clients_dir.__truediv__.return_value = mock_client_file
 
-        with patch.object(
-            wireguard_client, "_run_cmd", new_callable=AsyncMock
-        ):
+        with patch.object(wireguard_client, "_run_cmd", new_callable=AsyncMock):
             result = await wireguard_client.delete_peer(
                 pub_key="pub_key_abc", client_name="tg_abc_def"
             )
@@ -619,9 +613,7 @@ AllowedIPs = 10.0.0.9/32
         """Test delete_peer returns False on exception."""
         wireguard_client.conf_path.read_text.side_effect = Exception("IO error")
 
-        with patch(
-            "infrastructure.api_clients.client_wireguard.logger"
-        ) as mock_logger:
+        with patch("infrastructure.api_clients.client_wireguard.logger") as mock_logger:
             result = await wireguard_client.delete_peer(
                 pub_key="any_key", client_name="tg_any"
             )

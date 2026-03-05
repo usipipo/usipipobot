@@ -35,8 +35,7 @@ class AdminVpnMessages:
     KEYS_LIST_HEADER = "🔑 **Lista de Claves {server_type}**\n\n"
 
     NO_KEYS = (
-        "📭 **Sin Claves**\n\n"
-        "No hay claves {server_type} registradas en el sistema."
+        "📭 **Sin Claves**\n\n" "No hay claves {server_type} registradas en el sistema."
     )
 
     KEY_DETAILS = (
@@ -60,10 +59,7 @@ class AdminVpnMessages:
         "{errors_section}"
     )
 
-    CLEANUP_ERRORS = (
-        "⚠️ **Errores durante la limpieza:**\n"
-        "{errors}"
-    )
+    CLEANUP_ERRORS = "⚠️ **Errores durante la limpieza:**\n" "{errors}"
 
     NO_GHOST_KEYS = (
         "✅ **Sin Claves Fantasmas**\n\n"
@@ -87,8 +83,7 @@ class AdminVpnMessages:
     )
 
     OPERATION_CANCELLED = (
-        "❌ **Operación Cancelada**\n\n"
-        "La acción ha sido cancelada."
+        "❌ **Operación Cancelada**\n\n" "La acción ha sido cancelada."
     )
 
     # Error messages

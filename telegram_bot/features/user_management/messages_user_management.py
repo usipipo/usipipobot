@@ -6,8 +6,8 @@ Version: 2.0.0 - Feature-based architecture
 """
 
 from utils.message_separators import (
-    MessageSeparatorBuilder,
     TELEGRAM_MOBILE_WIDTH,
+    MessageSeparatorBuilder,
     compact_separator,
 )
 
@@ -36,16 +36,19 @@ def _format_key_slots(used: int, total: int) -> str:
 
 _SEP_HEADER = (
     MessageSeparatorBuilder()
-    .compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
+    .compact()
+    .style("double")
+    .length(TELEGRAM_MOBILE_WIDTH)
+    .build()
 )
 _SEP_DIVIDER = (
     MessageSeparatorBuilder()
-    .compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
+    .compact()
+    .style("simple")
+    .length(TELEGRAM_MOBILE_WIDTH)
+    .build()
 )
-_SEP_BOLD = (
-    MessageSeparatorBuilder()
-    .compact().style("bold").length(9).build()
-)
+_SEP_BOLD = MessageSeparatorBuilder().compact().style("bold").length(9).build()
 
 
 class UserManagementMessages:
@@ -186,7 +189,10 @@ class UserManagementMessages:
             _SEP_TIP = compact_separator("bold", 7, "💡")
             _SEP_DIV = (
                 MessageSeparatorBuilder()
-                .compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
+                .compact()
+                .style("simple")
+                .length(TELEGRAM_MOBILE_WIDTH)
+                .build()
             )
 
             @classmethod

@@ -37,10 +37,7 @@ async def logs_page(request: Request, ctx: MiniAppContext = Depends(require_admi
 
 
 @router.get("/api/logs")
-async def api_get_logs(
-    lines: int = 100,
-    ctx: MiniAppContext = Depends(require_admin)
-):
+async def api_get_logs(lines: int = 100, ctx: MiniAppContext = Depends(require_admin)):
     """API: Obtiene los últimos logs del sistema (solo administrador)."""
     try:
         from utils.logger import logger as app_logger
@@ -49,12 +46,12 @@ async def api_get_logs(
 
         # Parse log lines into structured format
         parsed_logs = []
-        for line in log_lines.strip().split('\n'):
+        for line in log_lines.strip().split("\n"):
             if not line.strip():
                 continue
 
             # Try to parse log format: "YYYY-MM-DD HH:mm:ss | LEVEL | message"
-            parts = line.split(' | ', 2)
+            parts = line.split(" | ", 2)
             if len(parts) >= 3:
                 timestamp = parts[0].strip()
                 level = parts[1].strip()
@@ -68,11 +65,13 @@ async def api_get_logs(
                 level = "INFO"
                 message = line
 
-            parsed_logs.append({
-                "timestamp": timestamp,
-                "level": level,
-                "message": message,
-            })
+            parsed_logs.append(
+                {
+                    "timestamp": timestamp,
+                    "level": level,
+                    "message": message,
+                }
+            )
 
         logger.debug(f"📋 Admin {ctx.user.id} fetched {len(parsed_logs)} log lines")
         return {

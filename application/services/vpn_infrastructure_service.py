@@ -359,7 +359,11 @@ class VpnInfrastructureService:
 
             type_keys = []
             for k in all_keys:
-                key_type_value = k.key_type.value if hasattr(k.key_type, "value") else str(k.key_type)
+                key_type_value = (
+                    k.key_type.value
+                    if hasattr(k.key_type, "value")
+                    else str(k.key_type)
+                )
                 if key_type_value.lower() == server_type_lower:
                     if include_inactive or k.is_active:
                         type_keys.append(k)

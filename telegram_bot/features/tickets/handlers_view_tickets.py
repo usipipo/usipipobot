@@ -13,9 +13,9 @@ from telegram.ext import ContextTypes
 from domain.entities.ticket import TicketStatus
 from utils.logger import logger
 
-from .handlers_user_tickets import UserTicketHandler, TICKET_MENU, TICKET_VIEWING
+from .handlers_user_tickets import TICKET_MENU, TICKET_VIEWING, UserTicketHandler
 from .keyboards_tickets import TicketKeyboards
-from .messages_tickets import TicketMessages, CATEGORY_NAME, PRIORITY_NAME, STATUS_NAME
+from .messages_tickets import CATEGORY_NAME, PRIORITY_NAME, STATUS_NAME, TicketMessages
 
 
 class ViewTicketsMixin:
@@ -121,7 +121,9 @@ class ViewTicketsMixin:
             )
             return TICKET_MENU
 
-        logger.info(f"🎫 User {user_id} viewing ticket {ticket_id} (simple_id: {simple_id})")
+        logger.info(
+            f"🎫 User {user_id} viewing ticket {ticket_id} (simple_id: {simple_id})"
+        )
 
         try:
             result = await self.ticket_service.get_ticket_with_messages(ticket_id)
@@ -138,7 +140,9 @@ class ViewTicketsMixin:
             ticket, messages = result
 
             if ticket.user_id != user_id:
-                logger.warning(f"⚠️ User {user_id} tried to access ticket {ticket_id} not owned by them")
+                logger.warning(
+                    f"⚠️ User {user_id} tried to access ticket {ticket_id} not owned by them"
+                )
                 await self._safe_edit_message(
                     query,
                     context,
@@ -150,9 +154,15 @@ class ViewTicketsMixin:
             header = TicketMessages.Detail.HEADER
             info = TicketMessages.Detail.INFO.format(
                 ticket_number=ticket.ticket_number,
-                category=CATEGORY_NAME.get(ticket.category.value, ticket.category.value),
-                priority=PRIORITY_NAME.get(ticket.priority.value, ticket.priority.value),
-                status=STATUS_NAME.get(ticket.status.value, ticket.status.value.upper()),
+                category=CATEGORY_NAME.get(
+                    ticket.category.value, ticket.category.value
+                ),
+                priority=PRIORITY_NAME.get(
+                    ticket.priority.value, ticket.priority.value
+                ),
+                status=STATUS_NAME.get(
+                    ticket.status.value, ticket.status.value.upper()
+                ),
                 created_at=ticket.created_at.strftime("%d/%m/%Y %H:%M"),
             )
             messages_text = self._format_messages(messages)

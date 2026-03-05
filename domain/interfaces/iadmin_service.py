@@ -132,8 +132,9 @@ class IAdminService(
 ):
     """
     Interfaz combinada del servicio de administración.
-    
+
     Mantiene compatibilidad hacia atrás con código existente.
     Las nuevas implementaciones deben usar las interfaces especializadas.
     """
+
     pass

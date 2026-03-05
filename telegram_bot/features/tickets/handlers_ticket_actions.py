@@ -12,7 +12,7 @@ from telegram.ext import ContextTypes
 
 from utils.logger import logger
 
-from .handlers_user_tickets import UserTicketHandler, TICKET_MENU, TICKET_REPLYING
+from .handlers_user_tickets import TICKET_MENU, TICKET_REPLYING, UserTicketHandler
 from .keyboards_tickets import TicketKeyboards
 from .messages_tickets import TicketMessages
 
@@ -61,7 +61,9 @@ class TicketActionsMixin:
 
         ticket_id_map = context.user_data.get("ticket_id_map")
         if not ticket_id_map or str(ticket_id_simple) not in ticket_id_map:
-            logger.error(f"❌ Ticket ID {ticket_id_simple} not found in mapping for reply")
+            logger.error(
+                f"❌ Ticket ID {ticket_id_simple} not found in mapping for reply"
+            )
             await self._safe_edit_message(
                 query,
                 context,
@@ -82,7 +84,9 @@ class TicketActionsMixin:
             )
             return TICKET_MENU
 
-        logger.info(f"🎫 User {user_id} starting reply to ticket {ticket_id} (simple_id: {ticket_id_simple})")
+        logger.info(
+            f"🎫 User {user_id} starting reply to ticket {ticket_id} (simple_id: {ticket_id_simple})"
+        )
 
         if context.user_data is None:
             context.user_data = {}
@@ -230,7 +234,9 @@ class TicketActionsMixin:
 
         ticket_id_map = context.user_data.get("ticket_id_map")
         if not ticket_id_map or str(ticket_id_simple) not in ticket_id_map:
-            logger.error(f"❌ Ticket ID {ticket_id_simple} not found in mapping for close")
+            logger.error(
+                f"❌ Ticket ID {ticket_id_simple} not found in mapping for close"
+            )
             await self._safe_edit_message(
                 query,
                 context,
@@ -251,7 +257,9 @@ class TicketActionsMixin:
             )
             return TICKET_MENU
 
-        logger.info(f"🎫 User {user_id} closing ticket {ticket_id} (simple_id: {ticket_id_simple})")
+        logger.info(
+            f"🎫 User {user_id} closing ticket {ticket_id} (simple_id: {ticket_id_simple})"
+        )
 
         try:
             # Usar UUID real para cerrar ticket en DB
@@ -270,7 +278,7 @@ class TicketActionsMixin:
                 query,
                 context,
                 text="✅ *Ticket Cerrado*\n\nTu ticket ha sido cerrado. "
-                     "Si necesitas más ayuda, puedes crear uno nuevo.",
+                "Si necesitas más ayuda, puedes crear uno nuevo.",
                 reply_markup=TicketKeyboards.back_to_menu(),
             )
 

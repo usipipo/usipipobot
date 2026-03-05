@@ -35,8 +35,8 @@ class ActivationMixin:
         user_id = update.effective_user.id
 
         try:
-            can_activate, error_msg = await self.billing_service.can_activate_consumption(
-                user_id, user_id
+            can_activate, error_msg = (
+                await self.billing_service.can_activate_consumption(user_id, user_id)
             )
 
             if not can_activate:
@@ -46,21 +46,24 @@ class ActivationMixin:
                 await query.edit_message_text(
                     text=message,
                     reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
                 return
 
             message = (
-                ConsumptionMessages.Activation.WARNING_HEADER + "\n\n" +
-                ConsumptionMessages.Activation.get_terms_and_conditions() + "\n\n" +
-                ConsumptionMessages.Activation.get_price_example() + "\n\n" +
-                ConsumptionMessages.Activation.CONFIRMATION_PROMPT
+                ConsumptionMessages.Activation.WARNING_HEADER
+                + "\n\n"
+                + ConsumptionMessages.Activation.get_terms_and_conditions()
+                + "\n\n"
+                + ConsumptionMessages.Activation.get_price_example()
+                + "\n\n"
+                + ConsumptionMessages.Activation.CONFIRMATION_PROMPT
             )
 
             await query.edit_message_text(
                 text=message,
                 reply_markup=ConsumptionKeyboards.activation_confirmation(),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -90,7 +93,7 @@ class ActivationMixin:
                 await query.edit_message_text(
                     text=ConsumptionMessages.Activation.get_success_message(),
                     reply_markup=ConsumptionKeyboards.activation_success(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
                 logger.info(f"✅ Usuario {user_id} activó modo consumo")
             else:
@@ -100,7 +103,7 @@ class ActivationMixin:
                 await query.edit_message_text(
                     text=message,
                     reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
 
         except Exception as e:

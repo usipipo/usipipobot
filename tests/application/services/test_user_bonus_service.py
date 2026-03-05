@@ -1,9 +1,10 @@
-import pytest
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
-from domain.entities.user import User
+import pytest
+
+from application.services.user_bonus_service import BonusCalculation, UserBonusService
 from domain.entities.data_package import DataPackage, PackageType
-from application.services.user_bonus_service import UserBonusService, BonusCalculation
+from domain.entities.user import User
 
 
 class TestCalculateWelcomeBonus:
@@ -60,9 +61,9 @@ class TestCalculateQuickRenewalBonus:
             DataPackage(
                 user_id=123,
                 package_type=PackageType.BASIC,
-                data_limit_bytes=10*1024**3,
+                data_limit_bytes=10 * 1024**3,
                 stars_paid=600,
-                expires_at=expires_soon
+                expires_at=expires_soon,
             )
         ]
         service = UserBonusService()
@@ -79,9 +80,9 @@ class TestCalculateQuickRenewalBonus:
             DataPackage(
                 user_id=123,
                 package_type=PackageType.BASIC,
-                data_limit_bytes=10*1024**3,
+                data_limit_bytes=10 * 1024**3,
                 stars_paid=600,
-                expires_at=expires_later
+                expires_at=expires_later,
             )
         ]
         service = UserBonusService()
@@ -125,16 +126,16 @@ class TestCalculateTotalBonus:
             telegram_id=123,
             purchase_count=0,
             welcome_bonus_used=False,
-            loyalty_bonus_percent=25
+            loyalty_bonus_percent=25,
         )
         expires_soon = datetime.now(timezone.utc) + timedelta(days=3)
         active_packages = [
             DataPackage(
                 user_id=123,
                 package_type=PackageType.BASIC,
-                data_limit_bytes=10*1024**3,
+                data_limit_bytes=10 * 1024**3,
                 stars_paid=600,
-                expires_at=expires_soon
+                expires_at=expires_soon,
             )
         ]
         service = UserBonusService()
@@ -163,16 +164,16 @@ class TestCalculateTotalBonus:
             telegram_id=123,
             purchase_count=2,
             welcome_bonus_used=True,
-            loyalty_bonus_percent=0
+            loyalty_bonus_percent=0,
         )
         expires_later = datetime.now(timezone.utc) + timedelta(days=15)
         active_packages = [
             DataPackage(
                 user_id=123,
                 package_type=PackageType.BASIC,
-                data_limit_bytes=10*1024**3,
+                data_limit_bytes=10 * 1024**3,
                 stars_paid=600,
-                expires_at=expires_later
+                expires_at=expires_later,
             )
         ]
         service = UserBonusService()

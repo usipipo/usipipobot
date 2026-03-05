@@ -12,8 +12,8 @@ from uuid import UUID
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from application.services.ticket_service import TicketService
 from application.services.ticket_notification_service import TicketNotificationService
+from application.services.ticket_service import TicketService
 from domain.entities.ticket import Ticket, TicketCategory
 from telegram_bot.common.base_handler import BaseHandler
 from telegram_bot.common.keyboards import CommonKeyboards
@@ -22,15 +22,14 @@ from utils.logger import logger
 
 from .keyboards_tickets import TicketKeyboards
 from .messages_tickets import (
-    TicketMessages,
     CATEGORY_EMOJI,
     CATEGORY_NAME,
     PRIORITY_EMOJI,
     PRIORITY_NAME,
     STATUS_EMOJI,
     STATUS_NAME,
+    TicketMessages,
 )
-
 
 # Conversation states
 TICKET_MENU = 0
@@ -64,10 +63,7 @@ class UserTicketHandler(BaseHandler):
             self._ticket_creation_cache[cache_key] = []
 
         user_tickets = self._ticket_creation_cache[cache_key]
-        user_tickets = [
-            ts for ts in user_tickets
-            if now - ts < timedelta(hours=24)
-        ]
+        user_tickets = [ts for ts in user_tickets if now - ts < timedelta(hours=24)]
         self._ticket_creation_cache[cache_key] = user_tickets
 
         return len(user_tickets) >= 3
@@ -136,9 +132,7 @@ class UserTicketHandler(BaseHandler):
             prefix = "👨‍💼 *Soporte:*" if msg.is_from_admin else "👤 *Tú:*"
             timestamp = msg.created_at.strftime("%d/%m %H:%M")
             lines.append(
-                f"{prefix}\n"
-                f"```\n{msg.message[:200]}\n```\n"
-                f"🕐 {timestamp}\n"
+                f"{prefix}\n" f"```\n{msg.message[:200]}\n```\n" f"🕐 {timestamp}\n"
             )
 
         return "\n".join(lines)
@@ -176,9 +170,7 @@ class UserTicketHandler(BaseHandler):
             await self._handle_error(update, context, e, "show_menu")
             return -1
 
-    async def cancel(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> int:
+    async def cancel(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Cancela la operación actual y vuelve al menú."""
         if update.callback_query:
             await self._safe_answer_query(update.callback_query)
@@ -197,9 +189,10 @@ class UserTicketHandler(BaseHandler):
     ) -> int:
         """Sale de la conversación de tickets y vuelve al menú principal."""
         from telegram.ext import ConversationHandler
+
+        from config import settings
         from telegram_bot.common.keyboards import CommonKeyboards
         from telegram_bot.common.messages import CommonMessages
-        from config import settings
 
         if update.callback_query:
             await self._safe_answer_query(update.callback_query)
@@ -236,6 +229,7 @@ class UserTicketHandler(BaseHandler):
     ) -> int:
         """Sale de la conversación de tickets y vuelve al menú de ayuda."""
         from telegram.ext import ConversationHandler
+
         from telegram_bot.features.user_management.keyboards_user_management import (
             UserManagementKeyboards,
         )

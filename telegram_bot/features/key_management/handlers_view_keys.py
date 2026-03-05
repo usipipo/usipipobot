@@ -8,8 +8,12 @@ Version: 1.0.0 - Refactor from handlers_key_management.py
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram_bot.features.key_management.messages_key_management import KeyManagementMessages
-from telegram_bot.features.key_management.keyboards_key_management import KeyManagementKeyboards
+from telegram_bot.features.key_management.keyboards_key_management import (
+    KeyManagementKeyboards,
+)
+from telegram_bot.features.key_management.messages_key_management import (
+    KeyManagementMessages,
+)
 from utils.logger import logger
 from utils.telegram_utils import escape_markdown, format_percentage
 

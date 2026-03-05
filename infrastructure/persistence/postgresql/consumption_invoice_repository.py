@@ -35,8 +35,9 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
     ) -> Optional[ConsumptionInvoice]:
         """Busca una factura específica por su ID."""
         result = await self.session.execute(
-            select(ConsumptionInvoiceModel)
-            .where(ConsumptionInvoiceModel.id == invoice_id)
+            select(ConsumptionInvoiceModel).where(
+                ConsumptionInvoiceModel.id == invoice_id
+            )
         )
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
@@ -73,10 +74,9 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
         Solo puede haber una factura pendiente activa por usuario.
         """
         result = await self.session.execute(
-            select(ConsumptionInvoiceModel)
-            .where(
+            select(ConsumptionInvoiceModel).where(
                 ConsumptionInvoiceModel.user_id == user_id,
-                ConsumptionInvoiceModel.status == InvoiceStatus.PENDING.value
+                ConsumptionInvoiceModel.status == InvoiceStatus.PENDING.value,
             )
         )
         model = result.scalar_one_or_none()
@@ -103,20 +103,16 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
         """
         now = datetime.now(timezone.utc)
         result = await self.session.execute(
-            select(ConsumptionInvoiceModel)
-            .where(
+            select(ConsumptionInvoiceModel).where(
                 ConsumptionInvoiceModel.status == InvoiceStatus.PENDING.value,
-                ConsumptionInvoiceModel.expires_at <= now
+                ConsumptionInvoiceModel.expires_at <= now,
             )
         )
         models = result.scalars().all()
         return [m.to_entity() for m in models]
 
     async def mark_as_paid(
-        self,
-        invoice_id: uuid.UUID,
-        transaction_hash: str,
-        current_user_id: int
+        self, invoice_id: uuid.UUID, transaction_hash: str, current_user_id: int
     ) -> bool:
         """Marca una factura como pagada."""
         model = await self.session.get(ConsumptionInvoiceModel, invoice_id)
@@ -149,10 +145,7 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
         return True
 
     async def update_status(
-        self,
-        invoice_id: uuid.UUID,
-        status: InvoiceStatus,
-        current_user_id: int
+        self, invoice_id: uuid.UUID, status: InvoiceStatus, current_user_id: int
     ) -> bool:
         """Actualiza el estado de una factura."""
         model = await self.session.get(ConsumptionInvoiceModel, invoice_id)
@@ -163,9 +156,7 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
         await self.session.commit()
         return True
 
-    async def delete(
-        self, invoice_id: uuid.UUID, current_user_id: int
-    ) -> bool:
+    async def delete(self, invoice_id: uuid.UUID, current_user_id: int) -> bool:
         """Elimina una factura de la base de datos."""
         model = await self.session.get(ConsumptionInvoiceModel, invoice_id)
         if not model:

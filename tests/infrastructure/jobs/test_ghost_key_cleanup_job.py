@@ -62,7 +62,9 @@ class TestGhostKeyCleanupJob:
         assert "elapsed_seconds" in result
 
     @pytest.mark.asyncio
-    async def test_run_with_ghost_keys_notifies_admin(self, cleanup_job, mock_vpn_service):
+    async def test_run_with_ghost_keys_notifies_admin(
+        self, cleanup_job, mock_vpn_service
+    ):
         """Test that admin is notified when ghost keys are found."""
         mock_vpn_service.cleanup_ghost_keys.return_value = {
             "total_checked": 50,
@@ -110,7 +112,9 @@ class TestShouldRunNow:
                     with patch(
                         "infrastructure.jobs.ghost_key_cleanup_job.datetime"
                     ) as mock_datetime:
-                        mock_datetime.utcnow.return_value = datetime(2024, 1, 7, 3, 0, 0)
+                        mock_datetime.utcnow.return_value = datetime(
+                            2024, 1, 7, 3, 0, 0
+                        )
                         mock_datetime.strftime = datetime.strftime
 
                         assert cleanup_job.should_run_now() is True
@@ -124,7 +128,9 @@ class TestShouldRunNow:
                         "infrastructure.jobs.ghost_key_cleanup_job.datetime"
                     ) as mock_datetime:
                         # Monday, not Sunday
-                        mock_datetime.utcnow.return_value = datetime(2024, 1, 8, 3, 0, 0)
+                        mock_datetime.utcnow.return_value = datetime(
+                            2024, 1, 8, 3, 0, 0
+                        )
                         mock_datetime.strftime = datetime.strftime
 
                         assert cleanup_job.should_run_now() is False
@@ -138,7 +144,9 @@ class TestShouldRunNow:
                         "infrastructure.jobs.ghost_key_cleanup_job.datetime"
                     ) as mock_datetime:
                         # Sunday but at hour 4, not 3
-                        mock_datetime.utcnow.return_value = datetime(2024, 1, 7, 4, 0, 0)
+                        mock_datetime.utcnow.return_value = datetime(
+                            2024, 1, 7, 4, 0, 0
+                        )
                         mock_datetime.strftime = datetime.strftime
 
                         assert cleanup_job.should_run_now() is False
@@ -152,7 +160,9 @@ class TestShouldRunNow:
                         "infrastructure.jobs.ghost_key_cleanup_job.datetime"
                     ) as mock_datetime:
                         # Correct day and hour
-                        mock_datetime.utcnow.return_value = datetime(2024, 1, 7, 3, 0, 0)
+                        mock_datetime.utcnow.return_value = datetime(
+                            2024, 1, 7, 3, 0, 0
+                        )
                         mock_datetime.strftime = datetime.strftime
 
                         assert cleanup_job.should_run_now() is False

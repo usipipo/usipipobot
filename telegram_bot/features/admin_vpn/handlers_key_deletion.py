@@ -37,8 +37,12 @@ class KeyDeletionMixin:
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
-            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
+            keys = await self.vpn_service.list_server_keys(
+                key_type, include_inactive=True
+            )
+            key = next(
+                (k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None
+            )
             if not key:
                 await self._safe_edit_message(
                     query,
@@ -55,7 +59,9 @@ class KeyDeletionMixin:
                 query,
                 context,
                 text=message,
-                reply_markup=AdminVpnKeyboards.confirmation("delete", full_key_id, key_type),
+                reply_markup=AdminVpnKeyboards.confirmation(
+                    "delete", full_key_id, key_type
+                ),
                 parse_mode="Markdown",
             )
         except Exception as e:
@@ -89,8 +95,12 @@ class KeyDeletionMixin:
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
-            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
+            keys = await self.vpn_service.list_server_keys(
+                key_type, include_inactive=True
+            )
+            key = next(
+                (k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None
+            )
             if not key:
                 await SpinnerManager.replace_spinner_with_message(
                     update,
