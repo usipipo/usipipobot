@@ -93,3 +93,17 @@ class MenuCallbacksMixin:
 
         elif callback_data == "show_history":
             await self.history_handler(update, _context)
+
+        elif callback_data == "main_menu":
+            from telegram_bot.keyboards import MainMenuKeyboard
+
+            user_id = update.effective_user.id
+            await query.edit_message_text(
+                text=self.messages.Welcome.RETURNING_USER_SIMPLIFIED,
+                reply_markup=MainMenuKeyboard.main_menu_with_admin(
+                    admin_id=int(self.settings.ADMIN_ID),
+                    current_user_id=user_id,
+                    miniapp_url=self._get_miniapp_url(),
+                ),
+                parse_mode="Markdown",
+            )
