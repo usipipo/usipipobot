@@ -92,6 +92,9 @@ def get_ticket_conversation_handler(
                 CallbackQueryHandler(
                     handler.show_menu, pattern="^tickets_menu$"
                 ),
+                CallbackQueryHandler(
+                    handler.back_to_main_menu, pattern="^main_menu$"
+                ),
             ],
             TICKET_REPLYING: [
                 MessageHandler(
