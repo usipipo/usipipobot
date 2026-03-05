@@ -29,7 +29,7 @@ class TicketKeyboards:
                 ),
             ],
             [
-                InlineKeyboardButton("🔙 Volver", callback_data="help"),
+                InlineKeyboardButton("🔙 Volver", callback_data="tickets_menu_exit"),
             ],
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -345,6 +345,14 @@ class TicketKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
+    def admin_back_to_menu() -> InlineKeyboardMarkup:
+        """Botón para volver al menú de gestión de tickets del admin."""
+        keyboard = [
+            [InlineKeyboardButton("🔙 Volver", callback_data="admin_tickets_menu")],
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
     def cancel_action() -> InlineKeyboardMarkup:
         """Botón para cancelar la acción actual."""
         keyboard = [
@@ -430,6 +438,11 @@ def admin_category_filter() -> InlineKeyboardMarkup:
 def back_to_menu() -> InlineKeyboardMarkup:
     """Botón para volver al menú de tickets."""
     return TicketKeyboards.back_to_menu()
+
+
+def admin_back_to_menu() -> InlineKeyboardMarkup:
+    """Botón para volver al menú de gestión de tickets del admin."""
+    return TicketKeyboards.admin_back_to_menu()
 
 
 def cancel_action() -> InlineKeyboardMarkup:
