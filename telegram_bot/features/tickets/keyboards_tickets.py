@@ -29,7 +29,7 @@ class TicketKeyboards:
                 ),
             ],
             [
-                InlineKeyboardButton("🔙 Volver", callback_data="help"),
+                InlineKeyboardButton("🔙 Volver", callback_data="tickets_menu_exit"),
             ],
         ]
         return InlineKeyboardMarkup(keyboard)
