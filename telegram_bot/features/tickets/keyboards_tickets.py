@@ -173,7 +173,7 @@ class TicketKeyboards:
             ]
         )
         keyboard.append(
-            [InlineKeyboardButton("🏠 Menú Principal", callback_data="tickets_menu")]
+            [InlineKeyboardButton("🏠 Menú Principal", callback_data="main_menu")]
         )
 
         return InlineKeyboardMarkup(keyboard)
