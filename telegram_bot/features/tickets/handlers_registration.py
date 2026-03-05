@@ -50,6 +50,9 @@ def get_ticket_conversation_handler(
                 CallbackQueryHandler(
                     handler.cancel, pattern="^main_menu$"
                 ),
+                CallbackQueryHandler(
+                    handler.exit_to_help, pattern="^tickets_menu_exit$"
+                ),
             ],
             TICKET_SELECTING_CATEGORY: [
                 CallbackQueryHandler(

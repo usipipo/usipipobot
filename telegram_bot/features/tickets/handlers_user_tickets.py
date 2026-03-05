@@ -230,3 +230,43 @@ class UserTicketHandler(BaseHandler):
         )
 
         return ConversationHandler.END
+
+    async def exit_to_help(
+        self, update: Update, context: ContextTypes.DEFAULT_TYPE
+    ) -> int:
+        """Sale de la conversación de tickets y vuelve al menú de ayuda."""
+        from telegram.ext import ConversationHandler
+        from telegram_bot.features.user_management.keyboards_user_management import (
+            UserManagementKeyboards,
+        )
+        from telegram_bot.features.user_management.messages_user_management import (
+            UserManagementMessages,
+        )
+
+        if update.callback_query:
+            await self._safe_answer_query(update.callback_query)
+
+        # Limpiar datos de la conversación
+        if context.user_data:
+            context.user_data.pop("ticket_category", None)
+            context.user_data.pop("ticket_category_name", None)
+            context.user_data.pop("ticket_message", None)
+            context.user_data.pop("replying_ticket_id", None)
+            context.user_data.pop("ticket_id_map", None)
+            context.user_data.pop("current_ticket_simple_id", None)
+
+        user = update.effective_user
+        if user is None:
+            return ConversationHandler.END
+
+        logger.info(f"🎫 User {user.id} exited tickets to help menu")
+
+        await self._safe_edit_message(
+            update.callback_query,
+            context,
+            text=UserManagementMessages.Welcome.HELP_TEXT,
+            reply_markup=UserManagementKeyboards.help_menu(),
+            parse_mode="Markdown",
+        )
+
+        return ConversationHandler.END
