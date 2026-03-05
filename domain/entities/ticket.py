@@ -7,6 +7,7 @@ from typing import Optional
 
 class TicketCategory(str, Enum):
     """Categorías de tickets de soporte."""
+
     VPN_FAIL = "vpn_fail"
     PAYMENT = "payment"
     ACCOUNT = "account"
@@ -15,6 +16,7 @@ class TicketCategory(str, Enum):
 
 class TicketPriority(str, Enum):
     """Prioridades de tickets."""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -22,6 +24,7 @@ class TicketPriority(str, Enum):
 
 class TicketStatus(str, Enum):
     """Estados posibles de un ticket."""
+
     OPEN = "open"
     RESPONDED = "responded"
     RESOLVED = "resolved"
@@ -33,18 +36,15 @@ class Ticket:
     """
     Entidad que representa un ticket de soporte.
     """
+
     user_id: int
     category: TicketCategory
     priority: TicketPriority
     subject: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     status: TicketStatus = field(default=TicketStatus.OPEN)
-    created_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
-    updated_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     resolved_at: Optional[datetime] = None
     resolved_by: Optional[int] = None
     admin_notes: Optional[str] = None

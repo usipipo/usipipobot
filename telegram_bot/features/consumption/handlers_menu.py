@@ -41,7 +41,8 @@ class MenuMixin:
 
             has_active_cycle = summary is not None and summary.is_active
             has_pending_debt = (
-                summary is not None and not summary.is_active
+                summary is not None
+                and not summary.is_active
                 and summary.billing_id is not None
             )
             can_activate, _ = await self.billing_service.can_activate_consumption(
@@ -55,20 +56,21 @@ class MenuMixin:
             else:
                 status_text = ConsumptionMessages.Menu.STATUS_INACTIVE
 
-            message = ConsumptionMessages.Menu.MAIN_MENU.format(
-                status_text=status_text
-            )
+            message = ConsumptionMessages.Menu.MAIN_MENU.format(status_text=status_text)
 
             keyboard = ConsumptionKeyboards.consumption_main_menu(
                 has_active_cycle=has_active_cycle,
                 has_pending_debt=has_pending_debt,
-                can_activate=can_activate
+                can_activate=can_activate,
             )
 
             if query:
                 await TelegramUtils.safe_edit_message(
-                    query, context, text=message, reply_markup=keyboard,
-                    parse_mode="Markdown"
+                    query,
+                    context,
+                    text=message,
+                    reply_markup=keyboard,
+                    parse_mode="Markdown",
                 )
             elif update.message:
                 await update.message.reply_text(
@@ -79,28 +81,27 @@ class MenuMixin:
             logger.error(f"Error en show_consumption_menu: {e}")
             await self._send_error_message(update, context)
 
-    async def show_info(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_info(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra información sobre el modo consumo."""
         query = update.callback_query
         if query:
             await query.answer()
 
         message = (
-            ConsumptionMessages.Activation.get_terms_and_conditions() + "\n\n" +
-            ConsumptionMessages.Activation.get_price_example()
+            ConsumptionMessages.Activation.get_terms_and_conditions()
+            + "\n\n"
+            + ConsumptionMessages.Activation.get_price_example()
         )
 
         if query:
             await query.edit_message_text(
                 text=message,
                 reply_markup=ConsumptionKeyboards.view_info_only(),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
         elif update.message:
             await update.message.reply_text(
                 text=message,
                 reply_markup=ConsumptionKeyboards.view_info_only(),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )

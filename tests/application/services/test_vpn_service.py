@@ -11,7 +11,11 @@ from domain.entities.vpn_key import KeyType, VpnKey
 
 @pytest.fixture
 def vpn_service(
-    mock_user_repo, mock_key_repo, mock_package_repo, mock_outline_client, mock_wireguard_client
+    mock_user_repo,
+    mock_key_repo,
+    mock_package_repo,
+    mock_outline_client,
+    mock_wireguard_client,
 ):
     return VpnService(
         user_repo=mock_user_repo,
@@ -166,7 +170,13 @@ class TestRevokeKey:
 class TestGetUserStatus:
     @pytest.mark.asyncio
     async def test_get_user_status_returns_summary(
-        self, vpn_service, mock_user_repo, mock_key_repo, mock_package_repo, sample_user, sample_vpn_key
+        self,
+        vpn_service,
+        mock_user_repo,
+        mock_key_repo,
+        mock_package_repo,
+        sample_user,
+        sample_vpn_key,
     ):
         mock_user_repo.get_by_id.return_value = sample_user
         sample_vpn_key.used_bytes = 5 * 1024**3
@@ -184,10 +194,17 @@ class TestGetUserStatus:
 
     @pytest.mark.asyncio
     async def test_get_user_status_includes_packages(
-        self, vpn_service, mock_user_repo, mock_key_repo, mock_package_repo, sample_user, sample_vpn_key
+        self,
+        vpn_service,
+        mock_user_repo,
+        mock_key_repo,
+        mock_package_repo,
+        sample_user,
+        sample_vpn_key,
     ):
         """Test that data packages are included in the total limit calculation."""
         from datetime import datetime, timedelta, timezone
+
         from domain.entities.data_package import DataPackage, PackageType
 
         mock_user_repo.get_by_id.return_value = sample_user
@@ -200,7 +217,7 @@ class TestGetUserStatus:
             user_id=123456789,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,  # 10GB package
-            data_used_bytes=1 * 1024**3,    # 1GB used from package
+            data_used_bytes=1 * 1024**3,  # 1GB used from package
             stars_paid=600,
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )

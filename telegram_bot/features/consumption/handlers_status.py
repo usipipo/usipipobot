@@ -48,24 +48,25 @@ class StatusMixin:
                     days_active=summary.days_active,
                     consumption_formatted=summary.formatted_consumption,
                     cost_formatted=summary.formatted_cost,
-                    days_remaining=days_remaining
+                    days_remaining=days_remaining,
                 )
                 keyboard = ConsumptionKeyboards.back_to_consumption_menu()
             else:
                 message = ConsumptionMessages.ConsumptionStatus.CLOSED_CYCLE.format(
                     consumption_formatted=summary.formatted_consumption,
-                    cost_formatted=summary.formatted_cost
+                    cost_formatted=summary.formatted_cost,
                 )
                 keyboard = ConsumptionKeyboards.consumption_main_menu(
-                    has_active_cycle=False,
-                    has_pending_debt=True,
-                    can_activate=False
+                    has_active_cycle=False, has_pending_debt=True, can_activate=False
                 )
 
             if query:
                 await TelegramUtils.safe_edit_message(
-                    query, context, text=message, reply_markup=keyboard,
-                    parse_mode="Markdown"
+                    query,
+                    context,
+                    text=message,
+                    reply_markup=keyboard,
+                    parse_mode="Markdown",
                 )
             elif update.message:
                 await update.message.reply_text(

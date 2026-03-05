@@ -48,9 +48,7 @@ class ICryptoOrderRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_reusable_wallet_for_user(
-        self, user_id: int
-    ) -> Optional[str]:
+    async def get_reusable_wallet_for_user(self, user_id: int) -> Optional[str]:
         """Busca una wallet reutilizable de una orden expirada del usuario."""
         pass
 

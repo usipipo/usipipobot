@@ -52,11 +52,21 @@ class AdminVpnHandler(
             CallbackQueryHandler(self.show_server_status, pattern="^vpn_status$"),
             CallbackQueryHandler(self.manage_server, pattern="^vpn_manage_wireguard$"),
             CallbackQueryHandler(self.manage_server, pattern="^vpn_manage_outline$"),
-            CallbackQueryHandler(self.show_server_details, pattern="^vpn_server_status_wireguard$"),
-            CallbackQueryHandler(self.show_server_details, pattern="^vpn_server_status_outline$"),
-            CallbackQueryHandler(self.list_server_keys, pattern="^vpn_list_keys_wireguard$"),
-            CallbackQueryHandler(self.list_server_keys, pattern="^vpn_list_keys_outline$"),
-            CallbackQueryHandler(self.cleanup_ghost_keys, pattern="^vpn_cleanup_ghosts$"),
+            CallbackQueryHandler(
+                self.show_server_details, pattern="^vpn_server_status_wireguard$"
+            ),
+            CallbackQueryHandler(
+                self.show_server_details, pattern="^vpn_server_status_outline$"
+            ),
+            CallbackQueryHandler(
+                self.list_server_keys, pattern="^vpn_list_keys_wireguard$"
+            ),
+            CallbackQueryHandler(
+                self.list_server_keys, pattern="^vpn_list_keys_outline$"
+            ),
+            CallbackQueryHandler(
+                self.cleanup_ghost_keys, pattern="^vpn_cleanup_ghosts$"
+            ),
             CallbackQueryHandler(self.show_key_details, pattern="^vkdet_wireguard_"),
             CallbackQueryHandler(self.show_key_details, pattern="^vkdet_outline_"),
             CallbackQueryHandler(self.handle_key_enable, pattern="^vke_wireguard_"),
@@ -65,9 +75,15 @@ class AdminVpnHandler(
             CallbackQueryHandler(self.handle_key_disable, pattern="^vkdis_outline_"),
             CallbackQueryHandler(self.confirm_delete_key, pattern="^vkdel_wireguard_"),
             CallbackQueryHandler(self.confirm_delete_key, pattern="^vkdel_outline_"),
-            CallbackQueryHandler(self.execute_delete_key, pattern="^vc_delete_wireguard_"),
-            CallbackQueryHandler(self.execute_delete_key, pattern="^vc_delete_outline_"),
-            CallbackQueryHandler(self.cancel_key_action, pattern="^vx_delete_wireguard_"),
+            CallbackQueryHandler(
+                self.execute_delete_key, pattern="^vc_delete_wireguard_"
+            ),
+            CallbackQueryHandler(
+                self.execute_delete_key, pattern="^vc_delete_outline_"
+            ),
+            CallbackQueryHandler(
+                self.cancel_key_action, pattern="^vx_delete_wireguard_"
+            ),
             CallbackQueryHandler(self.cancel_key_action, pattern="^vx_delete_outline_"),
             CallbackQueryHandler(self.keys_page, pattern="^vpn_keys_page_wireguard_"),
             CallbackQueryHandler(self.keys_page, pattern="^vpn_keys_page_outline_"),

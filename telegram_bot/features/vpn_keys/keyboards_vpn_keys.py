@@ -88,11 +88,15 @@ class VpnKeysKeyboards:
         """
         keyboard = [
             [
-                InlineKeyboardButton("🔑 Comprar Slots Extra", callback_data="buy_slots_menu"),
+                InlineKeyboardButton(
+                    "🔑 Comprar Slots Extra", callback_data="buy_slots_menu"
+                ),
                 InlineKeyboardButton("📦 Ver Planes", callback_data="buy_gb_menu"),
             ],
             [
-                InlineKeyboardButton("🗑️ Gestionar Llaves", callback_data="key_management"),
+                InlineKeyboardButton(
+                    "🗑️ Gestionar Llaves", callback_data="key_management"
+                ),
                 InlineKeyboardButton("🔙 Volver", callback_data="main_menu"),
             ],
         ]

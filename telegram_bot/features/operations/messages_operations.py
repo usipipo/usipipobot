@@ -6,24 +6,33 @@ Version: 3.1.0 - Elegant UI
 """
 
 from utils.message_separators import (
-    MessageSeparatorBuilder,
     TELEGRAM_MOBILE_WIDTH,
+    MessageSeparatorBuilder,
     section_separator,
 )
-
 
 # Separadores predefinidos para consistencia visual
 _SEP_HEADER = (
     MessageSeparatorBuilder()
-    .compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
+    .compact()
+    .style("double")
+    .length(TELEGRAM_MOBILE_WIDTH)
+    .build()
 )
 _SEP_DIVIDER = (
     MessageSeparatorBuilder()
-    .compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
+    .compact()
+    .style("simple")
+    .length(TELEGRAM_MOBILE_WIDTH)
+    .build()
 )
 _SEP_DECORATIVE = (
     MessageSeparatorBuilder()
-    .compact().style("bold").length(9).with_emoji("🔹", "both").build()
+    .compact()
+    .style("bold")
+    .length(9)
+    .with_emoji("🔹", "both")
+    .build()
 )
 
 
@@ -34,16 +43,10 @@ class OperationsMessages:
         """Mensajes para el menú principal de operaciones."""
 
         # Header del menú con estructura moderna/tech
-        _HEADER = (
-            f"{_SEP_HEADER}\n"
-            "🔧 *CENTRO DE OPERACIONES*\n"
-            f"{_SEP_HEADER}\n"
-        )
+        _HEADER = f"{_SEP_HEADER}\n" "🔧 *CENTRO DE OPERACIONES*\n" f"{_SEP_HEADER}\n"
 
         _CREDITS_INDICATOR = (
-            "\n"
-            "💎 *Créditos disponibles:* `{credits}`\n"
-            f"{_SEP_DIVIDER}\n"
+            "\n" "💎 *Créditos disponibles:* `{credits}`\n" f"{_SEP_DIVIDER}\n"
         )
 
         _TREE_STRUCTURE = (
@@ -63,10 +66,7 @@ class OperationsMessages:
             "   └─ Revisa todas tus transacciones\n"
         )
 
-        _FOOTER = (
-            f"\n{_SEP_DIVIDER}\n"
-            "👇 *Selecciona una opción:*"
-        )
+        _FOOTER = f"\n{_SEP_DIVIDER}\n" "👇 *Selecciona una opción:*"
 
         @classmethod
         def main_with_credits(cls, credits: int = 0) -> str:
@@ -79,11 +79,7 @@ class OperationsMessages:
             return message
 
         # Mensaje legacy para compatibilidad (sin créditos)
-        MAIN = (
-            _HEADER +
-            _TREE_STRUCTURE +
-            _FOOTER
-        )
+        MAIN = _HEADER + _TREE_STRUCTURE + _FOOTER
 
     class Credits:
         DISPLAY = (
@@ -135,16 +131,21 @@ class OperationsMessages:
         # Separadores reutilizables - usando ancho óptimo para móviles
         _SEP_DOUBLE = (
             MessageSeparatorBuilder()
-            .compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
+            .compact()
+            .style("double")
+            .length(TELEGRAM_MOBILE_WIDTH)
+            .build()
         )
         _SEP_SIMPLE = (
             MessageSeparatorBuilder()
-            .compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
+            .compact()
+            .style("simple")
+            .length(TELEGRAM_MOBILE_WIDTH)
+            .build()
         )
 
         HISTORY_HEADER = (
-            section_separator("Historial de Transacciones", "📜")
-            + f"{_SEP_DOUBLE}\n"
+            section_separator("Historial de Transacciones", "📜") + f"{_SEP_DOUBLE}\n"
         )
 
         NO_TRANSACTIONS = (

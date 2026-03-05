@@ -10,8 +10,8 @@ Version: 3.0.0 - Refactored into mixins
 
 from telegram_bot.features.key_management.handlers_key_management import (
     KeyManagementHandler,
-    get_key_management_handlers,
     get_key_management_callback_handlers,
+    get_key_management_handlers,
 )
 
 __all__ = [

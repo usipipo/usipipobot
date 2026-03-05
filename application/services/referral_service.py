@@ -57,7 +57,9 @@ class ReferralService:
         Returns:
             Dict con resultado de la operación
         """
-        logger.info(f"Starting referral registration: new_user={new_user_id}, code={referral_code}")
+        logger.info(
+            f"Starting referral registration: new_user={new_user_id}, code={referral_code}"
+        )
 
         try:
             referrer = await self.user_repo.get_by_referral_code(
@@ -117,7 +119,9 @@ class ReferralService:
             }
 
         except Exception as e:
-            logger.warning(f"Referral registration failed: new_user={new_user_id}, code={referral_code}, error={e}")
+            logger.warning(
+                f"Referral registration failed: new_user={new_user_id}, code={referral_code}, error={e}"
+            )
             return {"success": False, "error": str(e)}
 
     async def get_referral_stats(
@@ -162,7 +166,9 @@ class ReferralService:
         Returns:
             Dict con resultado del canje
         """
-        logger.info(f"Starting credit redemption for data: user={user_id}, credits={credits}")
+        logger.info(
+            f"Starting credit redemption for data: user={user_id}, credits={credits}"
+        )
 
         try:
             user = await self.user_repo.get_by_id(user_id, current_user_id)
@@ -295,15 +301,13 @@ class ReferralService:
             Código de referido generado
         """
         import secrets
+
         code = secrets.token_hex(4).upper()
         logger.debug(f"Generated referral code: {code}")
         return code
 
     async def record_referred_user_purchase(
-        self,
-        referrer_id: int,
-        referred_user_id: int,
-        current_user_id: int
+        self, referrer_id: int, referred_user_id: int, current_user_id: int
     ) -> Dict[str, Any]:
         """
         Registra que un usuario referido realizó una compra.
@@ -333,7 +337,7 @@ class ReferralService:
             return {
                 "success": True,
                 "referrer_id": referrer_id,
-                "total_referral_bonus_gb": referrer.referred_users_with_purchase * 5
+                "total_referral_bonus_gb": referrer.referred_users_with_purchase * 5,
             }
 
         except Exception as e:

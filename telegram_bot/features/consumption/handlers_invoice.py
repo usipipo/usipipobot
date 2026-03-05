@@ -47,11 +47,13 @@ class InvoiceMixin:
                         reason=error_msg or "No puedes generar factura"
                     ),
                     reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
                 return
 
-            summary = await self.billing_service.get_current_consumption(user_id, user_id)
+            summary = await self.billing_service.get_current_consumption(
+                user_id, user_id
+            )
 
             if not summary:
                 await query.edit_message_text(
@@ -59,22 +61,22 @@ class InvoiceMixin:
                         reason="No se encontró información de consumo"
                     ),
                     reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
                 return
 
             message = ConsumptionMessages.Invoice.SELECT_PAYMENT_METHOD.format(
                 consumption_formatted=summary.formatted_consumption,
-                cost_formatted=summary.formatted_cost
+                cost_formatted=summary.formatted_cost,
             )
 
             await query.edit_message_text(
                 text=message,
                 reply_markup=ConsumptionKeyboards.payment_method_selection(
                     consumption_formatted=summary.formatted_consumption,
-                    cost_formatted=summary.formatted_cost
+                    cost_formatted=summary.formatted_cost,
                 ),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -95,10 +97,10 @@ class InvoiceMixin:
         if query:
             await query.answer("Preparando wallet de pago...")
 
+        from application.services.common.container import get_service
         from application.services.wallet_management_service import (
             WalletManagementService,
         )
-        from application.services.common.container import get_service
 
         try:
             wallet_service = get_service(WalletManagementService)
@@ -116,7 +118,7 @@ class InvoiceMixin:
                 if query:
                     await query.edit_message_text(
                         text="❌ Usuario no encontrado.",
-                        reply_markup=ConsumptionKeyboards.back_to_consumption_menu()
+                        reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
                     )
                 return
 
@@ -126,7 +128,7 @@ class InvoiceMixin:
                 if query:
                     await query.edit_message_text(
                         text="❌ Error al preparar la wallet de pago. Intenta nuevamente.",
-                        reply_markup=ConsumptionKeyboards.back_to_consumption_menu()
+                        reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
                     )
                 return
 
@@ -139,7 +141,7 @@ class InvoiceMixin:
             if query:
                 await query.edit_message_text(
                     text="❌ Error al preparar el pago. Intenta nuevamente.",
-                    reply_markup=ConsumptionKeyboards.back_to_consumption_menu()
+                    reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
                 )
 
     async def _generate_invoice(
@@ -147,7 +149,7 @@ class InvoiceMixin:
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
         payment_method: PaymentMethod,
-        wallet_address: str = "N/A"
+        wallet_address: str = "N/A",
     ):
         """Genera la factura con el método de pago seleccionado."""
         query = update.callback_query
@@ -164,7 +166,7 @@ class InvoiceMixin:
                 user_id=user_id,
                 payment_method=payment_method,
                 wallet_address=wallet_address,
-                current_user_id=user_id
+                current_user_id=user_id,
             )
 
             if not result.success or not result.invoice:
@@ -173,26 +175,30 @@ class InvoiceMixin:
                         reason=result.error_message or "Error desconocido"
                     ),
                     reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
                 return
 
             invoice = result.invoice
-            summary = await self.billing_service.get_current_consumption(user_id, user_id)
+            summary = await self.billing_service.get_current_consumption(
+                user_id, user_id
+            )
 
             if payment_method == PaymentMethod.STARS:
                 await self._send_stars_invoice(update, context, invoice, summary)
             else:
                 message = ConsumptionMessages.Invoice.CRYPTO_PAYMENT.format(
-                    consumption_formatted=summary.formatted_consumption if summary else "N/A",
+                    consumption_formatted=(
+                        summary.formatted_consumption if summary else "N/A"
+                    ),
                     cost_formatted=invoice.get_formatted_amount(),
                     wallet_address=wallet_address,
-                    time_remaining=invoice.time_remaining_formatted
+                    time_remaining=invoice.time_remaining_formatted,
                 )
                 await query.edit_message_text(
                     text=message,
                     reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
 
         except Exception as e:
@@ -204,7 +210,7 @@ class InvoiceMixin:
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
         invoice: ConsumptionInvoice,
-        summary
+        summary,
     ):
         """Envía el invoice de Telegram Stars."""
         query = update.callback_query
@@ -224,7 +230,7 @@ class InvoiceMixin:
                 payload=payload,
                 provider_token="",
                 currency="XTR",
-                prices=[LabeledPrice("Consumo VPN", stars_amount)]
+                prices=[LabeledPrice("Consumo VPN", stars_amount)],
             )
 
             await query.delete_message()
@@ -233,5 +239,5 @@ class InvoiceMixin:
             logger.error(f"Error enviando invoice de Stars: {e}")
             await query.edit_message_text(
                 text="❌ Error al generar el pago con Stars. Intenta con Crypto.",
-                reply_markup=ConsumptionKeyboards.back_to_consumption_menu()
+                reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
             )

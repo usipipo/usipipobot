@@ -355,8 +355,7 @@ PersistentKeepalive = 15
             )
 
             new_content = content.replace(
-                f"### CLIENT {client_name}",
-                f"### CLIENT {client_name} [DISABLED]"
+                f"### CLIENT {client_name}", f"### CLIENT {client_name} [DISABLED]"
             )
             self.conf_path.write_text(new_content)
 
@@ -406,8 +405,7 @@ PersistentKeepalive = 15
             )
 
             new_content = content.replace(
-                f"### CLIENT {client_name} [DISABLED]",
-                f"### CLIENT {client_name}"
+                f"### CLIENT {client_name} [DISABLED]", f"### CLIENT {client_name}"
             )
             self.conf_path.write_text(new_content)
 

@@ -79,6 +79,7 @@ class QrGenerator:
 
             if not filename:
                 import uuid
+
                 filename = f"payment_{uuid.uuid4().hex[:8]}"
 
             file_full_path = qr_path / f"{filename}.png"

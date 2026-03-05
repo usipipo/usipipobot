@@ -124,9 +124,7 @@ class PostgresCryptoOrderRepository(ICryptoOrderRepository):
         models = result.scalars().all()
         return [m.to_entity() for m in models]
 
-    async def get_reusable_wallet_for_user(
-        self, user_id: int
-    ) -> Optional[str]:
+    async def get_reusable_wallet_for_user(self, user_id: int) -> Optional[str]:
         """Busca una wallet reutilizable de una orden expirada del mismo usuario."""
         result = await self.session.execute(
             select(CryptoOrderModel.wallet_address)

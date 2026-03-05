@@ -191,7 +191,7 @@ class AdminUserService(IAdminUserService):
 
     async def delete_user(self, user_id: int, **kwargs) -> AdminOperationResult:
         """Eliminar un usuario y sus claves asociadas."""
-        key_service = kwargs.get('key_service')
+        key_service = kwargs.get("key_service")
         try:
             user = await self.user_repository.get_by_id(user_id, user_id)
             if not user:
@@ -213,6 +213,7 @@ class AdminUserService(IAdminUserService):
                 )
 
             from typing import Any
+
             key_svc: Any = key_service
 
             deleted_keys_count = 0

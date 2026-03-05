@@ -1,14 +1,16 @@
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities.ticket import Ticket, TicketCategory, TicketStatus
 from domain.entities.ticket_message import TicketMessage
 from domain.interfaces.iticket_repository import ITicketRepository
 from infrastructure.persistence.postgresql.models.ticket import TicketModel
-from infrastructure.persistence.postgresql.models.ticket_message import TicketMessageModel
+from infrastructure.persistence.postgresql.models.ticket_message import (
+    TicketMessageModel,
+)
 
 
 class TicketRepository(ITicketRepository):
@@ -30,7 +32,7 @@ class TicketRepository(ITicketRepository):
             updated_at=model.updated_at,
             resolved_at=model.resolved_at,
             resolved_by=model.resolved_by,
-            admin_notes=model.admin_notes
+            admin_notes=model.admin_notes,
         )
 
     def _to_message_entity(self, model: TicketMessageModel) -> TicketMessage:
@@ -41,7 +43,7 @@ class TicketRepository(ITicketRepository):
             from_user_id=model.from_user_id,
             message=model.message,
             is_from_admin=model.is_from_admin,
-            created_at=model.created_at
+            created_at=model.created_at,
         )
 
     async def save(self, ticket: Ticket) -> Ticket:
@@ -57,7 +59,7 @@ class TicketRepository(ITicketRepository):
             updated_at=ticket.updated_at,
             resolved_at=ticket.resolved_at,
             resolved_by=ticket.resolved_by,
-            admin_notes=ticket.admin_notes
+            admin_notes=ticket.admin_notes,
         )
         self.session.add(model)
         await self.session.commit()
@@ -97,7 +99,7 @@ class TicketRepository(ITicketRepository):
             select(TicketModel).where(TicketModel.id == ticket.id)
         )
         model = result.scalar_one()
-        
+
         model.category = ticket.category.value
         model.priority = ticket.priority.value
         model.status = ticket.status.value
@@ -106,7 +108,7 @@ class TicketRepository(ITicketRepository):
         model.resolved_at = ticket.resolved_at
         model.resolved_by = ticket.resolved_by
         model.admin_notes = ticket.admin_notes
-        
+
         await self.session.commit()
         return ticket
 
@@ -132,10 +134,10 @@ class TicketRepository(ITicketRepository):
         """Obtiene todos los tickets abiertos."""
         result = await self.session.execute(
             select(TicketModel)
-            .where(TicketModel.status.in_(['open', 'responded']))
+            .where(TicketModel.status.in_(["open", "responded"]))
             .order_by(
                 TicketModel.priority.desc(),  # HIGH first
-                TicketModel.created_at.asc()   # Oldest first
+                TicketModel.created_at.asc(),  # Oldest first
             )
         )
         return [self._to_entity(m) for m in result.scalars().all()]
@@ -148,7 +150,7 @@ class TicketRepository(ITicketRepository):
             from_user_id=message.from_user_id,
             message=message.message,
             is_from_admin=message.is_from_admin,
-            created_at=message.created_at
+            created_at=message.created_at,
         )
         self.session.add(model)
         await self.session.commit()
@@ -166,7 +168,8 @@ class TicketRepository(ITicketRepository):
     async def count_open(self) -> int:
         """Cuenta tickets abiertos."""
         result = await self.session.execute(
-            select(func.count()).select_from(TicketModel)
-            .where(TicketModel.status.in_(['open', 'responded']))
+            select(func.count())
+            .select_from(TicketModel)
+            .where(TicketModel.status.in_(["open", "responded"]))
         )
         return result.scalar() or 0

@@ -3,12 +3,13 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Numeric
+from sqlalchemy import BigInteger, DateTime
 from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from domain.entities.consumption_billing import ConsumptionBilling, BillingStatus
+from domain.entities.consumption_billing import BillingStatus, ConsumptionBilling
 from infrastructure.persistence.postgresql.models.base import Base
 
 
@@ -21,8 +22,10 @@ class ConsumptionBillingModel(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.telegram_id", ondelete="CASCADE"),
-        nullable=False, index=True
+        BigInteger,
+        ForeignKey("users.telegram_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
@@ -41,17 +44,13 @@ class ConsumptionBillingModel(Base):
         Numeric(20, 12), nullable=False, default=Decimal("0.000439453125")
     )
     status: Mapped[str] = mapped_column(
-        SQLEnum(
-            "active", "closed", "paid", "cancelled",
-            name="billing_status_enum"
-        ),
+        SQLEnum("active", "closed", "paid", "cancelled", name="billing_status_enum"),
         nullable=False,
         default="active",
         index=True,
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     @classmethod

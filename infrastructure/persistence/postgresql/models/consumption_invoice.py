@@ -3,8 +3,9 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Numeric, String
+from sqlalchemy import BigInteger, DateTime
 from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey, Numeric, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -25,32 +26,26 @@ class ConsumptionInvoiceModel(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     billing_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("consumption_billings.id", ondelete="CASCADE"),
-        nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("consumption_billings.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.telegram_id", ondelete="CASCADE"),
-        nullable=False, index=True
+        BigInteger,
+        ForeignKey("users.telegram_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    amount_usd: Mapped[Decimal] = mapped_column(
-        Numeric(20, 6), nullable=False
-    )
-    wallet_address: Mapped[str] = mapped_column(
-        String(42), nullable=False, index=True
-    )
+    amount_usd: Mapped[Decimal] = mapped_column(Numeric(20, 6), nullable=False)
+    wallet_address: Mapped[str] = mapped_column(String(42), nullable=False, index=True)
     payment_method: Mapped[str] = mapped_column(
-        SQLEnum(
-            "stars", "crypto",
-            name="payment_method_enum"
-        ),
+        SQLEnum("stars", "crypto", name="payment_method_enum"),
         nullable=False,
         default="crypto",
     )
     status: Mapped[str] = mapped_column(
-        SQLEnum(
-            "pending", "paid", "expired", "cancelled",
-            name="invoice_status_enum"
-        ),
+        SQLEnum("pending", "paid", "expired", "cancelled", name="invoice_status_enum"),
         nullable=False,
         default="pending",
         index=True,
@@ -68,8 +63,7 @@ class ConsumptionInvoiceModel(Base):
         String(100), nullable=True, index=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc)
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
 
     @classmethod

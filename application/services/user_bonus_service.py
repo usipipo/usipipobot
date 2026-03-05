@@ -1,14 +1,15 @@
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import List
-from datetime import datetime, timezone, timedelta
 
-from domain.entities.user import User
 from domain.entities.data_package import DataPackage
+from domain.entities.user import User
 
 
 @dataclass
 class BonusCalculation:
     """Representa un bono calculado."""
+
     percent: int
     description: str
     gb_amount: float = 0  # Para bonos de GB fijos
@@ -27,8 +28,8 @@ class UserBonusService:
 
     # Thresholds para loyalty bonus (compra N -> bonus %)
     LOYALTY_THRESHOLDS = {
-        3: 10,   # 3ra compra: +10%
-        5: 15,   # 5ta compra: +15% adicional
+        3: 10,  # 3ra compra: +10%
+        5: 15,  # 5ta compra: +15% adicional
         10: 25,  # 10ma compra: +25% adicional
     }
 
@@ -43,7 +44,7 @@ class UserBonusService:
         if user.purchase_count == 0 and not user.welcome_bonus_used:
             return BonusCalculation(
                 percent=self.WELCOME_BONUS_PERCENT,
-                description=f"Bono de Bienvenida (+{self.WELCOME_BONUS_PERCENT}%)"
+                description=f"Bono de Bienvenida (+{self.WELCOME_BONUS_PERCENT}%)",
             )
         return BonusCalculation(percent=0, description="")
 
@@ -52,14 +53,12 @@ class UserBonusService:
         if user.loyalty_bonus_percent > 0:
             return BonusCalculation(
                 percent=user.loyalty_bonus_percent,
-                description=f"Bono de Fidelidad (+{user.loyalty_bonus_percent}%)"
+                description=f"Bono de Fidelidad (+{user.loyalty_bonus_percent}%)",
             )
         return BonusCalculation(percent=0, description="")
 
     def calculate_quick_renewal_bonus(
-        self,
-        user: User,
-        active_packages: List[DataPackage]
+        self, user: User, active_packages: List[DataPackage]
     ) -> BonusCalculation:
         """
         Calcula bono por renovación rápida.
@@ -77,7 +76,7 @@ class UserBonusService:
             if expires_at <= renewal_threshold and expires_at > now:
                 return BonusCalculation(
                     percent=self.QUICK_RENEWAL_BONUS_PERCENT,
-                    description=f"Recarga Rápida (+{self.QUICK_RENEWAL_BONUS_PERCENT}%)"
+                    description=f"Recarga Rápida (+{self.QUICK_RENEWAL_BONUS_PERCENT}%)",
                 )
 
         return BonusCalculation(percent=0, description="")
@@ -89,7 +88,7 @@ class UserBonusService:
             return BonusCalculation(
                 percent=0,
                 description=f"Bono Referidos (+{total_gb} GB)",
-                gb_amount=total_gb
+                gb_amount=total_gb,
             )
         return BonusCalculation(percent=0, description="")
 
@@ -97,7 +96,7 @@ class UserBonusService:
         self,
         user: User,
         active_packages: List[DataPackage],
-        is_referred_user_first_purchase: bool = False
+        is_referred_user_first_purchase: bool = False,
     ) -> tuple[int, List[BonusCalculation]]:
         """
         Calcula el bonus total acumulado y retorna desglose.
@@ -128,10 +127,12 @@ class UserBonusService:
 
         # Referred user first purchase bonus
         if is_referred_user_first_purchase:
-            bonuses.append(BonusCalculation(
-                percent=self.REFERRED_BONUS_PERCENT,
-                description=f"Bono Referido Primera Compra (+{self.REFERRED_BONUS_PERCENT}%)"
-            ))
+            bonuses.append(
+                BonusCalculation(
+                    percent=self.REFERRED_BONUS_PERCENT,
+                    description=f"Bono Referido Primera Compra (+{self.REFERRED_BONUS_PERCENT}%)",
+                )
+            )
             total_percent += self.REFERRED_BONUS_PERCENT
 
         return total_percent, bonuses

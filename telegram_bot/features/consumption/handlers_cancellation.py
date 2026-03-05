@@ -45,7 +45,7 @@ class CancellationMixin:
                         reason=error_msg or "No puedes cancelar el modo consumo"
                     ),
                     reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
                 return
 
@@ -59,23 +59,24 @@ class CancellationMixin:
                         reason="No se pudo obtener tu información de consumo"
                     ),
                     reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
                 return
 
             message = (
-                ConsumptionMessages.Cancellation.CONFIRMATION_HEADER + "\n\n" +
-                ConsumptionMessages.Cancellation.get_cancellation_summary(
+                ConsumptionMessages.Cancellation.CONFIRMATION_HEADER
+                + "\n\n"
+                + ConsumptionMessages.Cancellation.get_cancellation_summary(
                     days_active=summary.days_active,
                     consumption_formatted=summary.formatted_consumption,
-                    cost_formatted=summary.formatted_cost
+                    cost_formatted=summary.formatted_cost,
                 )
             )
 
             await query.edit_message_text(
                 text=message,
                 reply_markup=ConsumptionKeyboards.cancellation_confirmation(),
-                parse_mode="Markdown"
+                parse_mode="Markdown",
             )
 
         except Exception as e:
@@ -103,6 +104,7 @@ class CancellationMixin:
 
             if result.success:
                 from decimal import Decimal
+
                 if result.mb_consumed < Decimal("1024"):
                     consumption_formatted = f"{result.mb_consumed:.2f} MB"
                 else:
@@ -112,11 +114,14 @@ class CancellationMixin:
                 cost_formatted = f"${result.total_cost_usd:.2f} USD"
 
                 if result.had_debt:
-                    message = ConsumptionMessages.Cancellation.SUCCESS + "\n\n" + \
-                        f"📊 **Resumen del ciclo cancelado:**\n" + \
-                        f"📅 Días activos: {result.days_active}/30\n" + \
-                        f"📈 Consumo: {consumption_formatted}\n" + \
-                        f"💰 Costo: {cost_formatted}"
+                    message = (
+                        ConsumptionMessages.Cancellation.SUCCESS
+                        + "\n\n"
+                        + f"📊 **Resumen del ciclo cancelado:**\n"
+                        + f"📅 Días activos: {result.days_active}/30\n"
+                        + f"📈 Consumo: {consumption_formatted}\n"
+                        + f"💰 Costo: {cost_formatted}"
+                    )
                 else:
                     message = (
                         "✅ **Modo Consumo Cancelado**\n\n"
@@ -129,9 +134,11 @@ class CancellationMixin:
                 await query.edit_message_text(
                     text=message,
                     reply_markup=ConsumptionKeyboards.cancel_success_keyboard(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
-                logger.info(f"✅ Usuario {user_id} canceló modo consumo (had_debt={result.had_debt})")
+                logger.info(
+                    f"✅ Usuario {user_id} canceló modo consumo (had_debt={result.had_debt})"
+                )
             else:
                 message = ConsumptionMessages.Cancellation.CANNOT_CANCEL.format(
                     reason=result.error_message or "Error desconocido"
@@ -139,7 +146,7 @@ class CancellationMixin:
                 await query.edit_message_text(
                     text=message,
                     reply_markup=ConsumptionKeyboards.back_to_consumption_menu(),
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
                 )
 
         except Exception as e:

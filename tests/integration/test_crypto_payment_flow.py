@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from application.services.wallet_management_service import WalletManagementService
 from domain.entities.user import User

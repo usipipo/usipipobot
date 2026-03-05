@@ -9,9 +9,9 @@ from typing import Optional
 class BillingStatus(str, Enum):
     """Estados posibles de un ciclo de facturación por consumo."""
 
-    ACTIVE = "active"      # Ciclo en curso, consumiendo
-    CLOSED = "closed"      # Ciclo cerrado, esperando pago
-    PAID = "paid"          # Ciclo pagado, completado
+    ACTIVE = "active"  # Ciclo en curso, consumiendo
+    CLOSED = "closed"  # Ciclo cerrado, esperando pago
+    PAID = "paid"  # Ciclo pagado, completado
     CANCELLED = "cancelled"  # Ciclo cancelado (no implementado inicialmente)
 
 

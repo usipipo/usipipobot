@@ -15,7 +15,7 @@ from fastapi import APIRouter
 
 # Import routers from domain-specific modules
 from miniapp.routes_admin import router as admin_router
-from miniapp.routes_common import get_current_user, MiniAppContext, PaymentRequest
+from miniapp.routes_common import MiniAppContext, PaymentRequest, get_current_user
 from miniapp.routes_keys import router as keys_router
 from miniapp.routes_payments import router as payments_router
 from miniapp.routes_public import router as public_router

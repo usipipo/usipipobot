@@ -35,7 +35,9 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @router.get("/purchase", response_class=HTMLResponse)
-async def purchase_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+async def purchase_page(
+    request: Request, ctx: MiniAppContext = Depends(get_current_user)
+):
     """Página para comprar paquetes de datos y slots."""
     logger.info(f"💎 MiniApp purchase page accessed by user {ctx.user.id}")
     # Convert PackageOption objects to dict for template
@@ -93,7 +95,9 @@ async def api_create_stars_invoice(
             # DEFENSE: Verify user exists before creating invoice
             existing_user = await user_repo.get_by_id(ctx.user.id, ctx.user.id)
             if not existing_user:
-                logger.error(f"User {ctx.user.id} not found in database - cannot create invoice")
+                logger.error(
+                    f"User {ctx.user.id} not found in database - cannot create invoice"
+                )
                 return JSONResponse(
                     status_code=400,
                     content={
@@ -133,7 +137,9 @@ async def api_create_stars_invoice(
             }
 
     except Exception as e:
-        logger.error(f"Error creating stars invoice for user {ctx.user.id}: {e}", exc_info=True)
+        logger.error(
+            f"Error creating stars invoice for user {ctx.user.id}: {e}", exc_info=True
+        )
         return JSONResponse(
             status_code=500,
             content={
@@ -208,7 +214,9 @@ async def api_create_crypto_order(
             }
 
     except Exception as e:
-        logger.error(f"Error creating crypto order for user {ctx.user.id}: {e}", exc_info=True)
+        logger.error(
+            f"Error creating crypto order for user {ctx.user.id}: {e}", exc_info=True
+        )
         return JSONResponse(
             status_code=500,
             content={

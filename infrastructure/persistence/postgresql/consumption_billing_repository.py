@@ -1,12 +1,12 @@
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import List, Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.entities.consumption_billing import ConsumptionBilling, BillingStatus
+from domain.entities.consumption_billing import BillingStatus, ConsumptionBilling
 from domain.interfaces.iconsumption_billing_repository import (
     IConsumptionBillingRepository,
 )
@@ -36,8 +36,9 @@ class PostgresConsumptionBillingRepository(IConsumptionBillingRepository):
     ) -> Optional[ConsumptionBilling]:
         """Busca un ciclo de facturación específico por su ID."""
         result = await self.session.execute(
-            select(ConsumptionBillingModel)
-            .where(ConsumptionBillingModel.id == billing_id)
+            select(ConsumptionBillingModel).where(
+                ConsumptionBillingModel.id == billing_id
+            )
         )
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
@@ -62,10 +63,9 @@ class PostgresConsumptionBillingRepository(IConsumptionBillingRepository):
         Solo puede haber uno activo por usuario.
         """
         result = await self.session.execute(
-            select(ConsumptionBillingModel)
-            .where(
+            select(ConsumptionBillingModel).where(
                 ConsumptionBillingModel.user_id == user_id,
-                ConsumptionBillingModel.status == BillingStatus.ACTIVE.value
+                ConsumptionBillingModel.status == BillingStatus.ACTIVE.value,
             )
         )
         model = result.scalar_one_or_none()
@@ -92,20 +92,16 @@ class PostgresConsumptionBillingRepository(IConsumptionBillingRepository):
         """
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         result = await self.session.execute(
-            select(ConsumptionBillingModel)
-            .where(
+            select(ConsumptionBillingModel).where(
                 ConsumptionBillingModel.status == BillingStatus.ACTIVE.value,
-                ConsumptionBillingModel.started_at <= cutoff_date
+                ConsumptionBillingModel.started_at <= cutoff_date,
             )
         )
         models = result.scalars().all()
         return [m.to_entity() for m in models]
 
     async def update_status(
-        self,
-        billing_id: uuid.UUID,
-        status: BillingStatus,
-        current_user_id: int
+        self, billing_id: uuid.UUID, status: BillingStatus, current_user_id: int
     ) -> bool:
         """Actualiza el estado de un ciclo de facturación."""
         model = await self.session.get(ConsumptionBillingModel, billing_id)
@@ -121,10 +117,7 @@ class PostgresConsumptionBillingRepository(IConsumptionBillingRepository):
         return True
 
     async def add_consumption(
-        self,
-        billing_id: uuid.UUID,
-        mb_used: float,
-        current_user_id: int
+        self, billing_id: uuid.UUID, mb_used: float, current_user_id: int
     ) -> bool:
         """Agrega consumo a un ciclo activo."""
         model = await self.session.get(ConsumptionBillingModel, billing_id)
@@ -144,9 +137,7 @@ class PostgresConsumptionBillingRepository(IConsumptionBillingRepository):
         await self.session.commit()
         return True
 
-    async def delete(
-        self, billing_id: uuid.UUID, current_user_id: int
-    ) -> bool:
+    async def delete(self, billing_id: uuid.UUID, current_user_id: int) -> bool:
         """Elimina un ciclo de facturación de la base de datos."""
         model = await self.session.get(ConsumptionBillingModel, billing_id)
         if not model:

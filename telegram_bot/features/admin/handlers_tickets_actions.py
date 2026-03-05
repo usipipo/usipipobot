@@ -12,8 +12,8 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from telegram_bot.common.decorators import admin_required
 from telegram_bot.features.tickets.keyboards_tickets import TicketKeyboards
-from utils.spinner import SpinnerManager, admin_spinner_callback
 from utils.logger import logger
+from utils.spinner import SpinnerManager, admin_spinner_callback
 
 ADMIN_MENU = 0
 VIEWING_TICKETS = 9
@@ -33,9 +33,7 @@ class TicketsActionsMixin:
             prefix = "👨‍💼 *Admin:*" if msg.is_from_admin else "👤 *Usuario:*"
             timestamp = msg.created_at.strftime("%d/%m %H:%M")
             lines.append(
-                f"{prefix}\n"
-                f"```\n{msg.message[:200]}\n```\n"
-                f"🕐 {timestamp}\n"
+                f"{prefix}\n" f"```\n{msg.message[:200]}\n```\n" f"🕐 {timestamp}\n"
             )
         return "\n".join(lines)
 
@@ -70,6 +68,7 @@ class TicketsActionsMixin:
 
         try:
             from application.services.ticket_service import TicketService
+
             ticket_service = TicketService(self.service.ticket_repo)
             result = await ticket_service.get_ticket_with_messages(ticket_id)
 
@@ -205,6 +204,7 @@ class TicketsActionsMixin:
 
         try:
             from application.services.ticket_service import TicketService
+
             ticket_service = TicketService(self.service.ticket_repo)
 
             # Get ticket by simple ID
@@ -219,9 +219,7 @@ class TicketsActionsMixin:
 
             # Add admin response
             await ticket_service.add_admin_response(
-                ticket_id=ticket.id,
-                admin_id=admin_id,
-                message=message_text
+                ticket_id=ticket.id, admin_id=admin_id, message=message_text
             )
 
             await update.message.reply_text(
@@ -269,6 +267,7 @@ class TicketsActionsMixin:
 
         try:
             from application.services.ticket_service import TicketService
+
             ticket_service = TicketService(self.service.ticket_repo)
 
             # Get ticket by simple ID
@@ -286,9 +285,7 @@ class TicketsActionsMixin:
             # Close ticket
             admin_id = update.effective_user.id if update.effective_user else 0
             result = await ticket_service.close_ticket(
-                ticket_id=ticket.id,
-                user_id=admin_id,
-                is_admin=True
+                ticket_id=ticket.id, user_id=admin_id, is_admin=True
             )
 
             if result:
@@ -349,6 +346,7 @@ class TicketsActionsMixin:
 
         try:
             from application.services.ticket_service import TicketService
+
             ticket_service = TicketService(self.service.ticket_repo)
 
             # Get ticket by simple ID
@@ -366,8 +364,7 @@ class TicketsActionsMixin:
             # Reopen ticket
             admin_id = update.effective_user.id if update.effective_user else 0
             result = await ticket_service.reopen_ticket(
-                ticket_id=ticket.id,
-                admin_id=admin_id
+                ticket_id=ticket.id, admin_id=admin_id
             )
 
             if result:

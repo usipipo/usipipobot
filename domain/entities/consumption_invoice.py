@@ -9,17 +9,17 @@ from typing import Optional
 class InvoiceStatus(str, Enum):
     """Estados posibles de una factura de consumo."""
 
-    PENDING = "pending"      # Factura generada, esperando pago
-    PAID = "paid"            # Factura pagada exitosamente
-    EXPIRED = "expired"      # Factura vencida (30 minutos)
+    PENDING = "pending"  # Factura generada, esperando pago
+    PAID = "paid"  # Factura pagada exitosamente
+    EXPIRED = "expired"  # Factura vencida (30 minutos)
     CANCELLED = "cancelled"  # Factura cancelada manualmente
 
 
 class PaymentMethod(str, Enum):
     """Métodos de pago soportados."""
 
-    STARS = "stars"      # Pago con Telegram Stars
-    CRYPTO = "crypto"    # Pago con USDT (BSC)
+    STARS = "stars"  # Pago con Telegram Stars
+    CRYPTO = "crypto"  # Pago con USDT (BSC)
 
 
 @dataclass
@@ -99,7 +99,7 @@ class ConsumptionInvoice:
     def mark_as_paid(
         self,
         transaction_hash: Optional[str] = None,
-        telegram_payment_id: Optional[str] = None
+        telegram_payment_id: Optional[str] = None,
     ) -> None:
         """
         Marca la factura como pagada.

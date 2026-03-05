@@ -18,13 +18,11 @@ class TestKeyManagementKeyboards:
 
     def test_main_menu_without_consumption_active(self):
         """Test main menu shows 'Activar Consumo' when no active consumption."""
-        keys_summary = {
-            "total_count": 2,
-            "outline_count": 1,
-            "wireguard_count": 1
-        }
+        keys_summary = {"total_count": 2, "outline_count": 1, "wireguard_count": 1}
 
-        result = KeyManagementKeyboards.main_menu(keys_summary, has_consumption_active=False)
+        result = KeyManagementKeyboards.main_menu(
+            keys_summary, has_consumption_active=False
+        )
 
         assert isinstance(result, InlineKeyboardMarkup)
         # First button should be "Activar Consumo"
@@ -35,13 +33,11 @@ class TestKeyManagementKeyboards:
 
     def test_main_menu_with_consumption_active(self):
         """Test main menu shows 'Ver Mi Consumo' when consumption is active."""
-        keys_summary = {
-            "total_count": 2,
-            "outline_count": 1,
-            "wireguard_count": 1
-        }
+        keys_summary = {"total_count": 2, "outline_count": 1, "wireguard_count": 1}
 
-        result = KeyManagementKeyboards.main_menu(keys_summary, has_consumption_active=True)
+        result = KeyManagementKeyboards.main_menu(
+            keys_summary, has_consumption_active=True
+        )
 
         assert isinstance(result, InlineKeyboardMarkup)
         # First button should be "Ver Mi Consumo"
@@ -52,11 +48,7 @@ class TestKeyManagementKeyboards:
 
     def test_main_menu_default_no_consumption(self):
         """Test main menu defaults to no consumption active when not specified."""
-        keys_summary = {
-            "total_count": 2,
-            "outline_count": 1,
-            "wireguard_count": 1
-        }
+        keys_summary = {"total_count": 2, "outline_count": 1, "wireguard_count": 1}
 
         # Call without has_consumption_active parameter
         result = KeyManagementKeyboards.main_menu(keys_summary)
@@ -70,7 +62,9 @@ class TestKeyManagementKeyboards:
         """Test main menu with no keys still shows consumption button."""
         keys_summary = {"total_count": 0}
 
-        result = KeyManagementKeyboards.main_menu(keys_summary, has_consumption_active=False)
+        result = KeyManagementKeyboards.main_menu(
+            keys_summary, has_consumption_active=False
+        )
 
         assert isinstance(result, InlineKeyboardMarkup)
         # Should still have consumption button
@@ -78,13 +72,11 @@ class TestKeyManagementKeyboards:
 
     def test_main_menu_structure_with_keys(self):
         """Test main menu structure when user has keys."""
-        keys_summary = {
-            "total_count": 2,
-            "outline_count": 1,
-            "wireguard_count": 1
-        }
+        keys_summary = {"total_count": 2, "outline_count": 1, "wireguard_count": 1}
 
-        result = KeyManagementKeyboards.main_menu(keys_summary, has_consumption_active=True)
+        result = KeyManagementKeyboards.main_menu(
+            keys_summary, has_consumption_active=True
+        )
 
         # Should have: consumption button, keys row, actions row, back button
         assert len(result.inline_keyboard) >= 3
@@ -98,13 +90,11 @@ class TestKeyManagementKeyboards:
 
     def test_main_menu_only_outline_keys(self):
         """Test main menu with only Outline keys."""
-        keys_summary = {
-            "total_count": 1,
-            "outline_count": 1,
-            "wireguard_count": 0
-        }
+        keys_summary = {"total_count": 1, "outline_count": 1, "wireguard_count": 0}
 
-        result = KeyManagementKeyboards.main_menu(keys_summary, has_consumption_active=True)
+        result = KeyManagementKeyboards.main_menu(
+            keys_summary, has_consumption_active=True
+        )
 
         # Keys row should only have Outline
         keys_row = result.inline_keyboard[1]
@@ -113,13 +103,11 @@ class TestKeyManagementKeyboards:
 
     def test_main_menu_only_wireguard_keys(self):
         """Test main menu with only WireGuard keys."""
-        keys_summary = {
-            "total_count": 1,
-            "outline_count": 0,
-            "wireguard_count": 1
-        }
+        keys_summary = {"total_count": 1, "outline_count": 0, "wireguard_count": 1}
 
-        result = KeyManagementKeyboards.main_menu(keys_summary, has_consumption_active=True)
+        result = KeyManagementKeyboards.main_menu(
+            keys_summary, has_consumption_active=True
+        )
 
         # Keys row should only have WireGuard
         keys_row = result.inline_keyboard[1]

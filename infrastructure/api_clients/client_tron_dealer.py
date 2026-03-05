@@ -149,10 +149,7 @@ class TronDealerClient:
 
             # Make the async request
             response = await self._client.post(
-                url,
-                headers=self.headers,
-                json=data,
-                timeout=30.0
+                url, headers=self.headers, json=data, timeout=30.0
             )
 
             logger.debug(f"TronDealer API response status: {response.status_code}")
@@ -170,29 +167,43 @@ class TronDealerClient:
 
             # Handle HTTP error status codes
             if response.status_code == 401:
-                error_msg = (response_data.get("error", "Unauthorized")
-                             if isinstance(response_data, dict) else "Unauthorized")
+                error_msg = (
+                    response_data.get("error", "Unauthorized")
+                    if isinstance(response_data, dict)
+                    else "Unauthorized"
+                )
                 logger.warning(f"TronDealer API 401: {error_msg}")
                 raise TronDealerApiError(401, error_msg)
             elif response.status_code == 403:
-                error_msg = (response_data.get("error", "Forbidden")
-                             if isinstance(response_data, dict) else "Forbidden")
+                error_msg = (
+                    response_data.get("error", "Forbidden")
+                    if isinstance(response_data, dict)
+                    else "Forbidden"
+                )
                 logger.warning(f"TronDealer API 403: {error_msg}")
                 raise TronDealerApiError(403, error_msg)
             elif response.status_code == 404:
-                error_msg = (response_data.get("error", "Not found")
-                             if isinstance(response_data, dict) else "Not found")
+                error_msg = (
+                    response_data.get("error", "Not found")
+                    if isinstance(response_data, dict)
+                    else "Not found"
+                )
                 logger.warning(f"TronDealer API 404: {error_msg}")
                 raise TronDealerApiError(404, error_msg)
             elif response.status_code >= 400:
                 default_msg = f"HTTP {response.status_code}"
-                error_msg = (response_data.get("error", default_msg)
-                             if isinstance(response_data, dict) else default_msg)
+                error_msg = (
+                    response_data.get("error", default_msg)
+                    if isinstance(response_data, dict)
+                    else default_msg
+                )
                 logger.warning(f"TronDealer API {response.status_code}: {error_msg}")
                 raise TronDealerApiError(response.status_code, error_msg)
 
             # Check success flag in response body
-            if isinstance(response_data, dict) and not response_data.get("success", True):
+            if isinstance(response_data, dict) and not response_data.get(
+                "success", True
+            ):
                 error_msg = response_data.get("error", "Request failed")
                 logger.warning(f"TronDealer API business error: {error_msg}")
                 raise TronDealerApiError(response.status_code, error_msg)
@@ -210,8 +221,13 @@ class TronDealerClient:
             logger.error(f"TronDealer API request error: {type(e).__name__}: {e}")
             raise TronDealerApiError(503, f"Service unavailable: {str(e)}")
         except Exception as e:
-            logger.error(f"Unexpected error in TronDealer API call: {type(e).__name__}: {e}", exc_info=True)
-            raise TronDealerApiError(500, f"Unexpected error: {type(e).__name__}: {str(e)}")
+            logger.error(
+                f"Unexpected error in TronDealer API call: {type(e).__name__}: {e}",
+                exc_info=True,
+            )
+            raise TronDealerApiError(
+                500, f"Unexpected error: {type(e).__name__}: {str(e)}"
+            )
 
     async def assign_wallet(self, label: Optional[str] = None) -> BscWallet:
         """
@@ -236,24 +252,34 @@ class TronDealerClient:
 
             # Validate response structure
             if not isinstance(response_data, dict):
-                logger.error(f"Invalid response type from assign_wallet: {type(response_data)}")
+                logger.error(
+                    f"Invalid response type from assign_wallet: {type(response_data)}"
+                )
                 raise TronDealerApiError(500, "Invalid response format: expected dict")
 
             wallet_data = response_data.get("wallet")
             if not wallet_data:
                 logger.error(f"Missing 'wallet' field in response: {response_data}")
-                raise TronDealerApiError(500, "Invalid response format: missing wallet data")
+                raise TronDealerApiError(
+                    500, "Invalid response format: missing wallet data"
+                )
 
             if not isinstance(wallet_data, dict):
                 logger.error(f"Invalid wallet data type: {type(wallet_data)}")
-                raise TronDealerApiError(500, "Invalid response format: wallet data is not a dict")
+                raise TronDealerApiError(
+                    500, "Invalid response format: wallet data is not a dict"
+                )
 
             # Validate required fields
             required_fields = ["id", "address"]
             for field in required_fields:
                 if field not in wallet_data:
-                    logger.error(f"Missing required field '{field}' in wallet data: {wallet_data}")
-                    raise TronDealerApiError(500, f"Invalid response format: missing {field}")
+                    logger.error(
+                        f"Missing required field '{field}' in wallet data: {wallet_data}"
+                    )
+                    raise TronDealerApiError(
+                        500, f"Invalid response format: missing {field}"
+                    )
 
             wallet = BscWallet(
                 id=wallet_data["id"],
@@ -263,13 +289,18 @@ class TronDealerClient:
                 created_at=wallet_data.get("created_at"),
             )
 
-            logger.info(f"Successfully assigned wallet {wallet.address} with id {wallet.id}")
+            logger.info(
+                f"Successfully assigned wallet {wallet.address} with id {wallet.id}"
+            )
             return wallet
 
         except TronDealerApiError:
             raise
         except Exception as e:
-            logger.error(f"Unexpected error in assign_wallet: {type(e).__name__}: {e}", exc_info=True)
+            logger.error(
+                f"Unexpected error in assign_wallet: {type(e).__name__}: {e}",
+                exc_info=True,
+            )
             raise TronDealerApiError(500, f"Wallet assignment failed: {str(e)}")
         if not wallet_data:
             raise TronDealerApiError(
