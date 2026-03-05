@@ -149,6 +149,7 @@ let currentProduct = null;
 let currentProductType = null;
 let currentPriceStars = 0;
 let currentPriceUsdt = 0;
+let currentTransactionId = null;
 
 function showPaymentMethods(type, id, starsPrice, usdtPrice) {
     currentProductType = type;
@@ -180,6 +181,7 @@ function closePaymentModal() {
     document.getElementById('paymentModal').style.display = 'none';
     currentProduct = null;
     currentProductType = null;
+    currentTransactionId = null;
 }
 
 function closeCryptoModal() {
@@ -214,11 +216,39 @@ async function payWithStars() {
             return;
         }
 
+        // Store transaction ID for confirmation
+        currentTransactionId = data.transaction_id;
+
         // Open Telegram invoice
-        Telegram.WebApp.openInvoice(data.invoice_url, function(status) {
+        Telegram.WebApp.openInvoice(data.invoice_url, async function(status) {
             if (status === 'paid') {
-                Telegram.WebApp.showAlert('✅ ¡Pago completado con éxito!');
-                setTimeout(() => window.location.reload(), 1500);
+                // Confirm payment with backend to deliver the product
+                try {
+                    const confirmResponse = await fetch('/miniapp/api/confirm-payment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Telegram-Init-Data': Telegram.WebApp.initData
+                        },
+                        body: JSON.stringify({
+                            product_type: currentProductType,
+                            product_id: currentProduct,
+                            transaction_id: currentTransactionId
+                        })
+                    });
+
+                    const confirmData = await confirmResponse.json();
+
+                    if (confirmData.success) {
+                        Telegram.WebApp.showAlert('✅ ¡Compra completada con éxito!');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        Telegram.WebApp.showAlert('⚠️ ' + (confirmData.error || 'Pago recibido pero hubo un error activando el producto. Contacta a soporte.'));
+                    }
+                } catch (confirmError) {
+                    console.error('Error confirming payment:', confirmError);
+                    Telegram.WebApp.showAlert('⚠️ Pago recibido pero hubo un error de conexión. Contacta a soporte.');
+                }
             } else if (status === 'cancelled') {
                 Telegram.WebApp.showAlert('❌ Pago cancelado');
             } else if (status === 'failed') {

@@ -42,13 +42,27 @@ class MiniAppPaymentService:
         user_id: int,
         product_type: str,
         product_id: str,
+        transaction_id: Optional[str] = None,
     ) -> Optional[str]:
         """
         Create a Telegram Stars invoice URL for Mini App.
 
-        Returns a direct invoice URL that can be opened with Telegram.WebApp.openInvoice()
+        Args:
+            user_id: Telegram user ID
+            product_type: 'package' or 'slots'
+            product_id: Package type or slots identifier
+            transaction_id: Optional unique transaction ID for tracking
+
+        Returns:
+            Invoice URL that can be opened with Telegram.WebApp.openInvoice()
         """
         try:
+            # Generate transaction ID if not provided
+            if transaction_id is None:
+                import uuid
+
+                transaction_id = str(uuid.uuid4())[:8]
+
             if product_type == "package":
                 package_opt = self.get_package_option(product_id)
                 if not package_opt:
@@ -58,7 +72,7 @@ class MiniAppPaymentService:
                 # Create invoice parameters
                 title = f"Paquete {package_opt.name}"
                 description = f"{package_opt.data_gb} GB de datos VPN"
-                payload = f"data_package_{product_id}_{user_id}"
+                payload = f"data_package_{product_id}_{user_id}_{transaction_id}"
                 amount = package_opt.stars
 
             elif product_type == "slots":
@@ -73,7 +87,7 @@ class MiniAppPaymentService:
 
                 title = slot_opt.name
                 description = f"Añade {slots} claves VPN adicionales"
-                payload = f"key_slots_{slots}_{user_id}"
+                payload = f"key_slots_{slots}_{user_id}_{transaction_id}"
                 amount = slot_opt.stars
             else:
                 logger.error(f"Invalid product type: {product_type}")
