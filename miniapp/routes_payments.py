@@ -9,7 +9,7 @@ Version: 1.0.0
 
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
@@ -26,7 +26,21 @@ from infrastructure.persistence.postgresql.data_package_repository import (
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from miniapp.routes_common import MiniAppContext, PaymentRequest, get_current_user
 from miniapp.services.miniapp_payment_service import MiniAppPaymentService
+from pydantic import BaseModel, Field
 from utils.logger import logger
+
+
+class ConfirmPaymentRequest(BaseModel):
+    """Request model for confirming a payment."""
+
+    product_type: str = Field(..., description="Type of product: 'package' or 'slots'")
+    product_id: str = Field(
+        ..., description="Product identifier (e.g., 'basic', 'slots_3')"
+    )
+    transaction_id: str = Field(
+        ..., description="Unique transaction ID from invoice creation"
+    )
+
 
 router = APIRouter(tags=["Mini App - Payments"])
 
@@ -109,10 +123,16 @@ async def api_create_stars_invoice(
             data_package_service = DataPackageService(package_repo, user_repo)
             payment_service = MiniAppPaymentService(data_package_service)
 
+            # Generate unique transaction ID for this purchase
+            import uuid
+
+            transaction_id = str(uuid.uuid4())[:16]
+
             invoice_url = payment_service.create_stars_invoice_url(
                 user_id=ctx.user.id,
                 product_type=payment_req.product_type,
                 product_id=payment_req.product_id,
+                transaction_id=transaction_id,
             )
 
             if not invoice_url:
@@ -130,10 +150,14 @@ async def api_create_stars_invoice(
                     },
                 )
 
-            logger.info(f"Successfully created Stars invoice for user {ctx.user.id}")
+            logger.info(
+                f"Successfully created Stars invoice for user {ctx.user.id}: "
+                f"transaction_id={transaction_id}"
+            )
             return {
                 "success": True,
                 "invoice_url": invoice_url,
+                "transaction_id": transaction_id,
             }
 
     except Exception as e:
@@ -216,6 +240,154 @@ async def api_create_crypto_order(
     except Exception as e:
         logger.error(
             f"Error creating crypto order for user {ctx.user.id}: {e}", exc_info=True
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": "Error interno del servidor. Por favor intenta nuevamente.",
+            },
+        )
+
+
+@router.post("/api/confirm-payment")
+async def api_confirm_payment(
+    confirm_req: ConfirmPaymentRequest,
+    ctx: MiniAppContext = Depends(get_current_user),
+):
+    """API: Confirma un pago exitoso y entrega el producto."""
+    try:
+        logger.info(
+            f"Confirming payment for user {ctx.user.id}: "
+            f"{confirm_req.product_type}={confirm_req.product_id}, "
+            f"transaction_id={confirm_req.transaction_id}"
+        )
+
+        async with get_session_context() as session:
+            package_repo = PostgresDataPackageRepository(session)
+            user_repo = PostgresUserRepository(session)
+
+            # Verify user exists
+            existing_user = await user_repo.get_by_id(ctx.user.id, ctx.user.id)
+            if not existing_user:
+                logger.error(
+                    f"User {ctx.user.id} not found in database - cannot confirm payment"
+                )
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "success": False,
+                        "error": "Usuario no encontrado. Por favor reinicia la aplicación.",
+                    },
+                )
+
+            data_package_service = DataPackageService(package_repo, user_repo)
+            payment_service = MiniAppPaymentService(data_package_service)
+
+            if confirm_req.product_type == "package":
+                # Validate package exists
+                package_opt = payment_service.get_package_option(confirm_req.product_id)
+                if not package_opt:
+                    logger.warning(
+                        f"Invalid package type for user {ctx.user.id}: {confirm_req.product_id}"
+                    )
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "success": False,
+                            "error": "Paquete no válido.",
+                        },
+                    )
+
+                # Process package purchase
+                package, bonus_breakdown = await data_package_service.purchase_package(
+                    user_id=ctx.user.id,
+                    package_type=confirm_req.product_id,
+                    telegram_payment_id=f"miniapp_{confirm_req.transaction_id}",
+                    current_user_id=ctx.user.id,
+                )
+
+                logger.info(
+                    f"Package purchased successfully for user {ctx.user.id}: "
+                    f"{confirm_req.product_id}, package_id={package.id}"
+                )
+
+                return {
+                    "success": True,
+                    "message": "Paquete comprado exitosamente",
+                    "package_id": str(package.id),
+                    "data_bytes": package.remaining_bytes,
+                    "expires_at": (
+                        package.expires_at.isoformat() if package.expires_at else None
+                    ),
+                }
+
+            elif confirm_req.product_type == "slots":
+                # Parse slots count from product_id
+                slots_str = confirm_req.product_id.replace("slots_", "")
+                try:
+                    slots = int(slots_str)
+                except ValueError:
+                    logger.warning(
+                        f"Invalid slots format for user {ctx.user.id}: {confirm_req.product_id}"
+                    )
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "success": False,
+                            "error": "Formato de slots inválido.",
+                        },
+                    )
+
+                # Validate slots option exists
+                slot_opt = payment_service.get_slot_option(slots)
+                if not slot_opt:
+                    logger.warning(
+                        f"Invalid slots option for user {ctx.user.id}: {slots}"
+                    )
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "success": False,
+                            "error": "Opción de slots no válida.",
+                        },
+                    )
+
+                # Process slots purchase
+                result = await data_package_service.purchase_key_slots(
+                    user_id=ctx.user.id,
+                    slots=slots,
+                    telegram_payment_id=f"miniapp_{confirm_req.transaction_id}",
+                    current_user_id=ctx.user.id,
+                )
+
+                logger.info(
+                    f"Slots purchased successfully for user {ctx.user.id}: "
+                    f"+{result['slots_added']} slots, new_max={result['new_max_keys']}"
+                )
+
+                return {
+                    "success": True,
+                    "message": "Slots comprados exitosamente",
+                    "slots_added": result["slots_added"],
+                    "new_max_keys": result["new_max_keys"],
+                }
+
+            else:
+                logger.warning(
+                    f"Invalid product type for user {ctx.user.id}: {confirm_req.product_type}"
+                )
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "success": False,
+                        "error": "Tipo de producto no válido.",
+                    },
+                )
+
+    except Exception as e:
+        logger.error(
+            f"Error confirming payment for user {ctx.user.id}: {e}", exc_info=True
         )
         return JSONResponse(
             status_code=500,
