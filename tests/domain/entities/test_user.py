@@ -1,5 +1,6 @@
 import pytest
-from domain.entities.user import User, UserStatus, UserRole
+
+from domain.entities.user import User, UserRole, UserStatus
 
 
 class TestUserBonusTrackingFields:
@@ -17,7 +18,7 @@ class TestUserBonusTrackingFields:
             purchase_count=5,
             loyalty_bonus_percent=25,
             welcome_bonus_used=True,
-            referred_users_with_purchase=3
+            referred_users_with_purchase=3,
         )
 
         assert user.purchase_count == 5

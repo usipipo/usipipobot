@@ -5,8 +5,9 @@ Verifies that UserManagementHandler correctly passes billing_service
 to KeyManagementHandler when handling show_keys callback.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from application.services.consumption_billing_service import ConsumptionBillingService
 from application.services.user_profile_service import UserProfileService
@@ -56,7 +57,9 @@ class TestUserManagementHandlerBillingService:
             billing_service=None,
         )
 
-    def test_handler_stores_billing_service(self, handler_with_billing, mock_billing_service):
+    def test_handler_stores_billing_service(
+        self, handler_with_billing, mock_billing_service
+    ):
         """Test that handler correctly stores billing_service."""
         assert handler_with_billing.billing_service is mock_billing_service
 

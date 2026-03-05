@@ -44,12 +44,12 @@ class ConsumptionBaseHandler:
 
         if update.callback_query:
             await TelegramUtils.safe_edit_message(
-                update.callback_query, context,
+                update.callback_query,
+                context,
                 text=ConsumptionMessages.Error.GENERIC,
-                reply_markup=keyboard
+                reply_markup=keyboard,
             )
         elif update.message:
             await update.message.reply_text(
-                text=ConsumptionMessages.Error.GENERIC,
-                reply_markup=keyboard
+                text=ConsumptionMessages.Error.GENERIC, reply_markup=keyboard
             )

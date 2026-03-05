@@ -22,12 +22,11 @@ from telegram.ext import (
 
 from application.services.vpn_service import VpnService
 from config import settings
+from telegram_bot.common.keyboards import CommonKeyboards
 from utils.logger import logger
 from utils.qr_generator import QrGenerator
 from utils.spinner import vpn_spinner
 from utils.telegram_utils import escape_markdown
-
-from telegram_bot.common.keyboards import CommonKeyboards
 
 from .keyboards_vpn_keys import VpnKeysKeyboards
 from .messages_vpn_keys import VpnKeysMessages
@@ -67,13 +66,14 @@ class VpnKeysHandler:
         )
 
         if not can_create:
-            logger.warning(f"⚠️ User {telegram_id} reached key limit ({user.max_keys} keys)")
+            logger.warning(
+                f"⚠️ User {telegram_id} reached key limit ({user.max_keys} keys)"
+            )
             # Obtener cantidad de claves usadas para mostrar en el mensaje
             keys = await self.vpn_service.get_user_keys(telegram_id, telegram_id)
             used_keys = len([k for k in keys if k.is_active])
             error_message = VpnKeysMessages.Error.KEY_LIMIT_REACHED.format(
-                used_keys=used_keys,
-                max_keys=user.max_keys
+                used_keys=used_keys, max_keys=user.max_keys
             )
             if update.callback_query:
                 await update.callback_query.answer()
@@ -159,7 +159,9 @@ class VpnKeysHandler:
                 telegram_id, key_type, key_name, current_user_id=telegram_id
             )
 
-            logger.info(f"✅ Key {new_key.id} created successfully for user {telegram_id}")
+            logger.info(
+                f"✅ Key {new_key.id} created successfully for user {telegram_id}"
+            )
 
             safe_name = "".join(x for x in key_name if x.isalnum())
             file_id = f"{telegram_id}_{safe_name}"

@@ -41,8 +41,12 @@ class KeyOperationsMixin:
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
-            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
+            keys = await self.vpn_service.list_server_keys(
+                key_type, include_inactive=True
+            )
+            key = next(
+                (k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None
+            )
 
             if not key:
                 await SpinnerManager.replace_spinner_with_message(
@@ -114,8 +118,12 @@ class KeyOperationsMixin:
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
-            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
+            keys = await self.vpn_service.list_server_keys(
+                key_type, include_inactive=True
+            )
+            key = next(
+                (k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None
+            )
             if not key:
                 await SpinnerManager.replace_spinner_with_message(
                     update,
@@ -177,8 +185,12 @@ class KeyOperationsMixin:
         key_id_short = parts[-1]
 
         try:
-            keys = await self.vpn_service.list_server_keys(key_type, include_inactive=True)
-            key = next((k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None)
+            keys = await self.vpn_service.list_server_keys(
+                key_type, include_inactive=True
+            )
+            key = next(
+                (k for k in keys if str(k.get("id", "")).startswith(key_id_short)), None
+            )
             if not key:
                 await SpinnerManager.replace_spinner_with_message(
                     update,

@@ -217,6 +217,7 @@ class TestRedeemCreditsForData:
         https://github.com/usipipo/usipipobot/issues/249
         """
         from unittest.mock import patch
+
         from config import settings
 
         user = User(
@@ -227,7 +228,7 @@ class TestRedeemCreditsForData:
         mock_user_repo.get_by_id.return_value = user
 
         # Canjear 100 créditos (1 GB)
-        with patch.object(settings, 'REFERRAL_CREDITS_PER_GB', 100):
+        with patch.object(settings, "REFERRAL_CREDITS_PER_GB", 100):
             result = await service.redeem_credits_for_data(123, 100, 123)
 
         assert result["success"] is True
@@ -304,6 +305,7 @@ class TestRedeemCreditsForSlot:
         https://github.com/usipipo/usipipobot/issues/249
         """
         from unittest.mock import patch
+
         from config import settings
 
         user = User(
@@ -314,7 +316,7 @@ class TestRedeemCreditsForSlot:
         mock_user_repo.get_by_id.return_value = user
 
         # Canjear 500 créditos (1 slot)
-        with patch.object(settings, 'REFERRAL_CREDITS_PER_SLOT', 500):
+        with patch.object(settings, "REFERRAL_CREDITS_PER_SLOT", 500):
             result = await service.redeem_credits_for_slot(123, 123)
 
         assert result["success"] is True
@@ -351,9 +353,7 @@ class TestRecordReferredUserPurchase:
         self, service, mock_user_repo
     ):
         referrer = User(
-            telegram_id=123,
-            referral_code="ABC123",
-            referred_users_with_purchase=2
+            telegram_id=123, referral_code="ABC123", referred_users_with_purchase=2
         )
         mock_user_repo.get_by_id.return_value = referrer
 

@@ -15,7 +15,7 @@ class ConsumptionKeyboards:
     def consumption_main_menu(
         has_active_cycle: bool = False,
         has_pending_debt: bool = False,
-        can_activate: bool = False
+        can_activate: bool = False,
     ) -> InlineKeyboardMarkup:
         """
         Menú principal de tarifa por consumo.
@@ -29,46 +29,52 @@ class ConsumptionKeyboards:
 
         if has_pending_debt:
             # Usuario con deuda - mostrar botón de generar factura
-            keyboard.append([
-                InlineKeyboardButton(
-                    "💳 Generar Factura",
-                    callback_data="consumption_generate_invoice"
-                )
-            ])
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "💳 Generar Factura",
+                        callback_data="consumption_generate_invoice",
+                    )
+                ]
+            )
         elif has_active_cycle:
             # Usuario con ciclo activo - ver consumo y opción de cancelar
-            keyboard.append([
-                InlineKeyboardButton(
-                    "📊 Ver Mi Consumo",
-                    callback_data="consumption_view_status"
-                )
-            ])
-            keyboard.append([
-                InlineKeyboardButton(
-                    "🚫 Cancelar Modo Consumo",
-                    callback_data="consumption_cancel"
-                )
-            ])
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "📊 Ver Mi Consumo", callback_data="consumption_view_status"
+                    )
+                ]
+            )
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "🚫 Cancelar Modo Consumo", callback_data="consumption_cancel"
+                    )
+                ]
+            )
         elif can_activate:
             # Usuario puede activar
-            keyboard.append([
-                InlineKeyboardButton(
-                    "⚡ Activar Modo Consumo",
-                    callback_data="consumption_activate"
-                )
-            ])
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        "⚡ Activar Modo Consumo", callback_data="consumption_activate"
+                    )
+                ]
+            )
 
         # Información siempre disponible
-        keyboard.append([
-            InlineKeyboardButton(
-                "ℹ️ ¿Qué es el Modo Consumo?",
-                callback_data="consumption_info"
-            )
-        ])
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    "ℹ️ ¿Qué es el Modo Consumo?", callback_data="consumption_info"
+                )
+            ]
+        )
 
-        keyboard.append([
-            InlineKeyboardButton("🔙 Volver al Menú", callback_data="main_menu")
-        ])
+        keyboard.append(
+            [InlineKeyboardButton("🔙 Volver al Menú", callback_data="main_menu")]
+        )
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -79,22 +85,16 @@ class ConsumptionKeyboards:
             [
                 InlineKeyboardButton(
                     "✅ Acepto los Términos",
-                    callback_data="consumption_confirm_activate"
+                    callback_data="consumption_confirm_activate",
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "❌ Cancelar",
-                    callback_data="consumption_menu"
-                )
-            ],
+            [InlineKeyboardButton("❌ Cancelar", callback_data="consumption_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
     def payment_method_selection(
-        consumption_formatted: str,
-        cost_formatted: str
+        consumption_formatted: str, cost_formatted: str
     ) -> InlineKeyboardMarkup:
         """
         Teclado para seleccionar método de pago.
@@ -106,22 +106,15 @@ class ConsumptionKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "💫 Pagar con Telegram Stars",
-                    callback_data="consumption_pay_stars"
+                    "💫 Pagar con Telegram Stars", callback_data="consumption_pay_stars"
                 )
             ],
             [
                 InlineKeyboardButton(
-                    "💰 Pagar con Crypto (USDT)",
-                    callback_data="consumption_pay_crypto"
+                    "💰 Pagar con Crypto (USDT)", callback_data="consumption_pay_crypto"
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver",
-                    callback_data="consumption_menu"
-                )
-            ],
+            [InlineKeyboardButton("🔙 Volver", callback_data="consumption_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -131,13 +124,9 @@ class ConsumptionKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "📊 Menú Consumo",
-                    callback_data="consumption_menu"
+                    "📊 Menú Consumo", callback_data="consumption_menu"
                 ),
-                InlineKeyboardButton(
-                    "🔙 Menú Principal",
-                    callback_data="main_menu"
-                ),
+                InlineKeyboardButton("🔙 Menú Principal", callback_data="main_menu"),
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -149,15 +138,10 @@ class ConsumptionKeyboards:
             [
                 InlineKeyboardButton(
                     "🔄 Generar Nueva Factura",
-                    callback_data="consumption_generate_invoice"
+                    callback_data="consumption_generate_invoice",
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver",
-                    callback_data="consumption_menu"
-                )
-            ],
+            [InlineKeyboardButton("🔙 Volver", callback_data="consumption_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -167,16 +151,10 @@ class ConsumptionKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "📊 Ver Mi Consumo",
-                    callback_data="consumption_view_status"
+                    "📊 Ver Mi Consumo", callback_data="consumption_view_status"
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "🔙 Menú Principal",
-                    callback_data="main_menu"
-                )
-            ],
+            [InlineKeyboardButton("🔙 Menú Principal", callback_data="main_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -186,16 +164,10 @@ class ConsumptionKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "⚡ Activar Nuevo Ciclo",
-                    callback_data="consumption_activate"
+                    "⚡ Activar Nuevo Ciclo", callback_data="consumption_activate"
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "🔙 Menú Principal",
-                    callback_data="main_menu"
-                )
-            ],
+            [InlineKeyboardButton("🔙 Menú Principal", callback_data="main_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -205,16 +177,10 @@ class ConsumptionKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "⚡ Activar Modo Consumo",
-                    callback_data="consumption_activate"
+                    "⚡ Activar Modo Consumo", callback_data="consumption_activate"
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver",
-                    callback_data="main_menu"
-                )
-            ],
+            [InlineKeyboardButton("🔙 Volver", callback_data="main_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -225,13 +191,12 @@ class ConsumptionKeyboards:
             [
                 InlineKeyboardButton(
                     "✅ Sí, Cancelar Modo Consumo",
-                    callback_data="consumption_confirm_cancel"
+                    callback_data="consumption_confirm_cancel",
                 )
             ],
             [
                 InlineKeyboardButton(
-                    "❌ No, Mantener Activo",
-                    callback_data="consumption_menu"
+                    "❌ No, Mantener Activo", callback_data="consumption_menu"
                 )
             ],
         ]
@@ -243,15 +208,9 @@ class ConsumptionKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "💳 Generar Factura",
-                    callback_data="consumption_generate_invoice"
+                    "💳 Generar Factura", callback_data="consumption_generate_invoice"
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "🔙 Menú Principal",
-                    callback_data="main_menu"
-                )
-            ],
+            [InlineKeyboardButton("🔙 Menú Principal", callback_data="main_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)

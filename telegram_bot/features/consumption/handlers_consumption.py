@@ -14,12 +14,12 @@ from application.services.consumption_billing_service import (
 from application.services.consumption_invoice_service import (
     ConsumptionInvoiceService,
 )
-from telegram_bot.features.consumption.handlers_base import ConsumptionBaseHandler
-from telegram_bot.features.consumption.handlers_menu import MenuMixin
 from telegram_bot.features.consumption.handlers_activation import ActivationMixin
-from telegram_bot.features.consumption.handlers_status import StatusMixin
-from telegram_bot.features.consumption.handlers_invoice import InvoiceMixin
+from telegram_bot.features.consumption.handlers_base import ConsumptionBaseHandler
 from telegram_bot.features.consumption.handlers_cancellation import CancellationMixin
+from telegram_bot.features.consumption.handlers_invoice import InvoiceMixin
+from telegram_bot.features.consumption.handlers_menu import MenuMixin
+from telegram_bot.features.consumption.handlers_status import StatusMixin
 
 __all__ = [
     "ConsumptionHandler",
@@ -48,7 +48,7 @@ class ConsumptionHandler(
 
 def get_consumption_handlers(
     billing_service: ConsumptionBillingService,
-    invoice_service: ConsumptionInvoiceService
+    invoice_service: ConsumptionInvoiceService,
 ):
     """Retorna los handlers para el módulo de consumo."""
     handler = ConsumptionHandler(billing_service, invoice_service)
@@ -61,7 +61,7 @@ def get_consumption_handlers(
 
 def get_consumption_callback_handlers(
     billing_service: ConsumptionBillingService,
-    invoice_service: ConsumptionInvoiceService
+    invoice_service: ConsumptionInvoiceService,
 ):
     """Retorna los callback handlers para el módulo de consumo."""
     handler = ConsumptionHandler(billing_service, invoice_service)
@@ -80,8 +80,7 @@ def get_consumption_callback_handlers(
             handler.view_my_consumption, pattern="^consumption_view_status$"
         ),
         CallbackQueryHandler(
-            handler.start_invoice_generation,
-            pattern="^consumption_generate_invoice$"
+            handler.start_invoice_generation, pattern="^consumption_generate_invoice$"
         ),
         CallbackQueryHandler(
             handler.generate_invoice_stars, pattern="^consumption_pay_stars$"
@@ -89,9 +88,7 @@ def get_consumption_callback_handlers(
         CallbackQueryHandler(
             handler.generate_invoice_crypto, pattern="^consumption_pay_crypto$"
         ),
-        CallbackQueryHandler(
-            handler.show_info, pattern="^consumption_info$"
-        ),
+        CallbackQueryHandler(handler.show_info, pattern="^consumption_info$"),
         CallbackQueryHandler(
             handler.start_cancellation, pattern="^consumption_cancel$"
         ),

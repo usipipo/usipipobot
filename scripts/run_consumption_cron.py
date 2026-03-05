@@ -32,6 +32,7 @@ from application.services.consumption_invoice_service import (
     ConsumptionInvoiceService,
 )
 from config import settings
+from infrastructure.persistence.database import get_session_context
 from infrastructure.persistence.postgresql.consumption_billing_repository import (
     PostgresConsumptionBillingRepository,
 )
@@ -41,7 +42,6 @@ from infrastructure.persistence.postgresql.consumption_invoice_repository import
 from infrastructure.persistence.postgresql.user_repository import (
     PostgresUserRepository,
 )
-from infrastructure.persistence.database import get_session_context
 from utils.logger import logger
 
 
@@ -82,13 +82,9 @@ class ConsumptionCronJob:
                 logger.info("🔄 Iniciando cron job de consumo...")
 
                 # 1. Obtener ciclos expirados
-                expired_cycles = await billing_service.get_expired_cycles(
-                    self.admin_id
-                )
+                expired_cycles = await billing_service.get_expired_cycles(self.admin_id)
 
-                logger.info(
-                    f"📊 Ciclos expirados encontrados: {len(expired_cycles)}"
-                )
+                logger.info(f"📊 Ciclos expirados encontrados: {len(expired_cycles)}")
 
                 # 2. Procesar cada ciclo expirado
                 for cycle in expired_cycles:
@@ -116,9 +112,7 @@ class ConsumptionCronJob:
 
                     except Exception as e:
                         stats["errors"] += 1
-                        logger.error(
-                            f"❌ Error procesando ciclo {cycle.id}: {e}"
-                        )
+                        logger.error(f"❌ Error procesando ciclo {cycle.id}: {e}")
 
                 # 3. Cancelar facturas expiradas
                 expired_invoices = await invoice_service.cancel_expired_invoices(
@@ -126,9 +120,7 @@ class ConsumptionCronJob:
                 )
 
                 if expired_invoices > 0:
-                    logger.info(
-                        f"🗑️ Facturas expiradas canceladas: {expired_invoices}"
-                    )
+                    logger.info(f"🗑️ Facturas expiradas canceladas: {expired_invoices}")
 
                 stats["finished_at"] = datetime.now(timezone.utc).isoformat()
 
@@ -167,9 +159,7 @@ class ConsumptionCronJob:
             # await bot.send_message(chat_id=cycle.user_id, text=message)
 
         except Exception as e:
-            logger.error(
-                f"❌ Error notificando a usuario {cycle.user_id}: {e}"
-            )
+            logger.error(f"❌ Error notificando a usuario {cycle.user_id}: {e}")
 
 
 async def main():
@@ -195,7 +185,7 @@ async def main():
     print("=" * 50)
 
     # Retornar código de salida
-    return 0 if stats['errors'] == 0 else 1
+    return 0 if stats["errors"] == 0 else 1
 
 
 if __name__ == "__main__":

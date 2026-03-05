@@ -52,7 +52,9 @@ async def dashboard(request: Request, ctx: MiniAppContext = Depends(get_current_
             remaining_bytes = max(0, total_limit_bytes - total_used_bytes)
 
             usage_percent = (
-                (total_used_bytes / total_limit_bytes * 100) if total_limit_bytes > 0 else 0
+                (total_used_bytes / total_limit_bytes * 100)
+                if total_limit_bytes > 0
+                else 0
             )
 
             return templates.TemplateResponse(
@@ -77,7 +79,9 @@ async def dashboard(request: Request, ctx: MiniAppContext = Depends(get_current_
 
 
 @router.get("/profile", response_class=HTMLResponse)
-async def profile_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+async def profile_page(
+    request: Request, ctx: MiniAppContext = Depends(get_current_user)
+):
     """Página de perfil del usuario."""
     logger.info(f"👤 MiniApp profile page accessed by user {ctx.user.id}")
     try:
@@ -107,7 +111,9 @@ async def profile_page(request: Request, ctx: MiniAppContext = Depends(get_curre
                 profile_info = {
                     "created_at": user.created_at,
                     "status": (
-                        user.status.value if hasattr(user.status, "value") else str(user.status)
+                        user.status.value
+                        if hasattr(user.status, "value")
+                        else str(user.status)
                     ),
                     "max_keys": user.max_keys,
                     "referral_code": getattr(user, "referral_code", None),
@@ -120,7 +126,9 @@ async def profile_page(request: Request, ctx: MiniAppContext = Depends(get_curre
                     )
 
                     tx_repo = PostgresTransactionRepository(session)
-                    transactions = await tx_repo.get_user_transactions(ctx.user.id, limit=10)
+                    transactions = await tx_repo.get_user_transactions(
+                        ctx.user.id, limit=10
+                    )
                 except Exception as tx_error:
                     logger.warning(f"Could not fetch transactions: {tx_error}")
 
@@ -141,7 +149,9 @@ async def profile_page(request: Request, ctx: MiniAppContext = Depends(get_curre
 
 
 @router.get("/settings", response_class=HTMLResponse)
-async def settings_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+async def settings_page(
+    request: Request, ctx: MiniAppContext = Depends(get_current_user)
+):
     """Página de ajustes del usuario."""
     is_admin = ctx.user.id == int(settings.ADMIN_ID)
     logger.info(f"⚙️ User {ctx.user.id} accessed settings (admin={is_admin})")

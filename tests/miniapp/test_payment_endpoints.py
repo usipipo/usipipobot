@@ -5,10 +5,11 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from fastapi import Depends
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from infrastructure.api.server import create_app
 from miniapp.router import get_current_user
@@ -35,9 +36,7 @@ async def client():
     mock_user.telegram_id = 12345
     mock_user.max_keys = 2
 
-    with patch(
-        "miniapp.routes_payments.PostgresUserRepository"
-    ) as mock_repo_class:
+    with patch("miniapp.routes_payments.PostgresUserRepository") as mock_repo_class:
         mock_repo = AsyncMock()
         mock_repo.get_by_id.return_value = mock_user
         mock_repo_class.return_value = mock_repo
@@ -174,8 +173,8 @@ class TestMiniAppPaymentService:
 
     def test_get_package_option_success(self):
         """Test getting a valid package option."""
-        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
         from application.services.data_package_service import DataPackageService
+        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
 
         mock_service = MagicMock(spec=DataPackageService)
         payment_service = MiniAppPaymentService(mock_service)
@@ -187,8 +186,8 @@ class TestMiniAppPaymentService:
 
     def test_get_package_option_not_found(self):
         """Test getting an invalid package option."""
-        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
         from application.services.data_package_service import DataPackageService
+        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
 
         mock_service = MagicMock(spec=DataPackageService)
         payment_service = MiniAppPaymentService(mock_service)
@@ -198,8 +197,8 @@ class TestMiniAppPaymentService:
 
     def test_get_slot_option_success(self):
         """Test getting a valid slot option."""
-        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
         from application.services.data_package_service import DataPackageService
+        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
 
         mock_service = MagicMock(spec=DataPackageService)
         payment_service = MiniAppPaymentService(mock_service)
@@ -211,8 +210,8 @@ class TestMiniAppPaymentService:
 
     def test_create_stars_invoice_url_package(self):
         """Test creating Stars invoice URL for package."""
-        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
         from application.services.data_package_service import DataPackageService
+        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
 
         mock_service = MagicMock(spec=DataPackageService)
         payment_service = MiniAppPaymentService(mock_service)
@@ -230,8 +229,8 @@ class TestMiniAppPaymentService:
 
     def test_create_stars_invoice_url_slots(self):
         """Test creating Stars invoice URL for slots."""
-        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
         from application.services.data_package_service import DataPackageService
+        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
 
         mock_service = MagicMock(spec=DataPackageService)
         payment_service = MiniAppPaymentService(mock_service)
@@ -248,8 +247,8 @@ class TestMiniAppPaymentService:
 
     def test_create_stars_invoice_url_invalid_type(self):
         """Test creating Stars invoice URL with invalid type."""
-        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
         from application.services.data_package_service import DataPackageService
+        from miniapp.services.miniapp_payment_service import MiniAppPaymentService
 
         mock_service = MagicMock(spec=DataPackageService)
         payment_service = MiniAppPaymentService(mock_service)

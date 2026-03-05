@@ -1,16 +1,16 @@
-import pytest
+import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import uuid
+import pytest
 
 from application.services import consumption_billing_service
 from application.services.consumption_billing_service import (
-    ConsumptionBillingService,
     CancellationResult,
+    ConsumptionBillingService,
 )
-from domain.entities.consumption_billing import ConsumptionBilling, BillingStatus
+from domain.entities.consumption_billing import BillingStatus, ConsumptionBilling
 from domain.entities.user import User
 
 
@@ -20,8 +20,7 @@ class TestCanCancelConsumption:
     @pytest.fixture
     def service(self, mock_billing_repo, mock_user_repo):
         return ConsumptionBillingService(
-            billing_repo=mock_billing_repo,
-            user_repo=mock_user_repo
+            billing_repo=mock_billing_repo, user_repo=mock_user_repo
         )
 
     @pytest.fixture
@@ -52,15 +51,13 @@ class TestCanCancelConsumption:
     ):
         """Usuario con deuda pendiente no puede cancelar."""
         user = User(
-            telegram_id=123,
-            consumption_mode_enabled=True,
-            has_pending_debt=True
+            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=True
         )
         billing = ConsumptionBilling(
             user_id=123,
             started_at=datetime.now(timezone.utc),
             status=BillingStatus.ACTIVE,
-            id=uuid.uuid4()
+            id=uuid.uuid4(),
         )
         mock_user_repo.get_by_id.return_value = user
         mock_billing_repo.get_active_by_user.return_value = billing
@@ -78,13 +75,13 @@ class TestCanCancelConsumption:
         user = User(
             telegram_id=123,
             consumption_mode_enabled=False,  # Flag desactivado
-            has_pending_debt=False
+            has_pending_debt=False,
         )
         billing = ConsumptionBilling(
             user_id=123,
             started_at=datetime.now(timezone.utc),
             status=BillingStatus.ACTIVE,
-            id=uuid.uuid4()
+            id=uuid.uuid4(),
         )
         mock_user_repo.get_by_id.return_value = user
         mock_billing_repo.get_active_by_user.return_value = billing
@@ -111,15 +108,13 @@ class TestCanCancelConsumption:
     ):
         """Usuario con ciclo activo puede cancelar."""
         user = User(
-            telegram_id=123,
-            consumption_mode_enabled=True,
-            has_pending_debt=False
+            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
         )
         billing = ConsumptionBilling(
             user_id=123,
             started_at=datetime.now(timezone.utc),
             status=BillingStatus.ACTIVE,
-            id=uuid.uuid4()
+            id=uuid.uuid4(),
         )
         mock_user_repo.get_by_id.return_value = user
         mock_billing_repo.get_active_by_user.return_value = billing
@@ -136,8 +131,7 @@ class TestCancelConsumptionMode:
     @pytest.fixture
     def service(self, mock_billing_repo, mock_user_repo):
         return ConsumptionBillingService(
-            billing_repo=mock_billing_repo,
-            user_repo=mock_user_repo
+            billing_repo=mock_billing_repo, user_repo=mock_user_repo
         )
 
     @pytest.fixture
@@ -157,9 +151,7 @@ class TestCancelConsumptionMode:
         """Cancelación exitosa del modo consumo."""
         # Setup
         user = User(
-            telegram_id=123,
-            consumption_mode_enabled=True,
-            has_pending_debt=False
+            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
         )
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
@@ -168,7 +160,7 @@ class TestCancelConsumptionMode:
             status=BillingStatus.ACTIVE,
             id=billing_id,
             mb_consumed=Decimal("512.50"),
-            total_cost_usd=Decimal("0.125")
+            total_cost_usd=Decimal("0.125"),
         )
 
         mock_user_repo.get_by_id.return_value = user
@@ -177,17 +169,23 @@ class TestCancelConsumptionMode:
         # Mock container and vpn integration
         mock_container = MagicMock()
         mock_vpn_integration = AsyncMock()
-        mock_vpn_integration.block_user_keys.return_value = {"success": True, "errors": []}
+        mock_vpn_integration.block_user_keys.return_value = {
+            "success": True,
+            "errors": [],
+        }
         mock_container.resolve.return_value = mock_vpn_integration
 
         mock_container_module = MagicMock()
         mock_container_module.get_container.return_value = mock_container
 
         # Mock the imports inside the function
-        with patch.dict('sys.modules', {
-            'application.services.consumption_vpn_integration_service': MagicMock(),
-            'application.services.common.container': mock_container_module
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "application.services.consumption_vpn_integration_service": MagicMock(),
+                "application.services.common.container": mock_container_module,
+            },
+        ):
             # Execute
             result = await service.cancel_consumption_mode(123, 123)
 
@@ -227,9 +225,7 @@ class TestCancelConsumptionMode:
     ):
         """Error cuando no hay ciclo activo."""
         user = User(
-            telegram_id=123,
-            consumption_mode_enabled=True,
-            has_pending_debt=False
+            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
         )
         mock_user_repo.get_by_id.return_value = user
         mock_billing_repo.get_active_by_user.return_value = None
@@ -245,15 +241,13 @@ class TestCancelConsumptionMode:
     ):
         """Error cuando usuario ya tiene deuda."""
         user = User(
-            telegram_id=123,
-            consumption_mode_enabled=True,
-            has_pending_debt=True
+            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=True
         )
         billing = ConsumptionBilling(
             user_id=123,
             started_at=datetime.now(timezone.utc),
             status=BillingStatus.ACTIVE,
-            id=uuid.uuid4()
+            id=uuid.uuid4(),
         )
         mock_user_repo.get_by_id.return_value = user
         mock_billing_repo.get_active_by_user.return_value = billing
@@ -269,16 +263,14 @@ class TestCancelConsumptionMode:
     ):
         """Maneja caso cuando container es None."""
         user = User(
-            telegram_id=123,
-            consumption_mode_enabled=True,
-            has_pending_debt=False
+            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
         )
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
             user_id=123,
             started_at=datetime.now(timezone.utc),
             status=BillingStatus.ACTIVE,
-            id=billing_id
+            id=billing_id,
         )
 
         mock_user_repo.get_by_id.return_value = user
@@ -288,10 +280,13 @@ class TestCancelConsumptionMode:
         mock_container_module = MagicMock()
         mock_container_module.get_container.return_value = None
 
-        with patch.dict('sys.modules', {
-            'application.services.consumption_vpn_integration_service': MagicMock(),
-            'application.services.common.container': mock_container_module
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "application.services.consumption_vpn_integration_service": MagicMock(),
+                "application.services.common.container": mock_container_module,
+            },
+        ):
             # Should not raise, should complete successfully
             result = await service.cancel_consumption_mode(123, 123)
 
@@ -305,8 +300,7 @@ class TestCancelConsumptionModeWithoutDebt:
     @pytest.fixture
     def service(self, mock_billing_repo, mock_user_repo):
         return ConsumptionBillingService(
-            billing_repo=mock_billing_repo,
-            user_repo=mock_user_repo
+            billing_repo=mock_billing_repo, user_repo=mock_user_repo
         )
 
     @pytest.fixture
@@ -326,9 +320,7 @@ class TestCancelConsumptionModeWithoutDebt:
         """BUG FIX: Cancelación sin consumo NO bloquea claves ni marca deuda."""
         # Setup - ciclo activo pero sin consumo
         user = User(
-            telegram_id=123,
-            consumption_mode_enabled=True,
-            has_pending_debt=False
+            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
         )
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
@@ -337,7 +329,7 @@ class TestCancelConsumptionModeWithoutDebt:
             status=BillingStatus.ACTIVE,
             id=billing_id,
             mb_consumed=Decimal("0"),
-            total_cost_usd=Decimal("0")
+            total_cost_usd=Decimal("0"),
         )
 
         mock_user_repo.get_by_id.return_value = user
@@ -370,9 +362,7 @@ class TestCancelConsumptionModeWithoutDebt:
         """Cancelación CON consumo: SÍ bloquea claves, SÍ marca deuda."""
         # Setup - ciclo activo CON consumo
         user = User(
-            telegram_id=123,
-            consumption_mode_enabled=True,
-            has_pending_debt=False
+            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
         )
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
@@ -381,7 +371,7 @@ class TestCancelConsumptionModeWithoutDebt:
             status=BillingStatus.ACTIVE,
             id=billing_id,
             mb_consumed=Decimal("1024.00"),
-            total_cost_usd=Decimal("0.25")
+            total_cost_usd=Decimal("0.25"),
         )
 
         mock_user_repo.get_by_id.return_value = user
@@ -390,17 +380,23 @@ class TestCancelConsumptionModeWithoutDebt:
         # Mock container and vpn integration
         mock_container = MagicMock()
         mock_vpn_integration = AsyncMock()
-        mock_vpn_integration.block_user_keys.return_value = {"success": True, "errors": []}
+        mock_vpn_integration.block_user_keys.return_value = {
+            "success": True,
+            "errors": [],
+        }
         mock_container.resolve.return_value = mock_vpn_integration
 
         mock_container_module = MagicMock()
         mock_container_module.get_container.return_value = mock_container
 
         # Mock the imports inside the function
-        with patch.dict('sys.modules', {
-            'application.services.consumption_vpn_integration_service': MagicMock(),
-            'application.services.common.container': mock_container_module
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "application.services.consumption_vpn_integration_service": MagicMock(),
+                "application.services.common.container": mock_container_module,
+            },
+        ):
             # Execute
             result = await service.cancel_consumption_mode(123, 123)
 
@@ -425,9 +421,7 @@ class TestCancelConsumptionModeWithoutDebt:
         """Cancelación con costo > 0 aunque MB = 0: SÍ marca deuda."""
         # Setup - ciclo con costo positivo (caso edge)
         user = User(
-            telegram_id=123,
-            consumption_mode_enabled=True,
-            has_pending_debt=False
+            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
         )
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
@@ -436,7 +430,7 @@ class TestCancelConsumptionModeWithoutDebt:
             status=BillingStatus.ACTIVE,
             id=billing_id,
             mb_consumed=Decimal("0"),
-            total_cost_usd=Decimal("0.01")  # Costo positivo
+            total_cost_usd=Decimal("0.01"),  # Costo positivo
         )
 
         mock_user_repo.get_by_id.return_value = user
@@ -445,16 +439,22 @@ class TestCancelConsumptionModeWithoutDebt:
         # Mock container and vpn integration
         mock_container = MagicMock()
         mock_vpn_integration = AsyncMock()
-        mock_vpn_integration.block_user_keys.return_value = {"success": True, "errors": []}
+        mock_vpn_integration.block_user_keys.return_value = {
+            "success": True,
+            "errors": [],
+        }
         mock_container.resolve.return_value = mock_vpn_integration
 
         mock_container_module = MagicMock()
         mock_container_module.get_container.return_value = mock_container
 
-        with patch.dict('sys.modules', {
-            'application.services.consumption_vpn_integration_service': MagicMock(),
-            'application.services.common.container': mock_container_module
-        }):
+        with patch.dict(
+            "sys.modules",
+            {
+                "application.services.consumption_vpn_integration_service": MagicMock(),
+                "application.services.common.container": mock_container_module,
+            },
+        ):
             result = await service.cancel_consumption_mode(123, 123)
 
         # Assert

@@ -6,6 +6,7 @@ Version: 1.0.0
 """
 
 import pytest
+
 from telegram_bot.features.operations.keyboards_operations import OperationsKeyboards
 
 

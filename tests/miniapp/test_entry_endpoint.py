@@ -5,9 +5,10 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from infrastructure.api.server import create_app
 from miniapp.router import get_current_user
@@ -30,10 +31,8 @@ async def client_with_unregistered_user():
 
     async def mock_unregistered_user():
         from fastapi import HTTPException
-        raise HTTPException(
-            status_code=403,
-            detail="USER_NOT_REGISTERED"
-        )
+
+        raise HTTPException(status_code=403, detail="USER_NOT_REGISTERED")
 
     app.dependency_overrides[get_current_user] = mock_unregistered_user
     async with AsyncClient(
@@ -102,7 +101,9 @@ async def test_entry_endpoint_contains_usipipo_branding(client):
 
 
 @pytest.mark.asyncio
-async def test_api_user_returns_403_for_unregistered_user(client_with_unregistered_user):
+async def test_api_user_returns_403_for_unregistered_user(
+    client_with_unregistered_user,
+):
     """Test que la API devuelve 403 cuando el usuario no está registrado en el bot."""
     response = await client_with_unregistered_user.get("/miniapp/api/user")
     assert response.status_code == 403

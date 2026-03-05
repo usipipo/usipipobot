@@ -59,7 +59,9 @@ async def keys_list(request: Request, ctx: MiniAppContext = Depends(get_current_
 
 
 @router.get("/keys/create", response_class=HTMLResponse)
-async def create_key_form(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+async def create_key_form(
+    request: Request, ctx: MiniAppContext = Depends(get_current_user)
+):
     """Formulario para crear nueva clave VPN."""
     logger.info(f"➕ MiniApp create key form accessed by user {ctx.user.id}")
     try:
@@ -103,7 +105,9 @@ async def create_key_submit(
             current_user_id=ctx.user.id,
         )
 
-        logger.info(f"🔑 Nueva clave creada via Mini App: {new_key.id} para {ctx.user.id}")
+        logger.info(
+            f"🔑 Nueva clave creada via Mini App: {new_key.id} para {ctx.user.id}"
+        )
 
         return JSONResponse(
             status_code=200,
@@ -148,8 +152,12 @@ async def api_get_keys(ctx: MiniAppContext = Depends(get_current_user)):
                         "used_gb": round(k.used_gb, 2),
                         "limit_gb": round(k.data_limit_gb, 2),
                         "remaining_gb": round(k.remaining_bytes / (1024**3), 2),
-                        "created_at": (k.created_at.isoformat() if k.created_at else None),
-                        "last_seen": (k.last_seen_at.isoformat() if k.last_seen_at else None),
+                        "created_at": (
+                            k.created_at.isoformat() if k.created_at else None
+                        ),
+                        "last_seen": (
+                            k.last_seen_at.isoformat() if k.last_seen_at else None
+                        ),
                     }
                     for k in keys
                 ],
@@ -168,7 +176,9 @@ async def api_delete_key(
     try:
         # Only admins can delete keys
         if ctx.user.id != int(settings.ADMIN_ID):
-            logger.warning(f"User {ctx.user.id} attempted to delete key without admin privileges")
+            logger.warning(
+                f"User {ctx.user.id} attempted to delete key without admin privileges"
+            )
             raise HTTPException(
                 status_code=403, detail="Solo administradores pueden eliminar claves"
             )

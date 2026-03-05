@@ -59,10 +59,7 @@ class IConsumptionInvoiceRepository(Protocol):
         ...
 
     async def mark_as_paid(
-        self,
-        invoice_id: uuid.UUID,
-        transaction_hash: str,
-        current_user_id: int
+        self, invoice_id: uuid.UUID, transaction_hash: str, current_user_id: int
     ) -> bool:
         """Marca una factura como pagada."""
         ...
@@ -74,16 +71,11 @@ class IConsumptionInvoiceRepository(Protocol):
         ...
 
     async def update_status(
-        self,
-        invoice_id: uuid.UUID,
-        status: InvoiceStatus,
-        current_user_id: int
+        self, invoice_id: uuid.UUID, status: InvoiceStatus, current_user_id: int
     ) -> bool:
         """Actualiza el estado de una factura."""
         ...
 
-    async def delete(
-        self, invoice_id: uuid.UUID, current_user_id: int
-    ) -> bool:
+    async def delete(self, invoice_id: uuid.UUID, current_user_id: int) -> bool:
         """Elimina una factura de la base de datos."""
         ...

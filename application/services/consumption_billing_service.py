@@ -56,9 +56,7 @@ class ConsumptionBillingService:
         self._activation = ConsumptionActivationService(
             billing_repo, user_repo, self.price_per_mb
         )
-        self._cycle = ConsumptionCycleService(
-            billing_repo, user_repo, self.cycle_days
-        )
+        self._cycle = ConsumptionCycleService(billing_repo, user_repo, self.cycle_days)
 
     # ============================================
     # DELEGACIÓN A ConsumptionActivationService
@@ -68,9 +66,7 @@ class ConsumptionBillingService:
         self, user_id: int, current_user_id: int
     ) -> Tuple[bool, Optional[str]]:
         """Verifica si un usuario puede activar el modo consumo."""
-        return await self._activation.can_activate_consumption(
-            user_id, current_user_id
-        )
+        return await self._activation.can_activate_consumption(user_id, current_user_id)
 
     async def activate_consumption_mode(
         self, user_id: int, current_user_id: int
@@ -84,17 +80,13 @@ class ConsumptionBillingService:
         self, user_id: int, current_user_id: int
     ) -> Tuple[bool, Optional[str]]:
         """Verifica si un usuario puede cancelar el modo consumo."""
-        return await self._activation.can_cancel_consumption(
-            user_id, current_user_id
-        )
+        return await self._activation.can_cancel_consumption(user_id, current_user_id)
 
     async def cancel_consumption_mode(
         self, user_id: int, current_user_id: int
     ) -> CancellationResult:
         """Cancela el modo consumo para un usuario."""
-        return await self._activation.cancel_consumption_mode(
-            user_id, current_user_id
-        )
+        return await self._activation.cancel_consumption_mode(user_id, current_user_id)
 
     # ============================================
     # DELEGACIÓN A ConsumptionCycleService
@@ -104,33 +96,25 @@ class ConsumptionBillingService:
         self, user_id: int, mb_used: float, current_user_id: int
     ) -> bool:
         """Registra consumo de datos para un usuario en modo consumo."""
-        return await self._cycle.record_data_usage(
-            user_id, mb_used, current_user_id
-        )
+        return await self._cycle.record_data_usage(user_id, mb_used, current_user_id)
 
     async def get_current_consumption(
         self, user_id: int, current_user_id: int
     ) -> Optional[ConsumptionSummary]:
         """Obtiene el resumen de consumo actual de un usuario."""
-        return await self._cycle.get_current_consumption(
-            user_id, current_user_id
-        )
+        return await self._cycle.get_current_consumption(user_id, current_user_id)
 
     async def close_billing_cycle(
         self, billing_id: uuid.UUID, current_user_id: int
     ) -> bool:
         """Cierra un ciclo de facturación."""
-        return await self._cycle.close_billing_cycle(
-            billing_id, current_user_id
-        )
+        return await self._cycle.close_billing_cycle(billing_id, current_user_id)
 
     async def mark_cycle_as_paid(
         self, billing_id: uuid.UUID, current_user_id: int
     ) -> bool:
         """Marca un ciclo como pagado."""
-        return await self._cycle.mark_cycle_as_paid(
-            billing_id, current_user_id
-        )
+        return await self._cycle.mark_cycle_as_paid(billing_id, current_user_id)
 
     async def get_expired_cycles(
         self, current_user_id: int
@@ -142,6 +126,4 @@ class ConsumptionBillingService:
         self, user_id: int, current_user_id: int
     ) -> List[ConsumptionBilling]:
         """Obtiene el historial de ciclos de un usuario."""
-        return await self._cycle.get_user_billing_history(
-            user_id, current_user_id
-        )
+        return await self._cycle.get_user_billing_history(user_id, current_user_id)

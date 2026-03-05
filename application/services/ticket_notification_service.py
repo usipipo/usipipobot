@@ -1,4 +1,5 @@
 from telegram import Bot
+
 from domain.entities.ticket import Ticket, TicketStatus
 from utils.logger import logger
 
@@ -10,24 +11,26 @@ class TicketNotificationService:
         self.bot = bot
         self.admin_id = admin_id
 
-    async def notify_admin_new_ticket(self, ticket: Ticket, username: str = None) -> bool:
+    async def notify_admin_new_ticket(
+        self, ticket: Ticket, username: str = None
+    ) -> bool:
         """Notifica al admin de un nuevo ticket."""
         try:
             category_emoji = {
                 "vpn_fail": "🔴",
                 "payment": "💰",
                 "account": "👤",
-                "other": "❓"
+                "other": "❓",
             }.get(ticket.category.value, "🎫")
-            
+
             priority_emoji = {
                 "high": "🔴 ALTA",
                 "medium": "🟡 MEDIA",
-                "low": "🟢 BAJA"
+                "low": "🟢 BAJA",
             }.get(ticket.priority.value, "⚪")
-            
+
             username_text = f"(@{username})" if username else ""
-            
+
             message = (
                 f"🆕 *NUEVO TICKET DE SOPORTE*\n\n"
                 f"📋 *Número:* `{ticket.ticket_number}`\n"
@@ -37,45 +40,44 @@ class TicketNotificationService:
                 f"📝 *Asunto:* {ticket.subject}\n\n"
                 f"Usa `/admin` → Gestionar Tickets para responder."
             )
-            
+
             await self.bot.send_message(
-                chat_id=self.admin_id,
-                text=message,
-                parse_mode="Markdown"
+                chat_id=self.admin_id, text=message, parse_mode="Markdown"
             )
             logger.info(f"Admin notified of new ticket: {ticket.ticket_number}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to notify admin: {e}")
             return False
 
     async def notify_user_response(
-        self, 
-        user_id: int, 
-        ticket: Ticket, 
-        response_text: str
+        self, user_id: int, ticket: Ticket, response_text: str
     ) -> bool:
         """Notifica al usuario de una respuesta del admin."""
         try:
             # Truncate long responses
-            preview = response_text[:100] + "..." if len(response_text) > 100 else response_text
-            
+            preview = (
+                response_text[:100] + "..."
+                if len(response_text) > 100
+                else response_text
+            )
+
             message = (
                 f"📨 *NUEVA RESPUESTA A TU TICKET*\n\n"
                 f"📋 *Ticket:* `{ticket.ticket_number}`\n"
                 f"💬 *Mensaje:* {preview}\n\n"
                 f"Usa el menú de Soporte para ver la conversación completa."
             )
-            
+
             await self.bot.send_message(
-                chat_id=user_id,
-                text=message,
-                parse_mode="Markdown"
+                chat_id=user_id, text=message, parse_mode="Markdown"
             )
-            logger.info(f"User {user_id} notified of response to {ticket.ticket_number}")
+            logger.info(
+                f"User {user_id} notified of response to {ticket.ticket_number}"
+            )
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to notify user {user_id}: {e}")
             return False
@@ -90,14 +92,12 @@ class TicketNotificationService:
                 f"Tu solicitud ha sido resuelta. Si necesitas más ayuda, "
                 f"puedes crear un nuevo ticket desde el menú de Soporte."
             )
-            
+
             await self.bot.send_message(
-                chat_id=user_id,
-                text=message,
-                parse_mode="Markdown"
+                chat_id=user_id, text=message, parse_mode="Markdown"
             )
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to notify user of resolution: {e}")
             return False

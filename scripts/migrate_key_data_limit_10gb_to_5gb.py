@@ -17,18 +17,17 @@ from pathlib import Path
 # Agregar el directorio raíz al path para imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import update, select, and_
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy import and_, select, update
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from config import settings
 from infrastructure.persistence.postgresql.models import VpnKeyModel
 from utils.logger import logger
 
-
 # Constantes
 OLD_LIMIT_BYTES = 10 * 1024**3  # 10 GB
-NEW_LIMIT_BYTES = 5 * 1024**3   # 5 GB
+NEW_LIMIT_BYTES = 5 * 1024**3  # 5 GB
 
 
 async def migrate_key_data_limits():
@@ -57,13 +56,17 @@ async def migrate_key_data_limits():
 
             # Mostrar algunas llaves de ejemplo
             for key in keys_to_update[:5]:
-                logger.info(f"   - ID: {key.id}, Nombre: {key.name}, User: {key.user_id}")
+                logger.info(
+                    f"   - ID: {key.id}, Nombre: {key.name}, User: {key.user_id}"
+                )
 
             if total_keys > 5:
                 logger.info(f"   ... y {total_keys - 5} más")
 
             # Confirmar antes de actualizar
-            confirm = input(f"\n¿Actualizar {total_keys} llaves de 10GB a 5GB? (yes/no): ")
+            confirm = input(
+                f"\n¿Actualizar {total_keys} llaves de 10GB a 5GB? (yes/no): "
+            )
             if confirm.lower() != "yes":
                 logger.info("❌ Migración cancelada por el usuario.")
                 return
@@ -77,8 +80,12 @@ async def migrate_key_data_limits():
 
             await session.commit()
 
-            updated_count = result.rowcount if result.rowcount is not None else total_keys
-            logger.info(f"✅ Migración completada: {updated_count} llaves actualizadas de 10GB a 5GB")
+            updated_count = (
+                result.rowcount if result.rowcount is not None else total_keys
+            )
+            logger.info(
+                f"✅ Migración completada: {updated_count} llaves actualizadas de 10GB a 5GB"
+            )
 
             # Verificar que no queden llaves con 10GB
             verify_result = await session.execute(
@@ -91,7 +98,9 @@ async def migrate_key_data_limits():
             if remaining == 0:
                 logger.info("✅ Verificación exitosa: No quedan llaves con 10GB")
             else:
-                logger.warning(f"⚠️ Verificación: Aún quedan {remaining} llaves con 10GB")
+                logger.warning(
+                    f"⚠️ Verificación: Aún quedan {remaining} llaves con 10GB"
+                )
 
         except Exception as e:
             await session.rollback()
@@ -113,7 +122,9 @@ async def rollback_migration():
 
     async with async_session() as session:
         try:
-            confirm = input("⚠️ ¿REVERTIR migración? Esto cambiará llaves de 5GB a 10GB (yes/no): ")
+            confirm = input(
+                "⚠️ ¿REVERTIR migración? Esto cambiará llaves de 5GB a 10GB (yes/no): "
+            )
             if confirm.lower() != "yes":
                 logger.info("❌ Rollback cancelado.")
                 return
@@ -125,7 +136,9 @@ async def rollback_migration():
             )
 
             await session.commit()
-            logger.info(f"✅ Rollback completado: {result.rowcount} llaves revertidas a 10GB")
+            logger.info(
+                f"✅ Rollback completado: {result.rowcount} llaves revertidas a 10GB"
+            )
 
         except Exception as e:
             await session.rollback()
@@ -144,14 +157,12 @@ if __name__ == "__main__":
         description="Migrar límites de datos de llaves VPN de 10GB a 5GB"
     )
     parser.add_argument(
-        "--rollback",
-        action="store_true",
-        help="Revertir la migración (5GB -> 10GB)"
+        "--rollback", action="store_true", help="Revertir la migración (5GB -> 10GB)"
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Solo mostrar cuántas llaves serían afectadas sin hacer cambios"
+        help="Solo mostrar cuántas llaves serían afectadas sin hacer cambios",
     )
 
     args = parser.parse_args()
@@ -162,7 +173,9 @@ if __name__ == "__main__":
         # Implementar dry-run
         async def dry_run():
             engine = create_async_engine(settings.DATABASE_URL)
-            async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+            async_session = sessionmaker(
+                engine, class_=AsyncSession, expire_on_commit=False
+            )
             async with async_session() as session:
                 result = await session.execute(
                     select(VpnKeyModel).where(
@@ -177,6 +190,7 @@ if __name__ == "__main__":
                     print(f"   ... y {len(keys) - 10} más")
                 await session.close()
             await engine.dispose()
+
         asyncio.run(dry_run())
     else:
         asyncio.run(migrate_key_data_limits())

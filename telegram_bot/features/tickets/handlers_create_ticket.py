@@ -10,9 +10,15 @@ from telegram.ext import ContextTypes
 
 from utils.logger import logger
 
-from .handlers_user_tickets import UserTicketHandler, TICKET_MENU, TICKET_SELECTING_CATEGORY, TICKET_WRITING_MESSAGE, TICKET_CONFIRMING
+from .handlers_user_tickets import (
+    TICKET_CONFIRMING,
+    TICKET_MENU,
+    TICKET_SELECTING_CATEGORY,
+    TICKET_WRITING_MESSAGE,
+    UserTicketHandler,
+)
 from .keyboards_tickets import TicketKeyboards
-from .messages_tickets import TicketMessages, CATEGORY_NAME, PRIORITY_NAME
+from .messages_tickets import CATEGORY_NAME, PRIORITY_NAME, TicketMessages
 
 
 class CreateTicketMixin:
@@ -144,7 +150,11 @@ class CreateTicketMixin:
         try:
             confirm_message = TicketMessages.Create.CONFIRM.format(
                 category=category_name,
-                description=message_text[:200] + "..." if len(message_text) > 200 else message_text,
+                description=(
+                    message_text[:200] + "..."
+                    if len(message_text) > 200
+                    else message_text
+                ),
             )
             keyboard = TicketKeyboards.confirm_ticket()
 
@@ -220,7 +230,9 @@ class CreateTicketMixin:
             success_message = TicketMessages.Create.SUCCESS.format(
                 ticket_number=ticket.ticket_number,
                 category=CATEGORY_NAME.get(category.value, category.value),
-                priority=PRIORITY_NAME.get(ticket.priority.value, ticket.priority.value.upper()),
+                priority=PRIORITY_NAME.get(
+                    ticket.priority.value, ticket.priority.value.upper()
+                ),
             )
 
             await self._safe_edit_message(

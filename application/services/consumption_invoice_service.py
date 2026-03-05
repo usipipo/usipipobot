@@ -109,7 +109,7 @@ class ConsumptionInvoiceService:
         user_id: int,
         payment_method: PaymentMethod,
         wallet_address: Optional[str],
-        current_user_id: int
+        current_user_id: int,
     ) -> InvoiceGenerationResult:
         """
         Genera una factura tras selección del método de pago.
@@ -135,17 +135,14 @@ class ConsumptionInvoiceService:
             )
             if not can_generate:
                 logger.warning(f"⚠️ No se puede generar factura: {error_msg}")
-                return InvoiceGenerationResult(
-                    success=False,
-                    error_message=error_msg
-                )
+                return InvoiceGenerationResult(success=False, error_message=error_msg)
 
             # Obtener el ciclo de facturación
             user = await self.user_repo.get_by_id(user_id, current_user_id)
             if not user or user.current_billing_id is None:
                 return InvoiceGenerationResult(
                     success=False,
-                    error_message="No se encontró el ciclo de facturación"
+                    error_message="No se encontró el ciclo de facturación",
                 )
 
             billing = await self.billing_repo.get_by_id(
@@ -153,15 +150,14 @@ class ConsumptionInvoiceService:
             )
             if not billing or billing.id is None:
                 return InvoiceGenerationResult(
-                    success=False,
-                    error_message="Ciclo de facturación no válido"
+                    success=False, error_message="Ciclo de facturación no válido"
                 )
 
             # Validar método de pago y datos requeridos
             if payment_method == PaymentMethod.CRYPTO and not wallet_address:
                 return InvoiceGenerationResult(
                     success=False,
-                    error_message="Se requiere dirección de wallet para pago con crypto"
+                    error_message="Se requiere dirección de wallet para pago con crypto",
                 )
 
             # Para pagos con Stars, no necesitamos wallet
@@ -180,6 +176,7 @@ class ConsumptionInvoiceService:
 
             # Ajustar tiempo de expiración según configuración
             from datetime import timedelta
+
             invoice.expires_at = datetime.now(timezone.utc) + timedelta(
                 minutes=self.invoice_expiry_minutes
             )
@@ -195,21 +192,19 @@ class ConsumptionInvoiceService:
             return InvoiceGenerationResult(
                 success=True,
                 invoice=saved_invoice,
-                wallet_address=wallet_address if payment_method == PaymentMethod.CRYPTO else None
+                wallet_address=(
+                    wallet_address if payment_method == PaymentMethod.CRYPTO else None
+                ),
             )
 
         except Exception as e:
             logger.error(f"❌ Error generando factura: {e}")
             return InvoiceGenerationResult(
-                success=False,
-                error_message="Error interno al generar la factura"
+                success=False, error_message="Error interno al generar la factura"
             )
 
     async def process_crypto_payment(
-        self,
-        invoice_id: uuid.UUID,
-        transaction_hash: str,
-        current_user_id: int
+        self, invoice_id: uuid.UUID, transaction_hash: str, current_user_id: int
     ) -> PaymentResult:
         """
         Procesa un pago con crypto exitoso.
@@ -225,12 +220,14 @@ class ConsumptionInvoiceService:
         try:
             invoice = await self.invoice_repo.get_by_id(invoice_id, current_user_id)
             if not invoice:
-                return PaymentResult(success=False, error_message="Factura no encontrada")
+                return PaymentResult(
+                    success=False, error_message="Factura no encontrada"
+                )
 
             if invoice.payment_method != PaymentMethod.CRYPTO:
                 return PaymentResult(
                     success=False,
-                    error_message="Esta factura no es para pago con crypto"
+                    error_message="Esta factura no es para pago con crypto",
                 )
 
             # Verificar que la factura no haya expirado
@@ -238,7 +235,7 @@ class ConsumptionInvoiceService:
                 await self.invoice_repo.mark_as_expired(invoice_id, current_user_id)
                 return PaymentResult(
                     success=False,
-                    error_message="La factura ha expirado. Genera una nueva."
+                    error_message="La factura ha expirado. Genera una nueva.",
                 )
 
             # Marcar como pagada
@@ -268,7 +265,9 @@ class ConsumptionInvoiceService:
                     )
 
                     container = get_container()
-                    vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
+                    vpn_integration = container.resolve(
+                        ConsumptionVpnIntegrationService
+                    )
                     unblock_result = await vpn_integration.unblock_user_keys(
                         user.telegram_id, current_user_id
                     )
@@ -291,8 +290,7 @@ class ConsumptionInvoiceService:
                 return PaymentResult(success=True, invoice_id=invoice_id)
 
             return PaymentResult(
-                success=False,
-                error_message="No se pudo procesar el pago"
+                success=False, error_message="No se pudo procesar el pago"
             )
 
         except Exception as e:
@@ -300,10 +298,7 @@ class ConsumptionInvoiceService:
             return PaymentResult(success=False, error_message="Error interno")
 
     async def process_stars_payment(
-        self,
-        invoice_id: uuid.UUID,
-        telegram_payment_id: str,
-        current_user_id: int
+        self, invoice_id: uuid.UUID, telegram_payment_id: str, current_user_id: int
     ) -> PaymentResult:
         """
         Procesa un pago con Telegram Stars exitoso.
@@ -319,12 +314,14 @@ class ConsumptionInvoiceService:
         try:
             invoice = await self.invoice_repo.get_by_id(invoice_id, current_user_id)
             if not invoice:
-                return PaymentResult(success=False, error_message="Factura no encontrada")
+                return PaymentResult(
+                    success=False, error_message="Factura no encontrada"
+                )
 
             if invoice.payment_method != PaymentMethod.STARS:
                 return PaymentResult(
                     success=False,
-                    error_message="Esta factura no es para pago con Stars"
+                    error_message="Esta factura no es para pago con Stars",
                 )
 
             # Verificar que la factura no haya expirado
@@ -332,7 +329,7 @@ class ConsumptionInvoiceService:
                 await self.invoice_repo.mark_as_expired(invoice_id, current_user_id)
                 return PaymentResult(
                     success=False,
-                    error_message="La factura ha expirado. Genera una nueva."
+                    error_message="La factura ha expirado. Genera una nueva.",
                 )
 
             # Marcar como pagada
@@ -361,7 +358,9 @@ class ConsumptionInvoiceService:
                     )
 
                     container = get_container()
-                    vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
+                    vpn_integration = container.resolve(
+                        ConsumptionVpnIntegrationService
+                    )
                     unblock_result = await vpn_integration.unblock_user_keys(
                         user.telegram_id, current_user_id
                     )
@@ -384,8 +383,7 @@ class ConsumptionInvoiceService:
                 return PaymentResult(success=True, invoice_id=invoice_id)
 
             return PaymentResult(
-                success=False,
-                error_message="No se pudo procesar el pago"
+                success=False, error_message="No se pudo procesar el pago"
             )
 
         except Exception as e:
@@ -393,9 +391,7 @@ class ConsumptionInvoiceService:
             return PaymentResult(success=False, error_message="Error interno")
 
     async def _record_transaction(
-        self,
-        invoice: ConsumptionInvoice,
-        current_user_id: int
+        self, invoice: ConsumptionInvoice, current_user_id: int
     ) -> None:
         """
         Registra la transacción en el historial del usuario.

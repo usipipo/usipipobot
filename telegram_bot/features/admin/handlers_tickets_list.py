@@ -8,10 +8,10 @@ Version: 1.0.0 - Refactor from handlers_tickets.py
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
+from domain.entities.ticket import TicketCategory
 from telegram_bot.common.decorators import admin_required
 from telegram_bot.features.tickets.keyboards_tickets import TicketKeyboards
 from telegram_bot.features.tickets.messages_tickets import TicketMessages
-from domain.entities.ticket import TicketCategory
 from utils.spinner import SpinnerManager, admin_spinner_callback
 
 ADMIN_MENU = 0
@@ -31,6 +31,7 @@ class TicketsListMixin:
 
         try:
             from application.services.ticket_service import TicketService
+
             ticket_service = TicketService(self.service.ticket_repo)
             open_count = await ticket_service.count_open_tickets()
         except Exception:
@@ -59,6 +60,7 @@ class TicketsListMixin:
 
         try:
             from application.services.ticket_service import TicketService
+
             ticket_service = TicketService(self.service.ticket_repo)
             tickets = await ticket_service.get_pending_tickets()
 
@@ -107,6 +109,7 @@ class TicketsListMixin:
 
         try:
             from application.services.ticket_service import TicketService
+
             ticket_service = TicketService(self.service.ticket_repo)
 
             all_tickets = []
@@ -193,6 +196,7 @@ class TicketsListMixin:
 
         try:
             from application.services.ticket_service import TicketService
+
             ticket_service = TicketService(self.service.ticket_repo)
             tickets = await ticket_service.get_tickets_by_category(category)
 

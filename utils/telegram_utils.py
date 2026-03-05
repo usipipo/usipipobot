@@ -16,22 +16,6 @@ Author: uSipipo Team
 Version: 3.0.0 - Refactored into sub-modules
 """
 
-# Re-exportar todo desde los submódulos para mantener compatibilidad
-from utils.telegram_format_utils import (
-    format_bytes,
-    format_currency,
-    format_datetime,
-    format_percentage,
-    format_relative_time,
-    format_user_name,
-)
-from utils.telegram_validation_utils import (
-    escape_markdown,
-    sanitize_text,
-    truncate_string,
-    validate_email,
-    validate_phone_number,
-)
 from utils.telegram_callback_utils import (
     calculate_page_bounds,
     chunk_list,
@@ -42,9 +26,26 @@ from utils.telegram_callback_utils import (
     parse_callback_data,
     safe_get,
 )
+
+# Re-exportar todo desde los submódulos para mantener compatibilidad
+from utils.telegram_format_utils import (
+    format_bytes,
+    format_currency,
+    format_datetime,
+    format_percentage,
+    format_relative_time,
+    format_user_name,
+)
 from utils.telegram_message_handler import (
     TelegramHandlerUtils,
     TelegramUtils,
+)
+from utils.telegram_validation_utils import (
+    escape_markdown,
+    sanitize_text,
+    truncate_string,
+    validate_email,
+    validate_phone_number,
 )
 
 __all__ = [

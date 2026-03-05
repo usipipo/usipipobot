@@ -98,7 +98,9 @@ def _get_ticket_handlers(container) -> List[BaseHandler]:
     ticket_service = container.resolve(TicketService)
     notification_service = container.resolve(TicketNotificationService)
     handlers = []
-    handlers.append(get_ticket_conversation_handler(ticket_service, notification_service))
+    handlers.append(
+        get_ticket_conversation_handler(ticket_service, notification_service)
+    )
     handlers.extend(get_ticket_callback_handlers(ticket_service, notification_service))
     logger.info("✅ Handlers de tickets configurados")
     return handlers
@@ -116,7 +118,12 @@ def _get_consumption_handlers(container) -> List[BaseHandler]:
 
 
 def _get_core_handlers(
-    vpn_service, referral_service, data_package_service, user_profile_service, crypto_order_repo, billing_service
+    vpn_service,
+    referral_service,
+    data_package_service,
+    user_profile_service,
+    crypto_order_repo,
+    billing_service,
 ) -> List[BaseHandler]:
     """Initialize and return core feature handlers.
 
@@ -142,12 +149,22 @@ def _get_core_handlers(
     handlers.extend(get_basic_callback_handlers())
     logger.info("Basic commands handlers configured")
 
-    handlers.extend(get_operations_handlers(vpn_service, referral_service, crypto_order_repo))
-    handlers.extend(get_operations_callback_handlers(vpn_service, referral_service, crypto_order_repo))
+    handlers.extend(
+        get_operations_handlers(vpn_service, referral_service, crypto_order_repo)
+    )
+    handlers.extend(
+        get_operations_callback_handlers(
+            vpn_service, referral_service, crypto_order_repo
+        )
+    )
     logger.info("Operations handlers configured")
 
-    handlers.extend(get_user_management_handlers(vpn_service, user_profile_service, billing_service))
-    handlers.extend(get_user_callback_handlers(vpn_service, user_profile_service, billing_service))
+    handlers.extend(
+        get_user_management_handlers(vpn_service, user_profile_service, billing_service)
+    )
+    handlers.extend(
+        get_user_callback_handlers(vpn_service, user_profile_service, billing_service)
+    )
     logger.info("User management handlers configured")
 
     # 3. Handlers con MessageHandler genéricos (TEXT) al final

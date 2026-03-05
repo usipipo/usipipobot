@@ -1,7 +1,8 @@
-import pytest
 import uuid
-from unittest.mock import AsyncMock, MagicMock
 from decimal import Decimal
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 
 class TestConsumptionVpnIntegrationService:
