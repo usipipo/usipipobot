@@ -5,136 +5,135 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-## [v3.8.0] - 2026-03-04
+## [v3.9.0] - 2026-03-11
 
 ### Features
-- implement real service calls for reply and close actions
-- use ticket_id_map in action handlers (reply/close)
-- use ticket_id_map in view_ticket handler and fix LSP errors
-- add ticket_id_map mapping in keyboards_tickets
-- add tickets button to admin panel
-- export new ticket entities and models
-- add user ticket handlers with conversation flow
-- add ticket keyboards module
-- add ticket messages module with separators
-- add TicketService with full CRUD operations
-- add TicketNotificationService for admin/user notifications
-- add TicketRepository implementation
-- add alembic migration for tickets tables
-- add TicketMessageModel and User relationship
-- add TicketModel SQLAlchemy model
-- add TicketMessage entity
-- add ITicketRepository interface
-- add Ticket entity with status management
-- add ticket enums (category, priority, status)
-- improve bonuses message visual design
+- **Mini App Payment System** - Complete crypto payment integration for Mini App
+  - Payment confirmation for Mini App purchases
+  - CryptoPaymentService injection with request session
+  - Secure payment flow with transaction tracking
 
 ### Bug Fixes
-- corregir navegación botón atrás en gestión de tickets
-- navigation from tickets menu to help center
-- navigation from ticket detail to main menu
-- register missing TicketService dependencies in container
-- recognize user roles from database (Issue #252)
-- agregar estado REPLYING_TO_TICKET en ConversationHandler
-- change back button callback from 'admin' to 'help' for normal users
-- correct admin handlers import path
-- register ticket handlers in handler_initializer.py
-- corregir formato de badges con enlaces
-- corregir corchetes en badges y eliminar sección en inglés
-- add ticket_repo to AdminService and fix ticket menu issues
-- Implementar handlers para botones del menú de tickets admin (#251)
-- corregir descuento de créditos al canjear (#249)
+- **Admin Tickets** - Fix navigation back button in ticket management
+- **Navigation** - Fix navigation from tickets menu to help center
+- **Navigation** - Fix navigation from ticket detail to main menu
+- **CI/CD** - Resolve linting errors in CI pipeline
+
+### Technical
+- Improved error handling in TronDealer API client
+- Code formatting and line length fixes
+- Import organization and cleanup
+
+## [v3.8.1] - 2026-03-01
+
+### Bug Fixes
+- Resolve CHANGELOG.md merge conflicts
+- Release cleanup
+
+## [v3.8.0] - 2026-03-01
+
+### Features
+- **Pay-as-you-go VPN Consumption** - Complete VPN integration for consumption billing
+  - Conditional consumption button in VPN keys menu
+  - Consumption mode cancellation with debt validation
+  - Updated consumption rate from $0.45 to $0.25 per GB
+  - Redesigned key management menu with Option B
+  - Removed Settings, Statistics, and Suspend buttons from WireGuard menu
+  - Automatic crypto order cancellation and wallet reuse
+  - Debt check before creating VPN keys
+  - Key unblocking on payment processing
+  - Key blocking on billing cycle close
+  - VPN Server Management Center
+  - Ghost key cleanup job
+  - VpnInfrastructureService with enable/disable methods
+
+### Bug Fixes
+- Show inactive keys in admin panel
+- Handle 'no text in message' error gracefully
+- Replace obsolete VpnKeysKeyboards.main_menu with CommonKeyboards.main_menu
+- Reorder handlers to prioritize ConversationHandler and fix cancellation message
+- Filter inactive keys from admin server key list
+- Telegram callback_data 64 bytes limit in admin VPN handlers
+- Fix key deletion and Markdown parsing errors
+- Pass billing_service to KeyManagementHandler for consumption button
+- WireGuard usage always shows 0.0GB
+- Consumption mode cancellation without debt not blocking keys
+- Use billing as source of truth for cancellation
+- Register ConsumptionInvoiceService in dependency container
+- Register consumption handlers in handler_initializer
 
 ### Chores
-- bump fastapi from 0.133.0 to 0.135.1
-- bump sqlalchemy from 2.0.47 to 2.0.48
-- bump python-dotenv from 1.0.1 to 1.2.2
-- bump pytz from 2025.2 to 2026.1.post1
-- bump cachetools from 7.0.1 to 7.0.2
-- mueve archivos de documentación a carpeta docs
-- eliminar sistema de tickets completamente (#250)
+- Cleanup development files and update scripts
+- Add merge to main script
+- Remove completed markdown standardization track files
 
-### Other Changes
-- split handlers_user_management.py into mixins (#259)
-- update badges to dynamic PyPI versions
-- add agent configuration and project knowledge base
-- update README with professional structure and current features (v3.4.0)
-- split 582-line consumption_billing_service.py into modular components
-- split 621-line telegram_utils.py into modular components
-- split 829-line spinner.py into modular components
-- split handlers_consumption.py using mixin pattern
-- divide router.py en módulos por dominio (#259)
-- divide handlers_admin_vpn.py (751 lines) into mixin modules
-- split handlers_key_management.py into mixins (#259)
-- split handlers_buy_gb.py (944 → 6 files, <300 lines each)
-- dividir handlers_user_tickets.py en 4 archivos especializados
-- dividir handlers_admin.py en 10 archivos especializados
-- dividir admin_service.py en servicios especializados
-- fix flake8 linting issues
-- mejorar diseño visual del mensaje FAQ
+## [v3.7.0] - 2026-02-28
+
+### Features
+- **Transaction History** - Complete crypto transaction history
+  - Redesigned operations menu with better visual layout
+  - New "📜 History" button in operations menu
+  - Transaction status with emojis (⏳ Pending, ✅ Completed, ❌ Failed, ⏰ Expired)
+  - Pagination for transaction history (10 per page)
+  - Paginated methods in CryptoOrderRepository
+
+### Technical
+- Fix mypy type errors in dependency injection
+- Unit tests for new handlers and keyboards
+- Cleanup unused imports
 
 ## [v3.6.0] - 2026-02-28
 
 ### Features
-- Rediseño del menú de operaciones con mejor layout visual
-- Nuevo botón "📜 Historial" en menú de operaciones
-- Implementación de historial completo de transacciones crypto
-- Visualización de estados con emojis (⏳ Pendiente, ✅ Completada, ❌ Fallida, ⏰ Expirada)
-- Paginación para historial de transacciones (10 por página)
-- Métodos paginados en CryptoOrderRepository (`get_by_user_paginated`, `count_by_user`)
+- **Diagnostics Section** - Real-time logs viewer for admin (#234)
+- **Comprehensive Logging** - Logging across all bot features (#233)
 
-### Technical
-- Corrección de errores de tipo mypy en inyección de dependencias
-- Tests unitarios para nuevos handlers y keyboards
-- Limpieza de imports no utilizados
-
-## [v3.5.0] - 2026-02-28
-
-### Features
-- Add Diagnostics section with real-time logs viewer for admin (#234)
-- implement comprehensive logging across all bot features (#233)
-- add comprehensive logging to referral_service.py
-- add comprehensive logging to VpnService
-- add comprehensive logging to basic commands handlers
-- add comprehensive logging to key management handlers
-- add logs to VPN keys handlers
-- add logs to operations handlers
-- add comprehensive logs to referral handlers
-- remove key deletion option for users (#229)
-- restrict key deletion endpoint to admins only
-- remove delete button and function from miniapp
-- remove delete button from vpn key actions keyboard
-- update messages to remove delete key references
-- remove delete key handler for users
-- remove delete button from user key management keyboard
-- add days since join info and key management improvements
-- show days since join in /info command
+### Changed
+- Remove key deletion option for users (#229)
+- Restrict key deletion endpoint to admins only
+- Remove delete button from miniapp
+- Remove delete button from vpn key actions keyboard
+- Update messages to remove delete key references
+- Remove delete key handler for users
+- Add days since join info and key management improvements
+- Show days since join in /info command
 
 ### Bug Fixes
-- implement order expiration and wallet reuse
+- Implement order expiration and wallet reuse
 - 'There is no text in the message to edit' error in handlers
-- resolve invalid escape sequence warnings
-- resolve LSP type error in show_buy_slots_menu
-- improve TronDealer HTTP client error handling and logging
-- Crear usuario en BD al autenticar desde Mini App (#231)
-- Mejorar logging y manejo de errores en pagos Mini App (#231)
-- validación product_type y product_id en pagos (#230)
+- Resolve invalid escape sequence warnings
+- Resolve LSP type error in show_buy_slots_menu
+- Improve TronDealer HTTP client error handling and logging
+- Create user in DB when authenticating from Mini App (#231)
+- Improve logging and error handling in Mini App payments (#231)
+- Validate product_type and product_id in payments (#230)
 - Admin ticket response not working + Missing close ticket button
-- Mejora mensaje de límite de claves alcanzado
-- preserve created_at when loading existing users
+- Improve key limit reached message
+- Preserve created_at when loading existing users
 
-### Chores
-- remove completed markdown standardization track files
+## [v3.5.0] - 2026-02-27
 
-### Other Changes
-- fix linting issues in payment files
-- actualizar plan.md con checkpoint SHA
-- estandarizar parse_mode a Markdown en todos los mensajes
-- add migration notes and plan for bonus system columns (#223)
+### Features
+- **Bonus & Referral System**
+  - User bonus system with welcome, loyalty and quick renewal bonuses
+  - Referral system with +5GB bonus for referred user purchases
+  - FAQ button fixes with bonus information
+  - Updated payment flow and tests for buy GB feature
+  - Updated key slot pricing
 
-## [3.3.0] - 2026-02-26
+## [v3.4.0] - 2026-02-27
+
+### Features
+- **Business Model Refactor**
+  - Reduced data limit to 5GB per key (from 10GB)
+  - One key per server type limit (Outline/WireGuard)
+  - Crypto payments for key slots (USDT/BSC)
+  - Payment QR codes (EIP-681 format)
+  - Order expiration notifications (30 min timeout)
+  - Transaction history with expired orders
+  - 42 tests passing, flake8 clean
+
+## [v3.3.0] - 2026-02-26
 
 ### Added
 - **Crypto Payments for Slots** - Buy key slots with USDT (BSC)
@@ -156,7 +155,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enforced at key creation time
   - Clear error messages for users
 
-## [3.0.0] - 2026-02-25
+## [v3.2.0] - 2026-02-27
+
+### Features
+- **Transaction System**
+  - Transaction repository with balance tracking
+  - Crypto payment improvements
+  - Code quality fixes (black, isort)
+  - 20 commits ahead of main
+
+## [v3.1.0] - 2026-02-25
+
+### Features
+- **Mini App Enhanced**
+  - Privacy Policy page for Telegram Mini App compliance
+  - User Profile page with statistics and transaction history
+  - Settings page with preferences and support options
+  - Dropdown navigation from header avatar
+  - CCPA rights for California users
+  - 25+ new tests for Mini App endpoints
+
+## [v3.0.0] - 2026-02-25
 
 ### Added
 - **Telegram Mini App Web** - Complete web interface with cyberpunk design
@@ -210,7 +229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Unused GROQ variables from configuration
 - Obsolete game, referral announcer, broadcast features
 
-## [2.1.0] - 2026-02-24
+## [v2.1.0] - 2026-02-24
 
 ### Added
 - Mini App Web interface for Telegram
@@ -226,7 +245,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Various minor bug fixes and performance improvements
 
-## [2.0.0] - 2026-02-20
+## [v2.0.0] - 2026-02-20
 
 ### Added
 - Complete refactor to Clean Architecture
@@ -242,7 +261,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented dependency injection with Punq
 - Added comprehensive test coverage
 
-## [1.0.0] - 2026-01-15
+## [v1.0.0] - 2026-01-15
 
 ### Added
 - Initial release

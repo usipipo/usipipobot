@@ -260,3 +260,119 @@ class TestMiniAppPaymentService:
         )
 
         assert url is None
+
+
+class TestConfirmPayment:
+    """Tests for /api/confirm-payment endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_confirm_payment_package_success(self, client):
+        """Test confirming payment for a package creates the package."""
+        # Mock the data_package_service.purchase_package to return success
+        mock_package = MagicMock()
+        mock_package.id = "pkg_123"
+        mock_package.remaining_bytes = 1073741824  # 1 GB
+        mock_package.expires_at.isoformat.return_value = "2025-04-04T12:00:00"
+
+        with patch("miniapp.routes_payments.DataPackageService") as mock_service_class:
+            mock_service = AsyncMock()
+            mock_service.purchase_package.return_value = (mock_package, {})
+            mock_service_class.return_value = mock_service
+
+            response = await client.post(
+                "/miniapp/api/confirm-payment",
+                json={
+                    "product_type": "package",
+                    "product_id": "basic",
+                    "transaction_id": "txn_123abc",
+                },
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["message"] == "Paquete comprado exitosamente"
+        assert data["package_id"] == "pkg_123"
+
+    @pytest.mark.asyncio
+    async def test_confirm_payment_slots_success(self, client):
+        """Test confirming payment for slots adds the slots."""
+        with patch("miniapp.routes_payments.DataPackageService") as mock_service_class:
+            mock_service = AsyncMock()
+            mock_service.purchase_key_slots.return_value = {
+                "slots_added": 3,
+                "new_max_keys": 5,
+                "stars_paid": 700,
+            }
+            mock_service_class.return_value = mock_service
+
+            response = await client.post(
+                "/miniapp/api/confirm-payment",
+                json={
+                    "product_type": "slots",
+                    "product_id": "slots_3",
+                    "transaction_id": "txn_456def",
+                },
+            )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["message"] == "Slots comprados exitosamente"
+        assert data["slots_added"] == 3
+        assert data["new_max_keys"] == 5
+
+    @pytest.mark.asyncio
+    async def test_confirm_payment_invalid_product(self, client):
+        """Test confirming payment with invalid product returns error."""
+        response = await client.post(
+            "/miniapp/api/confirm-payment",
+            json={
+                "product_type": "package",
+                "product_id": "invalid_package",
+                "transaction_id": "txn_789ghi",
+            },
+        )
+
+        assert response.status_code == 400
+        data = response.json()
+        assert data["success"] is False
+        assert "error" in data
+
+    @pytest.mark.asyncio
+    async def test_confirm_payment_missing_transaction_id(self, client):
+        """Test confirming payment without transaction_id fails validation."""
+        response = await client.post(
+            "/miniapp/api/confirm-payment",
+            json={
+                "product_type": "package",
+                "product_id": "basic",
+            },
+        )
+
+        # Pydantic validation returns 422 for missing required fields
+        assert response.status_code == 422
+        data = response.json()
+        assert "detail" in data
+
+    @pytest.mark.asyncio
+    async def test_confirm_payment_service_error(self, client):
+        """Test handling of service errors during payment confirmation."""
+        with patch("miniapp.routes_payments.DataPackageService") as mock_service_class:
+            mock_service = AsyncMock()
+            mock_service.purchase_package.side_effect = Exception("Database error")
+            mock_service_class.return_value = mock_service
+
+            response = await client.post(
+                "/miniapp/api/confirm-payment",
+                json={
+                    "product_type": "package",
+                    "product_id": "basic",
+                    "transaction_id": "txn_999xyz",
+                },
+            )
+
+        assert response.status_code == 500
+        data = response.json()
+        assert data["success"] is False
+        assert "error" in data

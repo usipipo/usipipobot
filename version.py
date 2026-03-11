@@ -8,18 +8,64 @@ Usage:
     from version import __version__, VERSION_INFO
 """
 
-__version__ = "3.4.0"
+__version__ = "3.9.0"
 
 VERSION_INFO = {
     "major": 3,
-    "minor": 4,
+    "minor": 9,
     "patch": 0,
-    "release": "2026-02-27",
-    "codename": "Bonus & Referral System",
+    "release": "2026-03-11",
+    "codename": "Mini App Payment System",
 }
 
 VERSION_HISTORY = """
-v3.4.0 (2026-02-27) - Bonus & Referral System
+v3.9.0 (2026-03-11) - Mini App Payment System
+  - Mini App payment confirmation system
+  - CryptoPaymentService injection with request session
+  - Fix admin tickets navigation back button
+  - Fix navigation from tickets menu to help center
+  - Fix navigation from ticket detail to main menu
+  - Resolve CI linting errors
+
+v3.8.1 (2026-03-01) - Release Cleanup
+  - Resolve CHANGELOG.md merge conflicts
+  - Release cleanup
+
+v3.8.0 (2026-03-01) - Pay-as-you-go VPN Consumption
+  - Complete VPN integration for consumption billing
+  - Conditional consumption button in VPN keys menu
+  - Consumption mode cancellation with debt validation
+  - Updated consumption rate from $0.45 to $0.25 per GB
+  - Redesigned key management menu with Option B
+  - Removed Settings, Statistics, and Suspend buttons from WireGuard menu
+  - Automatic crypto order cancellation and wallet reuse
+  - Debt check before creating VPN keys
+  - Key unblocking on payment processing
+  - Key blocking on billing cycle close
+  - VPN Server Management Center
+  - Ghost key cleanup job
+  - VpnInfrastructureService with enable/disable methods
+
+v3.7.0 (2026-02-28) - Transaction History
+  - Redesigned operations menu with better visual layout
+  - New "📜 History" button in operations menu
+  - Transaction status with emojis
+  - Pagination for transaction history
+  - Paginated methods in CryptoOrderRepository
+
+v3.6.0 (2026-02-28) - Diagnostics & Logging
+  - Diagnostics section with real-time logs viewer for admin
+  - Comprehensive logging across all bot features
+  - Remove key deletion option for users
+  - Restrict key deletion endpoint to admins only
+  - Remove delete button from miniapp and VPN key actions
+  - Add days since join info in /info command
+  - Order expiration and wallet reuse implementation
+  - TronDealer HTTP client error handling improvements
+  - Mini App payment logging and error handling
+  - Admin ticket system fixes
+
+v3.5.0 (2026-02-27) - Bonus & Referral System
   - User bonus system with welcome, loyalty and quick renewal bonuses
   - Referral system with +5GB bonus for referred user purchases
   - FAQ button fixes with bonus information
