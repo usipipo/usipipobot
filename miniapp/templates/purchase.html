@@ -196,6 +196,14 @@ async function payWithStars() {
 
     closePaymentModal();
 
+    // Show loading indicator
+    Telegram.WebApp.HapticFeedback.notificationOccurred('light');
+    const loadingMsg = Telegram.WebApp.showPopup({
+        title: 'Procesando...',
+        message: 'Enviando factura a tu Telegram...',
+        buttons: []
+    });
+
     try {
         const response = await fetch('/miniapp/api/create-stars-invoice', {
             method: 'POST',
@@ -211,53 +219,32 @@ async function payWithStars() {
 
         const data = await response.json();
 
+        if (loadingMsg) loadingMsg.close();
+
         if (!data.success) {
             Telegram.WebApp.showAlert('Error: ' + (data.error || 'No se pudo crear la factura'));
             return;
         }
 
-        // Store transaction ID for confirmation
+        // Store transaction ID for tracking
         currentTransactionId = data.transaction_id;
 
-        // Open Telegram invoice
-        Telegram.WebApp.openInvoice(data.invoice_url, async function(status) {
-            if (status === 'paid') {
-                // Confirm payment with backend to deliver the product
-                try {
-                    const confirmResponse = await fetch('/miniapp/api/confirm-payment', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Telegram-Init-Data': Telegram.WebApp.initData
-                        },
-                        body: JSON.stringify({
-                            product_type: currentProductType,
-                            product_id: currentProduct,
-                            transaction_id: currentTransactionId
-                        })
-                    });
-
-                    const confirmData = await confirmResponse.json();
-
-                    if (confirmData.success) {
-                        Telegram.WebApp.showAlert('✅ ¡Compra completada con éxito!');
-                        setTimeout(() => window.location.reload(), 1500);
-                    } else {
-                        Telegram.WebApp.showAlert('⚠️ ' + (confirmData.error || 'Pago recibido pero hubo un error activando el producto. Contacta a soporte.'));
-                    }
-                } catch (confirmError) {
-                    console.error('Error confirming payment:', confirmError);
-                    Telegram.WebApp.showAlert('⚠️ Pago recibido pero hubo un error de conexión. Contacta a soporte.');
-                }
-            } else if (status === 'cancelled') {
-                Telegram.WebApp.showAlert('❌ Pago cancelado');
-            } else if (status === 'failed') {
-                Telegram.WebApp.showAlert('❌ El pago falló. Intenta nuevamente.');
+        // Show success message with instructions
+        Telegram.WebApp.showConfirm({
+            title: '✅ Factura Enviada',
+            message: 'Revisa tu chat de Telegram para completar el pago. La factura aparecerá en tu conversación con el bot.',
+            confirmButtonText: 'Entendido',
+            cancelButtonText: 'Cancelar'
+        }, function(confirm) {
+            if (confirm) {
+                // User acknowledged, they'll pay in Telegram
+                Telegram.WebApp.close();
             }
         });
 
     } catch (error) {
         console.error('Error:', error);
+        if (loadingMsg) loadingMsg.close();
         Telegram.WebApp.showAlert('❌ Error al procesar el pago');
     }
 }
@@ -269,6 +256,14 @@ async function payWithCrypto() {
     }
 
     closePaymentModal();
+
+    // Show loading indicator
+    Telegram.WebApp.HapticFeedback.notificationOccurred('light');
+    const loadingMsg = Telegram.WebApp.showPopup({
+        title: 'Procesando...',
+        message: 'Generando orden de pago crypto...',
+        buttons: []
+    });
 
     const modal = document.getElementById('cryptoModal');
     const content = document.getElementById('cryptoPaymentContent');
@@ -297,6 +292,8 @@ async function payWithCrypto() {
 
         const data = await response.json();
 
+        if (loadingMsg) loadingMsg.close();
+
         if (!data.success) {
             content.innerHTML = `
                 <div style="text-align: center; padding: 20px; color: var(--accent-red);">
@@ -307,40 +304,54 @@ async function payWithCrypto() {
             return;
         }
 
-        content.innerHTML = `
-            <div style="text-align: center;">
-                <div style="margin-bottom: 16px;">
-                    <img src="${data.qr_code_url}" alt="QR Code" style="max-width: 200px; border-radius: 8px;">
-                </div>
+        // Show message that payment info was sent to Telegram
+        Telegram.WebApp.showConfirm({
+            title: '💰 Orden Crypto Creada',
+            message: `La información de pago con la dirección wallet y QR code ha sido enviada a tu Telegram. Revisa tu chat para completar el pago.`,
+            confirmButtonText: 'Ver en Telegram',
+            cancelButtonText: 'Cerrar'
+        }, function(confirm) {
+            if (confirm) {
+                Telegram.WebApp.close();
+            } else {
+                // Show the QR code anyway in the modal
+                content.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="margin-bottom: 16px;">
+                            <img src="${data.qr_code_url}" alt="QR Code" style="max-width: 200px; border-radius: 8px;">
+                        </div>
 
-                <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 16px; word-break: break-all; font-family: monospace; font-size: 12px;">
-                    ${data.wallet_address}
-                </div>
+                        <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 16px; word-break: break-all; font-family: monospace; font-size: 12px;">
+                            ${data.wallet_address}
+                        </div>
 
-                <div style="font-size: 14px; margin-bottom: 8px;">
-                    Monto a enviar: <span style="color: var(--accent-green); font-weight: 600;">${data.amount_usdt} USDT</span>
-                </div>
+                        <div style="font-size: 14px; margin-bottom: 8px;">
+                            Monto a enviar: <span style="color: var(--accent-green); font-weight: 600;">${data.amount_usdt} USDT</span>
+                        </div>
 
-                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-                    Red: <span style="color: var(--accent-cyan);">BSC (BEP20)</span><br>
-                    Expira en: <span style="color: var(--accent-yellow);">30 minutos</span>
-                </div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                            Red: <span style="color: var(--accent-cyan);">BSC (BEP20)</span><br>
+                            Expira en: <span style="color: var(--accent-yellow);">30 minutos</span>
+                        </div>
 
-                <div style="font-size: 11px; color: var(--text-muted); text-align: left; margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
-                    <p style="margin-bottom: 4px;">⚠️ Importante:</p>
-                    <p style="margin-bottom: 4px;">• Envía exactamente el monto indicado</p>
-                    <p style="margin-bottom: 4px;">• Usa solo la red BSC/BEP20</p>
-                    <p>• El sistema detectará el pago automáticamente</p>
-                </div>
+                        <div style="font-size: 11px; color: var(--text-muted); text-align: left; margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+                            <p style="margin-bottom: 4px;">⚠️ Importante:</p>
+                            <p style="margin-bottom: 4px;">• Envía exactamente el monto indicado</p>
+                            <p style="margin-bottom: 4px;">• Usa solo la red BSC/BEP20</p>
+                            <p>• El sistema detectará el pago automáticamente</p>
+                        </div>
 
-                <button class="btn btn-secondary" onclick="copyWalletAddress('${data.wallet_address}')">
-                    📋 Copiar Dirección
-                </button>
-            </div>
-        `;
+                        <button class="btn btn-secondary" onclick="copyWalletAddress('${data.wallet_address}')">
+                            📋 Copiar Dirección
+                        </button>
+                    </div>
+                `;
+            }
+        });
 
     } catch (error) {
         console.error('Error:', error);
+        if (loadingMsg) loadingMsg.close();
         content.innerHTML = `
             <div style="text-align: center; padding: 20px; color: var(--accent-red);">
                 <p>❌ Error al crear la orden de pago</p>

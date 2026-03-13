@@ -30,6 +30,12 @@ class ConfirmationMixin:
             payload = query.invoice_payload
             parts = payload.split("_")
 
+            # Handle Mini App payments (format: data_package_TYPE_USERID_TXID or key_slots_N_USERID_TXID)
+            if payload.startswith("data_package_") or payload.startswith("key_slots_"):
+                await query.answer(ok=True)
+                logger.info(f"📦 Pre-checkout Mini App: {payload}")
+                return
+
             if len(parts) >= 3 and parts[0] == "key" and parts[1] == "slots":
                 slots = int(parts[2])
                 user_id = int(parts[3])
@@ -99,6 +105,14 @@ class ConfirmationMixin:
             payload = payment.invoice_payload
             parts = payload.split("_")
 
+            # Handle Mini App payments
+            if payload.startswith("data_package_") or payload.startswith("key_slots_"):
+                await self._handle_miniapp_payment(
+                    update, context, user_id, payment, payload, parts
+                )
+                return
+
+            # Handle regular bot payments
             if len(parts) >= 3 and parts[0] == "key" and parts[1] == "slots":
                 slots = int(parts[2])
                 telegram_payment_id = payment.telegram_payment_charge_id
@@ -186,4 +200,125 @@ class ConfirmationMixin:
             if update.message:
                 await update.message.reply_text(
                     text=BuyGbMessages.Error.PAYMENT_FAILED, parse_mode="Markdown"
+                )
+
+    async def _handle_miniapp_payment(
+        self,
+        update: Update,
+        context: ContextTypes.DEFAULT_TYPE,
+        user_id: int,
+        payment,
+        payload: str,
+        parts: list,
+    ):
+        """
+        Handle payments from Mini App users.
+        
+        Mini App payments use format: data_package_TYPE_USERID_TXID or key_slots_N_USERID_TXID
+        """
+        try:
+            telegram_payment_id = payment.telegram_payment_charge_id
+
+            if payload.startswith("data_package_"):
+                # Format: data_package_TYPE_USERID_TXID
+                # Extract package type (could be multi-part like "basic_premium")
+                type_start = len("data_package_")
+                remaining = payload[type_start:]
+                remaining_parts = remaining.split("_")
+                
+                # Last two parts are user_id and transaction_id
+                if len(remaining_parts) >= 3:
+                    package_type_str = "_".join(remaining_parts[:-2])
+                    
+                    package_result = await self.data_package_service.purchase_package(
+                        user_id=user_id,
+                        package_type=package_type_str,
+                        telegram_payment_id=telegram_payment_id,
+                        current_user_id=user_id,
+                    )
+                    package = package_result[0]
+
+                    package_option = None
+                    for pkg in PACKAGE_OPTIONS:
+                        if pkg.package_type.value == package_type_str:
+                            package_option = pkg
+                            break
+
+                    bonus_text = (
+                        f" (+{package_option.bonus_percent}% bonus)"
+                        if package_option and package_option.bonus_percent > 0
+                        else ""
+                    )
+                    expires_at = (
+                        package.expires_at.strftime("%d/%m/%Y %H:%M")
+                        if package.expires_at
+                        else "N/A"
+                    )
+
+                    success_message = (
+                        f"✅ *¡Pago desde Mini App Confirmado!*\n\n"
+                        f"📦 Paquete: *{package_option.name if package_option else package_type_str}*\n"
+                        f"💾 Datos: *{package_option.data_gb if package_option else 'N/A'} GB{bonus_text}*\n"
+                        f"⭐ Stars: *{payment.total_amount}*\n"
+                        f"📅 Expira: *{expires_at}*\n\n"
+                        f"Tu paquete ha sido activado inmediatamente.\n"
+                        f"Revisa tu sección de claves VPN."
+                    )
+
+                    if update.message:
+                        await update.message.reply_text(
+                            text=success_message,
+                            parse_mode="Markdown",
+                        )
+
+                    logger.info(
+                        f"📦 Mini App package purchased: {package_type_str} for user {user_id}"
+                    )
+
+            elif payload.startswith("key_slots_"):
+                # Format: key_slots_N_USERID_TXID
+                # Extract slots count (could be multi-digit)
+                type_start = len("key_slots_")
+                remaining = payload[type_start:]
+                remaining_parts = remaining.split("_")
+                
+                if len(remaining_parts) >= 2:
+                    slots = int(remaining_parts[0])
+
+                    result = await self.data_package_service.purchase_key_slots(
+                        user_id=user_id,
+                        slots=slots,
+                        telegram_payment_id=telegram_payment_id,
+                        current_user_id=user_id,
+                    )
+
+                    success_message = (
+                        f"✅ *¡Pago desde Mini App Confirmado!*\n\n"
+                        f"🔑 Slots: *+{result['slots_added']} claves*\n"
+                        f"🎯 Nuevo límite: *{result['new_max_keys']} claves*\n"
+                        f"⭐ Stars: *{payment.total_amount}*\n\n"
+                        f"Tu límite de claves ha sido aumentado.\n"
+                        f"Puedes crear nuevas claves desde la Mini App."
+                    )
+
+                    if update.message:
+                        await update.message.reply_text(
+                            text=success_message,
+                            parse_mode="Markdown",
+                        )
+
+                    logger.info(
+                        f"🔑 Mini App slots purchased: +{slots} for user {user_id}"
+                    )
+
+        except Exception as e:
+            logger.error(f"Error in _handle_miniapp_payment: {e}", exc_info=True)
+            if update.message:
+                await update.message.reply_text(
+                    text=(
+                        "⚠️ *Pago recibido pero hubo un error*\n\n"
+                        "Tu pago fue procesado correctamente, pero hubo un problema "
+                        "activando el producto. Contacta a soporte si el problema persiste."
+                    ),
+                    parse_mode="Markdown",
                 )
