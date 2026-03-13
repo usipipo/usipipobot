@@ -38,6 +38,13 @@ async def lifespan(app: FastAPI):
     from infrastructure.persistence.postgresql.user_repository import (
         PostgresUserRepository,
     )
+    from miniapp.services.miniapp_notification_service import init_notification_service
+    from telegram import Bot
+
+    # Initialize Telegram Bot for Mini App notifications
+    bot = Bot(token=settings.TELEGRAM_TOKEN)
+    init_notification_service(bot)
+    logger.info("✅ MiniApp Notification Service initialized with Telegram Bot")
 
     async with get_session_context() as session:
         token_repo = PostgresWebhookTokenRepository(session)
@@ -62,6 +69,7 @@ async def lifespan(app: FastAPI):
     yield
 
     logger.info("🔌 Shutting down API server...")
+    await bot.close()
     logger.info("✅ API server stopped")
 
 

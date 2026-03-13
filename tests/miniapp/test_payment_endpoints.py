@@ -36,15 +36,24 @@ async def client():
     mock_user.telegram_id = 12345
     mock_user.max_keys = 2
 
+    # Mock the notification service
+    mock_notification_service = AsyncMock()
+    mock_notification_service.send_stars_invoice.return_value = True
+    mock_notification_service.send_crypto_payment_notification.return_value = True
+    mock_notification_service.send_payment_confirmation.return_value = True
+
     with patch("miniapp.routes_payments.PostgresUserRepository") as mock_repo_class:
         mock_repo = AsyncMock()
         mock_repo.get_by_id.return_value = mock_user
         mock_repo_class.return_value = mock_repo
 
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as ac:
-            yield ac
+        with patch("miniapp.services.miniapp_notification_service.get_notification_service") as mock_get_service:
+            mock_get_service.return_value = mock_notification_service
+
+            async with AsyncClient(
+                transport=ASGITransport(app=app), base_url="http://test"
+            ) as ac:
+                yield ac
 
     # Clean up overrides after test
     app.dependency_overrides.clear()
@@ -71,8 +80,9 @@ class TestCreateStarsInvoice:
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert "invoice_url" in data
-        assert "tg://invoice" in data["invoice_url"]
+        assert "message" in data
+        assert "transaction_id" in data
+        assert "Telegram" in data["message"]
 
     @pytest.mark.asyncio
     async def test_create_stars_invoice_slots_success(self, client):
@@ -85,7 +95,8 @@ class TestCreateStarsInvoice:
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
-        assert "invoice_url" in data
+        assert "message" in data
+        assert "transaction_id" in data
 
     @pytest.mark.asyncio
     async def test_create_stars_invoice_invalid_product(self, client):
