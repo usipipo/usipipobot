@@ -109,7 +109,7 @@ async def request_otp(request: OTPRequest, http_request: Request):
     # Enviar OTP por Telegram
     try:
         from telegram import Bot
-        bot = Bot(token=settings.telegram_token)
+        bot = Bot(token=settings.TELEGRAM_TOKEN)
 
         await bot.send_message(
             chat_id=user.telegram_id,
