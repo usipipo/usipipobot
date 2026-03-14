@@ -48,18 +48,17 @@ async def get_current_user(
 
         # Verificar que no está en blacklist
         jti = payload["jti"]
-        r = redis.from_url(settings.REDIS_URL)
-
-        is_blacklisted = await r.exists(f"jwt:blacklist:{jti}")
-        if is_blacklisted:
-            logger.warning(f"Intento de usar token revocado: {jti}")
-            raise HTTPException(
-                status_code=401,
-                detail={
-                    "error": "token_revoked",
-                    "message": "Sesión cerrada. Inicia sesión nuevamente."
-                }
-            )
+        async with redis.from_url(settings.REDIS_URL) as r:
+            is_blacklisted = await r.exists(f"jwt:blacklist:{jti}")
+            if is_blacklisted:
+                logger.warning(f"Intento de usar token revocado: {jti}")
+                raise HTTPException(
+                    status_code=401,
+                    detail={
+                        "error": "token_revoked",
+                        "message": "Sesión cerrada. Inicia sesión nuevamente."
+                    }
+                )
 
         # Verificar que el usuario existe y está activo
         telegram_id = payload["sub"]
@@ -123,5 +122,7 @@ async def get_current_user_optional(
     """
     try:
         return await get_current_user(credentials)
-    except HTTPException:
-        return None
+    except HTTPException as e:
+        if e.status_code in (401, 403, 404):
+            return None
+        raise  # Re-raise server errors (500, 503, etc.)

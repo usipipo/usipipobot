@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any, Tuple
 from src.services.api_client import ApiClient
 from src.storage.secure_storage import SecureStorage
 from src.storage.preferences_storage import PreferencesStorage
-from src.config import OTP_LENGTH
+from src.config import OTP_LENGTH, JWT_EXPIRY_BUFFER_SECONDS
 
 
 class AuthService:
@@ -150,9 +150,10 @@ class AuthService:
                 return False, "JWT sin expiración"
 
             current_time = int(time.time())
-            if exp < current_time:
-                logger.debug(f"JWT expirado: exp={exp}, current={current_time}")
-                return False, "JWT expirado"
+            # Considerar expirado si queda menos de JWT_EXPIRY_BUFFER_SECONDS segundos
+            if exp < (current_time + JWT_EXPIRY_BUFFER_SECONDS):
+                logger.debug(f"JWT próximo a expirar o expirado: exp={exp}, current={current_time}")
+                return False, "JWT expirado o próximo a expirar"
 
             # Token válido y no expirado
             logger.debug(f"JWT válido, expira en {exp - current_time} segundos")

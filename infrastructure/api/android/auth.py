@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Request, Depends
 from infrastructure.api.android.schemas import (
     OTPRequest, OTPResponse, OTPVerify, TokenResponse,
-    RefreshTokenResponse, LogoutResponse, UserProfileResponse
+    RefreshTokenResponse, LogoutResponse, UserProfileResponse, UserInToken
 )
 from infrastructure.api.android.deps import get_current_user
 from sqlalchemy import text
@@ -12,6 +12,7 @@ import redis.asyncio as redis
 from loguru import logger
 import jwt
 import uuid
+import hmac
 from datetime import datetime, timezone, timedelta
 
 router = APIRouter(prefix="/auth", tags=["Android Auth"])
@@ -29,87 +30,86 @@ async def request_otp(request: OTPRequest, http_request: Request):
     - 5 solicitudes por IP por hora
     - 3 solicitudes por usuario por hora
     """
-    r = redis.from_url(settings.REDIS_URL)
+    async with redis.from_url(settings.REDIS_URL) as r:
+        # Rate limiting por IP (5 por hora)
+        client_ip = http_request.client.host if http_request.client else "unknown"
+        ip_key = f"rate:otp:ip:{client_ip}"
 
-    # Rate limiting por IP (5 por hora)
-    client_ip = http_request.client.host if http_request.client else "unknown"
-    ip_key = f"rate:otp:ip:{client_ip}"
+        ip_count = await r.incr(ip_key)
+        if ip_count == 1:
+            await r.expire(ip_key, 3600)
 
-    ip_count = await r.incr(ip_key)
-    if ip_count == 1:
-        await r.expire(ip_key, 3600)
-
-    if ip_count > 5:
-        ttl = await r.ttl(ip_key)
-        raise HTTPException(
-            status_code=429,
-            detail={
-                "error": "rate_limit_exceeded",
-                "message": "Demasiadas solicitudes desde tu IP",
-                "retry_after": ttl
-            }
-        )
-
-    # Rate limiting por identifier (3 por hora)
-    identifier_key = f"rate:otp:identifier:{request.identifier}"
-    identifier_count = await r.incr(identifier_key)
-    if identifier_count == 1:
-        await r.expire(identifier_key, 3600)
-
-    if identifier_count > 3:
-        ttl = await r.ttl(identifier_key)
-        raise HTTPException(
-            status_code=429,
-            detail={
-                "error": "rate_limit_exceeded",
-                "message": "Demasiadas solicitudes para este usuario",
-                "retry_after": ttl
-            }
-        )
-
-    # Buscar usuario en base de datos
-    async with get_session_context() as session:
-        if request.identifier.startswith("@"):
-            # Buscar por username
-            result = await session.execute(
-                text("SELECT telegram_id, username, status FROM users WHERE username = :username"),
-                {"username": request.identifier[1:]}
-            )
-        else:
-            # Buscar por telegram_id
-            result = await session.execute(
-                text("SELECT telegram_id, username, status FROM users WHERE telegram_id = :telegram_id"),
-                {"telegram_id": int(request.identifier)}
-            )
-
-        user = result.first()
-
-        if not user:
-            logger.warning(f"Usuario no encontrado: {request.identifier}")
+        if ip_count > 5:
+            ttl = await r.ttl(ip_key)
             raise HTTPException(
-                status_code=404,
+                status_code=429,
                 detail={
-                    "error": "user_not_found",
-                    "message": "Usuario no registrado en uSipipo. Primero debes usar el bot de Telegram."
+                    "error": "rate_limit_exceeded",
+                    "message": "Demasiadas solicitudes desde tu IP",
+                    "retry_after": ttl
                 }
             )
 
-        if user.status != "active":
-            logger.warning(f"Usuario inactivo: {user.telegram_id}")
+        # Rate limiting por identifier (3 por hora)
+        identifier_key = f"rate:otp:identifier:{request.identifier}"
+        identifier_count = await r.incr(identifier_key)
+        if identifier_count == 1:
+            await r.expire(identifier_key, 3600)
+
+        if identifier_count > 3:
+            ttl = await r.ttl(identifier_key)
             raise HTTPException(
-                status_code=403,
+                status_code=429,
                 detail={
-                    "error": "user_inactive",
-                    "message": "Cuenta inactiva o suspendida"
+                    "error": "rate_limit_exceeded",
+                    "message": "Demasiadas solicitudes para este usuario",
+                    "retry_after": ttl
                 }
             )
 
-    # Generar OTP (6 dígitos)
-    otp = f"{secrets.randbelow(1000000):06d}"
+        # Buscar usuario en base de datos
+        async with get_session_context() as session:
+            if request.identifier.startswith("@"):
+                # Buscar por username
+                result = await session.execute(
+                    text("SELECT telegram_id, username, status FROM users WHERE username = :username"),
+                    {"username": request.identifier[1:]}
+                )
+            else:
+                # Buscar por telegram_id
+                result = await session.execute(
+                    text("SELECT telegram_id, username, status FROM users WHERE telegram_id = :telegram_id"),
+                    {"telegram_id": int(request.identifier)}
+                )
 
-    # Guardar OTP en Redis con TTL de 5 minutos
-    otp_key = f"otp:{user.telegram_id}"
-    await r.setex(otp_key, 300, otp)  # 300 segundos = 5 minutos
+            user = result.first()
+
+            if not user:
+                logger.warning(f"Usuario no encontrado: {request.identifier}")
+                raise HTTPException(
+                    status_code=404,
+                    detail={
+                        "error": "user_not_found",
+                        "message": "Usuario no registrado en uSipipo. Primero debes usar el bot de Telegram."
+                    }
+                )
+
+            if user.status != "active":
+                logger.warning(f"Usuario inactivo: {user.telegram_id}")
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "error": "user_inactive",
+                        "message": "Cuenta inactiva o suspendida"
+                    }
+                )
+
+        # Generar OTP (6 dígitos)
+        otp = f"{secrets.randbelow(1000000):06d}"
+
+        # Guardar OTP en Redis con TTL de 5 minutos
+        otp_key = f"otp:{user.telegram_id}"
+        await r.setex(otp_key, 300, otp)  # 300 segundos = 5 minutos
 
     logger.info(f"OTP generado para usuario {user.telegram_id}")
 
@@ -153,96 +153,95 @@ async def verify_otp(request: OTPVerify):
     - Máximo 3 intentos fallidos
     - Al tercer fallo, el OTP se invalida
     """
-    r = redis.from_url(settings.REDIS_URL)
+    async with redis.from_url(settings.REDIS_URL) as r:
+        # Buscar usuario en base de datos
+        async with get_session_context() as session:
+            if request.identifier.startswith("@"):
+                # Buscar por username
+                result = await session.execute(
+                    text("SELECT telegram_id, username, full_name, status FROM users WHERE username = :username"),
+                    {"username": request.identifier[1:]}
+                )
+            else:
+                # Buscar por telegram_id
+                result = await session.execute(
+                    text("SELECT telegram_id, username, full_name, status FROM users WHERE telegram_id = :telegram_id"),
+                    {"telegram_id": int(request.identifier)}
+                )
 
-    # Buscar usuario en base de datos
-    async with get_session_context() as session:
-        if request.identifier.startswith("@"):
-            # Buscar por username
-            result = await session.execute(
-                text("SELECT telegram_id, username, full_name, status FROM users WHERE username = :username"),
-                {"username": request.identifier[1:]}
-            )
-        else:
-            # Buscar por telegram_id
-            result = await session.execute(
-                text("SELECT telegram_id, username, full_name, status FROM users WHERE telegram_id = :telegram_id"),
-                {"telegram_id": int(request.identifier)}
-            )
+            user = result.first()
 
-        user = result.first()
+            if not user:
+                logger.warning(f"Usuario no encontrado: {request.identifier}")
+                raise HTTPException(
+                    status_code=404,
+                    detail={
+                        "error": "user_not_found",
+                        "message": "Usuario no encontrado"
+                    }
+                )
 
-        if not user:
-            logger.warning(f"Usuario no encontrado: {request.identifier}")
+            if user.status != "active":
+                logger.warning(f"Usuario inactivo: {user.telegram_id}")
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "error": "user_inactive",
+                        "message": "Cuenta inactiva o suspendida"
+                    }
+                )
+
+        # Verificar OTP
+        otp_key = f"otp:{user.telegram_id}"
+        stored_otp = await r.get(otp_key)
+
+        if not stored_otp:
+            logger.warning(f"OTP no encontrado o expirado: {user.telegram_id}")
             raise HTTPException(
-                status_code=404,
+                status_code=401,
                 detail={
-                    "error": "user_not_found",
-                    "message": "Usuario no encontrado"
+                    "error": "otp_expired",
+                    "message": "Código expirado. Solicita uno nuevo."
                 }
             )
 
-        if user.status != "active":
-            logger.warning(f"Usuario inactivo: {user.telegram_id}")
+        # Verificar que el OTP coincide (timing-safe comparison)
+        if not hmac.compare_digest(stored_otp.decode(), request.otp):
+            # Incrementar contador de intentos fallidos
+            fail_key = f"otp:fail:{user.telegram_id}"
+            fail_count = await r.incr(fail_key)
+            if fail_count == 1:
+                await r.expire(fail_key, 900)  # 15 minutos de ventana
+
+            attempts_remaining = 3 - fail_count
+
+            logger.warning(
+                f"OTP inválido para usuario {user.telegram_id}. "
+                f"Intentos restantes: {attempts_remaining}"
+            )
+
+            if attempts_remaining <= 0:
+                # Bloquear: eliminar OTP para forzar solicitud de uno nuevo
+                await r.delete(otp_key)
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": "too_many_attempts",
+                        "message": "Demasiados intentos fallidos. Solicita un nuevo código."
+                    }
+                )
+
             raise HTTPException(
-                status_code=403,
+                status_code=401,
                 detail={
-                    "error": "user_inactive",
-                    "message": "Cuenta inactiva o suspendida"
+                    "error": "invalid_otp",
+                    "message": "Código incorrecto",
+                    "attempts_remaining": attempts_remaining
                 }
             )
 
-    # Verificar OTP
-    otp_key = f"otp:{user.telegram_id}"
-    stored_otp = await r.get(otp_key)
-
-    if not stored_otp:
-        logger.warning(f"OTP no encontrado o expirado: {user.telegram_id}")
-        raise HTTPException(
-            status_code=401,
-            detail={
-                "error": "otp_expired",
-                "message": "Código expirado. Solicita uno nuevo."
-            }
-        )
-
-    # Verificar que el OTP coincide
-    if stored_otp.decode() != request.otp:
-        # Incrementar contador de intentos fallidos
-        fail_key = f"otp:fail:{user.telegram_id}"
-        fail_count = await r.incr(fail_key)
-        if fail_count == 1:
-            await r.expire(fail_key, 900)  # 15 minutos de ventana
-
-        attempts_remaining = 3 - fail_count
-
-        logger.warning(
-            f"OTP inválido para usuario {user.telegram_id}. "
-            f"Intentos restantes: {attempts_remaining}"
-        )
-
-        if attempts_remaining <= 0:
-            # Bloquear: eliminar OTP para forzar solicitud de uno nuevo
-            await r.delete(otp_key)
-            raise HTTPException(
-                status_code=429,
-                detail={
-                    "error": "too_many_attempts",
-                    "message": "Demasiados intentos fallidos. Solicita un nuevo código."
-                }
-            )
-
-        raise HTTPException(
-            status_code=401,
-            detail={
-                "error": "invalid_otp",
-                "message": "Código incorrecto",
-                "attempts_remaining": attempts_remaining
-            }
-        )
-
-    # OTP válido: eliminar de Redis (un solo uso)
-    await r.delete(otp_key)
+        # OTP válido: eliminar de Redis (un solo uso)
+        await r.delete(otp_key)
     logger.info(f"OTP verificado exitosamente: {user.telegram_id}")
 
     # Generar JWT token
@@ -268,11 +267,11 @@ async def verify_otp(request: OTPVerify):
         access_token=token,
         token_type="bearer",
         expires_in=86400,  # 24 horas en segundos
-        user={
-            "telegram_id": user.telegram_id,
-            "username": user.username,
-            "full_name": user.full_name,
-        }
+        user=UserInToken(
+            telegram_id=user.telegram_id,
+            username=user.username,
+            full_name=user.full_name,
+        )
     )
 
 
@@ -283,8 +282,20 @@ async def refresh_token(payload: dict = Depends(get_current_user)):
 
     Requiere un token válido. Si el token está expirado,
     el usuario debe iniciar sesión nuevamente con OTP.
+    
+    Nota: Implementa token rotation - el token anterior se invalida.
     """
     telegram_id = payload["sub"]
+    old_jti = payload["jti"]
+    old_exp = payload.get("exp")
+
+    # Invalidar token actual (token rotation)
+    if old_exp:
+        ttl = int(old_exp - datetime.now(timezone.utc).timestamp())
+        if ttl > 0:
+            async with redis.from_url(settings.REDIS_URL) as r:
+                await r.setex(f"jwt:blacklist:{old_jti}", ttl, "1")
+            logger.info(f"Token anterior {old_jti} invalidado en refresh")
 
     # Generar nuevo token
     now = datetime.now(timezone.utc)
@@ -316,20 +327,19 @@ async def logout(payload: dict = Depends(get_current_user)):
     El token se agrega a la blacklist en Redis.
     El TTL de la blacklist es igual al tiempo restante del token.
     """
-    r = redis.from_url(settings.REDIS_URL)
+    async with redis.from_url(settings.REDIS_URL) as r:
+        # Obtener tiempo restante del token
+        exp = payload.get("exp")
+        jti = payload["jti"]
+        telegram_id = payload["sub"]
 
-    # Obtener tiempo restante del token
-    exp = payload.get("exp")
-    jti = payload["jti"]
-    telegram_id = payload["sub"]
-
-    if exp:
-        ttl = int(exp - datetime.now(timezone.utc).timestamp())
-        if ttl > 0:
-            # Agregar a blacklist con TTL restante
-            blacklist_key = f"jwt:blacklist:{jti}"
-            await r.setex(blacklist_key, ttl, "1")
-            logger.info(f"Token {jti} agregado a blacklist (TTL: {ttl}s)")
+        if exp:
+            ttl = int(exp - datetime.now(timezone.utc).timestamp())
+            if ttl > 0:
+                # Agregar a blacklist con TTL restante
+                blacklist_key = f"jwt:blacklist:{jti}"
+                await r.setex(blacklist_key, ttl, "1")
+                logger.info(f"Token {jti} agregado a blacklist (TTL: {ttl}s)")
 
     logger.info(f"Usuario {telegram_id} cerró sesión")
 

@@ -2,18 +2,33 @@
 Configuration for uSipipo VPN Android APK.
 """
 import os
+from loguru import logger
 
 # Data directory for app preferences
 APP_DATA_DIR = os.path.join(os.path.expanduser("~"), ".usipipo_apk")
 
 # Backend API URL
-# Priority: USIPIPO_API_URL env var > PUBLIC_URL + /api/v1 > default
-# For production: Set PUBLIC_URL in .env (e.g., https://usipipo.duckdns.org)
+# Priority: USIPIPO_API_URL env var > PUBLIC_URL + /api/v1 > empty (must be configured)
 _public_url = os.getenv("PUBLIC_URL", "").strip()
-if _public_url:
+_fallback_url = os.getenv("USIPIPO_API_URL", "")
+if _fallback_url:
+    BASE_URL = _fallback_url
+elif _public_url:
     BASE_URL = f"{_public_url.rstrip('/')}/api/v1"
 else:
-    BASE_URL = os.getenv("USIPIPO_API_URL", "https://usipipo.duckdns.org/api/v1")
+    BASE_URL = ""
+    logger.warning("BASE_URL no configurada. Configura USIPIPO_API_URL o PUBLIC_URL.")
+
+# Validate HTTPS in production
+if os.getenv("APP_ENV", "development").lower() == "production":
+    if not BASE_URL:
+        raise ValueError(
+            "USIPIPO_API_URL o PUBLIC_URL debe estar configurada en producción."
+        )
+    if not BASE_URL.startswith("https://"):
+        raise ValueError(
+            f"BASE_URL debe usar HTTPS en producción. Actual: {BASE_URL}"
+        )
 
 # Timeouts
 REQUEST_TIMEOUT = 30  # segundos

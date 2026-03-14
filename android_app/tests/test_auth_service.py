@@ -100,7 +100,7 @@ class TestJwtExpiryValidation:
         is_valid, error_msg = service._validate_jwt_expiry(expired_token)
 
         assert is_valid is False
-        assert error_msg == "JWT expirado"
+        assert error_msg == "JWT expirado o próximo a expirar"
 
     @patch('src.services.auth_service.PreferencesStorage')
     @patch('src.services.auth_service.SecureStorage')

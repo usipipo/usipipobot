@@ -462,7 +462,11 @@ class Settings(BaseSettings):
             self.WG_ENDPOINT = f"{self.SERVER_IP}:{self.WG_SERVER_PORT}"
 
         if self.is_production and "*" in self.CORS_ORIGINS:
-            pass
+            raise ValueError(
+                "CORS_ORIGINS no puede contener '*' en producción. "
+                "Define los orígenes permitidos. Ejemplo: "
+                "CORS_ORIGINS=[\"https://usipipo.duckdns.org\"]"
+            )
 
         if self.ADMIN_ID not in self.AUTHORIZED_USERS:
             self.AUTHORIZED_USERS.append(self.ADMIN_ID)
