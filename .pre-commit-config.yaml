@@ -1,0 +1,109 @@
+# =============================================================================
+# PRE-COMMIT HOOKS CONFIGURATION
+# =============================================================================
+# Install: uv run pre-commit install
+# Run manually: uv run pre-commit run --all-files
+# Update hooks: uv run pre-commit autoupdate
+# =============================================================================
+
+repos:
+  # =============================================================================
+  # STANDARD HOOKS (pre-commit-hooks)
+  # =============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Remove trailing whitespace
+      - id: trailing-whitespace
+        description: Removes trailing whitespace from files
+      
+      # Ensure files end with a newline
+      - id: end-of-file-fixer
+        description: Ensures files end with a newline
+      
+      # Validate YAML syntax
+      - id: check-yaml
+        description: Validates YAML syntax
+        args: ['--unsafe']  # Allow custom tags
+      
+      # Validate JSON syntax
+      - id: check-json
+        description: Validates JSON syntax
+      
+      # Detect private keys
+      - id: detect-private-key
+        description: Detects presence of private keys
+      
+      # Check for merge conflicts
+      - id: check-merge-conflict
+        description: Checks for merge conflict markers
+      
+      # Check added files for symlinks
+      - id: check-symlinks
+        description: Checks for broken symlinks
+
+  # =============================================================================
+  # IMPORT SORTING (isort)
+  # =============================================================================
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort (python)
+        description: Sorts imports in Python files
+        args: ['--profile', 'black', '--filter-files']
+
+  # =============================================================================
+  # CODE FORMATTING (Black)
+  # =============================================================================
+  - repo: https://github.com/psf/black
+    rev: 24.2.0
+    hooks:
+      - id: black
+        description: Formats Python code
+        language_version: python3.13
+        args: ['--config', 'pyproject.toml']
+
+  # =============================================================================
+  # SECURITY: SECRET DETECTION
+  # =============================================================================
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        description: Detects secrets in code
+        args: ['--baseline', '.secrets.baseline']
+        exclude: |
+          (?x)^(
+            .venv/|
+            venv/|
+            android_app/.venv/|
+            android_app/venv/|
+            \.git/|
+            logs/|
+            .*\.json$|
+            .*\.yaml$|
+            .*\.yml$|
+            package-lock\.json
+          )
+
+  # =============================================================================
+  # SECURITY: PYTHON LINTING (Flake8)
+  # =============================================================================
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        description: Lints Python code
+        additional_dependencies: [
+          'flake8-bugbear',
+          'flake8-comprehensions',
+          'flake8-simplify',
+        ]
+        args: [
+          '--max-line-length=100',
+          '--max-complexity=10',
+          '--select=E9,F63,F7,F82,B,C4,SIM',
+          '--extend-ignore=E203,E501,W503',
+          '--exclude=.venv,venv,android_app/.venv,android_app/venv,.git,logs,migrations/versions',
+        ]
