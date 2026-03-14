@@ -101,7 +101,7 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
-    user: dict
+    user: "UserInToken"
 
     model_config = {
         "json_schema_extra": {
@@ -110,13 +110,22 @@ class TokenResponse(BaseModel):
                 "token_type": "bearer",
                 "expires_in": 86400,
                 "user": {
-                    "telegram_id": "123456789",
+                    "telegram_id": 123456789,
                     "username": "juanperez",
                     "full_name": "Juan Pérez"
                 }
             }
         }
     }
+
+
+class UserInToken(BaseModel):
+    """
+    Schema tipado para información de usuario en respuestas de token.
+    """
+    telegram_id: int
+    username: str | None = None
+    full_name: str | None = None
 
 
 class RefreshTokenResponse(BaseModel):

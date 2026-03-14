@@ -16,6 +16,9 @@ class ApiClient:
         self.base_url = BASE_URL
         self.telegram_id = telegram_id
         self.timeout = REQUEST_TIMEOUT
+        # Advertir si no es HTTPS (solo en desarrollo)
+        if self.base_url and not self.base_url.startswith("https://"):
+            logger.warning(f"⚠️ BASE_URL no usa HTTPS: {self.base_url}")
 
     async def _get_headers(self) -> Dict[str, str]:
         """Get headers with JWT token if available."""
