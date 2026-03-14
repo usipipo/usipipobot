@@ -1,5 +1,9 @@
-from fastapi import APIRouter, HTTPException, status, Request
-from infrastructure.api.android.schemas import OTPRequest, OTPResponse, OTPVerify, TokenResponse
+from fastapi import APIRouter, HTTPException, status, Request, Depends
+from infrastructure.api.android.schemas import (
+    OTPRequest, OTPResponse, OTPVerify, TokenResponse,
+    RefreshTokenResponse, LogoutResponse
+)
+from infrastructure.api.android.deps import get_current_user
 from sqlalchemy import text
 from infrastructure.persistence.database import get_session_context
 from config import settings
@@ -270,3 +274,63 @@ async def verify_otp(request: OTPVerify):
             "full_name": user.full_name,
         }
     )
+
+
+@router.post("/refresh", response_model=RefreshTokenResponse)
+async def refresh_token(payload: dict = Depends(get_current_user)):
+    """
+    Renovar JWT token si aún no ha expirado.
+
+    Requiere un token válido. Si el token está expirado,
+    el usuario debe iniciar sesión nuevamente con OTP.
+    """
+    telegram_id = payload["sub"]
+
+    # Generar nuevo token
+    now = datetime.now(timezone.utc)
+
+    new_payload = {
+        "sub": telegram_id,
+        "client": "android_apk",
+        "iat": now,
+        "exp": now + timedelta(hours=24),
+        "jti": str(uuid.uuid4()),
+    }
+
+    new_token = jwt.encode(new_payload, settings.SECRET_KEY, algorithm="HS256")
+
+    logger.info(f"Token renovado para usuario {telegram_id}")
+
+    return RefreshTokenResponse(
+        access_token=new_token,
+        token_type="bearer",
+        expires_in=86400
+    )
+
+
+@router.post("/logout", response_model=LogoutResponse)
+async def logout(payload: dict = Depends(get_current_user)):
+    """
+    Invalidar JWT token (logout).
+
+    El token se agrega a la blacklist en Redis.
+    El TTL de la blacklist es igual al tiempo restante del token.
+    """
+    r = redis.from_url(settings.REDIS_URL)
+
+    # Obtener tiempo restante del token
+    exp = payload.get("exp")
+    jti = payload["jti"]
+    telegram_id = payload["sub"]
+
+    if exp:
+        ttl = int(exp - datetime.now(timezone.utc).timestamp())
+        if ttl > 0:
+            # Agregar a blacklist con TTL restante
+            blacklist_key = f"jwt:blacklist:{jti}"
+            await r.setex(blacklist_key, ttl, "1")
+            logger.info(f"Token {jti} agregado a blacklist (TTL: {ttl}s)")
+
+    logger.info(f"Usuario {telegram_id} cerró sesión")
+
+    return LogoutResponse(message="Sesión cerrada")
