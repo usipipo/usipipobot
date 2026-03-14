@@ -31,7 +31,7 @@ cat > /etc/caddy/Caddyfile << 'EOF'
 usipipo.duckdns.org {
     reverse_proxy localhost:8000
     encode gzip zstd
-    
+
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"
@@ -39,7 +39,7 @@ usipipo.duckdns.org {
         X-XSS-Protection "1; mode=block"
         Referrer-Policy "strict-origin-when-cross-origin"
     }
-    
+
     log {
         output file /var/log/caddy/usipipo.log
         format json

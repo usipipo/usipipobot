@@ -510,10 +510,10 @@ limiter = Limiter(
 def clear_all() -> None:
     """
     Limpia todos los tokens almacenados.
-    
+
     NOTA: keyring no soporta listar todas las claves por SERVICE_NAME.
     Usa PreferencesStorage para obtener el telegram_id y llamar delete_jwt(telegram_id).
-    
+
     Ejemplo:
         telegram_id = PreferencesStorage.get_last_user_id()
         if telegram_id:

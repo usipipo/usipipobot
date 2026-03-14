@@ -2,20 +2,21 @@
 Dashboard screen for uSipipo VPN Android APK.
 Main screen showing user summary, VPN keys, data usage, and quick actions.
 """
-from kivy.properties import StringProperty, BooleanProperty, NumericProperty, ListProperty
+
+import asyncio
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from kivy.clock import Clock
 from kivy.metrics import dp
-from kivymd.uix.screen import MDScreen
-from kivymd.uix.dialog import MDDialog
+from kivy.properties import BooleanProperty, ListProperty, NumericProperty, StringProperty
 from kivymd.uix.button import MDFlatButton
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import Snackbar
 from loguru import logger
-from datetime import datetime
-from typing import Optional, Dict, Any, List
-import asyncio
-
-from src.services.dashboard_service import DashboardService
 from src.services.auth_service import AuthService
+from src.services.dashboard_service import DashboardService
 from src.storage.preferences_storage import PreferencesStorage
 
 
@@ -103,8 +104,7 @@ class DashboardScreen(MDScreen):
         """Start auto-refresh timer."""
         self._stop_auto_refresh()  # Cancel any existing timer
         self._auto_refresh_event = Clock.schedule_interval(
-            lambda dt: self._auto_refresh_callback(),
-            self._refresh_interval
+            lambda dt: self._auto_refresh_callback(), self._refresh_interval
         )
         logger.debug(f"Auto-refresh started (interval: {self._refresh_interval}s)")
 
@@ -125,8 +125,7 @@ class DashboardScreen(MDScreen):
         """Start periodic offline check."""
         self._stop_offline_check()
         self._offline_check_event = Clock.schedule_interval(
-            lambda dt: self._check_offline_status(),
-            10  # Check every 10 seconds
+            lambda dt: self._check_offline_status(), 10  # Check every 10 seconds
         )
 
     def _stop_offline_check(self):
@@ -139,14 +138,14 @@ class DashboardScreen(MDScreen):
         """Check if device is offline."""
         was_offline = self.is_offline
         self.is_offline = not self._has_internet_connection()
-        
+
         if self.is_offline != was_offline:
             if self.is_offline:
                 logger.warning("Device went offline")
                 Snackbar(
                     text="Sin conexión. Los datos pueden no estar actualizados.",
                     duration=5,
-                    bg_color=[1, 0.267, 0.267, 1]  # Red
+                    bg_color=[1, 0.267, 0.267, 1],  # Red
                 ).open()
             else:
                 logger.info("Device back online")
@@ -155,16 +154,17 @@ class DashboardScreen(MDScreen):
     def _has_internet_connection(self) -> bool:
         """
         Check if device has internet connection.
-        
+
         Returns:
             True if online, False if offline
         """
         try:
             # Android-specific check
             from jnius import autoclass
-            Context = autoclass('android.content.Context')
-            ConnectivityManager = autoclass('android.net.ConnectivityManager')
-            activity = autoclass('org.kivy.android.PythonActivity').mActivity
+
+            Context = autoclass("android.content.Context")
+            ConnectivityManager = autoclass("android.net.ConnectivityManager")
+            activity = autoclass("org.kivy.android.PythonActivity").mActivity
             cm = activity.getSystemService(Context.CONNECTIVITY_SERVICE)
             network_info = cm.getActiveNetworkInfo()
             return network_info is not None and network_info.isConnected()
@@ -175,19 +175,19 @@ class DashboardScreen(MDScreen):
     def setup_pull_to_refresh(self):
         """Setup pull-to-refresh layout."""
         # Get the refresh layout from KV if available
-        if self.ids.get('refresh_layout'):
+        if self.ids.get("refresh_layout"):
             self.refresh_layout = self.ids.refresh_layout
             logger.debug("Pull-to-refresh layout configured")
 
     def load_dashboard_data(self, force_refresh: bool = False):
         """
         Load dashboard data from API or cache.
-        
+
         Args:
             force_refresh: If True, bypass cache and fetch from API
         """
         self.is_loading = True
-        
+
         # Get current user
         telegram_id = self.auth_service.get_current_user()
         if not telegram_id:
@@ -195,10 +195,10 @@ class DashboardScreen(MDScreen):
             self.is_authenticated = False
             Clock.schedule_once(lambda dt: self._redirect_to_login(), 0.5)
             return
-        
+
         self.is_authenticated = True
         self.dashboard_service = DashboardService(telegram_id=str(telegram_id))
-        
+
         # Load data asynchronously
         Clock.schedule_once(lambda dt: self._fetch_dashboard(force_refresh), 0)
 
@@ -214,10 +214,10 @@ class DashboardScreen(MDScreen):
                 data = await self.dashboard_service.refresh_dashboard()
             else:
                 data = await self.dashboard_service.get_dashboard_summary()
-            
+
             # Update UI on main thread
             Clock.schedule_once(lambda dt: self._update_dashboard(data))
-            
+
         except Exception as e:
             logger.error(f"Error fetching dashboard data: {e}")
             Clock.schedule_once(lambda dt: self._handle_load_error(e))
@@ -226,19 +226,19 @@ class DashboardScreen(MDScreen):
         """Fetch dashboard data (async wrapper)."""
         import asyncio
         from concurrent.futures import ThreadPoolExecutor
-        
+
         def run_async():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             return loop.run_until_complete(self._fetch_dashboard_async(force_refresh))
-        
+
         with ThreadPoolExecutor() as executor:
             executor.submit(run_async)
 
     def _update_dashboard(self, data: Dict[str, Any]):
         """
         Update dashboard UI with fetched data.
-        
+
         Args:
             data: Dashboard data from API
         """
@@ -251,26 +251,26 @@ class DashboardScreen(MDScreen):
             self.is_suspended = user.get("status") == "suspended"
             self.has_pending_debt = user.get("has_pending_debt", False)
             self.consumption_mode_enabled = user.get("consumption_mode_enabled", False)
-            
+
             # Format last login
             last_login = user.get("last_login")
             if last_login:
                 self.last_update = DashboardService.format_relative_time(last_login)
             else:
                 self.last_update = "Nunca"
-            
+
             # Data summary
             data_summary = data.get("data_summary", {})
             used_bytes = data_summary.get("total_used_bytes", 0)
             limit_bytes = data_summary.get("total_limit_bytes", 0)
-            
+
             self.data_used = DashboardService.format_bytes(used_bytes)
             self.data_limit = DashboardService.format_bytes(limit_bytes)
-            
+
             percentage = DashboardService.calculate_percentage(used_bytes, limit_bytes)
             self.data_percentage = percentage
             self.data_progress_color = self._get_progress_color(percentage)
-            
+
             # Active keys
             active_keys = data.get("active_keys", [])
             self.active_keys_count = len([k for k in active_keys if k.get("is_active", False)])
@@ -286,10 +286,12 @@ class DashboardScreen(MDScreen):
                     "type": key.get("key_type", "outline"),
                     "used": DashboardService.format_bytes(key.get("used_bytes", 0)),
                     "is_active": key.get("is_active", False),
-                    "color": [0, 0.941, 1, 1] if key.get("key_type") == "outline" else [0.6, 0, 1, 1]
+                    "color": (
+                        [0, 0.941, 1, 1] if key.get("key_type") == "outline" else [0.6, 0, 1, 1]
+                    ),
                 }
                 self.recent_keys.append(key_data)
-            
+
             # Package info
             package = data.get("active_package")
             if package:
@@ -298,10 +300,10 @@ class DashboardScreen(MDScreen):
                     "basic": "Básico",
                     "standard": "Estándar",
                     "advanced": "Avanzado",
-                    "premium": "Premium"
+                    "premium": "Premium",
                 }
                 self.package_type = pkg_types.get(pkg_type, "Desconocido")
-                
+
                 days_remaining = package.get("days_remaining")
                 if days_remaining is not None:
                     self.package_days_remaining = f"{days_remaining} días"
@@ -318,15 +320,15 @@ class DashboardScreen(MDScreen):
                 self.package_type = "Sin paquete"
                 self.package_days_remaining = ""
                 self.package_color = [0.541, 0.541, 0.604, 1]  # text_secondary
-            
+
             # Referral credits
             self.referral_credits = data.get("referral_credits", 0)
-            
+
             # Update UI state
             self.is_loading = False
-            
+
             logger.debug("Dashboard updated successfully")
-            
+
         except Exception as e:
             logger.error(f"Error updating dashboard: {e}")
             self._handle_load_error(e)
@@ -344,18 +346,15 @@ class DashboardScreen(MDScreen):
         """Handle dashboard load error."""
         self.is_loading = False
         logger.error(f"Dashboard load error: {error}")
-        
+
         # Show error snackbar
-        Snackbar(
-            text="Error cargando datos. Verifica tu conexión.",
-            duration=3
-        ).open()
+        Snackbar(text="Error cargando datos. Verifica tu conexión.", duration=3).open()
 
     def on_refresh(self):
         """Handle pull-to-refresh action."""
         logger.info("Dashboard refresh requested")
         self.load_dashboard_data(force_refresh=True)
-        
+
         # Reset pull-to-refresh layout
         if self.refresh_layout:
             self.refresh_layout.done()
@@ -375,15 +374,15 @@ class DashboardScreen(MDScreen):
                         text="CANCELAR",
                         theme_text_color="Custom",
                         text_color=[0, 0.941, 1, 1],
-                        on_release=self.dismiss_dialog
+                        on_release=self.dismiss_dialog,
                     ),
                     MDFlatButton(
                         text="SALIR",
                         theme_text_color="Custom",
                         text_color=[1, 0.267, 0.267, 1],
-                        on_release=self.confirm_logout
-                    )
-                ]
+                        on_release=self.confirm_logout,
+                    ),
+                ],
             )
         self.dialog.open()
 
@@ -395,16 +394,16 @@ class DashboardScreen(MDScreen):
         """Confirm and perform logout."""
         self.dialog.dismiss()
         self.dialog = None
-        
+
         # Perform logout
         import asyncio
         from concurrent.futures import ThreadPoolExecutor
-        
+
         def run_logout():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             return loop.run_until_complete(self.logout_async())
-        
+
         with ThreadPoolExecutor() as executor:
             executor.submit(run_logout)
 
@@ -465,8 +464,9 @@ class DashboardScreen(MDScreen):
         if self.manager:
             # Pass key_id to detail screen
             from kivy.app import App
+
             app = App.get_running_app()
-            if hasattr(app, 'current_key_id'):
+            if hasattr(app, "current_key_id"):
                 app.current_key_id = key_id
             self.manager.current = "key_detail"
 
@@ -474,7 +474,7 @@ class DashboardScreen(MDScreen):
         """Handle hamburger menu button press."""
         logger.info("Opening navigation drawer")
         # Open navigation drawer if available
-        if self.ids.get('nav_drawer'):
+        if self.ids.get("nav_drawer"):
             self.ids.nav_drawer.set_state("open")
         else:
             # Fallback: show menu dialog
@@ -490,33 +490,28 @@ class DashboardScreen(MDScreen):
             ("🔧 Soporte", lambda x: self._navigate_and_close("tickets")),
             ("⚙️ Configuración", lambda x: self._navigate_and_close("settings")),
         ]
-        
+
         buttons = [
             MDFlatButton(
                 text=item[0],
                 theme_text_color="Custom",
                 text_color=[0, 0.941, 1, 1],
-                on_release=item[1]
+                on_release=item[1],
             )
             for item in menu_items
         ]
-        
+
         buttons.append(
             MDFlatButton(
                 text="CANCELAR",
                 theme_text_color="Custom",
                 text_color=[0.878, 0.878, 0.878, 1],
-                on_release=self.dismiss_dialog
+                on_release=self.dismiss_dialog,
             )
         )
-        
+
         if not self.dialog:
-            self.dialog = MDDialog(
-                title="Menú",
-                type="simple",
-                items=[],
-                buttons=buttons
-            )
+            self.dialog = MDDialog(title="Menú", type="simple", items=[], buttons=buttons)
         self.dialog.open()
 
     def _navigate_and_close(self, screen_name: str):

@@ -10,21 +10,15 @@ from telegram.ext import ContextTypes
 
 from application.services.consumption_invoice_service import PaymentMethod
 from domain.entities.consumption_invoice import ConsumptionInvoice
-from telegram_bot.features.consumption.keyboards_consumption import (
-    ConsumptionKeyboards,
-)
-from telegram_bot.features.consumption.messages_consumption import (
-    ConsumptionMessages,
-)
+from telegram_bot.features.consumption.keyboards_consumption import ConsumptionKeyboards
+from telegram_bot.features.consumption.messages_consumption import ConsumptionMessages
 from utils.logger import logger
 
 
 class InvoiceMixin:
     """Mixin para facturación y pagos de consumo."""
 
-    async def start_invoice_generation(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def start_invoice_generation(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Inicia la generación de factura (selección de método de pago)."""
         query = update.callback_query
         if not query:
@@ -51,9 +45,7 @@ class InvoiceMixin:
                 )
                 return
 
-            summary = await self.billing_service.get_current_consumption(
-                user_id, user_id
-            )
+            summary = await self.billing_service.get_current_consumption(user_id, user_id)
 
             if not summary:
                 await query.edit_message_text(
@@ -83,24 +75,18 @@ class InvoiceMixin:
             logger.error(f"Error en start_invoice_generation: {e}")
             await self._send_error_message(update, context)
 
-    async def generate_invoice_stars(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def generate_invoice_stars(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Genera factura para pago con Telegram Stars."""
         await self._generate_invoice(update, context, PaymentMethod.STARS)
 
-    async def generate_invoice_crypto(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def generate_invoice_crypto(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Genera factura para pago con Crypto."""
         query = update.callback_query
         if query:
             await query.answer("Preparando wallet de pago...")
 
         from application.services.common.container import get_service
-        from application.services.wallet_management_service import (
-            WalletManagementService,
-        )
+        from application.services.wallet_management_service import WalletManagementService
 
         try:
             wallet_service = get_service(WalletManagementService)
@@ -132,9 +118,7 @@ class InvoiceMixin:
                     )
                 return
 
-            await self._generate_invoice(
-                update, context, PaymentMethod.CRYPTO, wallet.address
-            )
+            await self._generate_invoice(update, context, PaymentMethod.CRYPTO, wallet.address)
 
         except Exception as e:
             logger.error(f"Error obteniendo wallet: {e}")
@@ -180,17 +164,13 @@ class InvoiceMixin:
                 return
 
             invoice = result.invoice
-            summary = await self.billing_service.get_current_consumption(
-                user_id, user_id
-            )
+            summary = await self.billing_service.get_current_consumption(user_id, user_id)
 
             if payment_method == PaymentMethod.STARS:
                 await self._send_stars_invoice(update, context, invoice, summary)
             else:
                 message = ConsumptionMessages.Invoice.CRYPTO_PAYMENT.format(
-                    consumption_formatted=(
-                        summary.formatted_consumption if summary else "N/A"
-                    ),
+                    consumption_formatted=(summary.formatted_consumption if summary else "N/A"),
                     cost_formatted=invoice.get_formatted_amount(),
                     wallet_address=wallet_address,
                     time_remaining=invoice.time_remaining_formatted,

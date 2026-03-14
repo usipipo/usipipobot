@@ -324,8 +324,8 @@ CREATE TABLE android_notifications (
     read_at     TIMESTAMPTZ
 );
 
-CREATE INDEX idx_android_notif_user_unread 
-ON android_notifications(telegram_id, is_read) 
+CREATE INDEX idx_android_notif_user_unread
+ON android_notifications(telegram_id, is_read)
 WHERE is_read = FALSE;
 ```
 

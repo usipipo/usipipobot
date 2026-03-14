@@ -16,7 +16,7 @@ from utils.logger import logger
 class MiniAppNotificationService:
     """
     Service for sending notifications from Mini App to Telegram users.
-    
+
     This service bridges the Mini App web interface with the Telegram Bot,
     allowing the bot to send payment invoices and notifications to users.
     """
@@ -58,15 +58,11 @@ class MiniAppNotificationService:
                 prices=[LabeledPrice(title, amount)],
             )
 
-            logger.info(
-                f"⭐ Stars invoice sent to user {user_id}: {title} ({amount} XTR)"
-            )
+            logger.info(f"⭐ Stars invoice sent to user {user_id}: {title} ({amount} XTR)")
             return True
 
         except Exception as e:
-            logger.error(
-                f"Error sending stars invoice to user {user_id}: {e}", exc_info=True
-            )
+            logger.error(f"Error sending stars invoice to user {user_id}: {e}", exc_info=True)
             return False
 
     async def send_crypto_payment_notification(
@@ -235,7 +231,7 @@ _notification_service: Optional[MiniAppNotificationService] = None
 def get_notification_service() -> Optional[MiniAppNotificationService]:
     """
     Get the notification service instance.
-    
+
     Returns:
         MiniAppNotificationService instance or None if not initialized
     """
@@ -245,10 +241,10 @@ def get_notification_service() -> Optional[MiniAppNotificationService]:
 def init_notification_service(bot: Bot) -> MiniAppNotificationService:
     """
     Initialize the notification service with a bot instance.
-    
+
     Args:
         bot: Telegram Bot instance
-    
+
     Returns:
         MiniAppNotificationService instance
     """

@@ -11,12 +11,8 @@ from telegram_bot.features.consumption.handlers_consumption import (
 from telegram_bot.features.consumption.handlers_invoice import InvoiceMixin
 from telegram_bot.features.consumption.handlers_menu import MenuMixin
 from telegram_bot.features.consumption.handlers_status import StatusMixin
-from telegram_bot.features.consumption.keyboards_consumption import (
-    ConsumptionKeyboards,
-)
-from telegram_bot.features.consumption.messages_consumption import (
-    ConsumptionMessages,
-)
+from telegram_bot.features.consumption.keyboards_consumption import ConsumptionKeyboards
+from telegram_bot.features.consumption.messages_consumption import ConsumptionMessages
 
 __all__ = [
     "ConsumptionHandler",

@@ -174,17 +174,17 @@ class uSipipoApp(MDApp):
     def build(self):
         """Build the application."""
         self.title = "uSipipo VPN"
-        
+
         # Configurar colores globales desde config.py (NO duplicar)
         for color_name, color_value in COLORS.items():
             self.theme_cls.colors[color_name] = color_value
 
         # Crear screen manager
         self.screen_manager = MDScreenManager()
-        
+
         # Cargar archivos KV
         self._load_kv_files()
-        
+
         # Registrar pantallas (se irán agregando en tareas futuras)
         # self.screen_manager.add_widget(SplashScreen(name="splash"))
         # self.screen_manager.add_widget(LoginScreen(name="login"))
@@ -1758,4 +1758,3 @@ Antes de ejecutar este plan, verificar:
 - [ ] Las pantallas usan `ak.start()` para corrutinas async
 - [ ] Los dialogs tienen botón de cierre
 - [ ] El workflow de GitHub Actions tiene dependencias de sistema completas
-

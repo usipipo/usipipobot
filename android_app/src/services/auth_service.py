@@ -1,16 +1,17 @@
 """
 Authentication service for OTP and JWT management.
 """
+
 import time
+from typing import Any, Dict, Optional, Tuple
+
 import jwt
 from jwt.exceptions import PyJWTError
 from loguru import logger
-from typing import Optional, Dict, Any, Tuple
-
+from src.config import JWT_EXPIRY_BUFFER_SECONDS, OTP_LENGTH
 from src.services.api_client import ApiClient
-from src.storage.secure_storage import SecureStorage
 from src.storage.preferences_storage import PreferencesStorage
-from src.config import OTP_LENGTH, JWT_EXPIRY_BUFFER_SECONDS
+from src.storage.secure_storage import SecureStorage
 
 
 class AuthService:
@@ -47,19 +48,12 @@ class AuthService:
         """
         logger.info(f"Solicitando OTP para {identifier}")
 
-        response = await self.api_client.post(
-            "/auth/request-otp",
-            data={"identifier": identifier}
-        )
+        response = await self.api_client.post("/auth/request-otp", data={"identifier": identifier})
 
         logger.info("OTP solicitado exitosamente")
         return response
 
-    async def verify_otp(
-        self,
-        identifier: str,
-        otp_code: str
-    ) -> Dict[str, Any]:
+    async def verify_otp(self, identifier: str, otp_code: str) -> Dict[str, Any]:
         """
         Verify OTP code and receive JWT token.
 
@@ -73,21 +67,14 @@ class AuthService:
         logger.info(f"Verificando OTP para {identifier}")
 
         response = await self.api_client.post(
-            "/auth/verify-otp",
-            data={
-                "identifier": identifier,
-                "otp": otp_code
-            }
+            "/auth/verify-otp", data={"identifier": identifier, "otp": otp_code}
         )
 
         # Guardar JWT si la verificación es exitosa
         if "access_token" in response:
             telegram_id = str(response["user"]["telegram_id"])
             self.current_telegram_id = telegram_id
-            SecureStorage.save_jwt(
-                telegram_id,
-                response["access_token"]
-            )
+            SecureStorage.save_jwt(telegram_id, response["access_token"])
             logger.info(f"JWT guardado para usuario {telegram_id}")
 
         return response
@@ -99,11 +86,7 @@ class AuthService:
             # Llamar al endpoint de logout
             try:
                 self.api_client.telegram_id = telegram_id
-                await self.api_client.post(
-                    "/auth/logout",
-                    data={},
-                    use_auth=True
-                )
+                await self.api_client.post("/auth/logout", data={}, use_auth=True)
             except Exception as e:
                 logger.warning(f"Error en logout del backend: {e}")
 

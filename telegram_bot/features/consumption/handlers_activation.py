@@ -8,21 +8,15 @@ Version: 1.0.0 - Refactored from handlers_consumption.py
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram_bot.features.consumption.keyboards_consumption import (
-    ConsumptionKeyboards,
-)
-from telegram_bot.features.consumption.messages_consumption import (
-    ConsumptionMessages,
-)
+from telegram_bot.features.consumption.keyboards_consumption import ConsumptionKeyboards
+from telegram_bot.features.consumption.messages_consumption import ConsumptionMessages
 from utils.logger import logger
 
 
 class ActivationMixin:
     """Mixin para activación del modo consumo."""
 
-    async def start_activation(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def start_activation(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Inicia el flujo de activación del modo consumo."""
         query = update.callback_query
         if not query:
@@ -35,8 +29,8 @@ class ActivationMixin:
         user_id = update.effective_user.id
 
         try:
-            can_activate, error_msg = (
-                await self.billing_service.can_activate_consumption(user_id, user_id)
+            can_activate, error_msg = await self.billing_service.can_activate_consumption(
+                user_id, user_id
             )
 
             if not can_activate:
@@ -70,9 +64,7 @@ class ActivationMixin:
             logger.error(f"Error en start_activation: {e}")
             await self._send_error_message(update, context)
 
-    async def confirm_activation(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def confirm_activation(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Confirma la activación del modo consumo."""
         query = update.callback_query
         if not query:
@@ -85,9 +77,7 @@ class ActivationMixin:
         user_id = update.effective_user.id
 
         try:
-            result = await self.billing_service.activate_consumption_mode(
-                user_id, user_id
-            )
+            result = await self.billing_service.activate_consumption_mode(user_id, user_id)
 
             if result.success:
                 await query.edit_message_text(

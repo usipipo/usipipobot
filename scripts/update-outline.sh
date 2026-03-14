@@ -28,18 +28,18 @@ log "Contenedor corriendo con imagen ID: $RUNNING_IMAGE_ID"
 # Si el contenedor no existe o está usando imagen antigua, actualizar
 if [ "$LOCAL_IMAGE_ID" != "$RUNNING_IMAGE_ID" ]; then
     log "Nueva versión disponible. Actualizando contenedor..."
-    
+
     # Detener y eliminar contenedor actual
     log "Deteniendo contenedor $CONTAINER_NAME..."
     docker stop "$CONTAINER_NAME" >> "$LOG_FILE" 2>&1
     docker rm "$CONTAINER_NAME" >> "$LOG_FILE" 2>&1
-    
+
     # Eliminar imagen antigua para liberar espacio
     if [ -n "$RUNNING_IMAGE_ID" ]; then
         log "Eliminando imagen antigua..."
         docker rmi "$(docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep "$RUNNING_IMAGE_ID" | awk '{print $1}')" >> "$LOG_FILE" 2>&1 || true
     fi
-    
+
     # Crear nuevo contenedor con la misma configuración
     log "Creando nuevo contenedor..."
     docker run -d \
@@ -48,7 +48,7 @@ if [ "$LOCAL_IMAGE_ID" != "$RUNNING_IMAGE_ID" ]; then
         --network host \
         -v /opt/outline/persisted-state:/opt/outline/persisted-state \
         "$IMAGE" >> "$LOG_FILE" 2>&1
-    
+
     if [ $? -eq 0 ]; then
         log "✅ Contenedor actualizado exitosamente"
         log "Nuevo contenedor ID: $(docker ps -q -f name=$CONTAINER_NAME)"

@@ -3,15 +3,17 @@ Tests de integración para endpoints /api/v1/auth
 
 Requiere: Redis corriendo, DB de test configurada
 """
+
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from httpx import AsyncClient, ASGITransport
-from unittest.mock import AsyncMock, patch, MagicMock
-from datetime import datetime, timezone, timedelta
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 
 from config import settings
 from infrastructure.api.android.auth import router
 from infrastructure.api.android.deps import get_current_user
-from fastapi import FastAPI
 
 
 def create_test_app():
@@ -27,26 +29,24 @@ async def fake_get_current_user():
         "sub": "123456789",
         "client": "android_apk",
         "jti": "test-jti-123",
-        "exp": int((datetime.now(timezone.utc) + timedelta(hours=24)).timestamp())
+        "exp": int((datetime.now(timezone.utc) + timedelta(hours=24)).timestamp()),
     }
 
 
 async def fake_get_current_user_revoked():
     """Fake get_current_user that raises token_revoked."""
     from fastapi import HTTPException
+
     raise HTTPException(
         status_code=401,
-        detail={
-            "error": "token_revoked",
-            "message": "Sesión cerrada. Inicia sesión nuevamente."
-        }
+        detail={"error": "token_revoked", "message": "Sesión cerrada. Inicia sesión nuevamente."},
     )
 
 
 @pytest.fixture
 def mock_redis():
     """Fixture: Mock Redis connection."""
-    with patch('infrastructure.api.android.auth.redis') as mock:
+    with patch("infrastructure.api.android.auth.redis") as mock:
         redis_instance = MagicMock()
         redis_instance.__aenter__ = AsyncMock(return_value=redis_instance)
         redis_instance.__aexit__ = AsyncMock(return_value=None)
@@ -64,7 +64,7 @@ def mock_redis():
 @pytest.fixture
 def mock_db_session():
     """Fixture: Mock database session."""
-    with patch('infrastructure.api.android.auth.get_session_context') as mock:
+    with patch("infrastructure.api.android.auth.get_session_context") as mock:
         session = AsyncMock()
         session.__aenter__ = AsyncMock(return_value=session)
         session.__aexit__ = AsyncMock(return_value=None)
@@ -87,7 +87,9 @@ class TestRequestOTP:
         test_app = create_test_app()
         async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
             # Act
-            response = await ac.post("/api/v1/auth/request-otp", json={"identifier": "@nonexistent"})
+            response = await ac.post(
+                "/api/v1/auth/request-otp", json={"identifier": "@nonexistent"}
+            )
 
             # Assert
             assert response.status_code == 404
@@ -99,9 +101,7 @@ class TestRequestOTP:
         # Arrange: Mock DB returns inactive user
         mock_result = MagicMock()
         mock_result.first.return_value = MagicMock(
-            telegram_id=123,
-            username="testuser",
-            status="suspended"
+            telegram_id=123, username="testuser", status="suspended"
         )
         mock_db_session.execute.return_value = mock_result
 
@@ -155,10 +155,7 @@ class TestVerifyOTP:
         # Arrange: Mock DB returns active user
         mock_result = MagicMock()
         mock_result.first.return_value = MagicMock(
-            telegram_id=123,
-            username="testuser",
-            full_name="Test User",
-            status="active"
+            telegram_id=123, username="testuser", full_name="Test User", status="active"
         )
         mock_db_session.execute.return_value = mock_result
 
@@ -172,8 +169,7 @@ class TestVerifyOTP:
         async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
             # Act
             response = await ac.post(
-                "/api/v1/auth/verify-otp",
-                json={"identifier": "@testuser", "otp": "123456"}
+                "/api/v1/auth/verify-otp", json={"identifier": "@testuser", "otp": "123456"}
             )
 
             # Assert
@@ -187,10 +183,7 @@ class TestVerifyOTP:
         # Arrange: Mock DB returns active user
         mock_result = MagicMock()
         mock_result.first.return_value = MagicMock(
-            telegram_id=123,
-            username="testuser",
-            full_name="Test User",
-            status="active"
+            telegram_id=123, username="testuser", full_name="Test User", status="active"
         )
         mock_db_session.execute.return_value = mock_result
 
@@ -202,8 +195,7 @@ class TestVerifyOTP:
         async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
             # Act
             response = await ac.post(
-                "/api/v1/auth/verify-otp",
-                json={"identifier": "@testuser", "otp": "123456"}
+                "/api/v1/auth/verify-otp", json={"identifier": "@testuser", "otp": "123456"}
             )
 
             # Assert
@@ -216,10 +208,7 @@ class TestVerifyOTP:
         # Arrange: Mock DB returns active user
         mock_result = MagicMock()
         mock_result.first.return_value = MagicMock(
-            telegram_id=123,
-            username="testuser",
-            full_name="Test User",
-            status="active"
+            telegram_id=123, username="testuser", full_name="Test User", status="active"
         )
         mock_db_session.execute.return_value = mock_result
 
@@ -232,8 +221,7 @@ class TestVerifyOTP:
         async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
             # Act
             response = await ac.post(
-                "/api/v1/auth/verify-otp",
-                json={"identifier": "@testuser", "otp": "123456"}
+                "/api/v1/auth/verify-otp", json={"identifier": "@testuser", "otp": "123456"}
             )
 
             # Assert
@@ -246,10 +234,7 @@ class TestVerifyOTP:
         # Arrange: Mock DB returns active user
         mock_result = MagicMock()
         mock_result.first.return_value = MagicMock(
-            telegram_id=123,
-            username="testuser",
-            full_name="Test User",
-            status="active"
+            telegram_id=123, username="testuser", full_name="Test User", status="active"
         )
         mock_db_session.execute.return_value = mock_result
 
@@ -262,8 +247,7 @@ class TestVerifyOTP:
         async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
             # Act
             response = await ac.post(
-                "/api/v1/auth/verify-otp",
-                json={"identifier": "@testuser", "otp": "123456"}
+                "/api/v1/auth/verify-otp", json={"identifier": "@testuser", "otp": "123456"}
             )
 
             # Assert
@@ -343,7 +327,7 @@ class TestMe:
             full_name="Test User",
             status="active",
             has_pending_debt=False,
-            consumption_mode_enabled=False
+            consumption_mode_enabled=False,
         )
         mock_db_session.execute.return_value = mock_result
 

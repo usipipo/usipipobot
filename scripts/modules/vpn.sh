@@ -197,7 +197,7 @@ install_outline() {
         local apiUrl certSha
         apiUrl=$(run_sudo awk -F'apiUrl:' '/apiUrl/{print substr($0, index($0,$2))}' "$access_file" | tr -d '\r' | sed -n '1p' || true)
         certSha=$(run_sudo awk -F'certSha256:' '/certSha256/{print substr($0, index($0,$2))}' "$access_file" | tr -d '\r' | sed -n '1p' || true)
-        
+
         if [ -z "$apiUrl" ]; then
             apiUrl=$(run_sudo grep -E "^apiUrl:" "$access_file" 2>/dev/null | sed 's/^apiUrl://' | tr -d '[:space:]' || true)
         fi
@@ -273,7 +273,7 @@ install_wireguard_extract_only() {
     if ! run_sudo test -f "$params_file"; then
         return 1
     fi
-    
+
     local WG_SERVER_WG_NIC WG_SERVER_WG_IPV4 WG_SERVER_WG_IPV6 WG_SERVER_PORT WG_SERVER_PRIV_KEY WG_SERVER_PUB_KEY CLIENT_DNS_1 CLIENT_DNS_2 ALLOWED_IPS
     WG_SERVER_WG_NIC=$(run_sudo grep '^SERVER_WG_NIC=' "$params_file" | cut -d= -f2- | tr -d '"' || true)
     WG_SERVER_WG_IPV4=$(run_sudo grep '^SERVER_WG_IPV4=' "$params_file" | cut -d= -f2- | tr -d '"' || true)
@@ -284,7 +284,7 @@ install_wireguard_extract_only() {
     CLIENT_DNS_1=$(run_sudo grep '^CLIENT_DNS_1=' "$params_file" | cut -d= -f2- | tr -d '"' || true)
     CLIENT_DNS_2=$(run_sudo grep '^CLIENT_DNS_2=' "$params_file" | cut -d= -f2- | tr -d '"' || true)
     ALLOWED_IPS=$(run_sudo grep '^ALLOWED_IPS=' "$params_file" | cut -d= -f2- | tr -d '"' || true)
-    
+
     if [[ -n "$WG_SERVER_PUB_KEY" && ${#WG_SERVER_PUB_KEY} -lt 44 ]]; then
         log_warn "Clave pública extraída parece truncada (${#WG_SERVER_PUB_KEY} chars). Intentando obtener del sistema..."
         WG_SERVER_PUB_KEY=$(run_sudo wg show "$WG_SERVER_WG_NIC" public-key 2>/dev/null || true)
@@ -455,14 +455,14 @@ uninstall_wireguard() {
 # Bot permissions for WireGuard
 # =============================================================================
 configure_bot_permissions() {
-    log "🛡️ Configurando permisos de WireGuard para el bot" 
-    
+    log "🛡️ Configurando permisos de WireGuard para el bot"
+
     local BOT_USER=${SUDO_USER:-$(whoami)}
-    local WG_PATH="/etc/wireguard" 
-    local WG_CONF="${WG_PATH}/wg0.conf" 
+    local WG_PATH="/etc/wireguard"
+    local WG_CONF="${WG_PATH}/wg0.conf"
 
     log "Usuario del bot identificado: ${BOT_USER}"
-    
+
     if [ "${BOT_USER}" = "root" ]; then
         log_warn "El bot se está ejecutando como 'root'. NO se modificará el sudoers."
     else
@@ -478,19 +478,19 @@ ${BOT_USER} ALL=(root) NOPASSWD: /usr/bin/wg set *
 ${BOT_USER} ALL=(root) NOPASSWD: /usr/bin/wg show *
 EOF
         run_sudo chmod 0440 "$SUDOERS_FILE"
-        log_ok "Reglas de NOPASSWD añadidas a ${SUDOERS_FILE}." 
+        log_ok "Reglas de NOPASSWD añadidas a ${SUDOERS_FILE}."
     fi
 
     log "Asegurando el directorio de clientes: ${WG_PATH}/clients"
     run_sudo mkdir -p "${WG_PATH}/clients"
     run_sudo chown -R "${BOT_USER}:${BOT_USER}" "${WG_PATH}/clients"
-    log_ok "Propiedad del directorio clients ajustada." 
-    
+    log_ok "Propiedad del directorio clients ajustada."
+
     if [ -f "${WG_CONF}" ]; then
         log "Asegurando permisos para el archivo de configuración principal: ${WG_CONF}"
         run_sudo chown "${BOT_USER}:${BOT_USER}" "${WG_CONF}"
         run_sudo chmod 600 "${WG_CONF}"
-        log_ok "Permisos de ${WG_CONF} ajustados." 
+        log_ok "Permisos de ${WG_CONF} ajustados."
     else
         log_warn "Archivo ${WG_CONF} no encontrado. Asumiendo que se creará luego."
     fi
@@ -503,18 +503,18 @@ EOF
 # =============================================================================
 fix_wireguard_mtu() {
     log "🔧 Aplicando MTU=1420 a configuración de WireGuard..."
-    
+
     local wg_conf="/etc/wireguard/wg0.conf"
-    
+
     if run_sudo test -f "$wg_conf"; then
         if ! run_sudo grep -q "^MTU" "$wg_conf"; then
             log "Añadiendo MTU=1420 a ${wg_conf}..."
             run_sudo sed -i '/^PrivateKey/a MTU = 1420' "$wg_conf"
-            
+
             log_ok "MTU añadido. Reiniciando WireGuard..."
             run_sudo wg-quick down wg0 2>/dev/null || true
             run_sudo wg-quick up wg0
-            
+
             log_ok "WireGuard reiniciado con MTU correcto"
         else
             log_ok "MTU ya está configurado en ${wg_conf}"

@@ -1,13 +1,13 @@
 """
 Login screen for uSipipo VPN Android APK.
 """
-from kivy.properties import StringProperty, BooleanProperty
-from kivymd.uix.screen import MDScreen
-from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton
-from loguru import logger
-import asynckivy as ak
 
+import asynckivy as ak
+from kivy.properties import BooleanProperty, StringProperty
+from kivymd.uix.button import MDFlatButton
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.screen import MDScreen
+from loguru import logger
 from src.services.auth_service import AuthService
 
 
@@ -37,16 +37,16 @@ class LoginScreen(MDScreen):
     def on_login_pressed(self):
         """Handle login button press."""
         identifier = self.ids.identifier_field.text.strip()
-        
+
         if not identifier:
             self.show_error("Por favor ingresa tu usuario de Telegram")
             return
-        
+
         # Validate format (@username or telegram_id)
         if not self.validate_identifier(identifier):
             self.show_error("Formato inválido. Usa @usuario o ID numérico")
             return
-        
+
         # Request OTP
         self.is_loading = True
         ak.start(self.request_otp_async(identifier))
@@ -55,7 +55,7 @@ class LoginScreen(MDScreen):
         """Request OTP asynchronously."""
         try:
             response = await self.auth_service.request_otp(identifier)
-            
+
             if response.get("success"):
                 # Navigate to OTP screen
                 otp_screen = self.manager.get_screen("otp")
@@ -75,11 +75,11 @@ class LoginScreen(MDScreen):
         # Allow @username format
         if identifier.startswith("@"):
             return len(identifier) > 1
-        
+
         # Allow numeric telegram_id
         if identifier.isdigit():
             return len(identifier) >= 5
-        
+
         return False
 
     def show_error(self, message: str):
@@ -88,12 +88,7 @@ class LoginScreen(MDScreen):
             self.dialog = MDDialog(
                 title="Error",
                 text=message,
-                buttons=[
-                    MDFlatButton(
-                        text="OK",
-                        on_release=self.dismiss_dialog
-                    )
-                ]
+                buttons=[MDFlatButton(text="OK", on_release=self.dismiss_dialog)],
             )
         else:
             self.dialog.text = message
@@ -116,11 +111,6 @@ class LoginScreen(MDScreen):
         dialog = MDDialog(
             title="Información",
             text=message,
-            buttons=[
-                MDFlatButton(
-                    text="OK",
-                    on_release=lambda x: dialog.dismiss()
-                )
-            ]
+            buttons=[MDFlatButton(text="OK", on_release=lambda x: dialog.dismiss())],
         )
         dialog.open()

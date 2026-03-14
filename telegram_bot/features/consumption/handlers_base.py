@@ -8,18 +8,10 @@ Version: 1.0.0 - Refactored from handlers_consumption.py
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from application.services.consumption_billing_service import (
-    ConsumptionBillingService,
-)
-from application.services.consumption_invoice_service import (
-    ConsumptionInvoiceService,
-)
-from telegram_bot.features.consumption.keyboards_consumption import (
-    ConsumptionKeyboards,
-)
-from telegram_bot.features.consumption.messages_consumption import (
-    ConsumptionMessages,
-)
+from application.services.consumption_billing_service import ConsumptionBillingService
+from application.services.consumption_invoice_service import ConsumptionInvoiceService
+from telegram_bot.features.consumption.keyboards_consumption import ConsumptionKeyboards
+from telegram_bot.features.consumption.messages_consumption import ConsumptionMessages
 from utils.logger import logger
 from utils.telegram_utils import TelegramUtils
 
@@ -36,9 +28,7 @@ class ConsumptionBaseHandler:
         self.invoice_service = invoice_service
         logger.info("⚡ ConsumptionHandler inicializado")
 
-    async def _send_error_message(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def _send_error_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Envía mensaje de error genérico."""
         keyboard = ConsumptionKeyboards.back_to_consumption_menu()
 

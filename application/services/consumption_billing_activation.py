@@ -12,9 +12,7 @@ from decimal import Decimal
 from typing import Optional, Tuple
 
 from domain.entities.consumption_billing import BillingStatus, ConsumptionBilling
-from domain.interfaces.iconsumption_billing_repository import (
-    IConsumptionBillingRepository,
-)
+from domain.interfaces.iconsumption_billing_repository import IConsumptionBillingRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
 
@@ -56,17 +54,14 @@ class ConsumptionActivationService:
 
         if user.has_pending_debt:
             return False, (
-                "Tienes una deuda pendiente. "
-                "Debes pagarla antes de activar el modo consumo."
+                "Tienes una deuda pendiente. " "Debes pagarla antes de activar el modo consumo."
             )
 
         if user.consumption_mode_enabled:
             return False, "Ya tienes el modo consumo activo"
 
         # Verificar si ya tiene un ciclo activo
-        existing_billing = await self.billing_repo.get_active_by_user(
-            user_id, current_user_id
-        )
+        existing_billing = await self.billing_repo.get_active_by_user(user_id, current_user_id)
         if existing_billing:
             return False, "Ya tienes un ciclo de consumo activo"
 
@@ -89,9 +84,7 @@ class ConsumptionActivationService:
 
         try:
             # Validar que puede activar
-            can_activate, error_msg = await self.can_activate_consumption(
-                user_id, current_user_id
-            )
+            can_activate, error_msg = await self.can_activate_consumption(user_id, current_user_id)
             if not can_activate:
                 logger.warning(f"⚠️ No se puede activar modo consumo: {error_msg}")
                 return ActivationResult(success=False, error_message=error_msg)
@@ -122,8 +115,7 @@ class ConsumptionActivationService:
                 await self.user_repo.save(user, current_user_id)
 
             logger.info(
-                f"✅ Modo consumo activado - user_id={user_id}, "
-                f"billing_id={saved_billing.id}"
+                f"✅ Modo consumo activado - user_id={user_id}, " f"billing_id={saved_billing.id}"
             )
 
             return ActivationResult(success=True, billing_id=saved_billing.id)
@@ -181,17 +173,13 @@ class ConsumptionActivationService:
 
         try:
             # Validar que puede cancelar
-            can_cancel, error_msg = await self.can_cancel_consumption(
-                user_id, current_user_id
-            )
+            can_cancel, error_msg = await self.can_cancel_consumption(user_id, current_user_id)
             if not can_cancel:
                 logger.warning(f"⚠️ No se puede cancelar modo consumo: {error_msg}")
                 return CancellationResult(success=False, error_message=error_msg)
 
             # Obtener ciclo activo
-            billing = await self.billing_repo.get_active_by_user(
-                user_id, current_user_id
-            )
+            billing = await self.billing_repo.get_active_by_user(user_id, current_user_id)
             if not billing or billing.id is None:
                 return CancellationResult(
                     success=False,
@@ -286,8 +274,7 @@ class ConsumptionActivationService:
 
                     if not block_result["success"]:
                         logger.error(
-                            f"Failed to block keys for user {user_id}: "
-                            f"{block_result['errors']}"
+                            f"Failed to block keys for user {user_id}: " f"{block_result['errors']}"
                         )
                 else:
                     logger.error("VPN integration service not available")

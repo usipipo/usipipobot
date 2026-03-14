@@ -1,20 +1,20 @@
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
-from config import settings
-import redis.asyncio as redis
-from sqlalchemy import text
-from infrastructure.persistence.database import get_session_context
-from loguru import logger
 from datetime import datetime, timezone
 from typing import Optional
+
+import jwt
+import redis.asyncio as redis
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from loguru import logger
+from sqlalchemy import text
+
+from config import settings
+from infrastructure.persistence.database import get_session_context
 
 security = HTTPBearer()
 
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-) -> dict:
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     """
     Validar JWT token y extraer información del usuario.
 
@@ -32,7 +32,7 @@ async def get_current_user(
             token,
             settings.SECRET_KEY,
             algorithms=["HS256"],
-            options={"require": ["exp", "sub", "jti"]}
+            options={"require": ["exp", "sub", "jti"]},
         )
 
         # Verificar que es un token de Android
@@ -40,10 +40,7 @@ async def get_current_user(
             logger.warning(f"Token con client inválido: {payload.get('client')}")
             raise HTTPException(
                 status_code=401,
-                detail={
-                    "error": "invalid_client",
-                    "message": "Token no válido para este endpoint"
-                }
+                detail={"error": "invalid_client", "message": "Token no válido para este endpoint"},
             )
 
         # Verificar que no está en blacklist
@@ -56,8 +53,8 @@ async def get_current_user(
                     status_code=401,
                     detail={
                         "error": "token_revoked",
-                        "message": "Sesión cerrada. Inicia sesión nuevamente."
-                    }
+                        "message": "Sesión cerrada. Inicia sesión nuevamente.",
+                    },
                 )
 
         # Verificar que el usuario existe y está activo
@@ -66,7 +63,7 @@ async def get_current_user(
         async with get_session_context() as session:
             result = await session.execute(
                 text("SELECT status FROM users WHERE telegram_id = :telegram_id"),
-                {"telegram_id": int(telegram_id)}
+                {"telegram_id": int(telegram_id)},
             )
             user = result.first()
 
@@ -74,20 +71,14 @@ async def get_current_user(
                 logger.warning(f"Usuario {telegram_id} no existe en DB")
                 raise HTTPException(
                     status_code=404,
-                    detail={
-                        "error": "user_not_found",
-                        "message": "Usuario no encontrado"
-                    }
+                    detail={"error": "user_not_found", "message": "Usuario no encontrado"},
                 )
 
             if user.status != "active":
                 logger.warning(f"Usuario {telegram_id} está inactivo")
                 raise HTTPException(
                     status_code=403,
-                    detail={
-                        "error": "user_inactive",
-                        "message": "Cuenta inactiva o suspendida"
-                    }
+                    detail={"error": "user_inactive", "message": "Cuenta inactiva o suspendida"},
                 )
 
         return payload
@@ -98,22 +89,19 @@ async def get_current_user(
             status_code=401,
             detail={
                 "error": "token_expired",
-                "message": "Sesión expirada. Inicia sesión nuevamente."
-            }
+                "message": "Sesión expirada. Inicia sesión nuevamente.",
+            },
         )
     except jwt.InvalidTokenError as e:
         logger.warning(f"Token inválido: {e}")
         raise HTTPException(
             status_code=401,
-            detail={
-                "error": "invalid_token",
-                "message": f"Token inválido: {str(e)}"
-            }
+            detail={"error": "invalid_token", "message": f"Token inválido: {str(e)}"},
         )
 
 
 async def get_current_user_optional(
-    credentials: HTTPAuthorizationCredentials = Depends(security)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> Optional[dict]:
     """
     Obtener usuario si hay token válido, None si no hay token o es inválido.

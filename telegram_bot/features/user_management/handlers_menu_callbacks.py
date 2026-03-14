@@ -14,9 +14,7 @@ from application.services.admin_service import AdminService
 class MenuCallbacksMixin:
     """Mixin para manejar callbacks del menú principal."""
 
-    async def main_menu_callback(
-        self, update: Update, _context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def main_menu_callback(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
         """
         Maneja los callbacks del menú principal.
         """
@@ -35,9 +33,7 @@ class MenuCallbacksMixin:
                 KeyManagementHandler,
             )
 
-            key_mgmt_handler = KeyManagementHandler(
-                self.vpn_service, self.billing_service
-            )
+            key_mgmt_handler = KeyManagementHandler(self.vpn_service, self.billing_service)
             await key_mgmt_handler.show_key_submenu(update, _context)
 
         elif callback_data == "create_key":
@@ -49,9 +45,7 @@ class MenuCallbacksMixin:
         elif callback_data == "buy_data" or callback_data == "operations_menu":
             from application.services.common.container import get_container
             from application.services.referral_service import ReferralService
-            from telegram_bot.features.operations.handlers_operations import (
-                OperationsHandler,
-            )
+            from telegram_bot.features.operations.handlers_operations import OperationsHandler
 
             container = get_container()
             referral_service = container.resolve(ReferralService)

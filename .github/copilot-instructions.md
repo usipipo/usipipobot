@@ -61,10 +61,10 @@ Use `Optional[T]`, `List[T]`, `Dict[K, V]` for collections.
 
 ```python
 async def create_key(
-    self, 
-    telegram_id: int, 
-    key_type: str, 
-    key_name: str, 
+    self,
+    telegram_id: int,
+    key_type: str,
+    key_name: str,
     current_user_id: int
 ) -> VpnKey: ...
 ```
@@ -106,7 +106,7 @@ class VpnKey:
     external_id: str
     data_limit_bytes: int
     bytes_used: int = 0
-    
+
     @property
     def is_active(self) -> bool:
         return self.status == KeyStatus.ACTIVE
@@ -120,7 +120,7 @@ from abc import ABC, abstractmethod
 class IKeyRepository(ABC):
     @abstractmethod
     async def save(self, key: VpnKey, current_user_id: int) -> VpnKey: ...
-    
+
     @abstractmethod
     async def get_by_id(self, key_id: str, current_user_id: int) -> Optional[VpnKey]: ...
 ```
@@ -158,7 +158,7 @@ vpn_service = get_service(VpnService)
 class PostgresKeyRepository(IKeyRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
-    
+
     async def save(self, key: VpnKey, current_user_id: int) -> VpnKey:
         try:
             model = KeyModel.from_entity(key)
@@ -175,7 +175,7 @@ class PostgresKeyRepository(IKeyRepository):
 class OutlineClient:
     def __init__(self, api_url: str):
         self.api_url = api_url
-    
+
     async def create_key(self, name: str) -> dict: ...
 ```
 
@@ -190,7 +190,7 @@ class Settings(BaseSettings):
     TELEGRAM_TOKEN: str = Field(..., min_length=30)
     DATABASE_URL: str = Field(...)
     SECRET_KEY: str = Field(..., min_length=32)
-    
+
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
@@ -215,19 +215,19 @@ class TestCreateKey:
             outline_client=mock_outline,
             wireguard_client=mock_wireguard,
         )
-    
+
     @pytest.mark.asyncio
     async def test_create_outline_key(self, service, mock_key_repo, mock_user_repo):
         mock_user_repo.get_by_id.return_value = User(telegram_id=123, role=UserRole.USER)
         mock_outline.create_key.return_value = {"id": "key_123", "access_url": "ss://..."}
-        
+
         result = await service.create_key(
             telegram_id=123,
             key_type="outline",
             key_name="my_key",
             current_user_id=123
         )
-        
+
         assert result is not None
         mock_key_repo.save.assert_called_once()
 ```

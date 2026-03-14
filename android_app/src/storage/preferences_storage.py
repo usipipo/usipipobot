@@ -2,10 +2,11 @@
 Preferences storage for non-sensitive app preferences.
 Uses JSON file for simple key-value storage.
 """
+
 import json
 import os
-from loguru import logger
 
+from loguru import logger
 from src.config import APP_DATA_DIR
 
 
