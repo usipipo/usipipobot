@@ -1,8 +1,11 @@
 """
 Authentication service for OTP and JWT management.
 """
+import time
+import jwt
+from jwt.exceptions import PyJWTError
 from loguru import logger
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 
 from src.services.api_client import ApiClient
 from src.storage.secure_storage import SecureStorage
@@ -120,9 +123,76 @@ class AuthService:
         if not token:
             return False
 
-        # TODO: Validar expiración del JWT decodificando el payload
-        # Por ahora, solo verificamos que existe el token
-        return True
+        # Validar expiración del JWT decodificando el payload
+        is_valid, _ = self._validate_jwt_expiry(token)
+        return is_valid
+
+    def _validate_jwt_expiry(self, token: str) -> Tuple[bool, Optional[str]]:
+        """
+        Validate JWT token expiry.
+
+        Args:
+            token: JWT token string
+
+        Returns:
+            Tuple of (is_valid, error_message)
+            - is_valid: True if token is valid and not expired
+            - error_message: None if valid, error description if invalid
+        """
+        try:
+            # Decode without verification (signature already verified by backend)
+            # We only care about expiry
+            decoded = jwt.decode(token, options={"verify_signature": False})
+            exp = decoded.get("exp")
+
+            if exp is None:
+                logger.warning("JWT no tiene campo 'exp'")
+                return False, "JWT sin expiración"
+
+            current_time = int(time.time())
+            if exp < current_time:
+                logger.debug(f"JWT expirado: exp={exp}, current={current_time}")
+                return False, "JWT expirado"
+
+            # Token válido y no expirado
+            logger.debug(f"JWT válido, expira en {exp - current_time} segundos")
+            return True, None
+
+        except PyJWTError as e:
+            logger.error(f"Error decodificando JWT: {e}")
+            return False, f"Error JWT: {str(e)}"
+        except Exception as e:
+            logger.error(f"Error validando JWT: {e}")
+            return False, f"Error inesperado: {str(e)}"
+
+    def get_jwt_expiry_info(self) -> Tuple[Optional[int], Optional[int]]:
+        """
+        Get JWT expiry information.
+
+        Returns:
+            Tuple of (expires_at, time_remaining)
+            - expires_at: Unix timestamp when token expires (None if no token)
+            - time_remaining: Seconds until expiration (None if no token or expired)
+        """
+        telegram_id = self.current_telegram_id
+        if not telegram_id:
+            return None, None
+
+        token = SecureStorage.get_jwt(telegram_id)
+        if not token:
+            return None, None
+
+        try:
+            decoded = jwt.decode(token, options={"verify_signature": False})
+            exp = decoded.get("exp")
+            if exp:
+                current_time = int(time.time())
+                time_remaining = max(0, exp - current_time)
+                return exp, time_remaining
+            return None, None
+        except Exception as e:
+            logger.error(f"Error obteniendo información de expiración JWT: {e}")
+            return None, None
 
     def get_current_user(self) -> Optional[str]:
         """Get current authenticated user telegram_id."""
