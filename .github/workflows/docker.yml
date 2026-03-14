@@ -4,8 +4,35 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+    paths:
+      - 'domain/**'
+      - 'application/**'
+      - 'infrastructure/**'
+      - 'telegram_bot/**'
+      - 'miniapp/**'
+      - 'utils/**'
+      - 'config.py'
+      - 'main.py'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - '.github/workflows/docker.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'domain/**'
+      - 'application/**'
+      - 'infrastructure/**'
+      - 'telegram_bot/**'
+      - 'miniapp/**'
+      - 'utils/**'
+      - 'config.py'
+      - 'main.py'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - 'Dockerfile'
+      - '.dockerignore'
 
 env:
   REGISTRY: ghcr.io

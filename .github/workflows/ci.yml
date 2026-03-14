@@ -3,8 +3,37 @@ name: CI
 on:
   push:
     branches: [main, develop]
+    paths:
+      - 'domain/**'
+      - 'application/**'
+      - 'infrastructure/**'
+      - 'telegram_bot/**'
+      - 'miniapp/**'
+      - 'utils/**'
+      - 'config.py'
+      - 'main.py'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/codeql.yml'
+      - '.github/workflows/docker.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'domain/**'
+      - 'application/**'
+      - 'infrastructure/**'
+      - 'telegram_bot/**'
+      - 'miniapp/**'
+      - 'utils/**'
+      - 'config.py'
+      - 'main.py'
+      - 'tests/**'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
+      - 'uv.lock'
 
 jobs:
   test:
