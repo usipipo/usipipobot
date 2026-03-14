@@ -18,9 +18,7 @@ class MainMenuKeyboard:
         if miniapp_url:
             keyboard.append(
                 [
-                    InlineKeyboardButton(
-                        "📱 Mini App", web_app=WebAppInfo(url=miniapp_url)
-                    ),
+                    InlineKeyboardButton("📱 Mini App", web_app=WebAppInfo(url=miniapp_url)),
                 ]
             )
 
@@ -34,9 +32,7 @@ class MainMenuKeyboard:
         keyboard.extend(
             [
                 [
-                    InlineKeyboardButton(
-                        "⚙️ Operaciones", callback_data="operations_menu"
-                    ),
+                    InlineKeyboardButton("⚙️ Operaciones", callback_data="operations_menu"),
                     InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage"),
                 ],
                 [InlineKeyboardButton("❓ Ayuda", callback_data="help")],
@@ -56,17 +52,13 @@ class MainMenuKeyboard:
             if miniapp_url:
                 keyboard.append(
                     [
-                        InlineKeyboardButton(
-                            "📱 Mini App", web_app=WebAppInfo(url=miniapp_url)
-                        ),
+                        InlineKeyboardButton("📱 Mini App", web_app=WebAppInfo(url=miniapp_url)),
                     ]
                 )
 
             keyboard.append(
                 [
-                    InlineKeyboardButton(
-                        "🔑 Mis Claves VPN", callback_data="show_keys"
-                    ),
+                    InlineKeyboardButton("🔑 Mis Claves VPN", callback_data="show_keys"),
                     InlineKeyboardButton("➕ Nueva Clave", callback_data="create_key"),
                 ]
             )
@@ -74,12 +66,8 @@ class MainMenuKeyboard:
             keyboard.extend(
                 [
                     [
-                        InlineKeyboardButton(
-                            "⚙️ Operaciones", callback_data="operations_menu"
-                        ),
-                        InlineKeyboardButton(
-                            "💾 Mis Datos", callback_data="show_usage"
-                        ),
+                        InlineKeyboardButton("⚙️ Operaciones", callback_data="operations_menu"),
+                        InlineKeyboardButton("💾 Mis Datos", callback_data="show_usage"),
                     ],
                     [InlineKeyboardButton("❓ Ayuda", callback_data="help")],
                 ]

@@ -23,9 +23,7 @@ class Settings(BaseSettings):
     # =========================================================================
     # APLICACIÓN BASE
     # =========================================================================
-    PROJECT_NAME: str = Field(
-        default="uSipipo VPN Manager", description="Nombre del proyecto"
-    )
+    PROJECT_NAME: str = Field(default="uSipipo VPN Manager", description="Nombre del proyecto")
 
     VERSION: str = Field(default=__version__, description="Versión de la aplicación")
 
@@ -34,9 +32,7 @@ class Settings(BaseSettings):
         description="Entorno de ejecución: development | production | staging",
     )
 
-    DEFAULT_LANG: str = Field(
-        default="es", description="Idioma por defecto de la aplicación"
-    )
+    DEFAULT_LANG: str = Field(default="es", description="Idioma por defecto de la aplicación")
 
     # =========================================================================
     # SEGURIDAD Y API
@@ -58,9 +54,7 @@ class Settings(BaseSettings):
 
     API_HOST: str = Field(default="0.0.0.0", description="Host donde escucha la API")
 
-    API_PORT: int = Field(
-        default=8000, ge=1024, le=65535, description="Puerto de la API"
-    )
+    API_PORT: int = Field(default=8000, ge=1024, le=65535, description="Puerto de la API")
 
     CORS_ORIGINS: List[str] = Field(
         default=["*"],
@@ -158,9 +152,7 @@ class Settings(BaseSettings):
     # =========================================================================
     # WIREGUARD
     # =========================================================================
-    WG_INTERFACE: str = Field(
-        default="wg0", description="Nombre de la interfaz WireGuard"
-    )
+    WG_INTERFACE: str = Field(default="wg0", description="Nombre de la interfaz WireGuard")
 
     WG_SERVER_PORT: int = Field(
         default=51820, ge=1024, le=65535, description="Puerto UDP de WireGuard"
@@ -270,9 +262,7 @@ class Settings(BaseSettings):
         default=3, ge=0, le=23, description="Hour to run cleanup (0-23)"
     )
 
-    BILLING_CYCLE_DAYS: int = Field(
-        default=30, ge=1, description="Días del ciclo de facturación"
-    )
+    BILLING_CYCLE_DAYS: int = Field(default=30, ge=1, description="Días del ciclo de facturación")
 
     # =========================================================================
     # SISTEMA DE TARIFA POR CONSUMO (PAY-AS-YOU-GO)
@@ -365,9 +355,7 @@ class Settings(BaseSettings):
     # =========================================================================
     TEMP_PATH: str = Field(default="./temp", description="Directorio temporal")
 
-    QR_CODE_PATH: str = Field(
-        default="./static/qr_codes", description="Directorio para códigos QR"
-    )
+    QR_CODE_PATH: str = Field(default="./static/qr_codes", description="Directorio para códigos QR")
 
     CLIENT_CONFIGS_PATH: str = Field(
         default="./static/configs",
@@ -465,7 +453,7 @@ class Settings(BaseSettings):
             raise ValueError(
                 "CORS_ORIGINS no puede contener '*' en producción. "
                 "Define los orígenes permitidos. Ejemplo: "
-                "CORS_ORIGINS=[\"https://usipipo.duckdns.org\"]"
+                'CORS_ORIGINS=["https://usipipo.duckdns.org"]'
             )
 
         if self.ADMIN_ID not in self.AUTHORIZED_USERS:
@@ -513,9 +501,7 @@ class Settings(BaseSettings):
 
     @property
     def wireguard_enabled(self) -> bool:
-        return bool(
-            self.WG_SERVER_PUBKEY and self.WG_SERVER_PRIVKEY and self.WG_ENDPOINT
-        )
+        return bool(self.WG_SERVER_PUBKEY and self.WG_SERVER_PRIVKEY and self.WG_ENDPOINT)
 
     @property
     def outline_enabled(self) -> bool:

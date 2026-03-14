@@ -38,9 +38,7 @@ class VpnService:
         self, telegram_id: int, key_type: str, key_name: str, current_user_id: int
     ) -> VpnKey:
         """Orquesta la creación de una llave VPN."""
-        logger.info(
-            f"🔑 Iniciando creación de llave {key_type} para usuario {telegram_id}"
-        )
+        logger.info(f"🔑 Iniciando creación de llave {key_type} para usuario {telegram_id}")
         user = await self.user_repo.get_by_id(telegram_id, current_user_id)
         if not user:
             user = User(telegram_id=telegram_id)
@@ -48,10 +46,8 @@ class VpnService:
 
         # Check for pending debt
         if self.vpn_integration_service is not None:
-            can_create, error_msg = (
-                await self.vpn_integration_service.check_can_create_key(
-                    telegram_id, current_user_id
-                )
+            can_create, error_msg = await self.vpn_integration_service.check_can_create_key(
+                telegram_id, current_user_id
             )
             if not can_create:
                 raise ValueError(error_msg)
@@ -114,9 +110,7 @@ class VpnService:
                 return metrics.get(str(key.external_id), 0)
 
             if key.key_type == "wireguard":
-                peer_data = await self.wireguard_client.get_peer_metrics(
-                    key.external_id
-                )
+                peer_data = await self.wireguard_client.get_peer_metrics(key.external_id)
                 return peer_data.get("transfer_total", 0)
 
             return 0
@@ -128,9 +122,7 @@ class VpnService:
         """Persiste el consumo actualizado en la base de datos."""
         # For usage updates, we need to determine the user. Since this is called from jobs/sync,
         # it might be admin, but let's get the key first to know the user
-        key = await self.key_repo.get_by_id(
-            key_id, settings.ADMIN_ID
-        )  # Use admin to get the key
+        key = await self.key_repo.get_by_id(key_id, settings.ADMIN_ID)  # Use admin to get the key
         if key and key.user_id is not None:
             await self.key_repo.update_usage(key_id, used_bytes, key.user_id)
         else:
@@ -178,9 +170,7 @@ class VpnService:
         keys_data_limit = sum(k.data_limit_bytes for k in keys)
 
         # Obtener paquetes de datos activos y sumar sus límites
-        packages = await self.package_repo.get_valid_by_user(
-            telegram_id, current_user_id
-        )
+        packages = await self.package_repo.get_valid_by_user(telegram_id, current_user_id)
         packages_data_limit = sum(p.data_limit_bytes for p in packages)
         packages_used_bytes = sum(p.data_used_bytes for p in packages)
 
@@ -194,8 +184,7 @@ class VpnService:
             "keys": keys,
             "total_used_gb": total_used_including_packages / (1024**3),
             "total_limit_gb": total_data_limit / (1024**3),
-            "remaining_gb": max(0, total_data_limit - total_used_including_packages)
-            / (1024**3),
+            "remaining_gb": max(0, total_data_limit - total_used_including_packages) / (1024**3),
             "keys_limit_gb": keys_data_limit / (1024**3),
             "packages_limit_gb": packages_data_limit / (1024**3),
         }
@@ -209,9 +198,7 @@ class VpnService:
             return True
         return False
 
-    async def get_user_keys(
-        self, telegram_id: int, current_user_id: int
-    ) -> List[VpnKey]:
+    async def get_user_keys(self, telegram_id: int, current_user_id: int) -> List[VpnKey]:
         """Obtiene todas las llaves activas de un usuario."""
         keys = await self.key_repo.get_by_user_id(telegram_id, current_user_id)
         logger.debug(f"🔑 Usuario {telegram_id} tiene {len(keys)} llave(s)")
@@ -246,9 +233,7 @@ class VpnService:
             logger.error(f"❌ Error al revocar llave {key_id}: {e}")
             return False
 
-    async def rename_key(
-        self, key_id: str, new_name: str, current_user_id: int
-    ) -> bool:
+    async def rename_key(self, key_id: str, new_name: str, current_user_id: int) -> bool:
         """Renombra una llave VPN."""
         try:
             key_uuid = uuid.UUID(key_id)
@@ -331,22 +316,16 @@ class VpnService:
                     usage = await self.wireguard_client.get_usage()
                     # Proxy de carga: número de peers activos
                     active_peers = len(usage)
-                    load = min(
-                        active_peers * 2, 100
-                    )  # Asumimos 50 usuarios = 100% carga
+                    load = min(active_peers * 2, 100)  # Asumimos 50 usuarios = 100% carga
                 except Exception as e:
                     logger.warning(f"No se pudo obtener estado real de WireGuard: {e}")
 
             return {"location": location, "ping": ping, "load": load}
         except Exception as e:
-            logger.error(
-                f"Error general obteniendo estado de servidor {server_type}: {e}"
-            )
+            logger.error(f"Error general obteniendo estado de servidor {server_type}: {e}")
             return {"location": "Desconocida", "ping": 0, "load": 0}
 
-    async def get_key_by_id(
-        self, key_id: str, current_user_id: int
-    ) -> Optional[VpnKey]:
+    async def get_key_by_id(self, key_id: str, current_user_id: int) -> Optional[VpnKey]:
         """Obtiene una llave por su ID."""
         try:
             key_uuid = uuid.UUID(key_id)
@@ -382,9 +361,7 @@ class VpnService:
             logger.error(f"Error eliminando llave {key_id}: {e}")
             raise
 
-    async def deactivate_inactive_key(
-        self, key_id: uuid.UUID, current_user_id: int
-    ) -> bool:
+    async def deactivate_inactive_key(self, key_id: uuid.UUID, current_user_id: int) -> bool:
         """Desactiva una llave por inactividad (soft delete)."""
         try:
             key = await self.key_repo.get_by_id(key_id, current_user_id)

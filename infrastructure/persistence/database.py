@@ -72,9 +72,7 @@ def _configure_sqlalchemy_logging():
 
     # Configurar nivel de logging basado en el entorno
     if settings.is_development:
-        sqlalchemy_logger.setLevel(
-            logging.WARNING
-        )  # Solo WARNING y ERROR en desarrollo
+        sqlalchemy_logger.setLevel(logging.WARNING)  # Solo WARNING y ERROR en desarrollo
     else:
         sqlalchemy_logger.setLevel(logging.ERROR)  # Solo ERROR en producción
 

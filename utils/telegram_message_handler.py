@@ -58,9 +58,7 @@ class TelegramUtils:
 
             # Handle "no text in message" error - send new message instead
             if "there is no text in the message" in err_lower:
-                logger.warning(
-                    "safe_edit_message: message has no text, sending new message"
-                )
+                logger.warning("safe_edit_message: message has no text, sending new message")
                 try:
                     await context.bot.send_message(
                         chat_id=query.message.chat.id,
@@ -70,9 +68,7 @@ class TelegramUtils:
                     )
                     return True
                 except Exception as ex:
-                    logger.error(
-                        f"safe_edit_message: send_message fallback failed: {ex}"
-                    )
+                    logger.error(f"safe_edit_message: send_message fallback failed: {ex}")
                     return False
 
             # Handle "message not modified" - not an error, just return True
@@ -88,9 +84,7 @@ class TelegramUtils:
                     await query.edit_message_text(text=text, reply_markup=reply_markup)
                     return True
                 except BadRequest as e2:
-                    logger.warning(
-                        f"safe_edit_message: retry without parse_mode failed: {e2}"
-                    )
+                    logger.warning(f"safe_edit_message: retry without parse_mode failed: {e2}")
 
             try:
                 # If the message has caption, try to edit caption

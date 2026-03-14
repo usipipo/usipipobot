@@ -50,13 +50,13 @@ class AdminMessages:
             "**Esta acción no se puede deshacer.**"
         )
 
-        USER_SUSPENDED = (
-            "⏸️ **Usuario Suspendido**\n\nEl usuario ha sido suspendido exitosamente."
-        )
+        USER_SUSPENDED = "⏸️ **Usuario Suspendido**\n\nEl usuario ha sido suspendido exitosamente."
         USER_REACTIVATED = (
             "✅ **Usuario Reactivado**\n\nEl usuario ha sido reactivado exitosamente."
         )
-        USER_DELETED = "🗑️ **Usuario Eliminado**\n\nEl usuario y todos sus datos han sido eliminados."
+        USER_DELETED = (
+            "🗑️ **Usuario Eliminado**\n\nEl usuario y todos sus datos han sido eliminados."
+        )
 
     class Keys:
         """Mensajes de gestión de llaves."""
@@ -84,15 +84,9 @@ class AdminMessages:
             "**Esta acción no se puede deshacer.**"
         )
 
-        KEY_DELETED = (
-            "🗑️ **Llave Eliminada**\n\nLa llave VPN ha sido eliminada exitosamente."
-        )
-        KEY_SUSPENDED = (
-            "⏸️ **Llave Suspendida**\n\nLa llave ha sido suspendida temporalmente."
-        )
-        KEY_REACTIVATED = (
-            "✅ **Llave Reactivada**\n\nLa llave ha sido reactivada exitosamente."
-        )
+        KEY_DELETED = "🗑️ **Llave Eliminada**\n\nLa llave VPN ha sido eliminada exitosamente."
+        KEY_SUSPENDED = "⏸️ **Llave Suspendida**\n\nLa llave ha sido suspendida temporalmente."
+        KEY_REACTIVATED = "✅ **Llave Reactivada**\n\nLa llave ha sido reactivada exitosamente."
 
     class Dashboard:
         """Mensajes del dashboard."""
@@ -122,15 +116,13 @@ class AdminMessages:
         SYSTEM_HEALTHY = (
             "✅ **Sistema Saludable**\n\nTodos los servicios funcionando correctamente."
         )
-        SYSTEM_WARNING = "⚠️ **Advertencia del Sistema**\n\nSe detectaron problemas que requieren atención."
+        SYSTEM_WARNING = (
+            "⚠️ **Advertencia del Sistema**\n\nSe detectaron problemas que requieren atención."
+        )
         SYSTEM_CRITICAL = "🚨 **Estado Crítico**\n\nSe requieren acciones inmediatas."
 
-        RESTART_SUCCESS = (
-            "🔄 **Servicio Reiniciado**\n\nEl servicio se ha reiniciado exitosamente."
-        )
-        MAINTENANCE_MODE = (
-            "🔧 **Modo Mantenimiento**\n\nEl sistema está en modo mantenimiento."
-        )
+        RESTART_SUCCESS = "🔄 **Servicio Reiniciado**\n\nEl servicio se ha reiniciado exitosamente."
+        MAINTENANCE_MODE = "🔧 **Modo Mantenimiento**\n\nEl sistema está en modo mantenimiento."
 
     class Settings:
         """Mensajes de configuración."""
@@ -171,7 +163,9 @@ class AdminMessages:
             "📁 Archivo: `{filename}`"
         )
 
-        LOGS_CLEARED = "🧹 **Logs Limpiados**\n\nLos archivos de log han sido limpiados exitosamente."
+        LOGS_CLEARED = (
+            "🧹 **Logs Limpiados**\n\nLos archivos de log han sido limpiados exitosamente."
+        )
 
     class Error:
         """Mensajes de error."""
@@ -188,10 +182,16 @@ class AdminMessages:
             "Esta función está reservada para administradores."
         )
 
-        USER_NOT_FOUND = "❌ **Usuario No Encontrado**\n\nEl usuario especificado no existe en el sistema."
-        KEY_NOT_FOUND = "❌ **Llave No Encontrada**\n\nLa llave especificada no existe en el sistema."
+        USER_NOT_FOUND = (
+            "❌ **Usuario No Encontrado**\n\nEl usuario especificado no existe en el sistema."
+        )
+        KEY_NOT_FOUND = (
+            "❌ **Llave No Encontrada**\n\nLa llave especificada no existe en el sistema."
+        )
 
-        OPERATION_FAILED = "❌ **Operación Fallida**\n\nNo se pudo completar la operación.\n\nError: {error}"
+        OPERATION_FAILED = (
+            "❌ **Operación Fallida**\n\nNo se pudo completar la operación.\n\nError: {error}"
+        )
 
     class Success:
         """Mensajes de éxito."""
@@ -199,11 +199,11 @@ class AdminMessages:
         OPERATION_COMPLETED = (
             "✅ **Operación Completada**\n\nLa acción se ha realizado exitosamente."
         )
-        OPERATION_CANCELLED = (
-            "❌ **Operación Cancelada**\n\nLa acción ha sido cancelada."
-        )
+        OPERATION_CANCELLED = "❌ **Operación Cancelada**\n\nLa acción ha sido cancelada."
 
-        CHANGES_SAVED = "💾 **Cambios Guardados**\n\nLa configuración ha sido actualizada correctamente."
+        CHANGES_SAVED = (
+            "💾 **Cambios Guardados**\n\nLa configuración ha sido actualizada correctamente."
+        )
 
         BACKUP_CREATED = (
             "📦 **Backup Creado**\n\n"
@@ -230,4 +230,6 @@ class AdminMessages:
             "Error: {error}"
         )
 
-        LOGS_CLEARED = "🧹 **Logs Limpiados**\n\nLos archivos de log han sido limpiados exitosamente."
+        LOGS_CLEARED = (
+            "🧹 **Logs Limpiados**\n\nLos archivos de log han sido limpiados exitosamente."
+        )

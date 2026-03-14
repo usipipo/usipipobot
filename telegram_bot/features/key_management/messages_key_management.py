@@ -23,9 +23,7 @@ class KeyManagementMessages:
     )
 
     NO_KEYS = (
-        "📭 *Sin llaves*\n\n"
-        "🔒 No tienes llaves activas\n\n"
-        "💡 Crea tu primera llave segura 🚀"
+        "📭 *Sin llaves*\n\n" "🔒 No tienes llaves activas\n\n" "💡 Crea tu primera llave segura 🚀"
     )
 
     BACK_TO_MAIN = "🔙 Volviendo al menú..."
@@ -38,9 +36,7 @@ class KeyManagementMessages:
 
     NO_KEYS_TYPE = "📭 Sin llaves {type}\n\n" "💡 Crea una nueva llave para comenzar."
 
-    NO_KEYS_STATS = (
-        "📭 *Sin estadísticas*\n\n" "No hay llaves para mostrar datos de consumo."
-    )
+    NO_KEYS_STATS = "📭 *Sin estadísticas*\n\n" "No hay llaves para mostrar datos de consumo."
 
     # ============================================
     # KEY DETAILS
@@ -56,9 +52,7 @@ class KeyManagementMessages:
         "⚡ *Acciones:*"
     )
 
-    KEY_NOT_FOUND = (
-        "❌ *Llave no encontrada*\n\n" "No existe o no te pertenece a tu cuenta."
-    )
+    KEY_NOT_FOUND = "❌ *Llave no encontrada*\n\n" "No existe o no te pertenece a tu cuenta."
 
     # ============================================
     # STATISTICS
@@ -94,9 +88,7 @@ class KeyManagementMessages:
         )
 
         KEY_REACTIVATED = (
-            "✅ *Llave activada*\n\n"
-            "🚀 Conexión lista\n\n"
-            "🌐 ¡A navegar seguro\\! 🔥"
+            "✅ *Llave activada*\n\n" "🚀 Conexión lista\n\n" "🌐 ¡A navegar seguro\\! 🔥"
         )
 
         KEY_DELETED = (
@@ -126,13 +118,9 @@ class KeyManagementMessages:
             "🔄 Intenta de nuevo en un momento 📡"
         )
 
-        KEY_NOT_ACCESSIBLE = (
-            "🚫 *Acceso denegado*\n\n" "🔒 No tienes permisos para esta llave 🔐"
-        )
+        KEY_NOT_ACCESSIBLE = "🚫 *Acceso denegado*\n\n" "🔒 No tienes permisos para esta llave 🔐"
 
-        OPERATION_FAILED = (
-            "❌ *Operación fallida*\n\n" "💥 No se pudo completar\n\n" "📟 {error}"
-        )
+        OPERATION_FAILED = "❌ *Operación fallida*\n\n" "💥 No se pudo completar\n\n" "📟 {error}"
 
         DELETE_NOT_ALLOWED = (
             "🔒 *Eliminación bloqueada*\n\n"
@@ -159,6 +147,4 @@ class KeyManagementMessages:
 
         CHANGES_SAVED = "💾 *Guardado*\n\n" "✨ Cambios actualizados"
 
-        BACKUP_CREATED = (
-            "📦 *Backup creado*\n\n" "💾 Copia segura guardada\n\n" "📁 {filename}"
-        )
+        BACKUP_CREATED = "📦 *Backup creado*\n\n" "💾 Copia segura guardada\n\n" "📁 {filename}"

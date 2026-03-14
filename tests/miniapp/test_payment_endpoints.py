@@ -47,12 +47,12 @@ async def client():
         mock_repo.get_by_id.return_value = mock_user
         mock_repo_class.return_value = mock_repo
 
-        with patch("miniapp.services.miniapp_notification_service.get_notification_service") as mock_get_service:
+        with patch(
+            "miniapp.services.miniapp_notification_service.get_notification_service"
+        ) as mock_get_service:
             mock_get_service.return_value = mock_notification_service
 
-            async with AsyncClient(
-                transport=ASGITransport(app=app), base_url="http://test"
-            ) as ac:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
                 yield ac
 
     # Clean up overrides after test

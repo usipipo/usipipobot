@@ -12,9 +12,7 @@ class KeyManagementKeyboards:
     """Teclados para gestión de llaves VPN."""
 
     @staticmethod
-    def main_menu(
-        keys_summary: dict, has_consumption_active: bool = False
-    ) -> InlineKeyboardMarkup:
+    def main_menu(keys_summary: dict, has_consumption_active: bool = False) -> InlineKeyboardMarkup:
         """
         Teclado del menú principal de gestión de llaves.
 
@@ -30,28 +28,18 @@ class KeyManagementKeyboards:
         # Botón de consumo: Ver Consumo si está activo, Activar si no
         if has_consumption_active:
             keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "📊 Ver Mi Consumo", callback_data="consumption_view_status"
-                    )
-                ]
+                [InlineKeyboardButton("📊 Ver Mi Consumo", callback_data="consumption_view_status")]
             )
         else:
             keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "⚡ Activar Consumo", callback_data="consumption_activate"
-                    )
-                ]
+                [InlineKeyboardButton("⚡ Activar Consumo", callback_data="consumption_activate")]
             )
 
         if keys_summary.get("total_count", 0) == 0:
             keyboard.extend(
                 [
                     [
-                        InlineKeyboardButton(
-                            "➕ Crear Nueva", callback_data="create_key"
-                        ),
+                        InlineKeyboardButton("➕ Crear Nueva", callback_data="create_key"),
                     ],
                     [
                         InlineKeyboardButton(
@@ -89,11 +77,7 @@ class KeyManagementKeyboards:
                     InlineKeyboardButton("📊 Estadísticas", callback_data="key_stats"),
                     InlineKeyboardButton("➕ Crear Nueva", callback_data="create_key"),
                 ],
-                [
-                    InlineKeyboardButton(
-                        "🔙 Volver al Menú Principal", callback_data="main_menu"
-                    )
-                ],
+                [InlineKeyboardButton("🔙 Volver al Menú Principal", callback_data="main_menu")],
             ]
         )
 
@@ -117,18 +101,12 @@ class KeyManagementKeyboards:
             status_emoji = "🟢" if key.is_active else "🔴"
             button_text = f"{status_emoji} {key.name}"
             callback_data = f"key_details_{key.id}"
-            keyboard.append(
-                [InlineKeyboardButton(button_text, callback_data=callback_data)]
-            )
+            keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
 
         # Opciones adicionales
-        keyboard.append(
-            [InlineKeyboardButton("➕ Crear Nueva", callback_data="create_key")]
-        )
+        keyboard.append([InlineKeyboardButton("➕ Crear Nueva", callback_data="create_key")])
 
-        keyboard.append(
-            [InlineKeyboardButton("🔙 Volver", callback_data="back_to_keys")]
-        )
+        keyboard.append([InlineKeyboardButton("🔙 Volver", callback_data="back_to_keys")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -173,9 +151,7 @@ class KeyManagementKeyboards:
         management_row = []
         if not is_active:
             management_row.append(
-                InlineKeyboardButton(
-                    "✅ Reactivar", callback_data=f"key_reactivate_{key_id}"
-                )
+                InlineKeyboardButton("✅ Reactivar", callback_data=f"key_reactivate_{key_id}")
             )
 
         management_row.append(
@@ -198,9 +174,7 @@ class KeyManagementKeyboards:
         Returns:
             InlineKeyboardMarkup: Teclado de retorno
         """
-        keyboard = [
-            [InlineKeyboardButton("🔙 Volver a la Lista", callback_data="back_to_keys")]
-        ]
+        keyboard = [[InlineKeyboardButton("🔙 Volver a la Lista", callback_data="back_to_keys")]]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
@@ -211,13 +185,7 @@ class KeyManagementKeyboards:
         Returns:
             InlineKeyboardMarkup: Teclado de cancelación
         """
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "❌ Cancelar Renombrado", callback_data="cancel_rename"
-                )
-            ]
-        ]
+        keyboard = [[InlineKeyboardButton("❌ Cancelar Renombrado", callback_data="cancel_rename")]]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
@@ -229,11 +197,7 @@ class KeyManagementKeyboards:
             InlineKeyboardMarkup: Teclado de retorno
         """
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver al Menú Principal", callback_data="main_menu"
-                )
-            ]
+            [InlineKeyboardButton("🔙 Volver al Menú Principal", callback_data="main_menu")]
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -246,11 +210,7 @@ class KeyManagementKeyboards:
             InlineKeyboardMarkup: Teclado de retorno principal
         """
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver al Menú Principal", callback_data="main_menu"
-                )
-            ]
+            [InlineKeyboardButton("🔙 Volver al Menú Principal", callback_data="main_menu")]
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -268,9 +228,7 @@ class KeyManagementKeyboards:
         """
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "✅ Confirmar", callback_data=f"confirm_{action}_{key_id}"
-                ),
+                InlineKeyboardButton("✅ Confirmar", callback_data=f"confirm_{action}_{key_id}"),
                 InlineKeyboardButton("❌ Cancelar", callback_data=f"cancel_{action}"),
             ]
         ]

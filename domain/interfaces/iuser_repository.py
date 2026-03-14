@@ -28,15 +28,11 @@ class IUserRepository(Protocol):
         """Busca un usuario por su código de referido."""
         ...
 
-    async def get_referrals_by_user(
-        self, telegram_id: int, current_user_id: int
-    ) -> List[User]:
+    async def get_referrals_by_user(self, telegram_id: int, current_user_id: int) -> List[User]:
         """Obtiene la lista de usuarios referidos por un usuario."""
         ...
 
-    async def get_referrals(
-        self, referrer_id: int, current_user_id: int
-    ) -> List[Dict[str, Any]]:
+    async def get_referrals(self, referrer_id: int, current_user_id: int) -> List[Dict[str, Any]]:
         """Obtiene todos los usuarios referidos por este usuario como lista de dicts."""
         ...
 
@@ -62,9 +58,7 @@ class IUserRepository(Protocol):
         """Actualiza los créditos de referido de un usuario."""
         ...
 
-    async def increment_max_keys(
-        self, telegram_id: int, slots: int, current_user_id: int
-    ) -> bool:
+    async def increment_max_keys(self, telegram_id: int, slots: int, current_user_id: int) -> bool:
         """Incrementa el límite de claves de un usuario."""
         ...
 

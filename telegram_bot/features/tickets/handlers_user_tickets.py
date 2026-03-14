@@ -131,15 +131,11 @@ class UserTicketHandler(BaseHandler):
         for msg in messages:
             prefix = "👨‍💼 *Soporte:*" if msg.is_from_admin else "👤 *Tú:*"
             timestamp = msg.created_at.strftime("%d/%m %H:%M")
-            lines.append(
-                f"{prefix}\n" f"```\n{msg.message[:200]}\n```\n" f"🕐 {timestamp}\n"
-            )
+            lines.append(f"{prefix}\n" f"```\n{msg.message[:200]}\n```\n" f"🕐 {timestamp}\n")
 
         return "\n".join(lines)
 
-    async def show_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> int:
+    async def show_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Muestra el menú principal de soporte."""
         if not update.effective_user:
             return -1
@@ -155,9 +151,7 @@ class UserTicketHandler(BaseHandler):
 
             if query:
                 await self._safe_answer_query(query)
-                await self._safe_edit_message(
-                    query, context, text=message, reply_markup=keyboard
-                )
+                await self._safe_edit_message(query, context, text=message, reply_markup=keyboard)
             elif update.message:
                 await update.message.reply_text(
                     text=message, reply_markup=keyboard, parse_mode="Markdown"
@@ -184,9 +178,7 @@ class UserTicketHandler(BaseHandler):
         logger.info("🎫 Ticket operation cancelled")
         return await self.show_menu(update, context)
 
-    async def back_to_main_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> int:
+    async def back_to_main_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Sale de la conversación de tickets y vuelve al menú principal."""
         from telegram.ext import ConversationHandler
 
@@ -224,9 +216,7 @@ class UserTicketHandler(BaseHandler):
 
         return ConversationHandler.END
 
-    async def exit_to_help(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ) -> int:
+    async def exit_to_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Sale de la conversación de tickets y vuelve al menú de ayuda."""
         from telegram.ext import ConversationHandler
 

@@ -48,9 +48,7 @@ class UserProfileService:
         self, user_id: int, current_user_id: int
     ) -> Optional[UserProfileSummary]:
         try:
-            vpn_status = await self.vpn_service.get_user_status(
-                user_id, current_user_id
-            )
+            vpn_status = await self.vpn_service.get_user_status(user_id, current_user_id)
             user = vpn_status.get("user")
             if not user:
                 logger.warning(f"User not found for profile summary: {user_id}")
@@ -80,9 +78,7 @@ class UserProfileService:
                 total_used_gb=vpn_status.get("total_used_gb", 0.0),
                 total_limit_gb=vpn_status.get("total_limit_gb", 0.0),
                 remaining_gb=vpn_status.get("remaining_gb", 0.0),
-                free_data_remaining_gb=data_summary.get("free_plan", {}).get(
-                    "remaining_gb", 0.0
-                ),
+                free_data_remaining_gb=data_summary.get("free_plan", {}).get("remaining_gb", 0.0),
                 active_packages=data_summary.get("active_packages", 0),
                 referral_code=referral_stats.referral_code,
                 total_referrals=referral_stats.total_referrals,
@@ -99,12 +95,8 @@ class UserProfileService:
 
     async def get_user_transactions(self, user_id: int, limit: int = 10) -> List[dict]:
         try:
-            transactions = await self.transaction_repo.get_user_transactions(
-                user_id, limit
-            )
-            logger.info(
-                f"📋 Retrieved {len(transactions)} transactions for user {user_id}"
-            )
+            transactions = await self.transaction_repo.get_user_transactions(user_id, limit)
+            logger.info(f"📋 Retrieved {len(transactions)} transactions for user {user_id}")
             return transactions
         except Exception as e:
             logger.error(f"Error retrieving transactions for user {user_id}: {e}")

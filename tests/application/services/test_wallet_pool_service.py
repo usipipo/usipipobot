@@ -38,9 +38,7 @@ def mock_user_repo():
 
 
 @pytest.fixture
-def wallet_pool_service(
-    mock_tron_dealer_client, mock_crypto_order_repo, mock_user_repo
-):
+def wallet_pool_service(mock_tron_dealer_client, mock_crypto_order_repo, mock_user_repo):
     """WalletPoolService instance with mocked dependencies."""
     return WalletPoolService(
         tron_dealer_client=mock_tron_dealer_client,
@@ -53,25 +51,19 @@ class TestGetOrAssignWallet:
     """Tests for get_or_assign_wallet method."""
 
     @pytest.mark.asyncio
-    async def test_reuses_user_existing_wallet(
-        self, wallet_pool_service, mock_crypto_order_repo
-    ):
+    async def test_reuses_user_existing_wallet(self, wallet_pool_service, mock_crypto_order_repo):
         """Should reuse wallet from user's expired order."""
         mock_crypto_order_repo.get_reusable_wallet_for_user.return_value = (
             "0x1234567890abcdef1234567890abcdef12345678"
         )
 
-        wallet = await wallet_pool_service.get_or_assign_wallet(
-            user_id=123456, label="test-label"
-        )
+        wallet = await wallet_pool_service.get_or_assign_wallet(user_id=123456, label="test-label")
 
         assert wallet is not None
         assert wallet.address == "0x1234567890abcdef1234567890abcdef12345678"
         assert wallet.id == "reused"
         assert wallet.status == "active"
-        mock_crypto_order_repo.get_reusable_wallet_for_user.assert_called_once_with(
-            123456
-        )
+        mock_crypto_order_repo.get_reusable_wallet_for_user.assert_called_once_with(123456)
 
     @pytest.mark.asyncio
     async def test_reuses_any_expired_wallet_when_no_user_wallet(
@@ -117,14 +109,10 @@ class TestGetOrAssignWallet:
         assert wallet is not None
         assert wallet.id == "new-wallet-123"
         assert wallet.address == "0xnewwallet123456789012345678901234567890"
-        mock_tron_dealer_client.assign_wallet.assert_called_once_with(
-            label="test-label"
-        )
+        mock_tron_dealer_client.assign_wallet.assert_called_once_with(label="test-label")
 
     @pytest.mark.asyncio
-    async def test_returns_none_on_error(
-        self, wallet_pool_service, mock_crypto_order_repo
-    ):
+    async def test_returns_none_on_error(self, wallet_pool_service, mock_crypto_order_repo):
         """Should return None when an error occurs."""
         mock_crypto_order_repo.get_reusable_wallet_for_user.side_effect = Exception(
             "Database error"
@@ -160,18 +148,14 @@ class TestGetPoolStats:
     """Tests for get_pool_stats method."""
 
     @pytest.mark.asyncio
-    async def test_returns_pool_statistics(
-        self, wallet_pool_service, mock_crypto_order_repo
-    ):
+    async def test_returns_pool_statistics(self, wallet_pool_service, mock_crypto_order_repo):
         """Should return pool statistics."""
         expired_orders = [
             MagicMock(wallet_address="0x1234..."),
             MagicMock(wallet_address="0x5678..."),
             MagicMock(wallet_address="0x1234..."),  # Duplicate
         ]
-        mock_crypto_order_repo.get_expired_orders_with_wallets.return_value = (
-            expired_orders
-        )
+        mock_crypto_order_repo.get_expired_orders_with_wallets.return_value = expired_orders
 
         stats = await wallet_pool_service.get_pool_stats()
 
@@ -179,9 +163,7 @@ class TestGetPoolStats:
         assert stats["reusable_wallets_count"] == 2  # Unique addresses
 
     @pytest.mark.asyncio
-    async def test_returns_zero_stats_on_error(
-        self, wallet_pool_service, mock_crypto_order_repo
-    ):
+    async def test_returns_zero_stats_on_error(self, wallet_pool_service, mock_crypto_order_repo):
         """Should return zero stats when error occurs."""
         mock_crypto_order_repo.get_expired_orders_with_wallets.side_effect = Exception(
             "Database error"
@@ -210,9 +192,7 @@ class TestCreateNewWallet:
         mock_tron_dealer_client.assign_wallet.return_value = new_wallet
         wallet_pool_service.user_repo.update_wallet_address.return_value = True
 
-        wallet = await wallet_pool_service._create_new_wallet(
-            user_id=123456, label="user-123456"
-        )
+        wallet = await wallet_pool_service._create_new_wallet(user_id=123456, label="user-123456")
 
         assert wallet is not None
         assert wallet.address == "0xnewaddress1234567890123456789012345678"
@@ -239,15 +219,11 @@ class TestCreateNewWallet:
         assert wallet is None
 
     @pytest.mark.asyncio
-    async def test_handles_trondealer_api_error(
-        self, wallet_pool_service, mock_tron_dealer_client
-    ):
+    async def test_handles_trondealer_api_error(self, wallet_pool_service, mock_tron_dealer_client):
         """Should handle TronDealer API errors."""
         from infrastructure.api_clients.client_tron_dealer import TronDealerApiError
 
-        mock_tron_dealer_client.assign_wallet.side_effect = TronDealerApiError(
-            401, "Unauthorized"
-        )
+        mock_tron_dealer_client.assign_wallet.side_effect = TronDealerApiError(401, "Unauthorized")
 
         wallet = await wallet_pool_service._create_new_wallet(user_id=123456)
 

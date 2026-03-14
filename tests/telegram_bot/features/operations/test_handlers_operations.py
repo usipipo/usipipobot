@@ -84,8 +84,7 @@ class TestShowTransactionsHistory:
             # Verificar que el mensaje contiene información sobre no tener transacciones
             call_args = mock_utils.safe_edit_message.call_args
             assert (
-                "Sin Transacciones" in call_args.kwargs["text"]
-                or "📭" in call_args.kwargs["text"]
+                "Sin Transacciones" in call_args.kwargs["text"] or "📭" in call_args.kwargs["text"]
             )
 
     @pytest.mark.asyncio
@@ -166,9 +165,7 @@ class TestShowTransactionsHistory:
             assert any("Siguiente" in text for text in button_texts)
 
     @pytest.mark.asyncio
-    async def test_show_transactions_history_no_repo(
-        self, handler, mock_update, mock_context
-    ):
+    async def test_show_transactions_history_no_repo(self, handler, mock_update, mock_context):
         """Manejar error cuando no hay repositorio disponible."""
         handler.crypto_order_repo = None
 

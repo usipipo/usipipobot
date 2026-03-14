@@ -27,9 +27,7 @@ class ICryptoOrderRepository(ABC):
         pass
 
     @abstractmethod
-    async def mark_completed(
-        self, order_id: uuid.UUID, tx_hash: str
-    ) -> Optional[CryptoOrder]:
+    async def mark_completed(self, order_id: uuid.UUID, tx_hash: str) -> Optional[CryptoOrder]:
         pass
 
     @abstractmethod
@@ -41,9 +39,7 @@ class ICryptoOrderRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_expired_orders_with_wallets(
-        self, limit: int = 100
-    ) -> List[CryptoOrder]:
+    async def get_expired_orders_with_wallets(self, limit: int = 100) -> List[CryptoOrder]:
         """Obtiene órdenes expiradas que tienen wallets asignadas."""
         pass
 

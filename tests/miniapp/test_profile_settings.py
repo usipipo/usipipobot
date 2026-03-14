@@ -15,9 +15,7 @@ from infrastructure.api.server import create_app
 async def client():
     """Cliente de pruebas para la API."""
     app = create_app()
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 
@@ -92,10 +90,7 @@ class TestDropdownNavigation:
         import pathlib
 
         base_template = (
-            pathlib.Path(__file__).parent.parent.parent
-            / "miniapp"
-            / "templates"
-            / "base.html"
+            pathlib.Path(__file__).parent.parent.parent / "miniapp" / "templates" / "base.html"
         )
         content = base_template.read_text().lower()
         assert "dashboard" in content
@@ -110,10 +105,7 @@ class TestDropdownNavigation:
         import pathlib
 
         base_template = (
-            pathlib.Path(__file__).parent.parent.parent
-            / "miniapp"
-            / "templates"
-            / "base.html"
+            pathlib.Path(__file__).parent.parent.parent / "miniapp" / "templates" / "base.html"
         )
         content = base_template.read_text().lower()
         nav_start = content.find("bottom-nav")

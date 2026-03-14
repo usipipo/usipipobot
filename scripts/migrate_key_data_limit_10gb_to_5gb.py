@@ -41,9 +41,7 @@ async def migrate_key_data_limits():
         try:
             # Contar llaves que serán actualizadas
             count_result = await session.execute(
-                select(VpnKeyModel).where(
-                    VpnKeyModel.data_limit_bytes == OLD_LIMIT_BYTES
-                )
+                select(VpnKeyModel).where(VpnKeyModel.data_limit_bytes == OLD_LIMIT_BYTES)
             )
             keys_to_update = count_result.scalars().all()
             total_keys = len(keys_to_update)
@@ -56,17 +54,13 @@ async def migrate_key_data_limits():
 
             # Mostrar algunas llaves de ejemplo
             for key in keys_to_update[:5]:
-                logger.info(
-                    f"   - ID: {key.id}, Nombre: {key.name}, User: {key.user_id}"
-                )
+                logger.info(f"   - ID: {key.id}, Nombre: {key.name}, User: {key.user_id}")
 
             if total_keys > 5:
                 logger.info(f"   ... y {total_keys - 5} más")
 
             # Confirmar antes de actualizar
-            confirm = input(
-                f"\n¿Actualizar {total_keys} llaves de 10GB a 5GB? (yes/no): "
-            )
+            confirm = input(f"\n¿Actualizar {total_keys} llaves de 10GB a 5GB? (yes/no): ")
             if confirm.lower() != "yes":
                 logger.info("❌ Migración cancelada por el usuario.")
                 return
@@ -80,27 +74,21 @@ async def migrate_key_data_limits():
 
             await session.commit()
 
-            updated_count = (
-                result.rowcount if result.rowcount is not None else total_keys
-            )
+            updated_count = result.rowcount if result.rowcount is not None else total_keys
             logger.info(
                 f"✅ Migración completada: {updated_count} llaves actualizadas de 10GB a 5GB"
             )
 
             # Verificar que no queden llaves con 10GB
             verify_result = await session.execute(
-                select(VpnKeyModel).where(
-                    VpnKeyModel.data_limit_bytes == OLD_LIMIT_BYTES
-                )
+                select(VpnKeyModel).where(VpnKeyModel.data_limit_bytes == OLD_LIMIT_BYTES)
             )
             remaining = len(verify_result.scalars().all())
 
             if remaining == 0:
                 logger.info("✅ Verificación exitosa: No quedan llaves con 10GB")
             else:
-                logger.warning(
-                    f"⚠️ Verificación: Aún quedan {remaining} llaves con 10GB"
-                )
+                logger.warning(f"⚠️ Verificación: Aún quedan {remaining} llaves con 10GB")
 
         except Exception as e:
             await session.rollback()
@@ -122,9 +110,7 @@ async def rollback_migration():
 
     async with async_session() as session:
         try:
-            confirm = input(
-                "⚠️ ¿REVERTIR migración? Esto cambiará llaves de 5GB a 10GB (yes/no): "
-            )
+            confirm = input("⚠️ ¿REVERTIR migración? Esto cambiará llaves de 5GB a 10GB (yes/no): ")
             if confirm.lower() != "yes":
                 logger.info("❌ Rollback cancelado.")
                 return
@@ -136,9 +122,7 @@ async def rollback_migration():
             )
 
             await session.commit()
-            logger.info(
-                f"✅ Rollback completado: {result.rowcount} llaves revertidas a 10GB"
-            )
+            logger.info(f"✅ Rollback completado: {result.rowcount} llaves revertidas a 10GB")
 
         except Exception as e:
             await session.rollback()
@@ -173,14 +157,10 @@ if __name__ == "__main__":
         # Implementar dry-run
         async def dry_run():
             engine = create_async_engine(settings.DATABASE_URL)
-            async_session = sessionmaker(
-                engine, class_=AsyncSession, expire_on_commit=False
-            )
+            async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
             async with async_session() as session:
                 result = await session.execute(
-                    select(VpnKeyModel).where(
-                        VpnKeyModel.data_limit_bytes == OLD_LIMIT_BYTES
-                    )
+                    select(VpnKeyModel).where(VpnKeyModel.data_limit_bytes == OLD_LIMIT_BYTES)
                 )
                 keys = result.scalars().all()
                 print(f"📊 DRY RUN: Se actualizarían {len(keys)} llaves de 10GB a 5GB")

@@ -38,8 +38,7 @@ class AdminStatsService(IAdminStatsService):
             active_users = sum(
                 1
                 for u in users
-                if getattr(u, "status", "").lower() == "active"
-                or getattr(u, "is_active", False)
+                if getattr(u, "status", "").lower() == "active" or getattr(u, "is_active", False)
             )
 
             total_keys = len(all_keys)
@@ -59,21 +58,15 @@ class AdminStatsService(IAdminStatsService):
                 or str(k.key_type).lower() == "outline"
             )
 
-            wireguard_pct = round(
-                (wireguard_keys / total_keys * 100) if total_keys > 0 else 0, 1
-            )
-            outline_pct = round(
-                (outline_keys / total_keys * 100) if total_keys > 0 else 0, 1
-            )
+            wireguard_pct = round((wireguard_keys / total_keys * 100) if total_keys > 0 else 0, 1)
+            outline_pct = round((outline_keys / total_keys * 100) if total_keys > 0 else 0, 1)
 
             total_usage_gb = 0
             avg_usage = round(total_usage_gb / total_users, 2) if total_users > 0 else 0
 
             total_revenue = await self._calculate_total_revenue()
             new_users_today = await self._calculate_new_users_today(current_user_id)
-            keys_created_today = await self._calculate_keys_created_today(
-                current_user_id
-            )
+            keys_created_today = await self._calculate_keys_created_today(current_user_id)
 
             return {
                 "total_users": total_users,
@@ -100,9 +93,7 @@ class AdminStatsService(IAdminStatsService):
     async def _calculate_total_revenue(self) -> float:
         """Calcula los ingresos totales del sistema."""
         try:
-            deposit_transactions = (
-                await self.payment_repository.get_transactions_by_type("deposit")
-            )
+            deposit_transactions = await self.payment_repository.get_transactions_by_type("deposit")
             total_amount = sum(t["amount"] for t in deposit_transactions)
             total_revenue = total_amount / 100.0
             return round(total_revenue, 2)
@@ -116,9 +107,7 @@ class AdminStatsService(IAdminStatsService):
             all_users = await self.user_repository.get_all_users(current_user_id)
             today = datetime.now(timezone.utc).date()
             new_users_today = sum(
-                1
-                for user in all_users
-                if user.created_at and user.created_at.date() == today
+                1 for user in all_users if user.created_at and user.created_at.date() == today
             )
             return new_users_today
         except Exception as e:
@@ -131,9 +120,7 @@ class AdminStatsService(IAdminStatsService):
             all_keys = await self.key_repository.get_all_keys(current_user_id)
             today = datetime.now(timezone.utc).date()
             keys_created_today = sum(
-                1
-                for key in all_keys
-                if key.created_at and key.created_at.date() == today
+                1 for key in all_keys if key.created_at and key.created_at.date() == today
             )
             return keys_created_today
         except Exception as e:

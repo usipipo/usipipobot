@@ -51,26 +51,14 @@ def get_admin_callback_handlers(admin_service: AdminService):
         CallbackQueryHandler(handler.suspend_user, pattern=r"^user_suspend_\d+$"),
         CallbackQueryHandler(handler.reactivate_user, pattern=r"^user_reactivate_\d+$"),
         CallbackQueryHandler(handler.confirm_delete_user, pattern=r"^user_delete_\d+$"),
-        CallbackQueryHandler(
-            handler.execute_delete_user, pattern=r"^confirm_delete_user_\d+$"
-        ),
-        CallbackQueryHandler(
-            handler.cancel_user_action, pattern=r"^cancel_delete_user$"
-        ),
+        CallbackQueryHandler(handler.execute_delete_user, pattern=r"^confirm_delete_user_\d+$"),
+        CallbackQueryHandler(handler.cancel_user_action, pattern=r"^cancel_delete_user$"),
         CallbackQueryHandler(handler.keys_page, pattern=r"^keys_page_\d+$"),
         CallbackQueryHandler(handler.keys_filter, pattern=r"^keys_filter_\w+$"),
-        CallbackQueryHandler(
-            handler.show_key_details, pattern=r"^admin_key_details_[a-f0-9\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.suspend_key, pattern=r"^admin_key_suspend_[a-f0-9\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.reactivate_key, pattern=r"^admin_key_reactivate_[a-f0-9\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.confirm_delete_key, pattern=r"^admin_key_delete_[a-f0-9\-]+$"
-        ),
+        CallbackQueryHandler(handler.show_key_details, pattern=r"^admin_key_details_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.suspend_key, pattern=r"^admin_key_suspend_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.reactivate_key, pattern=r"^admin_key_reactivate_[a-f0-9\-]+$"),
+        CallbackQueryHandler(handler.confirm_delete_key, pattern=r"^admin_key_delete_[a-f0-9\-]+$"),
         CallbackQueryHandler(
             handler.execute_delete_key, pattern=r"^confirm_delete_key_[a-f0-9\-]+$"
         ),
@@ -80,27 +68,13 @@ def get_admin_callback_handlers(admin_service: AdminService):
         CallbackQueryHandler(handler.show_tickets_menu, pattern="^admin_tickets_menu$"),
         CallbackQueryHandler(handler.show_open_tickets, pattern="^admin_tickets_open$"),
         CallbackQueryHandler(handler.show_all_tickets, pattern="^admin_tickets$"),
-        CallbackQueryHandler(
-            handler.show_category_filter, pattern="^admin_tickets_filter$"
-        ),
-        CallbackQueryHandler(
-            handler.filter_tickets_by_category, pattern="^admin_tickets_filter_"
-        ),
-        CallbackQueryHandler(
-            handler.view_admin_ticket, pattern=r"^admin_ticket_[0-9a-f\-]+$"
-        ),
-        CallbackQueryHandler(
-            handler.start_ticket_reply, pattern=r"^admin_ticket_resp_\d+$"
-        ),
-        CallbackQueryHandler(
-            handler.close_admin_ticket, pattern=r"^admin_ticket_close_\d+$"
-        ),
-        CallbackQueryHandler(
-            handler.reopen_admin_ticket, pattern=r"^admin_ticket_reopen_\d+$"
-        ),
-        CallbackQueryHandler(
-            handler.show_server_settings, pattern="^settings_servers$"
-        ),
+        CallbackQueryHandler(handler.show_category_filter, pattern="^admin_tickets_filter$"),
+        CallbackQueryHandler(handler.filter_tickets_by_category, pattern="^admin_tickets_filter_"),
+        CallbackQueryHandler(handler.view_admin_ticket, pattern=r"^admin_ticket_[0-9a-f\-]+$"),
+        CallbackQueryHandler(handler.start_ticket_reply, pattern=r"^admin_ticket_resp_\d+$"),
+        CallbackQueryHandler(handler.close_admin_ticket, pattern=r"^admin_ticket_close_\d+$"),
+        CallbackQueryHandler(handler.reopen_admin_ticket, pattern=r"^admin_ticket_reopen_\d+$"),
+        CallbackQueryHandler(handler.show_server_settings, pattern="^settings_servers$"),
         CallbackQueryHandler(handler.show_limits_settings, pattern="^settings_limits$"),
         CallbackQueryHandler(handler.clear_logs, pattern="^clear_logs$"),
         CallbackQueryHandler(handler.backup_database, pattern="^backup_db$"),
@@ -119,38 +93,24 @@ def get_admin_conversation_handler(
             ADMIN_MENU: [
                 CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
                 CallbackQueryHandler(handler.show_keys, pattern="^admin_show_keys$"),
-                CallbackQueryHandler(
-                    handler.show_dashboard, pattern="^admin_server_status$"
-                ),
+                CallbackQueryHandler(handler.show_dashboard, pattern="^admin_server_status$"),
                 CallbackQueryHandler(handler.show_settings, pattern="^admin_settings$"),
-                CallbackQueryHandler(
-                    handler.show_maintenance, pattern="^admin_maintenance$"
-                ),
-                CallbackQueryHandler(
-                    handler.show_tickets_menu, pattern="^admin_tickets_menu$"
-                ),
+                CallbackQueryHandler(handler.show_maintenance, pattern="^admin_maintenance$"),
+                CallbackQueryHandler(handler.show_tickets_menu, pattern="^admin_tickets_menu$"),
                 CallbackQueryHandler(handler.logs_handler, pattern="^admin_logs$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             VIEWING_USERS: [
                 CallbackQueryHandler(handler.users_page, pattern=r"^users_page_\d+$"),
-                CallbackQueryHandler(
-                    handler.show_user_details, pattern=r"^user_details_\d+$"
-                ),
+                CallbackQueryHandler(handler.show_user_details, pattern=r"^user_details_\d+$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             VIEWING_USER_DETAILS: [
                 CallbackQueryHandler(handler.show_users, pattern="^admin_show_users$"),
-                CallbackQueryHandler(
-                    handler.suspend_user, pattern=r"^user_suspend_\d+$"
-                ),
-                CallbackQueryHandler(
-                    handler.reactivate_user, pattern=r"^user_reactivate_\d+$"
-                ),
-                CallbackQueryHandler(
-                    handler.confirm_delete_user, pattern=r"^user_delete_\d+$"
-                ),
+                CallbackQueryHandler(handler.suspend_user, pattern=r"^user_suspend_\d+$"),
+                CallbackQueryHandler(handler.reactivate_user, pattern=r"^user_reactivate_\d+$"),
+                CallbackQueryHandler(handler.confirm_delete_user, pattern=r"^user_delete_\d+$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
@@ -158,9 +118,7 @@ def get_admin_conversation_handler(
                 CallbackQueryHandler(
                     handler.execute_delete_user, pattern=r"^confirm_delete_user_\d+$"
                 ),
-                CallbackQueryHandler(
-                    handler.cancel_user_action, pattern=r"^cancel_delete_user$"
-                ),
+                CallbackQueryHandler(handler.cancel_user_action, pattern=r"^cancel_delete_user$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
             ],
             VIEWING_KEYS: [
@@ -193,18 +151,12 @@ def get_admin_conversation_handler(
                     handler.execute_delete_key,
                     pattern=r"^confirm_delete_key_[a-f0-9\-]+$",
                 ),
-                CallbackQueryHandler(
-                    handler.cancel_key_action, pattern=r"^cancel_delete_key$"
-                ),
+                CallbackQueryHandler(handler.cancel_key_action, pattern=r"^cancel_delete_key$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
             ],
             VIEWING_SETTINGS: [
-                CallbackQueryHandler(
-                    handler.show_server_settings, pattern="^settings_servers$"
-                ),
-                CallbackQueryHandler(
-                    handler.show_limits_settings, pattern="^settings_limits$"
-                ),
+                CallbackQueryHandler(handler.show_server_settings, pattern="^settings_servers$"),
+                CallbackQueryHandler(handler.show_limits_settings, pattern="^settings_limits$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
@@ -215,15 +167,9 @@ def get_admin_conversation_handler(
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             VIEWING_TICKETS: [
-                CallbackQueryHandler(
-                    handler.show_open_tickets, pattern="^admin_tickets_open$"
-                ),
-                CallbackQueryHandler(
-                    handler.show_all_tickets, pattern="^admin_tickets$"
-                ),
-                CallbackQueryHandler(
-                    handler.show_tickets_menu, pattern="^admin_tickets_menu$"
-                ),
+                CallbackQueryHandler(handler.show_open_tickets, pattern="^admin_tickets_open$"),
+                CallbackQueryHandler(handler.show_all_tickets, pattern="^admin_tickets$"),
+                CallbackQueryHandler(handler.show_tickets_menu, pattern="^admin_tickets_menu$"),
                 CallbackQueryHandler(
                     handler.show_category_filter, pattern="^admin_tickets_filter$"
                 ),
@@ -246,12 +192,8 @@ def get_admin_conversation_handler(
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],
             REPLYING_TO_TICKET: [
-                MessageHandler(
-                    filters.TEXT & ~filters.COMMAND, handler.send_ticket_reply
-                ),
-                CallbackQueryHandler(
-                    handler.show_tickets_menu, pattern="^admin_tickets_menu$"
-                ),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handler.send_ticket_reply),
+                CallbackQueryHandler(handler.show_tickets_menu, pattern="^admin_tickets_menu$"),
                 CallbackQueryHandler(handler.back_to_menu, pattern="^admin$"),
                 CallbackQueryHandler(handler.end_admin, pattern="^end_admin$"),
             ],

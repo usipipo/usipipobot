@@ -182,9 +182,7 @@ class ConsumptionMessages:
             "💡 Genera una nueva factura para realizar el pago."
         )
 
-        NO_PENDING_DEBT = (
-            "ℹ️ **No tienes deudas pendientes**\n\n" "✅ Estás al día con tus pagos"
-        )
+        NO_PENDING_DEBT = "ℹ️ **No tienes deudas pendientes**\n\n" "✅ Estás al día con tus pagos"
 
     class Menu:
         """Mensajes del menú principal de consumo."""
@@ -196,13 +194,9 @@ class ConsumptionMessages:
             "💡 *Navega sin límites y paga solo por lo que consumes*"
         )
 
-        STATUS_ACTIVE = (
-            "✅ Modo consumo ACTIVO\n" "📊 Usa `/mi_consumo` para ver detalles"
-        )
+        STATUS_ACTIVE = "✅ Modo consumo ACTIVO\n" "📊 Usa `/mi_consumo` para ver detalles"
 
-        STATUS_INACTIVE = (
-            "⭕ Modo consumo INACTIVO\n" "📦 Usando plan gratuito (5GB/clave)"
-        )
+        STATUS_INACTIVE = "⭕ Modo consumo INACTIVO\n" "📦 Usando plan gratuito (5GB/clave)"
 
         STATUS_DEBT = "🔴 TIENES DEUDA PENDIENTE\n" "💳 Genera factura para pagar"
 

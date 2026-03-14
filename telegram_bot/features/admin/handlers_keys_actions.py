@@ -112,9 +112,7 @@ class KeysActionsMixin:
             return ADMIN_MENU
 
     @admin_required
-    async def confirm_delete_key(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def confirm_delete_key(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra confirmación para eliminar llave."""
         query = update.callback_query
         await self._safe_answer_query(query)
@@ -181,9 +179,7 @@ class KeysActionsMixin:
             return ADMIN_MENU
 
     @admin_required
-    async def cancel_key_action(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def cancel_key_action(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Cancela una acción de llave."""
         query = update.callback_query
         await self._safe_answer_query(query)

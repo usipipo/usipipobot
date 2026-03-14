@@ -115,9 +115,7 @@ class SettingsAdminMixin:
             return ADMIN_MENU
 
     @admin_required
-    async def show_maintenance(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_maintenance(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra el menú de mantenimiento."""
         query = update.callback_query
         await self._safe_answer_query(query)

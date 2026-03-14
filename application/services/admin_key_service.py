@@ -43,9 +43,7 @@ class AdminKeyService(IAdminKeyService):
 
             key_list = []
             for key in all_keys:
-                user = await self.user_repository.get_by_id(
-                    key.user_id, current_user_id
-                )
+                user = await self.user_repository.get_by_id(key.user_id, current_user_id)
                 user_name = user.full_name or "Unknown" if user else "Unknown"
 
                 usage_stats = await self.get_key_usage_stats(str(key.id))
@@ -55,9 +53,7 @@ class AdminKeyService(IAdminKeyService):
                     user_id=key.user_id,
                     user_name=user_name,
                     key_type=(
-                        key.key_type.value
-                        if hasattr(key.key_type, "value")
-                        else str(key.key_type)
+                        key.key_type.value if hasattr(key.key_type, "value") else str(key.key_type)
                     ),
                     key_name=key.name,
                     access_url=key.key_data,
@@ -149,9 +145,7 @@ class AdminKeyService(IAdminKeyService):
             if success:
                 logger.info(f"Clave {key_id} eliminada completamente")
             else:
-                logger.error(
-                    f"Error en eliminación completa de clave {key_id}: {result}"
-                )
+                logger.error(f"Error en eliminación completa de clave {key_id}: {result}")
 
             return result
 
@@ -164,9 +158,7 @@ class AdminKeyService(IAdminKeyService):
                 "error": str(e),
             }
 
-    async def toggle_key_status(
-        self, key_id: str, active: bool = True
-    ) -> Dict[str, Any]:
+    async def toggle_key_status(self, key_id: str, active: bool = True) -> Dict[str, Any]:
         """Activa o desactiva una llave VPN sin eliminarla."""
         try:
             key = await self.key_repository.get_key(key_id)
@@ -184,9 +176,7 @@ class AdminKeyService(IAdminKeyService):
             if success:
                 key.is_active = active
                 await self.key_repository.save(key, key.user_id or 1)
-                logger.info(
-                    f"Clave {key_id} {'reactivada' if active else 'suspendida'}"
-                )
+                logger.info(f"Clave {key_id} {'reactivada' if active else 'suspendida'}")
                 return {"success": True}
             else:
                 return {
@@ -205,15 +195,11 @@ class AdminKeyService(IAdminKeyService):
             key_type = str(key.key_type).lower() if key.key_type else ""
 
             if key_type == "wireguard":
-                result = await self.wireguard_client.disable_peer(
-                    key.name or key.external_id
-                )
+                result = await self.wireguard_client.disable_peer(key.name or key.external_id)
                 if not result:
                     success = False
             elif key_type == "outline":
-                result = await self.outline_client.disable_key(
-                    key.id or key.external_id
-                )
+                result = await self.outline_client.disable_key(key.id or key.external_id)
                 if not result:
                     success = False
 
@@ -229,9 +215,7 @@ class AdminKeyService(IAdminKeyService):
             key_type = str(key.key_type).lower() if key.key_type else ""
 
             if key_type == "wireguard":
-                result = await self.wireguard_client.enable_peer(
-                    key.name or key.external_id
-                )
+                result = await self.wireguard_client.enable_peer(key.name or key.external_id)
                 if not result:
                     success = False
             elif key_type == "outline":
@@ -256,15 +240,11 @@ class AdminKeyService(IAdminKeyService):
 
             if key.key_type.lower() == "wireguard":
                 try:
-                    metrics = await self.wireguard_client.get_peer_metrics(
-                        key.external_id
-                    )
+                    metrics = await self.wireguard_client.get_peer_metrics(key.external_id)
                     data_used = metrics.get("transfer_total", 0)
                     server_status = "active" if data_used > 0 else "inactive"
                 except Exception as e:
-                    logger.error(
-                        f"Error obteniendo métricas WireGuard para {key_id}: {e}"
-                    )
+                    logger.error(f"Error obteniendo métricas WireGuard para {key_id}: {e}")
                     server_status = "error"
 
             elif key.key_type.lower() == "outline":
@@ -273,9 +253,7 @@ class AdminKeyService(IAdminKeyService):
                     data_used = metrics.get("bytes", 0)
                     server_status = "active" if data_used > 0 else "inactive"
                 except Exception as e:
-                    logger.error(
-                        f"Error obteniendo métricas Outline para {key_id}: {e}"
-                    )
+                    logger.error(f"Error obteniendo métricas Outline para {key_id}: {e}")
                     server_status = "error"
 
             return {

@@ -63,8 +63,7 @@ class WebhookSecurityService:
         token = WebhookToken(
             token_hash=nonce_hash,
             purpose="replay_protection",
-            expires_at=datetime.now(timezone.utc)
-            + timedelta(hours=self.NONCE_EXPIRY_HOURS),
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=self.NONCE_EXPIRY_HOURS),
             extra_data={"nonce": nonce},
         )
 
@@ -88,9 +87,7 @@ class WebhookSecurityService:
 
         return None
 
-    def is_suspicious_request(
-        self, payload: dict, headers: dict
-    ) -> Tuple[bool, Optional[str]]:
+    def is_suspicious_request(self, payload: dict, headers: dict) -> Tuple[bool, Optional[str]]:
         if not payload:
             return True, "Empty payload"
 

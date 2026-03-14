@@ -17,14 +17,10 @@ class ReferralKeyboards:
     def main_menu(credits: int, share_url: str = "") -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "💳 Canjear Creditos", callback_data="referral_redeem_menu"
-                ),
+                InlineKeyboardButton("💳 Canjear Creditos", callback_data="referral_redeem_menu"),
             ],
             [
-                InlineKeyboardButton(
-                    "📋 Copiar Codigo", callback_data="referral_copy_code"
-                ),
+                InlineKeyboardButton("📋 Copiar Codigo", callback_data="referral_copy_code"),
                 InlineKeyboardButton("🔄 Actualizar", callback_data="referral_refresh"),
             ],
             (
@@ -69,16 +65,10 @@ class ReferralKeyboards:
 
         if not can_redeem_data and not can_redeem_slot:
             keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "❌ Sin creditos suficientes", callback_data="referral_noop"
-                    )
-                ]
+                [InlineKeyboardButton("❌ Sin creditos suficientes", callback_data="referral_noop")]
             )
 
-        keyboard.append(
-            [InlineKeyboardButton("🔙 Volver", callback_data="referral_menu")]
-        )
+        keyboard.append([InlineKeyboardButton("🔙 Volver", callback_data="referral_menu")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -86,12 +76,8 @@ class ReferralKeyboards:
     def confirm_redeem_data(credits: int, gb: int) -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "✅ Confirmar", callback_data="referral_confirm_data"
-                ),
-                InlineKeyboardButton(
-                    "❌ Cancelar", callback_data="referral_redeem_menu"
-                ),
+                InlineKeyboardButton("✅ Confirmar", callback_data="referral_confirm_data"),
+                InlineKeyboardButton("❌ Cancelar", callback_data="referral_redeem_menu"),
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -100,12 +86,8 @@ class ReferralKeyboards:
     def confirm_redeem_slot(credits: int) -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "✅ Confirmar", callback_data="referral_confirm_slot"
-                ),
-                InlineKeyboardButton(
-                    "❌ Cancelar", callback_data="referral_redeem_menu"
-                ),
+                InlineKeyboardButton("✅ Confirmar", callback_data="referral_confirm_slot"),
+                InlineKeyboardButton("❌ Cancelar", callback_data="referral_redeem_menu"),
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -114,9 +96,7 @@ class ReferralKeyboards:
     def success_back() -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "💳 Canjear Mas", callback_data="referral_redeem_menu"
-                ),
+                InlineKeyboardButton("💳 Canjear Mas", callback_data="referral_redeem_menu"),
                 InlineKeyboardButton("📋 Mi Codigo", callback_data="referral_menu"),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],

@@ -42,9 +42,7 @@ class KeysListMixin:
         admin_id = user.id
 
         page = context.user_data.get("keys_page", 1) if context.user_data else 1
-        key_filter = (
-            context.user_data.get("keys_filter", "all") if context.user_data else "all"
-        )
+        key_filter = context.user_data.get("keys_filter", "all") if context.user_data else "all"
 
         try:
             result = await self._get_filtered_keys(admin_id, page, key_filter)
@@ -63,17 +61,9 @@ class KeysListMixin:
                 )
                 return VIEWING_KEYS
 
-            filter_text = (
-                f"🔍 Filtro: {key_filter.upper()}\n" if key_filter != "all" else ""
-            )
-            message = (
-                AdminMessages.Keys.HEADER
-                + filter_text
-                + f"📊 Total: {total_keys} llaves\n\n"
-            )
-            keyboard = AdminKeyboards.keys_list_paginated(
-                keys, page, total_pages, key_filter
-            )
+            filter_text = f"🔍 Filtro: {key_filter.upper()}\n" if key_filter != "all" else ""
+            message = AdminMessages.Keys.HEADER + filter_text + f"📊 Total: {total_keys} llaves\n\n"
+            keyboard = AdminKeyboards.keys_list_paginated(keys, page, total_pages, key_filter)
 
             await SpinnerManager.replace_spinner_with_message(
                 update,
@@ -89,18 +79,12 @@ class KeysListMixin:
             await self._handle_error(update, context, e, "show_keys")
             return ADMIN_MENU
 
-    async def _get_filtered_keys(
-        self, admin_id: int, page: int, key_filter: str
-    ) -> Dict:
+    async def _get_filtered_keys(self, admin_id: int, page: int, key_filter: str) -> Dict:
         """Obtiene llaves filtradas con paginación."""
         all_keys = await self.service.get_all_keys(current_user_id=admin_id)
 
         if key_filter != "all":
-            all_keys = [
-                k
-                for k in all_keys
-                if k.get("key_type", "").lower() == key_filter.lower()
-            ]
+            all_keys = [k for k in all_keys if k.get("key_type", "").lower() == key_filter.lower()]
 
         total_keys = len(all_keys)
         total_pages = max(1, (total_keys + KEYS_PER_PAGE - 1) // KEYS_PER_PAGE)
@@ -142,9 +126,7 @@ class KeysListMixin:
 
         return await self._show_keys_page(update, context, 1)
 
-    async def _show_keys_page(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE, page: int
-    ):
+    async def _show_keys_page(self, update: Update, context: ContextTypes.DEFAULT_TYPE, page: int):
         """Muestra una página específica de llaves."""
         query = update.callback_query
 
@@ -152,9 +134,7 @@ class KeysListMixin:
         if user is None:
             return ADMIN_MENU
         admin_id = user.id
-        key_filter = (
-            context.user_data.get("keys_filter", "all") if context.user_data else "all"
-        )
+        key_filter = context.user_data.get("keys_filter", "all") if context.user_data else "all"
 
         try:
             result = await self._get_filtered_keys(admin_id, page, key_filter)
@@ -172,17 +152,9 @@ class KeysListMixin:
                 )
                 return VIEWING_KEYS
 
-            filter_text = (
-                f"🔍 Filtro: {key_filter.upper()}\n" if key_filter != "all" else ""
-            )
-            message = (
-                AdminMessages.Keys.HEADER
-                + filter_text
-                + f"📊 Total: {total_keys} llaves\n\n"
-            )
-            keyboard = AdminKeyboards.keys_list_paginated(
-                keys, page, total_pages, key_filter
-            )
+            filter_text = f"🔍 Filtro: {key_filter.upper()}\n" if key_filter != "all" else ""
+            message = AdminMessages.Keys.HEADER + filter_text + f"📊 Total: {total_keys} llaves\n\n"
+            keyboard = AdminKeyboards.keys_list_paginated(keys, page, total_pages, key_filter)
 
             await self._safe_edit_message(
                 query,
@@ -220,9 +192,7 @@ class KeysListMixin:
 
         try:
             all_keys = await self.service.get_all_keys(current_user_id=admin_id)
-            key = next(
-                (k for k in all_keys if str(k.get("key_id", "")) == str(key_id)), None
-            )
+            key = next((k for k in all_keys if str(k.get("key_id", "")) == str(key_id)), None)
 
             if not key:
                 await SpinnerManager.replace_spinner_with_message(

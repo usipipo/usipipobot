@@ -46,9 +46,7 @@ class ViewTicketsMixin:
 
             if query:
                 await self._safe_answer_query(query)
-                await self._safe_edit_message(
-                    query, context, text=message, reply_markup=keyboard
-                )
+                await self._safe_edit_message(query, context, text=message, reply_markup=keyboard)
             elif update.message:
                 await update.message.reply_text(
                     text=message, reply_markup=keyboard, parse_mode="Markdown"
@@ -121,9 +119,7 @@ class ViewTicketsMixin:
             )
             return TICKET_MENU
 
-        logger.info(
-            f"🎫 User {user_id} viewing ticket {ticket_id} (simple_id: {simple_id})"
-        )
+        logger.info(f"🎫 User {user_id} viewing ticket {ticket_id} (simple_id: {simple_id})")
 
         try:
             result = await self.ticket_service.get_ticket_with_messages(ticket_id)
@@ -154,15 +150,9 @@ class ViewTicketsMixin:
             header = TicketMessages.Detail.HEADER
             info = TicketMessages.Detail.INFO.format(
                 ticket_number=ticket.ticket_number,
-                category=CATEGORY_NAME.get(
-                    ticket.category.value, ticket.category.value
-                ),
-                priority=PRIORITY_NAME.get(
-                    ticket.priority.value, ticket.priority.value
-                ),
-                status=STATUS_NAME.get(
-                    ticket.status.value, ticket.status.value.upper()
-                ),
+                category=CATEGORY_NAME.get(ticket.category.value, ticket.category.value),
+                priority=PRIORITY_NAME.get(ticket.priority.value, ticket.priority.value),
+                status=STATUS_NAME.get(ticket.status.value, ticket.status.value.upper()),
                 created_at=ticket.created_at.strftime("%d/%m/%Y %H:%M"),
             )
             messages_text = self._format_messages(messages)
@@ -179,9 +169,7 @@ class ViewTicketsMixin:
                 can_close=ticket.status != TicketStatus.CLOSED,
             )
 
-            await self._safe_edit_message(
-                query, context, text=message, reply_markup=keyboard
-            )
+            await self._safe_edit_message(query, context, text=message, reply_markup=keyboard)
 
             return TICKET_VIEWING
 

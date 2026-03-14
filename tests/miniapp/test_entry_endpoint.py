@@ -18,9 +18,7 @@ from miniapp.router import get_current_user
 async def client():
     """Cliente de pruebas para la API."""
     app = create_app()
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 
@@ -35,9 +33,7 @@ async def client_with_unregistered_user():
         raise HTTPException(status_code=403, detail="USER_NOT_REGISTERED")
 
     app.dependency_overrides[get_current_user] = mock_unregistered_user
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
 

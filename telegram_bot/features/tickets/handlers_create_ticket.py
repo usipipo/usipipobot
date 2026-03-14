@@ -55,9 +55,7 @@ class CreateTicketMixin:
 
             if query:
                 await self._safe_answer_query(query)
-                await self._safe_edit_message(
-                    query, context, text=message, reply_markup=keyboard
-                )
+                await self._safe_edit_message(query, context, text=message, reply_markup=keyboard)
             elif update.message:
                 await update.message.reply_text(
                     text=message, reply_markup=keyboard, parse_mode="Markdown"
@@ -104,9 +102,7 @@ class CreateTicketMixin:
             )
             keyboard = TicketKeyboards.cancel_action()
 
-            await self._safe_edit_message(
-                query, context, text=message, reply_markup=keyboard
-            )
+            await self._safe_edit_message(query, context, text=message, reply_markup=keyboard)
 
             return TICKET_WRITING_MESSAGE
 
@@ -151,9 +147,7 @@ class CreateTicketMixin:
             confirm_message = TicketMessages.Create.CONFIRM.format(
                 category=category_name,
                 description=(
-                    message_text[:200] + "..."
-                    if len(message_text) > 200
-                    else message_text
+                    message_text[:200] + "..." if len(message_text) > 200 else message_text
                 ),
             )
             keyboard = TicketKeyboards.confirm_ticket()
@@ -230,9 +224,7 @@ class CreateTicketMixin:
             success_message = TicketMessages.Create.SUCCESS.format(
                 ticket_number=ticket.ticket_number,
                 category=CATEGORY_NAME.get(category.value, category.value),
-                priority=PRIORITY_NAME.get(
-                    ticket.priority.value, ticket.priority.value.upper()
-                ),
+                priority=PRIORITY_NAME.get(ticket.priority.value, ticket.priority.value.upper()),
             )
 
             await self._safe_edit_message(

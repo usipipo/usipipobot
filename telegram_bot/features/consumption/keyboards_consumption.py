@@ -40,11 +40,7 @@ class ConsumptionKeyboards:
         elif has_active_cycle:
             # Usuario con ciclo activo - ver consumo y opción de cancelar
             keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "📊 Ver Mi Consumo", callback_data="consumption_view_status"
-                    )
-                ]
+                [InlineKeyboardButton("📊 Ver Mi Consumo", callback_data="consumption_view_status")]
             )
             keyboard.append(
                 [
@@ -65,16 +61,10 @@ class ConsumptionKeyboards:
 
         # Información siempre disponible
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "ℹ️ ¿Qué es el Modo Consumo?", callback_data="consumption_info"
-                )
-            ]
+            [InlineKeyboardButton("ℹ️ ¿Qué es el Modo Consumo?", callback_data="consumption_info")]
         )
 
-        keyboard.append(
-            [InlineKeyboardButton("🔙 Volver al Menú", callback_data="main_menu")]
-        )
+        keyboard.append([InlineKeyboardButton("🔙 Volver al Menú", callback_data="main_menu")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -123,9 +113,7 @@ class ConsumptionKeyboards:
         """Teclado para volver al menú de consumo."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "📊 Menú Consumo", callback_data="consumption_menu"
-                ),
+                InlineKeyboardButton("📊 Menú Consumo", callback_data="consumption_menu"),
                 InlineKeyboardButton("🔙 Menú Principal", callback_data="main_menu"),
             ]
         ]
@@ -149,11 +137,7 @@ class ConsumptionKeyboards:
     def activation_success() -> InlineKeyboardMarkup:
         """Teclado tras activación exitosa."""
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "📊 Ver Mi Consumo", callback_data="consumption_view_status"
-                )
-            ],
+            [InlineKeyboardButton("📊 Ver Mi Consumo", callback_data="consumption_view_status")],
             [InlineKeyboardButton("🔙 Menú Principal", callback_data="main_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -162,11 +146,7 @@ class ConsumptionKeyboards:
     def payment_success() -> InlineKeyboardMarkup:
         """Teclado tras pago exitoso."""
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "⚡ Activar Nuevo Ciclo", callback_data="consumption_activate"
-                )
-            ],
+            [InlineKeyboardButton("⚡ Activar Nuevo Ciclo", callback_data="consumption_activate")],
             [InlineKeyboardButton("🔙 Menú Principal", callback_data="main_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -175,11 +155,7 @@ class ConsumptionKeyboards:
     def view_info_only() -> InlineKeyboardMarkup:
         """Teclado solo informativo."""
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "⚡ Activar Modo Consumo", callback_data="consumption_activate"
-                )
-            ],
+            [InlineKeyboardButton("⚡ Activar Modo Consumo", callback_data="consumption_activate")],
             [InlineKeyboardButton("🔙 Volver", callback_data="main_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
@@ -194,11 +170,7 @@ class ConsumptionKeyboards:
                     callback_data="consumption_confirm_cancel",
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "❌ No, Mantener Activo", callback_data="consumption_menu"
-                )
-            ],
+            [InlineKeyboardButton("❌ No, Mantener Activo", callback_data="consumption_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
 

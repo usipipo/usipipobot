@@ -55,13 +55,9 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             username=entity.username,
             full_name=entity.full_name,
             status=(
-                entity.status.value
-                if isinstance(entity.status, UserStatus)
-                else entity.status
+                entity.status.value if isinstance(entity.status, UserStatus) else entity.status
             ),
-            role=(
-                entity.role.value if isinstance(entity.role, UserRole) else entity.role
-            ),
+            role=(entity.role.value if isinstance(entity.role, UserRole) else entity.role),
             max_keys=entity.max_keys,
             referral_code=entity.referral_code,
             referred_by=entity.referred_by,
@@ -94,13 +90,9 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 existing.username = user.username
                 existing.full_name = user.full_name
                 existing.status = (
-                    user.status.value
-                    if isinstance(user.status, UserStatus)
-                    else user.status
+                    user.status.value if isinstance(user.status, UserStatus) else user.status
                 )
-                existing.role = (
-                    user.role.value if isinstance(user.role, UserRole) else user.role
-                )
+                existing.role = user.role.value if isinstance(user.role, UserRole) else user.role
                 existing.max_keys = user.max_keys
                 existing.referral_code = user.referral_code
                 existing.referred_by = user.referred_by
@@ -111,9 +103,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 existing.purchase_count = user.purchase_count
                 existing.loyalty_bonus_percent = user.loyalty_bonus_percent
                 existing.welcome_bonus_used = user.welcome_bonus_used
-                existing.referred_users_with_purchase = (
-                    user.referred_users_with_purchase
-                )
+                existing.referred_users_with_purchase = user.referred_users_with_purchase
             else:
                 model = self._entity_to_model(user)
                 self.session.add(model)
@@ -150,9 +140,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
     async def exists(self, telegram_id: int, current_user_id: int) -> bool:
         await self._set_current_user(current_user_id)
         try:
-            query = select(UserModel.telegram_id).where(
-                UserModel.telegram_id == telegram_id
-            )
+            query = select(UserModel.telegram_id).where(UserModel.telegram_id == telegram_id)
             result = await self.session.execute(query)
             return result.scalar_one_or_none() is not None
         except Exception as e:
@@ -191,9 +179,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             logger.error(f"Error al obtener referidos: {e}")
             return []
 
-    async def get_referrals_by_user(
-        self, telegram_id: int, current_user_id: int
-    ) -> List[User]:
+    async def get_referrals_by_user(self, telegram_id: int, current_user_id: int) -> List[User]:
         await self._set_current_user(current_user_id)
         try:
             query = select(UserModel).where(UserModel.referred_by == telegram_id)
@@ -224,15 +210,11 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             query = (
                 update(UserModel)
                 .where(UserModel.telegram_id == telegram_id)
-                .values(
-                    free_data_used_bytes=UserModel.free_data_used_bytes + bytes_used
-                )
+                .values(free_data_used_bytes=UserModel.free_data_used_bytes + bytes_used)
             )
             await self.session.execute(query)
             await self.session.commit()
-            logger.debug(
-                f"Uso de datos gratuitos actualizado para usuario {telegram_id}"
-            )
+            logger.debug(f"Uso de datos gratuitos actualizado para usuario {telegram_id}")
             return True
         except Exception as e:
             await self.session.rollback()
@@ -252,18 +234,14 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             )
             await self.session.execute(query)
             await self.session.commit()
-            logger.debug(
-                f"Créditos actualizados para usuario {telegram_id}: {credits_delta:+d}"
-            )
+            logger.debug(f"Créditos actualizados para usuario {telegram_id}: {credits_delta:+d}")
             return True
         except Exception as e:
             await self.session.rollback()
             logger.error(f"Error al actualizar créditos de referido: {e}")
             return False
 
-    async def increment_max_keys(
-        self, telegram_id: int, slots: int, current_user_id: int
-    ) -> bool:
+    async def increment_max_keys(self, telegram_id: int, slots: int, current_user_id: int) -> bool:
         """Incrementa el límite de claves de un usuario."""
         await self._set_current_user(current_user_id)
         try:
@@ -274,9 +252,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             )
             await self.session.execute(query)
             await self.session.commit()
-            logger.debug(
-                f"Límite de claves incrementado para usuario {telegram_id}: +{slots}"
-            )
+            logger.debug(f"Límite de claves incrementado para usuario {telegram_id}: +{slots}")
             return True
         except Exception as e:
             await self.session.rollback()
@@ -291,13 +267,9 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
                 existing.username = user.username
                 existing.full_name = user.full_name
                 existing.status = (
-                    user.status.value
-                    if isinstance(user.status, UserStatus)
-                    else user.status
+                    user.status.value if isinstance(user.status, UserStatus) else user.status
                 )
-                existing.role = (
-                    user.role.value if isinstance(user.role, UserRole) else user.role
-                )
+                existing.role = user.role.value if isinstance(user.role, UserRole) else user.role
                 existing.max_keys = user.max_keys
                 existing.referral_code = user.referral_code
                 existing.referred_by = user.referred_by
@@ -342,9 +314,7 @@ class PostgresUserRepository(BasePostgresRepository, IUserRepository):
             )
             await self.session.execute(query)
             await self.session.commit()
-            logger.debug(
-                f"Wallet address actualizada para usuario {telegram_id}: {wallet_address}"
-            )
+            logger.debug(f"Wallet address actualizada para usuario {telegram_id}: {wallet_address}")
             return True
         except Exception as e:
             await self.session.rollback()

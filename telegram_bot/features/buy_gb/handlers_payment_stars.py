@@ -49,23 +49,17 @@ class PaymentStarsMixin:
 
             await context.bot.send_invoice(
                 chat_id=update.effective_chat.id,
-                title=BuyGbMessages.Payment.INVOICE_TITLE.format(
-                    package_name=package_option.name
-                ),
+                title=BuyGbMessages.Payment.INVOICE_TITLE.format(package_name=package_option.name),
                 description=BuyGbMessages.Payment.INVOICE_DESCRIPTION.format(
                     gb_amount=package_option.data_gb
                 ),
                 payload=payload,
                 provider_token="",
                 currency="XTR",
-                prices=[
-                    LabeledPrice(f"{package_option.data_gb} GB", package_option.stars)
-                ],
+                prices=[LabeledPrice(f"{package_option.data_gb} GB", package_option.stars)],
             )
 
-            logger.info(
-                f"📦 Invoice enviado: {package_option.name} para usuario {user_id}"
-            )
+            logger.info(f"📦 Invoice enviado: {package_option.name} para usuario {user_id}")
 
         except Exception as e:
             logger.error(f"Error en pay_with_stars: {e}")
@@ -75,9 +69,7 @@ class PaymentStarsMixin:
                 parse_mode="Markdown",
             )
 
-    async def pay_slots_with_stars(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def pay_slots_with_stars(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Procesa pago de slots con Telegram Stars."""
         query = update.callback_query
         if not query or not query.data:
@@ -109,9 +101,7 @@ class PaymentStarsMixin:
 
             await context.bot.send_invoice(
                 chat_id=update.effective_chat.id,
-                title=BuyGbMessages.Slots.INVOICE_TITLE.format(
-                    slots_name=slot_option.name
-                ),
+                title=BuyGbMessages.Slots.INVOICE_TITLE.format(slots_name=slot_option.name),
                 description=BuyGbMessages.Slots.INVOICE_DESCRIPTION.format(slots=slots),
                 payload=payload,
                 provider_token="",
@@ -119,9 +109,7 @@ class PaymentStarsMixin:
                 prices=[LabeledPrice(f"+{slots} Claves", slot_option.stars)],
             )
 
-            logger.info(
-                f"🔑 Invoice enviado: {slot_option.name} para usuario {user_id}"
-            )
+            logger.info(f"🔑 Invoice enviado: {slot_option.name} para usuario {user_id}")
 
         except Exception as e:
             logger.error(f"Error en pay_slots_with_stars: {e}")
@@ -162,23 +150,17 @@ class PaymentStarsMixin:
 
             await context.bot.send_invoice(
                 chat_id=update.effective_chat.id,
-                title=BuyGbMessages.Payment.INVOICE_TITLE.format(
-                    package_name=package_option.name
-                ),
+                title=BuyGbMessages.Payment.INVOICE_TITLE.format(package_name=package_option.name),
                 description=BuyGbMessages.Payment.INVOICE_DESCRIPTION.format(
                     gb_amount=package_option.data_gb
                 ),
                 payload=payload,
                 provider_token="",
                 currency="XTR",
-                prices=[
-                    LabeledPrice(f"{package_option.data_gb} GB", package_option.stars)
-                ],
+                prices=[LabeledPrice(f"{package_option.data_gb} GB", package_option.stars)],
             )
 
-            logger.info(
-                f"📦 Invoice enviado: {package_option.name} para usuario {user_id}"
-            )
+            logger.info(f"📦 Invoice enviado: {package_option.name} para usuario {user_id}")
 
         except Exception as e:
             logger.error(f"Error en buy_package: {e}")

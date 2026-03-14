@@ -18,21 +18,15 @@ class ConsumptionBillingModel(Base):
 
     __tablename__ = "consumption_billings"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("users.telegram_id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    started_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    ended_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    ended_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     # Usamos Numeric para precisión decimal exacta
     mb_consumed: Mapped[Decimal] = mapped_column(
         Numeric(20, 6), nullable=False, default=Decimal("0.00")

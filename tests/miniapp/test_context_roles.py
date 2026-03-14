@@ -38,9 +38,7 @@ class TestMiniAppContextIsAdmin:
     def test_is_admin_true_when_telegram_id_matches_admin_id(self):
         """User matching ADMIN_ID should be admin even without db_user."""
         admin_id = int(settings.ADMIN_ID)
-        telegram_user = TelegramUser(
-            id=admin_id, first_name="Admin", username="adminuser"
-        )
+        telegram_user = TelegramUser(id=admin_id, first_name="Admin", username="adminuser")
 
         ctx = MiniAppContext(user=telegram_user, db_user=None)
 
@@ -66,9 +64,7 @@ class TestMiniAppContextIsAdmin:
             first_name="Secondary",
             username="secondaryadmin",
         )
-        db_user = User(
-            telegram_id=55555, username="secondaryadmin", role=UserRole.ADMIN
-        )
+        db_user = User(telegram_id=55555, username="secondaryadmin", role=UserRole.ADMIN)
 
         ctx = MiniAppContext(user=telegram_user, db_user=db_user)
 

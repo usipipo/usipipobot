@@ -59,8 +59,7 @@ class CommonMessages:
         )
 
         PERMISSION_DENIED = (
-            "🔒 **Permiso Denegado**\n\n"
-            "No tienes los permisos necesarios para esta acción."
+            "🔒 **Permiso Denegado**\n\n" "No tienes los permisos necesarios para esta acción."
         )
 
         RATE_LIMIT = (
@@ -81,8 +80,7 @@ class CommonMessages:
         )
 
         CHANGES_SAVED = (
-            "💾 **Cambios Guardados**\n\n"
-            "Los cambios han sido guardados correctamente."
+            "💾 **Cambios Guardados**\n\n" "Los cambios han sido guardados correctamente."
         )
 
         CREATED_SUCCESSFULLY = (
@@ -90,13 +88,11 @@ class CommonMessages:
         )
 
         UPDATED_SUCCESSFULLY = (
-            "🔄 **Actualizado Exitosamente**\n\n"
-            "El elemento ha sido actualizado correctamente."
+            "🔄 **Actualizado Exitosamente**\n\n" "El elemento ha sido actualizado correctamente."
         )
 
         DELETED_SUCCESSFULLY = (
-            "🗑️ **Eliminado Exitosamente**\n\n"
-            "El elemento ha sido eliminado correctamente."
+            "🗑️ **Eliminado Exitosamente**\n\n" "El elemento ha sido eliminado correctamente."
         )
 
     # ============================================
@@ -145,21 +141,13 @@ class CommonMessages:
     class Empty:
         """Empty state messages."""
 
-        NO_DATA = (
-            "📭 **Sin Datos**\n\n" "No hay información disponible en este momento."
-        )
+        NO_DATA = "📭 **Sin Datos**\n\n" "No hay información disponible en este momento."
 
-        NO_RESULTS = (
-            "🔍 **Sin Resultados**\n\n" "No se encontraron resultados para tu búsqueda."
-        )
+        NO_RESULTS = "🔍 **Sin Resultados**\n\n" "No se encontraron resultados para tu búsqueda."
 
-        NO_ITEMS = (
-            "📦 **Sin Elementos**\n\n" "No hay elementos para mostrar en esta sección."
-        )
+        NO_ITEMS = "📦 **Sin Elementos**\n\n" "No hay elementos para mostrar en esta sección."
 
-        NO_HISTORY = (
-            "📋 **Sin Historial**\n\n" "No hay actividad reciente para mostrar."
-        )
+        NO_HISTORY = "📋 **Sin Historial**\n\n" "No hay actividad reciente para mostrar."
 
     # ============================================
     # MENU

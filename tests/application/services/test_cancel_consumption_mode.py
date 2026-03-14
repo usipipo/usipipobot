@@ -19,9 +19,7 @@ class TestCanCancelConsumption:
 
     @pytest.fixture
     def service(self, mock_billing_repo, mock_user_repo):
-        return ConsumptionBillingService(
-            billing_repo=mock_billing_repo, user_repo=mock_user_repo
-        )
+        return ConsumptionBillingService(billing_repo=mock_billing_repo, user_repo=mock_user_repo)
 
     @pytest.fixture
     def mock_billing_repo(self):
@@ -50,9 +48,7 @@ class TestCanCancelConsumption:
         self, service, mock_user_repo, mock_billing_repo
     ):
         """Usuario con deuda pendiente no puede cancelar."""
-        user = User(
-            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=True
-        )
+        user = User(telegram_id=123, consumption_mode_enabled=True, has_pending_debt=True)
         billing = ConsumptionBilling(
             user_id=123,
             started_at=datetime.now(timezone.utc),
@@ -107,9 +103,7 @@ class TestCanCancelConsumption:
         self, service, mock_user_repo, mock_billing_repo
     ):
         """Usuario con ciclo activo puede cancelar."""
-        user = User(
-            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
-        )
+        user = User(telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False)
         billing = ConsumptionBilling(
             user_id=123,
             started_at=datetime.now(timezone.utc),
@@ -130,9 +124,7 @@ class TestCancelConsumptionMode:
 
     @pytest.fixture
     def service(self, mock_billing_repo, mock_user_repo):
-        return ConsumptionBillingService(
-            billing_repo=mock_billing_repo, user_repo=mock_user_repo
-        )
+        return ConsumptionBillingService(billing_repo=mock_billing_repo, user_repo=mock_user_repo)
 
     @pytest.fixture
     def mock_billing_repo(self):
@@ -150,9 +142,7 @@ class TestCancelConsumptionMode:
     ):
         """Cancelación exitosa del modo consumo."""
         # Setup
-        user = User(
-            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
-        )
+        user = User(telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False)
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
             user_id=123,
@@ -208,9 +198,7 @@ class TestCancelConsumptionMode:
         )
 
     @pytest.mark.asyncio
-    async def test_cancel_consumption_mode_user_not_found(
-        self, service, mock_user_repo
-    ):
+    async def test_cancel_consumption_mode_user_not_found(self, service, mock_user_repo):
         """Error cuando usuario no existe."""
         mock_user_repo.get_by_id.return_value = None
 
@@ -224,9 +212,7 @@ class TestCancelConsumptionMode:
         self, service, mock_user_repo, mock_billing_repo
     ):
         """Error cuando no hay ciclo activo."""
-        user = User(
-            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
-        )
+        user = User(telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False)
         mock_user_repo.get_by_id.return_value = user
         mock_billing_repo.get_active_by_user.return_value = None
 
@@ -240,9 +226,7 @@ class TestCancelConsumptionMode:
         self, service, mock_user_repo, mock_billing_repo
     ):
         """Error cuando usuario ya tiene deuda."""
-        user = User(
-            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=True
-        )
+        user = User(telegram_id=123, consumption_mode_enabled=True, has_pending_debt=True)
         billing = ConsumptionBilling(
             user_id=123,
             started_at=datetime.now(timezone.utc),
@@ -262,9 +246,7 @@ class TestCancelConsumptionMode:
         self, service, mock_user_repo, mock_billing_repo
     ):
         """Maneja caso cuando container es None."""
-        user = User(
-            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
-        )
+        user = User(telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False)
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
             user_id=123,
@@ -299,9 +281,7 @@ class TestCancelConsumptionModeWithoutDebt:
 
     @pytest.fixture
     def service(self, mock_billing_repo, mock_user_repo):
-        return ConsumptionBillingService(
-            billing_repo=mock_billing_repo, user_repo=mock_user_repo
-        )
+        return ConsumptionBillingService(billing_repo=mock_billing_repo, user_repo=mock_user_repo)
 
     @pytest.fixture
     def mock_billing_repo(self):
@@ -319,9 +299,7 @@ class TestCancelConsumptionModeWithoutDebt:
     ):
         """BUG FIX: Cancelación sin consumo NO bloquea claves ni marca deuda."""
         # Setup - ciclo activo pero sin consumo
-        user = User(
-            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
-        )
+        user = User(telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False)
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
             user_id=123,
@@ -361,9 +339,7 @@ class TestCancelConsumptionModeWithoutDebt:
     ):
         """Cancelación CON consumo: SÍ bloquea claves, SÍ marca deuda."""
         # Setup - ciclo activo CON consumo
-        user = User(
-            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
-        )
+        user = User(telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False)
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
             user_id=123,
@@ -420,9 +396,7 @@ class TestCancelConsumptionModeWithoutDebt:
     ):
         """Cancelación con costo > 0 aunque MB = 0: SÍ marca deuda."""
         # Setup - ciclo con costo positivo (caso edge)
-        user = User(
-            telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False
-        )
+        user = User(telegram_id=123, consumption_mode_enabled=True, has_pending_debt=False)
         billing_id = uuid.uuid4()
         billing = ConsumptionBilling(
             user_id=123,

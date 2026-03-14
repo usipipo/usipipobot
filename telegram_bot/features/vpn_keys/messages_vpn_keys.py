@@ -45,9 +45,7 @@ class VpnKeysMessages:
             "   Cada slot te permite crear 1 clave extra"
         )
 
-        INVALID_NAME = (
-            "⛔ *NOMBRE INVÁLIDO*\n\n" "📝 Solo letras, números\n" "   y espacios 🎯"
-        )
+        INVALID_NAME = "⛔ *NOMBRE INVÁLIDO*\n\n" "📝 Solo letras, números\n" "   y espacios 🎯"
 
     # ============================================
     # SUCCESS
@@ -73,8 +71,6 @@ class VpnKeysMessages:
             "🚀 Lista para usar ⚡"
         )
 
-        KEY_DELETED = (
-            "🗑️ *ELIMINADA*\n\n" "💥 `{name}` destruida\n\n" "🔌 Devices off ⚡"
-        )
+        KEY_DELETED = "🗑️ *ELIMINADA*\n\n" "💥 `{name}` destruida\n\n" "🔌 Devices off ⚡"
 
         KEY_RENAMED = "✏️ *RENOMBRADA*\n\n" "✨ {new_name}\n\n" "✅ Listo 🎯"

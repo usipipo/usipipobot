@@ -10,9 +10,7 @@ class IConsumptionBillingRepository(Protocol):
     Define cómo interactuamos con la tabla de billing en la BD.
     """
 
-    async def save(
-        self, billing: ConsumptionBilling, current_user_id: int
-    ) -> ConsumptionBilling:
+    async def save(self, billing: ConsumptionBilling, current_user_id: int) -> ConsumptionBilling:
         """Guarda un nuevo ciclo de facturación o actualiza uno existente."""
         ...
 
@@ -22,9 +20,7 @@ class IConsumptionBillingRepository(Protocol):
         """Busca un ciclo de facturación específico por su ID."""
         ...
 
-    async def get_by_user(
-        self, user_id: int, current_user_id: int
-    ) -> List[ConsumptionBilling]:
+    async def get_by_user(self, user_id: int, current_user_id: int) -> List[ConsumptionBilling]:
         """Recupera todos los ciclos de facturación de un usuario."""
         ...
 

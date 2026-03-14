@@ -33,17 +33,13 @@ class AdminUserService(IAdminUserService):
 
             user_list = []
             for user in users:
-                user_keys = await self.key_repository.get_by_user(
-                    user.telegram_id, current_user_id
-                )
+                user_keys = await self.key_repository.get_by_user(user.telegram_id, current_user_id)
                 active_keys = [k for k in user_keys if k.is_active]
 
                 balance = await self.payment_repository.get_balance(user.telegram_id)
 
                 name_parts = (user.full_name or "").split(" ", 1)
-                first_name = (
-                    name_parts[0] if name_parts and name_parts[0] else "Unknown"
-                )
+                first_name = name_parts[0] if name_parts and name_parts[0] else "Unknown"
                 last_name = name_parts[1] if len(name_parts) > 1 else None
 
                 user_info = AdminUserInfo(
@@ -94,9 +90,7 @@ class AdminUserService(IAdminUserService):
             logger.error(f"Error obteniendo usuario {user_id}: {e}")
             return None
 
-    async def update_user_status(
-        self, user_id: int, status: str
-    ) -> AdminOperationResult:
+    async def update_user_status(self, user_id: int, status: str) -> AdminOperationResult:
         """Actualizar estado del usuario (ACTIVE, SUSPENDED, BLOCKED)."""
         try:
             user = await self.user_repository.get_by_id(user_id, user_id)
@@ -227,9 +221,7 @@ class AdminUserService(IAdminUserService):
 
             await self.user_repository.delete_user(user_id)
 
-            message = (
-                f"Usuario {user_id} eliminado junto con {deleted_keys_count} claves"
-            )
+            message = f"Usuario {user_id} eliminado junto con {deleted_keys_count} claves"
             logger.info(message)
             return AdminOperationResult(
                 success=True,

@@ -85,9 +85,7 @@ class PostgresTransactionRepository(BasePostgresRepository, ITransactionReposito
             logger.error(f"Error al obtener transacciones del usuario {user_id}: {e}")
             return []
 
-    async def get_transactions_by_type(
-        self, transaction_type: str, limit: int = 100
-    ) -> List[dict]:
+    async def get_transactions_by_type(self, transaction_type: str, limit: int = 100) -> List[dict]:
         try:
             query = (
                 select(TransactionModel)
@@ -112,9 +110,7 @@ class PostgresTransactionRepository(BasePostgresRepository, ITransactionReposito
                 for m in models
             ]
         except Exception as e:
-            logger.error(
-                f"Error al obtener transacciones de tipo {transaction_type}: {e}"
-            )
+            logger.error(f"Error al obtener transacciones de tipo {transaction_type}: {e}")
             return []
 
     async def get_balance(self, user_id: int) -> Balance:

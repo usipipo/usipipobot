@@ -57,9 +57,7 @@ class OutlineClient:
             key_id = key_data["id"]
 
             # 2. Renombrar la llave
-            await self.client.put(
-                f"{self.api_url}/access-keys/{key_id}/name", data={"name": name}
-            )
+            await self.client.put(f"{self.api_url}/access-keys/{key_id}/name", data={"name": name})
 
             # 3. Formatear respuesta con branding
             return {
@@ -140,9 +138,7 @@ class OutlineClient:
         Reactiva una clave Outline removiendo el data-limit.
         """
         try:
-            res = await self.client.delete(
-                f"{self.api_url}/access-keys/{key_id}/data-limit"
-            )
+            res = await self.client.delete(f"{self.api_url}/access-keys/{key_id}/data-limit")
             if res.status_code == 204:
                 logger.info(f"Key {key_id} enabled (data-limit removed)")
                 return True

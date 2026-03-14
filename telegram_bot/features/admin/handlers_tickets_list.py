@@ -22,9 +22,7 @@ class TicketsListMixin:
     """Mixin para listado de tickets en panel admin."""
 
     @admin_required
-    async def show_tickets_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_tickets_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra el menú de gestión de tickets."""
         query = update.callback_query
         await self._safe_answer_query(query)
@@ -151,9 +149,7 @@ class TicketsListMixin:
             return VIEWING_TICKETS
 
     @admin_required
-    async def show_category_filter(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_category_filter(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra menú de filtro por categoría."""
         query = update.callback_query
         await self._safe_answer_query(query)

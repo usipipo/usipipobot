@@ -15,9 +15,7 @@ class ICryptoTransactionRepository(ABC):
         pass
 
     @abstractmethod
-    async def get_by_user(
-        self, user_id: int, limit: int = 50
-    ) -> List[CryptoTransaction]:
+    async def get_by_user(self, user_id: int, limit: int = 50) -> List[CryptoTransaction]:
         pass
 
     @abstractmethod
