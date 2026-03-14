@@ -56,3 +56,64 @@ class OTPResponse(BaseModel):
             }
         }
     }
+
+
+class OTPVerify(BaseModel):
+    """
+    Schema para verificar código OTP.
+    """
+    identifier: str = Field(..., min_length=1, max_length=50)
+    otp: str = Field(..., min_length=6, max_length=6)
+
+    @validator("identifier")
+    def validate_identifier(cls, v):
+        v = v.strip()
+        if v.startswith("@"):
+            if not re.match(r"^[a-zA-Z0-9_]{5,32}$", v[1:]):
+                raise ValueError("Username inválido")
+        else:
+            if not v.isdigit():
+                raise ValueError("Debe ser username o telegram_id")
+        return v
+
+    @validator("otp")
+    def validate_otp(cls, v):
+        if not v.isdigit():
+            raise ValueError("El código OTP debe ser numérico")
+        if len(v) != 6:
+            raise ValueError("El código OTP debe tener 6 dígitos")
+        return v
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "identifier": "@juanperez",
+                "otp": "123456"
+            }
+        }
+    }
+
+
+class TokenResponse(BaseModel):
+    """
+    Schema de respuesta con token JWT.
+    """
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    user: dict
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+                "expires_in": 86400,
+                "user": {
+                    "telegram_id": "123456789",
+                    "username": "juanperez",
+                    "full_name": "Juan Pérez"
+                }
+            }
+        }
+    }
