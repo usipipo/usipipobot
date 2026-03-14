@@ -164,6 +164,18 @@ echo "🔒 Paso 7: Verificando token revocado..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
+# Primero probar endpoint /me con token válido (antes del logout)
+# Esto ya se probó implícitamente en el refresh, pero vamos a hacerlo explícito
+echo "Probando endpoint /me con token ANTES del logout:"
+ME_RESPONSE=$(curl -s -X GET "$BASE_URL/me" \
+  -H "Authorization: Bearer $ACCESS_TOKEN")
+
+echo "$ME_RESPONSE" | python3 -m json.tool
+
+echo ""
+echo "Ahora probando endpoint /me con token DESPUÉS del logout:"
+
+# El logout ya se hizo en el paso 6, así que el token debería estar revocado
 REVOKED_RESPONSE=$(curl -s -X GET "$BASE_URL/me" \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -w "\n%{http_code}")
