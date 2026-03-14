@@ -1,5 +1,5 @@
 # Core
-kivy==2.3.0
+kivy==2.3.1
 kivymd==1.2.0
 
 # Async support for Kivy
@@ -14,11 +14,11 @@ keyring==24.3.0
 certifi==2024.2.2
 
 # Validation
-pydantic==2.6.0
+pydantic==2.10.0
 
 # Utilities
 qrcode==7.4.2
-Pillow==10.2.0
+Pillow==11.0.0
 loguru==0.7.2
 
 # Testing
