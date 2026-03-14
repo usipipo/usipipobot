@@ -50,16 +50,12 @@ class PaymentCryptoMixin:
 
             from application.services.common.container import get_service
             from application.services.crypto_payment_service import CryptoPaymentService
-            from application.services.wallet_management_service import (
-                WalletManagementService,
-            )
+            from application.services.wallet_management_service import WalletManagementService
 
             wallet_service = get_service(WalletManagementService)
             payment_service = get_service(CryptoPaymentService)
 
-            wallet = await wallet_service.assign_wallet(
-                user_id, label=f"user-{user_id}"
-            )
+            wallet = await wallet_service.assign_wallet(user_id, label=f"user-{user_id}")
 
             if not wallet:
                 await query.edit_message_text(
@@ -142,9 +138,7 @@ Monto a pagar: *{usdt_amount} USDT*
                 parse_mode="Markdown",
             )
 
-    async def pay_slots_with_crypto(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def pay_slots_with_crypto(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Inicia pago de slots con crypto usando TronDealer."""
         query = update.callback_query
         if not query or not query.data:
@@ -174,12 +168,8 @@ Monto a pagar: *{usdt_amount} USDT*
 
             from application.services.common.container import get_service
             from application.services.crypto_payment_service import CryptoPaymentService
-            from application.services.wallet_management_service import (
-                WalletManagementService,
-            )
-            from infrastructure.persistence.postgresql.user_repository import (
-                PostgresUserRepository,
-            )
+            from application.services.wallet_management_service import WalletManagementService
+            from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 
             wallet_service = get_service(WalletManagementService)
             payment_service = get_service(CryptoPaymentService)

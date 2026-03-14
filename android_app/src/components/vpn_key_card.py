@@ -2,7 +2,8 @@
 VPN Key card component for uSipipo VPN Android APK.
 Shows VPN key information with status and usage.
 """
-from kivy.properties import StringProperty, ListProperty, BooleanProperty
+
+from kivy.properties import BooleanProperty, ListProperty, StringProperty
 from kivymd.uix.card import MDCard
 from kivymd.uix.ripplebehavior import CommonRippleBehavior
 
@@ -10,7 +11,7 @@ from kivymd.uix.ripplebehavior import CommonRippleBehavior
 class VpnKeyCard(CommonRippleBehavior, MDCard):
     """
     Reusable VPN key card component.
-    
+
     Features:
     - Key name and type indicator
     - Data usage display
@@ -24,7 +25,7 @@ class VpnKeyCard(CommonRippleBehavior, MDCard):
     key_type = StringProperty("outline")  # outline | wireguard
     key_usage = StringProperty("0 GB usados")
     key_status = StringProperty("Activa")
-    
+
     # Computed properties
     key_type_icon = StringProperty("check-circle")
     key_type_color = ListProperty([0, 0.941, 1, 1])  # neon_cyan for Outline
@@ -69,7 +70,7 @@ class VpnKeyCard(CommonRippleBehavior, MDCard):
     def set_key_data(self, key_data: dict):
         """
         Set key data from API response.
-        
+
         Args:
             key_data: Dict with key information:
                 - name: Key name
@@ -80,11 +81,11 @@ class VpnKeyCard(CommonRippleBehavior, MDCard):
         self.key_name = key_data.get("name", "Sin nombre")
         self.key_type = key_data.get("key_type", "outline")
         self.is_active = key_data.get("is_active", True)
-        
+
         # Format usage
         used_bytes = key_data.get("used_bytes", 0)
         self.key_usage = self._format_bytes(used_bytes) + " usados"
-        
+
         # Update displays
         self._update_type_colors()
         self._update_status()

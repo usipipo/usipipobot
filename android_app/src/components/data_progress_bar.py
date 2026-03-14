@@ -2,14 +2,15 @@
 Data progress bar component for uSipipo VPN Android APK.
 Shows data usage with color-coded progress bar.
 """
-from kivy.properties import NumericProperty, StringProperty, ListProperty
+
+from kivy.properties import ListProperty, NumericProperty, StringProperty
 from kivymd.uix.card import MDCard
 
 
 class DataProgressBar(MDCard):
     """
     Reusable data progress bar component.
-    
+
     Features:
     - Percentage-based progress (0-100)
     - Color-coded based on usage level
@@ -21,7 +22,7 @@ class DataProgressBar(MDCard):
     percentage = NumericProperty(0.0)
     label_text = StringProperty("Datos")
     value_text = StringProperty("0 GB / 5 GB")
-    
+
     # Color properties (defaults to cyan)
     bar_color = ListProperty([0, 0.941, 1, 1])  # neon_cyan
 
@@ -45,7 +46,7 @@ class DataProgressBar(MDCard):
     def set_data(self, used_bytes: int, limit_bytes: int):
         """
         Set data usage and automatically calculate percentage.
-        
+
         Args:
             used_bytes: Bytes used
             limit_bytes: Total bytes limit
@@ -54,7 +55,7 @@ class DataProgressBar(MDCard):
             self.percentage = min(100.0, (used_bytes / limit_bytes) * 100)
         else:
             self.percentage = 0.0
-        
+
         # Format bytes to human-readable
         self.value_text = f"{self._format_bytes(used_bytes)} / {self._format_bytes(limit_bytes)}"
 

@@ -8,21 +8,15 @@ Version: 1.0.0 - Refactored from handlers_consumption.py
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram_bot.features.consumption.keyboards_consumption import (
-    ConsumptionKeyboards,
-)
-from telegram_bot.features.consumption.messages_consumption import (
-    ConsumptionMessages,
-)
+from telegram_bot.features.consumption.keyboards_consumption import ConsumptionKeyboards
+from telegram_bot.features.consumption.messages_consumption import ConsumptionMessages
 from utils.logger import logger
 
 
 class CancellationMixin:
     """Mixin para cancelación del modo consumo."""
 
-    async def start_cancellation(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def start_cancellation(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Inicia el flujo de cancelación del modo consumo."""
         query = update.callback_query
         if not query:
@@ -49,9 +43,7 @@ class CancellationMixin:
                 )
                 return
 
-            summary = await self.billing_service.get_current_consumption(
-                user_id, user_id
-            )
+            summary = await self.billing_service.get_current_consumption(user_id, user_id)
 
             if not summary:
                 await query.edit_message_text(
@@ -83,9 +75,7 @@ class CancellationMixin:
             logger.error(f"Error en start_cancellation: {e}")
             await self._send_error_message(update, context)
 
-    async def confirm_cancellation(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def confirm_cancellation(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Confirma la cancelación del modo consumo."""
         query = update.callback_query
         if not query:
@@ -98,9 +88,7 @@ class CancellationMixin:
         user_id = update.effective_user.id
 
         try:
-            result = await self.billing_service.cancel_consumption_mode(
-                user_id, user_id
-            )
+            result = await self.billing_service.cancel_consumption_mode(user_id, user_id)
 
             if result.success:
                 from decimal import Decimal

@@ -5,9 +5,7 @@ import pytest
 from application.services.user_profile_service import UserProfileService
 from application.services.vpn_service import VpnService
 from domain.entities.user import User, UserStatus
-from telegram_bot.features.user_management.handlers_user_management import (
-    UserManagementHandler,
-)
+from telegram_bot.features.user_management.handlers_user_management import UserManagementHandler
 
 
 class TestUserManagementHandler:
@@ -28,9 +26,7 @@ class TestUserManagementHandler:
         return UserManagementHandler(vpn_service, user_profile_service)
 
     @pytest.mark.asyncio
-    async def test_show_usage_callback_calls_info_handler(
-        self, handler, user_profile_service
-    ):
+    async def test_show_usage_callback_calls_info_handler(self, handler, user_profile_service):
         """Callback show_usage debe llamar a info_handler."""
         profile = MagicMock()
         profile.user_id = 123

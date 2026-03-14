@@ -56,7 +56,7 @@ if [ "$option" == "1" ]; then
     echo "  Generando Nuevo Keystore"
     echo "============================================================================="
     echo ""
-    
+
     # Parámetros del keystore
     read -p "Keystore password (mínimo 6 caracteres): " -s KEYSTORE_PASSWORD
     echo ""
@@ -66,10 +66,10 @@ if [ "$option" == "1" ]; then
     read -p "Tu nombre (CN): " CN
     read -p "Tu organización (OU): " OU
     read -p "Ciudad (L): " L
-    
+
     # Validar que el directorio existe
     mkdir -p android_app
-    
+
     # Generar keystore
     echo ""
     echo "Generando keystore en: $KEYSTORE_FILE"
@@ -82,16 +82,16 @@ if [ "$option" == "1" ]; then
         -storepass "$KEYSTORE_PASSWORD" \
         -keypass "$KEY_PASSWORD" \
         -dname "CN=$CN, OU=$OU, L=$L, S=Unknown, C=Unknown"
-    
+
     echo "✅ Keystore generado exitosamente"
-    
+
 elif [ "$option" == "2" ]; then
     echo ""
     echo "============================================================================="
     echo "  Usar Keystore Existente"
     echo "============================================================================="
     echo ""
-    
+
     read -p "Ruta al keystore existente: " KEYSTORE_FILE
     read -p "Keystore password: " -s KEYSTORE_PASSWORD
     echo ""
@@ -99,13 +99,13 @@ elif [ "$option" == "2" ]; then
     echo ""
     read -p "Key password: " -s KEY_PASSWORD
     echo ""
-    
+
     # Verificar que el keystore existe
     if [ ! -f "$KEYSTORE_FILE" ]; then
         echo "❌ El archivo keystore no existe: $KEYSTORE_FILE"
         exit 1
     fi
-    
+
     echo "✅ Keystore encontrado: $KEYSTORE_FILE"
 else
     echo "❌ Opción inválida"

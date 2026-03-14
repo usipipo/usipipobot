@@ -4,10 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from application.services.data_package_service import (
-    PACKAGE_OPTIONS,
-    DataPackageService,
-)
+from application.services.data_package_service import PACKAGE_OPTIONS, DataPackageService
 from domain.entities.data_package import DataPackage, PackageType
 
 
@@ -61,9 +58,7 @@ class TestGetAvailablePackages:
 
 class TestPurchasePackage:
     @pytest.mark.asyncio
-    async def test_purchase_creates_package(
-        self, service, mock_package_repo, mock_user_repo
-    ):
+    async def test_purchase_creates_package(self, service, mock_package_repo, mock_user_repo):
         from domain.entities.user import User
 
         user = User(
@@ -129,9 +124,7 @@ class TestGetUserPackages:
 
 class TestGetUserDataSummary:
     @pytest.mark.asyncio
-    async def test_returns_aggregated_summary(
-        self, service, mock_package_repo, mock_user_repo
-    ):
+    async def test_returns_aggregated_summary(self, service, mock_package_repo, mock_user_repo):
         mock_package_repo.get_valid_by_user.return_value = [
             DataPackage(
                 user_id=123,
@@ -160,9 +153,7 @@ class TestGetUserDataSummary:
         assert result["active_packages"] == 2
 
     @pytest.mark.asyncio
-    async def test_returns_detailed_packages_info(
-        self, service, mock_package_repo, mock_user_repo
-    ):
+    async def test_returns_detailed_packages_info(self, service, mock_package_repo, mock_user_repo):
         from domain.entities.user import User
 
         expires_at = datetime.now(timezone.utc) + timedelta(days=15)
@@ -215,9 +206,7 @@ class TestConsumeData:
         mock_package_repo.update_usage.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_consume_returns_false_when_no_packages(
-        self, service, mock_package_repo
-    ):
+    async def test_consume_returns_false_when_no_packages(self, service, mock_package_repo):
         mock_package_repo.get_valid_by_user.return_value = []
 
         result = await service.consume_data(123, 1024, current_user_id=123)
@@ -225,9 +214,7 @@ class TestConsumeData:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_consume_returns_true_when_packages_exist(
-        self, service, mock_package_repo
-    ):
+    async def test_consume_returns_true_when_packages_exist(self, service, mock_package_repo):
         package = DataPackage(
             id=uuid.uuid4(),
             user_id=123,
@@ -267,9 +254,7 @@ class TestExpireOldPackages:
         mock_package_repo.deactivate.assert_called_once_with(expired_package.id, 1)
 
     @pytest.mark.asyncio
-    async def test_expire_returns_zero_when_no_expired_packages(
-        self, service, mock_package_repo
-    ):
+    async def test_expire_returns_zero_when_no_expired_packages(self, service, mock_package_repo):
         mock_package_repo.get_expired_packages.return_value = []
 
         result = await service.expire_old_packages(admin_user_id=1)

@@ -10,9 +10,7 @@ from telegram.ext import ContextTypes
 
 from application.services.data_package_service import PACKAGE_OPTIONS
 from config import settings
-from telegram_bot.features.user_management.keyboards_user_management import (
-    UserManagementKeyboards,
-)
+from telegram_bot.features.user_management.keyboards_user_management import UserManagementKeyboards
 from utils.logger import logger
 from utils.telegram_utils import TelegramUtils
 
@@ -34,9 +32,7 @@ class PackagesMixin:
 
         try:
             packages_list = BuyGbMessages.Menu.format_packages_list()
-            message = BuyGbMessages.Menu.PACKAGES_LIST.format(
-                packages_list=packages_list
-            )
+            message = BuyGbMessages.Menu.PACKAGES_LIST.format(packages_list=packages_list)
             keyboard = BuyGbKeyboards.packages_menu()
 
             if query:
@@ -71,9 +67,7 @@ class PackagesMixin:
                     parse_mode="Markdown",
                 )
 
-    async def select_payment_method(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def select_payment_method(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra opciones de método de pago para un paquete."""
         query = update.callback_query
         if not query or not query.data:
@@ -118,9 +112,7 @@ class PackagesMixin:
                 parse_mode="Markdown",
             )
 
-    async def view_data_summary(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def view_data_summary(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra el resumen de datos del usuario."""
         query = update.callback_query
         if not query:
@@ -174,10 +166,7 @@ class PackagesMixin:
                 user_id=user_id, current_user_id=user_id
             )
 
-            if (
-                summary["active_packages"] == 0
-                and summary["free_plan"]["remaining_gb"] <= 0
-            ):
+            if summary["active_packages"] == 0 and summary["free_plan"]["remaining_gb"] <= 0:
                 message = BuyGbMessages.Data.NO_DATA
             else:
                 message = BuyGbMessages.Data.DATA_INFO(summary)

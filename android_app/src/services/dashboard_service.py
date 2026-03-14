@@ -2,12 +2,13 @@
 Dashboard service for uSipipo VPN Android APK.
 Handles dashboard data fetching and caching.
 """
-from datetime import datetime, timezone, timedelta
-from typing import Optional, Dict, Any, List
-from loguru import logger
+
 import json
 import os
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, List, Optional
 
+from loguru import logger
 from src.services.api_client import ApiClient
 from src.storage.cache_storage import CacheStorage
 
@@ -26,10 +27,10 @@ class DashboardService:
     async def get_dashboard_summary(self) -> Dict[str, Any]:
         """
         Get dashboard summary data.
-        
+
         Uses local cache if available and not expired (15-min TTL).
         Falls back to API call if cache is missing or expired.
-        
+
         Returns:
             Dict with dashboard data:
             - user: user info (name, username, photo_url, status, etc.)
@@ -40,13 +41,13 @@ class DashboardService:
             - has_pending_debt: bool
             - consumption_mode_enabled: bool
             - last_login: datetime
-            
+
         Raises:
             httpx.HTTPStatusError: If API call fails
             httpx.RequestError: If network error occurs
         """
         cache_key = f"dashboard:{self.telegram_id}"
-        
+
         # Try to get from cache first
         try:
             cached_data = self.cache_storage.get(cache_key)
@@ -55,34 +56,33 @@ class DashboardService:
                 return cached_data
         except Exception as e:
             logger.warning(f"Error reading cache: {e}")
-        
+
         # Cache miss or error: fetch from API
         logger.debug(f"Dashboard cache miss for user {self.telegram_id}, fetching from API")
-        
+
         try:
-            response = await self.api_client.get(
-                endpoint="/dashboard/summary",
-                use_auth=True
-            )
-            
+            response = await self.api_client.get(endpoint="/dashboard/summary", use_auth=True)
+
             # Store in cache with timestamp
             cache_entry = {
                 "data": response,
                 "cached_at": datetime.now(timezone.utc).isoformat(),
-                "expires_at": (datetime.now(timezone.utc) + timedelta(seconds=self.CACHE_TTL_SECONDS)).isoformat()
+                "expires_at": (
+                    datetime.now(timezone.utc) + timedelta(seconds=self.CACHE_TTL_SECONDS)
+                ).isoformat(),
             }
-            
+
             try:
                 self.cache_storage.set(cache_key, cache_entry)
                 logger.debug(f"Dashboard data cached for user {self.telegram_id}")
             except Exception as e:
                 logger.warning(f"Error writing cache: {e}")
-            
+
             return response
-            
+
         except Exception as e:
             logger.error(f"Error fetching dashboard data: {e}")
-            
+
             # If we have stale cache, return it as fallback
             try:
                 stale_cache = self.cache_storage.get(cache_key)
@@ -91,37 +91,36 @@ class DashboardService:
                     return stale_cache.get("data", stale_cache)
             except:
                 pass
-            
+
             raise
 
     async def refresh_dashboard(self) -> Dict[str, Any]:
         """
         Force refresh dashboard data from API (bypass cache).
-        
+
         Returns:
             Dict with fresh dashboard data
         """
         cache_key = f"dashboard:{self.telegram_id}"
-        
+
         logger.info(f"Refreshing dashboard data for user {self.telegram_id}")
-        
-        response = await self.api_client.get(
-            endpoint="/dashboard/summary",
-            use_auth=True
-        )
-        
+
+        response = await self.api_client.get(endpoint="/dashboard/summary", use_auth=True)
+
         # Update cache
         cache_entry = {
             "data": response,
             "cached_at": datetime.now(timezone.utc).isoformat(),
-            "expires_at": (datetime.now(timezone.utc) + timedelta(seconds=self.CACHE_TTL_SECONDS)).isoformat()
+            "expires_at": (
+                datetime.now(timezone.utc) + timedelta(seconds=self.CACHE_TTL_SECONDS)
+            ).isoformat(),
         }
-        
+
         try:
             self.cache_storage.set(cache_key, cache_entry)
         except Exception as e:
             logger.warning(f"Error updating cache after refresh: {e}")
-        
+
         return response
 
     def clear_cache(self):
@@ -167,18 +166,18 @@ class DashboardService:
         """Format datetime to relative time string (e.g., 'hace 2 horas')."""
         if not dt_str:
             return "Nunca"
-        
+
         try:
             # Parse ISO format datetime
             dt = datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
             now = datetime.now(timezone.utc)
             diff = now - dt
-            
+
             seconds = diff.total_seconds()
             minutes = seconds / 60
             hours = minutes / 60
             days = hours / 24
-            
+
             if seconds < 60:
                 return "ahora mismo"
             elif minutes < 60:
@@ -189,7 +188,7 @@ class DashboardService:
                 return f"hace {int(days)}d"
             else:
                 return dt.strftime("%d/%m/%Y")
-                
+
         except Exception as e:
             logger.warning(f"Error formatting time {dt_str}: {e}")
             return "Desconocido"

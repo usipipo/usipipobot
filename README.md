@@ -142,7 +142,10 @@ cp example.env .env
 # 4. Ejecutar migraciones
 uv run alembic upgrade head
 
-# 5. Iniciar el bot
+# 5. Configurar pre-commit (recomendado)
+./scripts/setup-pre-commit.sh
+
+# 6. Iniciar el bot
 uv run python main.py
 ```
 

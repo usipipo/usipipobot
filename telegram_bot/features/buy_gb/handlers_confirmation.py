@@ -18,9 +18,7 @@ from .messages_buy_gb import BuyGbMessages
 class ConfirmationMixin:
     """Mixin para confirmación y entrega de compras."""
 
-    async def pre_checkout_callback(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def pre_checkout_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Valida el pre-checkout antes del pago."""
         query = update.pre_checkout_query
         if not query:
@@ -55,9 +53,7 @@ class ConfirmationMixin:
                     return
 
                 await query.answer(ok=True)
-                logger.info(
-                    f"🔑 Pre-checkout exitoso: +{slots} slots para usuario {user_id}"
-                )
+                logger.info(f"🔑 Pre-checkout exitoso: +{slots} slots para usuario {user_id}")
                 return
 
             if len(parts) != 4 or parts[0] != "data" or parts[1] != "package":
@@ -82,17 +78,13 @@ class ConfirmationMixin:
                 return
 
             await query.answer(ok=True)
-            logger.info(
-                f"📦 Pre-checkout exitoso: {package_option.name} para usuario {user_id}"
-            )
+            logger.info(f"📦 Pre-checkout exitoso: {package_option.name} para usuario {user_id}")
 
         except Exception as e:
             logger.error(f"Error en pre_checkout_callback: {e}")
             await query.answer(ok=False, error_message="Error procesando pago")
 
-    async def successful_payment(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def successful_payment(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Procesa el pago exitoso y entrega el producto."""
         if not update.effective_user:
             return
@@ -137,9 +129,7 @@ class ConfirmationMixin:
                         parse_mode="Markdown",
                     )
 
-                logger.info(
-                    f"🔑 Slots comprados exitosamente: +{slots} para usuario {user_id}"
-                )
+                logger.info(f"🔑 Slots comprados exitosamente: +{slots} para usuario {user_id}")
                 return
 
             if len(parts) != 4:
@@ -175,9 +165,7 @@ class ConfirmationMixin:
             expires_at = package.expires_at.strftime("%d/%m/%Y %H:%M")
 
             success_message = BuyGbMessages.Payment.CONFIRMATION.format(
-                package_name=(
-                    package_option.name if package_option else package_type_str
-                ),
+                package_name=(package_option.name if package_option else package_type_str),
                 gb_amount=package_option.data_gb if package_option else "N/A",
                 bonus_text=bonus_text,
                 stars=payment.total_amount,
@@ -213,7 +201,7 @@ class ConfirmationMixin:
     ):
         """
         Handle payments from Mini App users.
-        
+
         Mini App payments use format: data_package_TYPE_USERID_TXID or key_slots_N_USERID_TXID
         """
         try:
@@ -225,11 +213,11 @@ class ConfirmationMixin:
                 type_start = len("data_package_")
                 remaining = payload[type_start:]
                 remaining_parts = remaining.split("_")
-                
+
                 # Last two parts are user_id and transaction_id
                 if len(remaining_parts) >= 3:
                     package_type_str = "_".join(remaining_parts[:-2])
-                    
+
                     package_result = await self.data_package_service.purchase_package(
                         user_id=user_id,
                         package_type=package_type_str,
@@ -281,7 +269,7 @@ class ConfirmationMixin:
                 type_start = len("key_slots_")
                 remaining = payload[type_start:]
                 remaining_parts = remaining.split("_")
-                
+
                 if len(remaining_parts) >= 2:
                     slots = int(remaining_parts[0])
 
@@ -307,9 +295,7 @@ class ConfirmationMixin:
                             parse_mode="Markdown",
                         )
 
-                    logger.info(
-                        f"🔑 Mini App slots purchased: +{slots} for user {user_id}"
-                    )
+                    logger.info(f"🔑 Mini App slots purchased: +{slots} for user {user_id}")
 
         except Exception as e:
             logger.error(f"Error in _handle_miniapp_payment: {e}", exc_info=True)

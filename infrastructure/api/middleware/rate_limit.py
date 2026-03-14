@@ -11,23 +11,24 @@ from utils.logger import logger
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """
     Rate limiting middleware using in-memory storage.
-    
+
     LIMITATION: This implementation uses in-memory storage (defaultdict).
     - Does NOT persist across worker restarts
     - Does NOT share state between multiple workers
-    
+
     If running with multiple uvicorn workers (--workers N), the rate limit
     is applied per-worker, not globally. For production-grade rate limiting,
     migrate to Redis-based storage (e.g., slowapi with Redis backend).
-    
+
     TODO: Migrate to slowapi + Redis for multi-worker support:
         pip install slowapi
         from slowapi import Limiter
         from slowapi.util import get_remote_address
         limiter = Limiter(key_func=get_remote_address, storage_uri=settings.REDIS_URL)
-    
+
     For now, ensure the server runs with --workers 1 in production.
     """
+
     def __init__(self, app, requests_per_minute: int = 60):
         super().__init__(app)
         self.requests_per_minute = requests_per_minute

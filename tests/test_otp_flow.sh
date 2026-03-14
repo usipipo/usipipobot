@@ -83,7 +83,7 @@ try:
     print("✅ JWT válido (estructura)")
     print(f"   - sub (telegram_id): {payload.get('sub')}")
     print(f"   - client: {payload.get('client')}")
-    
+
     from datetime import datetime
     iat = payload.get('iat')
     exp = payload.get('exp')

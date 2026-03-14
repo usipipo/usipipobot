@@ -1,6 +1,6 @@
 /**
  * uSipipo Mini App - Main JavaScript
- * 
+ *
  * Integración con Telegram WebApp SDK y lógica de la aplicación.
  */
 

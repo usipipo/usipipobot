@@ -1,19 +1,27 @@
-from fastapi import APIRouter, HTTPException, status, Request, Depends
-from infrastructure.api.android.schemas import (
-    OTPRequest, OTPResponse, OTPVerify, TokenResponse,
-    RefreshTokenResponse, LogoutResponse, UserProfileResponse, UserInToken
-)
-from infrastructure.api.android.deps import get_current_user
-from sqlalchemy import text
-from infrastructure.persistence.database import get_session_context
-from config import settings
-import secrets
-import redis.asyncio as redis
-from loguru import logger
-import jwt
-import uuid
 import hmac
-from datetime import datetime, timezone, timedelta
+import secrets
+import uuid
+from datetime import datetime, timedelta, timezone
+
+import jwt
+import redis.asyncio as redis
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from loguru import logger
+from sqlalchemy import text
+
+from config import settings
+from infrastructure.api.android.deps import get_current_user
+from infrastructure.api.android.schemas import (
+    LogoutResponse,
+    OTPRequest,
+    OTPResponse,
+    OTPVerify,
+    RefreshTokenResponse,
+    TokenResponse,
+    UserInToken,
+    UserProfileResponse,
+)
+from infrastructure.persistence.database import get_session_context
 
 router = APIRouter(prefix="/auth", tags=["Android Auth"])
 
@@ -46,8 +54,8 @@ async def request_otp(request: OTPRequest, http_request: Request):
                 detail={
                     "error": "rate_limit_exceeded",
                     "message": "Demasiadas solicitudes desde tu IP",
-                    "retry_after": ttl
-                }
+                    "retry_after": ttl,
+                },
             )
 
         # Rate limiting por identifier (3 por hora)
@@ -63,8 +71,8 @@ async def request_otp(request: OTPRequest, http_request: Request):
                 detail={
                     "error": "rate_limit_exceeded",
                     "message": "Demasiadas solicitudes para este usuario",
-                    "retry_after": ttl
-                }
+                    "retry_after": ttl,
+                },
             )
 
         # Buscar usuario en base de datos
@@ -72,14 +80,18 @@ async def request_otp(request: OTPRequest, http_request: Request):
             if request.identifier.startswith("@"):
                 # Buscar por username
                 result = await session.execute(
-                    text("SELECT telegram_id, username, status FROM users WHERE username = :username"),
-                    {"username": request.identifier[1:]}
+                    text(
+                        "SELECT telegram_id, username, status FROM users WHERE username = :username"
+                    ),
+                    {"username": request.identifier[1:]},
                 )
             else:
                 # Buscar por telegram_id
                 result = await session.execute(
-                    text("SELECT telegram_id, username, status FROM users WHERE telegram_id = :telegram_id"),
-                    {"telegram_id": int(request.identifier)}
+                    text(
+                        "SELECT telegram_id, username, status FROM users WHERE telegram_id = :telegram_id"
+                    ),
+                    {"telegram_id": int(request.identifier)},
                 )
 
             user = result.first()
@@ -90,18 +102,15 @@ async def request_otp(request: OTPRequest, http_request: Request):
                     status_code=404,
                     detail={
                         "error": "user_not_found",
-                        "message": "Usuario no registrado en uSipipo. Primero debes usar el bot de Telegram."
-                    }
+                        "message": "Usuario no registrado en uSipipo. Primero debes usar el bot de Telegram.",
+                    },
                 )
 
             if user.status != "active":
                 logger.warning(f"Usuario inactivo: {user.telegram_id}")
                 raise HTTPException(
                     status_code=403,
-                    detail={
-                        "error": "user_inactive",
-                        "message": "Cuenta inactiva o suspendida"
-                    }
+                    detail={"error": "user_inactive", "message": "Cuenta inactiva o suspendida"},
                 )
 
         # Generar OTP (6 dígitos)
@@ -116,6 +125,7 @@ async def request_otp(request: OTPRequest, http_request: Request):
     # Enviar OTP por Telegram
     try:
         from telegram import Bot
+
         bot = Bot(token=settings.TELEGRAM_TOKEN)
 
         await bot.send_message(
@@ -126,7 +136,7 @@ async def request_otp(request: OTPRequest, http_request: Request):
                 f"Válido por *5 minutos*.\n\n"
                 f"⚠️ *No compartas este código con nadie.*"
             ),
-            parse_mode="Markdown"
+            parse_mode="Markdown",
         )
 
         logger.info(f"OTP enviado a Telegram: {user.telegram_id}")
@@ -135,10 +145,7 @@ async def request_otp(request: OTPRequest, http_request: Request):
         logger.error(f"Error enviando OTP por Telegram: {e}")
         # No fallar el endpoint si Telegram falla, el OTP ya está en Redis
 
-    return OTPResponse(
-        message="Código enviado a tu chat de Telegram",
-        expires_in_seconds=300
-    )
+    return OTPResponse(message="Código enviado a tu chat de Telegram", expires_in_seconds=300)
 
 
 @router.post("/verify-otp", response_model=TokenResponse)
@@ -159,14 +166,18 @@ async def verify_otp(request: OTPVerify):
             if request.identifier.startswith("@"):
                 # Buscar por username
                 result = await session.execute(
-                    text("SELECT telegram_id, username, full_name, status FROM users WHERE username = :username"),
-                    {"username": request.identifier[1:]}
+                    text(
+                        "SELECT telegram_id, username, full_name, status FROM users WHERE username = :username"
+                    ),
+                    {"username": request.identifier[1:]},
                 )
             else:
                 # Buscar por telegram_id
                 result = await session.execute(
-                    text("SELECT telegram_id, username, full_name, status FROM users WHERE telegram_id = :telegram_id"),
-                    {"telegram_id": int(request.identifier)}
+                    text(
+                        "SELECT telegram_id, username, full_name, status FROM users WHERE telegram_id = :telegram_id"
+                    ),
+                    {"telegram_id": int(request.identifier)},
                 )
 
             user = result.first()
@@ -175,20 +186,14 @@ async def verify_otp(request: OTPVerify):
                 logger.warning(f"Usuario no encontrado: {request.identifier}")
                 raise HTTPException(
                     status_code=404,
-                    detail={
-                        "error": "user_not_found",
-                        "message": "Usuario no encontrado"
-                    }
+                    detail={"error": "user_not_found", "message": "Usuario no encontrado"},
                 )
 
             if user.status != "active":
                 logger.warning(f"Usuario inactivo: {user.telegram_id}")
                 raise HTTPException(
                     status_code=403,
-                    detail={
-                        "error": "user_inactive",
-                        "message": "Cuenta inactiva o suspendida"
-                    }
+                    detail={"error": "user_inactive", "message": "Cuenta inactiva o suspendida"},
                 )
 
         # Verificar OTP
@@ -199,10 +204,7 @@ async def verify_otp(request: OTPVerify):
             logger.warning(f"OTP no encontrado o expirado: {user.telegram_id}")
             raise HTTPException(
                 status_code=401,
-                detail={
-                    "error": "otp_expired",
-                    "message": "Código expirado. Solicita uno nuevo."
-                }
+                detail={"error": "otp_expired", "message": "Código expirado. Solicita uno nuevo."},
             )
 
         # Verificar que el OTP coincide (timing-safe comparison)
@@ -227,8 +229,8 @@ async def verify_otp(request: OTPVerify):
                     status_code=429,
                     detail={
                         "error": "too_many_attempts",
-                        "message": "Demasiados intentos fallidos. Solicita un nuevo código."
-                    }
+                        "message": "Demasiados intentos fallidos. Solicita un nuevo código.",
+                    },
                 )
 
             raise HTTPException(
@@ -236,8 +238,8 @@ async def verify_otp(request: OTPVerify):
                 detail={
                     "error": "invalid_otp",
                     "message": "Código incorrecto",
-                    "attempts_remaining": attempts_remaining
-                }
+                    "attempts_remaining": attempts_remaining,
+                },
             )
 
         # OTP válido: eliminar de Redis (un solo uso)
@@ -255,11 +257,7 @@ async def verify_otp(request: OTPVerify):
         "jti": str(uuid.uuid4()),
     }
 
-    token = jwt.encode(
-        jwt_payload,
-        settings.SECRET_KEY,
-        algorithm="HS256"
-    )
+    token = jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm="HS256")
 
     logger.info(f"JWT generado para usuario {user.telegram_id}")
 
@@ -271,7 +269,7 @@ async def verify_otp(request: OTPVerify):
             telegram_id=user.telegram_id,
             username=user.username,
             full_name=user.full_name,
-        )
+        ),
     )
 
 
@@ -282,7 +280,7 @@ async def refresh_token(payload: dict = Depends(get_current_user)):
 
     Requiere un token válido. Si el token está expirado,
     el usuario debe iniciar sesión nuevamente con OTP.
-    
+
     Nota: Implementa token rotation - el token anterior se invalida.
     """
     telegram_id = payload["sub"]
@@ -312,11 +310,7 @@ async def refresh_token(payload: dict = Depends(get_current_user)):
 
     logger.info(f"Token renovado para usuario {telegram_id}")
 
-    return RefreshTokenResponse(
-        access_token=new_token,
-        token_type="bearer",
-        expires_in=86400
-    )
+    return RefreshTokenResponse(access_token=new_token, token_type="bearer", expires_in=86400)
 
 
 @router.post("/logout", response_model=LogoutResponse)
@@ -374,7 +368,7 @@ async def get_current_user_profile(payload: dict = Depends(get_current_user)):
                 WHERE telegram_id = :telegram_id
                 """
             ),
-            {"telegram_id": int(telegram_id)}
+            {"telegram_id": int(telegram_id)},
         )
         user = result.first()
 
@@ -382,10 +376,7 @@ async def get_current_user_profile(payload: dict = Depends(get_current_user)):
             logger.warning(f"Usuario {telegram_id} no encontrado en DB")
             raise HTTPException(
                 status_code=404,
-                detail={
-                    "error": "user_not_found",
-                    "message": "Usuario no encontrado"
-                }
+                detail={"error": "user_not_found", "message": "Usuario no encontrado"},
             )
 
         logger.debug(f"Perfil de usuario {telegram_id} consultado exitosamente")
@@ -396,5 +387,5 @@ async def get_current_user_profile(payload: dict = Depends(get_current_user)):
             full_name=user.full_name,
             status=user.status,
             has_pending_debt=user.has_pending_debt or False,
-            consumption_mode_enabled=user.consumption_mode_enabled or False
+            consumption_mode_enabled=user.consumption_mode_enabled or False,
         )

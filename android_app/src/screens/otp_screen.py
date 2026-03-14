@@ -1,14 +1,14 @@
 """
 OTP verification screen for uSipipo VPN Android APK.
 """
-from kivy.properties import StringProperty, NumericProperty, BooleanProperty
-from kivy.clock import Clock
-from kivymd.uix.screen import MDScreen
-from kivymd.uix.dialog import MDDialog
-from kivymd.uix.button import MDFlatButton
-from loguru import logger
-import asynckivy as ak
 
+import asynckivy as ak
+from kivy.clock import Clock
+from kivy.properties import BooleanProperty, NumericProperty, StringProperty
+from kivymd.uix.button import MDFlatButton
+from kivymd.uix.dialog import MDDialog
+from kivymd.uix.screen import MDScreen
+from loguru import logger
 from src.services.auth_service import AuthService
 
 
@@ -84,10 +84,7 @@ class OtpScreen(MDScreen):
     async def verify_otp_async(self, otp: str):
         """Verify OTP asynchronously."""
         try:
-            response = await self.auth_service.verify_otp(
-                identifier=self.identifier,
-                otp_code=otp
-            )
+            response = await self.auth_service.verify_otp(identifier=self.identifier, otp_code=otp)
 
             if response.get("access_token"):
                 logger.info("OTP verificado exitosamente")
@@ -105,7 +102,7 @@ class OtpScreen(MDScreen):
         """Handle resend OTP button press."""
         if self.is_resending or self.time_remaining > 0:
             return
-        
+
         self.is_resending = True
         ak.start(self.resend_otp_async())
 
@@ -113,7 +110,7 @@ class OtpScreen(MDScreen):
         """Resend OTP asynchronously."""
         try:
             response = await self.auth_service.request_otp(self.identifier)
-            
+
             if response.get("success"):
                 self.time_remaining = response.get("expires_in_seconds", 300)
                 self._start_countdown()
@@ -137,12 +134,7 @@ class OtpScreen(MDScreen):
             self.dialog = MDDialog(
                 title="Error",
                 text=message,
-                buttons=[
-                    MDFlatButton(
-                        text="OK",
-                        on_release=self.dismiss_dialog
-                    )
-                ]
+                buttons=[MDFlatButton(text="OK", on_release=self.dismiss_dialog)],
             )
         else:
             self.dialog.text = message
@@ -157,11 +149,6 @@ class OtpScreen(MDScreen):
         dialog = MDDialog(
             title="Éxito",
             text=message,
-            buttons=[
-                MDFlatButton(
-                    text="OK",
-                    on_release=lambda x: dialog.dismiss()
-                )
-            ]
+            buttons=[MDFlatButton(text="OK", on_release=lambda x: dialog.dismiss())],
         )
         dialog.open()

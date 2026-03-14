@@ -43,7 +43,7 @@ show_system_status() {
     echo -e "${WHITE}              ${HEADER_ICON} uSipipo System Status ${HEADER_ICON}${NC}"
     echo -e "${CYAN}${SEPARATOR}${NC}"
     echo ""
-    
+
     # Python
     echo -e "${WHITE}Python:${NC}"
     if command -v python3 &>/dev/null; then
@@ -51,7 +51,7 @@ show_system_status() {
     else
         echo "  ❌ Not installed"
     fi
-    
+
     # Virtual Environment
     echo ""
     echo -e "${WHITE}Virtual Environment:${NC}"
@@ -60,7 +60,7 @@ show_system_status() {
     else
         echo "  ❌ Not created"
     fi
-    
+
     # PostgreSQL
     echo ""
     echo -e "${WHITE}PostgreSQL:${NC}"
@@ -73,7 +73,7 @@ show_system_status() {
     else
         echo "  ❌ Not installed"
     fi
-    
+
     # Docker
     echo ""
     echo -e "${WHITE}Docker:${NC}"
@@ -86,7 +86,7 @@ show_system_status() {
     else
         echo "  ❌ Not installed"
     fi
-    
+
     # Outline (shadowbox container)
     echo ""
     echo -e "${WHITE}Outline (shadowbox):${NC}"
@@ -95,7 +95,7 @@ show_system_status() {
     else
         echo "  ❌ Not running"
     fi
-    
+
     # WireGuard
     echo ""
     echo -e "${WHITE}WireGuard:${NC}"
@@ -104,7 +104,7 @@ show_system_status() {
     else
         echo "  ❌ Not running"
     fi
-    
+
     # Systemd Service
     echo ""
     echo -e "${WHITE}Systemd Service (usipipo):${NC}"
@@ -115,7 +115,7 @@ show_system_status() {
     else
         echo "  ❌ Not created"
     fi
-    
+
     # Environment
     echo ""
     echo -e "${WHITE}Environment (.env):${NC}"
@@ -128,7 +128,7 @@ show_system_status() {
     else
         echo "  ❌ .env file not found"
     fi
-    
+
     echo ""
 }
 
@@ -141,7 +141,7 @@ run_full_setup() {
     echo -e "${WHITE}        ${HEADER_ICON} Full Setup (Automated) ${HEADER_ICON}${NC}"
     echo -e "${CYAN}${SEPARATOR}${NC}"
     echo ""
-    
+
     log "This will perform the following steps:"
     echo "  1. Install Docker"
     echo "  2. Install PostgreSQL and create database"
@@ -150,42 +150,42 @@ run_full_setup() {
     echo "  5. Run database migrations"
     echo "  6. Create systemd service"
     echo ""
-    
+
     if ! confirm "Proceed with full setup?"; then
         log "Full setup cancelled"
         return 1
     fi
-    
+
     # Step 1: Docker
     log "📦 Step 1/6: Docker..."
     # shellcheck source=./modules/vpn.sh
     source "${MODULES_DIR}/vpn.sh"
     install_docker_wrapper || log_warn "Docker installation skipped or failed"
-    
+
     # Step 2: PostgreSQL
     log "📦 Step 2/6: PostgreSQL..."
     # shellcheck source=./modules/database.sh
     source "${MODULES_DIR}/database.sh"
     setup_database || { log_err "Database setup failed"; return 1; }
-    
+
     # Step 3 & 4: Python
     log "📦 Step 3-4/6: Python environment..."
     # shellcheck source=./modules/python.sh
     source "${MODULES_DIR}/python.sh"
     setup_python || { log_err "Python setup failed"; return 1; }
-    
+
     # Step 5: Migrations
     log "📦 Step 5/6: Database migrations..."
     # shellcheck source=./modules/bot.sh
     source "${MODULES_DIR}/bot.sh"
     run_migrations "$PROJECT_DIR/venv" || { log_err "Migrations failed"; return 1; }
-    
+
     # Step 6: Systemd
     log "📦 Step 6/6: Systemd service..."
     # shellcheck source=./modules/systemd.sh
     source "${MODULES_DIR}/systemd.sh"
     setup_systemd "$PROJECT_DIR" || log_warn "Systemd setup skipped"
-    
+
     echo ""
     log_ok "🎉 Full setup complete!"
     echo ""
@@ -206,7 +206,7 @@ setup_outline_autoupdates() {
     echo -e "${WHITE}        ${HEADER_ICON} Setup Outline Auto-Updates ${HEADER_ICON}${NC}"
     echo -e "${CYAN}${SEPARATOR}${NC}"
     echo ""
-    
+
     log "This will configure automatic monthly updates for Outline VPN."
     echo ""
     echo "What it does:"
@@ -215,29 +215,29 @@ setup_outline_autoupdates() {
     echo "  - Runs on first Sunday of each month at 3:00 AM"
     echo "  - Logs to: /var/log/outline-update.log"
     echo ""
-    
+
     if ! command -v docker &>/dev/null; then
         log_err "Docker is not installed. Please install Docker first (option 1)."
         return 1
     fi
-    
+
     if ! confirm "Proceed with setting up auto-updates?"; then
         log "Auto-update setup cancelled"
         return 1
     fi
-    
+
     local SCRIPT_PATH="$PROJECT_DIR/scripts/update-outline.sh"
-    
+
     # Check if script exists
     if [[ ! -f "$SCRIPT_PATH" ]]; then
         log_err "Update script not found: $SCRIPT_PATH"
         return 1
     fi
-    
+
     # Make script executable
     chmod +x "$SCRIPT_PATH"
     log "Update script ready: $SCRIPT_PATH"
-    
+
     # Check if cron job already exists
     if crontab -l 2>/dev/null | grep -q "update-outline.sh"; then
         log_warn "Cron job for Outline updates already exists."
@@ -249,10 +249,10 @@ setup_outline_autoupdates() {
             return 0
         fi
     fi
-    
+
     # Add cron job
     (crontab -l 2>/dev/null; echo "# uSipipo: Outline VPN monthly auto-update - first Sunday at 3:00 AM"; echo "0 3 1-7 * 0 $SCRIPT_PATH") | crontab -
-    
+
     if [[ $? -eq 0 ]]; then
         log_ok "✅ Auto-updates configured successfully!"
         echo ""
@@ -263,7 +263,7 @@ setup_outline_autoupdates() {
         log_err "Failed to configure cron job"
         return 1
     fi
-    
+
     echo ""
 }
 
@@ -363,10 +363,10 @@ show_menu() {
 bootstrap() {
     # Check dependencies
     check_dependencies || exit 1
-    
+
     # Ensure .env exists
     ensure_env_exists "$PROJECT_DIR/.env" "$PROJECT_DIR/example.env"
-    
+
     log "🛡️ uSipipo Setup Manager v1.0"
     log "Project directory: $PROJECT_DIR"
 }

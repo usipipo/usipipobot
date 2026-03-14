@@ -24,19 +24,10 @@ from .handlers_keys_list import VIEWING_KEYS, KeysListMixin
 from .handlers_settings import VIEWING_MAINTENANCE, VIEWING_SETTINGS, SettingsAdminMixin
 from .handlers_tickets_actions import REPLYING_TO_TICKET, TicketsActionsMixin
 from .handlers_tickets_list import VIEWING_TICKETS, TicketsListMixin
-from .handlers_users_actions import (
-    CONFIRMING_USER_DELETE,
-    VIEWING_USER_DETAILS,
-    UsersActionsMixin,
-)
+from .handlers_users_actions import CONFIRMING_USER_DELETE, VIEWING_USER_DETAILS, UsersActionsMixin
 
 # Importar estados para re-exportar
-from .handlers_users_list import (
-    ADMIN_MENU,
-    USERS_PER_PAGE,
-    VIEWING_USERS,
-    UsersListMixin,
-)
+from .handlers_users_list import ADMIN_MENU, USERS_PER_PAGE, VIEWING_USERS, UsersListMixin
 from .keyboards_admin import AdminKeyboards
 from .messages_admin import AdminMessages
 

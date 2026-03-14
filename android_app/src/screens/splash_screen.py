@@ -1,12 +1,12 @@
 """
 Splash screen for uSipipo VPN Android APK.
 """
+
+import asynckivy as ak
 from kivy.clock import Clock
 from kivy.properties import StringProperty
 from kivymd.uix.screen import MDScreen
 from loguru import logger
-import asynckivy as ak
-
 from src.services.auth_service import AuthService
 
 

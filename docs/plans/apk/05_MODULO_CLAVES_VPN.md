@@ -205,7 +205,7 @@ Máximo: 30 caracteres
         ▼
 [MDDialog de confirmación]
 "⚠️ ¿Eliminar Mi iPhone?"
-"Esta acción es irreversible. 
+"Esta acción es irreversible.
  La clave dejará de funcionar."
         │
 [Tap "Eliminar"]

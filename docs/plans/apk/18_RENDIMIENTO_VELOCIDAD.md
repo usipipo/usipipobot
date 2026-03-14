@@ -59,63 +59,63 @@
 -- =============================================================================
 
 -- Usuario por telegram_id (ya debería existir como PK, pero verificar)
-CREATE INDEX IF NOT EXISTS idx_users_telegram_id 
+CREATE INDEX IF NOT EXISTS idx_users_telegram_id
 ON users(telegram_id);
 
 -- Usuario por referral_code (para flujo de referidos)
-CREATE INDEX IF NOT EXISTS idx_users_referral_code 
+CREATE INDEX IF NOT EXISTS idx_users_referral_code
 ON users(referral_code);
 
 -- Usuario por status (para filtrar usuarios activos)
-CREATE INDEX IF NOT EXISTS idx_users_status 
+CREATE INDEX IF NOT EXISTS idx_users_status
 ON users(status);
 
 -- Composite index para login (telegram_id + status)
-CREATE INDEX IF NOT EXISTS idx_users_telegram_status 
+CREATE INDEX IF NOT EXISTS idx_users_telegram_status
 ON users(telegram_id, status);
 
 -- Claves VPN por usuario
-CREATE INDEX IF NOT EXISTS idx_vpn_keys_user_id 
+CREATE INDEX IF NOT EXISTS idx_vpn_keys_user_id
 ON vpn_keys(user_id);
 
 -- Claves VPN por usuario + activas (query más común)
-CREATE INDEX IF NOT EXISTS idx_vpn_keys_user_active 
+CREATE INDEX IF NOT EXISTS idx_vpn_keys_user_active
 ON vpn_keys(user_id, is_active);
 
 -- Claves VPN por external_id (para sync con servidores VPN)
-CREATE INDEX IF NOT EXISTS idx_vpn_keys_external_id 
+CREATE INDEX IF NOT EXISTS idx_vpn_keys_external_id
 ON vpn_keys(external_id);
 
 -- Paquetes de datos por usuario + activos
-CREATE INDEX IF NOT EXISTS idx_data_packages_user_active 
+CREATE INDEX IF NOT EXISTS idx_data_packages_user_active
 ON data_packages(user_id, is_active);
 
 -- Paquetes de datos por expires_at (para job de expiración)
-CREATE INDEX IF NOT EXISTS idx_data_packages_expires_at 
-ON data_packages(expires_at) 
+CREATE INDEX IF NOT EXISTS idx_data_packages_expires_at
+ON data_packages(expires_at)
 WHERE is_active = true;
 
 -- Crypto orders por status + created_at (para job de expiración)
-CREATE INDEX IF NOT EXISTS idx_crypto_orders_status_created 
+CREATE INDEX IF NOT EXISTS idx_crypto_orders_status_created
 ON crypto_orders(status, created_at);
 
 -- Tickets por usuario + status
-CREATE INDEX IF NOT EXISTS idx_tickets_user_status 
+CREATE INDEX IF NOT EXISTS idx_tickets_user_status
 ON tickets(user_id, status);
 
 -- Tickets por status + created_at (para admins)
-CREATE INDEX IF NOT EXISTS idx_tickets_status_created 
+CREATE INDEX IF NOT EXISTS idx_tickets_status_created
 ON tickets(status, created_at);
 
 -- Notificaciones Android por telegram_id + no leídas
-CREATE INDEX IF NOT EXISTS idx_android_notif_user_unread 
-ON android_notifications(telegram_id, is_read) 
+CREATE INDEX IF NOT EXISTS idx_android_notif_user_unread
+ON android_notifications(telegram_id, is_read)
 WHERE is_read = false;
 
 -- Índice parcial para notificaciones pendientes (< 24 horas)
-CREATE INDEX IF NOT EXISTS idx_android_notif_recent_unread 
-ON android_notifications(telegram_id, created_at) 
-WHERE is_read = false 
+CREATE INDEX IF NOT EXISTS idx_android_notif_recent_unread
+ON android_notifications(telegram_id, created_at)
+WHERE is_read = false
   AND created_at > NOW() - INTERVAL '24 hours';
 
 -- =============================================================================
@@ -124,15 +124,15 @@ WHERE is_read = false
 -- Los índices BRIN son más pequeños y eficientes para columnas correlacionadas
 
 -- Índice BRIN para created_at en users (los nuevos usuarios se insertan al final)
-CREATE INDEX IF NOT EXISTS idx_users_created_at_brin 
+CREATE INDEX IF NOT EXISTS idx_users_created_at_brin
 ON users USING BRIN(created_at);
 
 -- Índice BRIN para created_at en vpn_keys
-CREATE INDEX IF NOT EXISTS idx_vpn_keys_created_at_brin 
+CREATE INDEX IF NOT EXISTS idx_vpn_keys_created_at_brin
 ON vpn_keys USING BRIN(created_at);
 
 -- Índice BRIN para created_at en data_packages
-CREATE INDEX IF NOT EXISTS idx_data_packages_created_at_brin 
+CREATE INDEX IF NOT EXISTS idx_data_packages_created_at_brin
 ON data_packages USING BRIN(created_at);
 
 -- =============================================================================
@@ -152,12 +152,12 @@ ANALYZE android_notifications;
 -- =============================================================================
 -- Query para verificar que todos los índices existen
 
-SELECT 
+SELECT
     schemaname,
     tablename,
     indexname,
     pg_size_pretty(pg_relation_size(indexname::regclass)) as index_size
-FROM pg_indexes 
+FROM pg_indexes
 WHERE schemaname = 'public'
 ORDER BY tablename, indexname;
 ```
@@ -193,7 +193,7 @@ async def get_dashboard_summary(session: AsyncSession, telegram_id: int):
     """
     query = text("""
         WITH user_data AS (
-            SELECT 
+            SELECT
                 telegram_id,
                 username,
                 full_name,
@@ -207,7 +207,7 @@ async def get_dashboard_summary(session: AsyncSession, telegram_id: int):
             WHERE telegram_id = :telegram_id
         ),
         keys_summary AS (
-            SELECT 
+            SELECT
                 COUNT(*) FILTER (WHERE is_active = true) as active_keys,
                 COUNT(*) as total_keys,
                 SUM(used_bytes) FILTER (WHERE is_active = true) as total_used_bytes,
@@ -216,26 +216,26 @@ async def get_dashboard_summary(session: AsyncSession, telegram_id: int):
             WHERE user_id = :telegram_id
         ),
         active_package AS (
-            SELECT 
+            SELECT
                 package_type,
                 data_limit_bytes,
                 data_used_bytes,
                 expires_at,
                 purchased_at
             FROM data_packages
-            WHERE user_id = :telegram_id 
+            WHERE user_id = :telegram_id
               AND is_active = true
             ORDER BY expires_at DESC
             LIMIT 1
         ),
         referral_stats AS (
-            SELECT 
+            SELECT
                 COUNT(*) as total_referrals,
                 SUM(CASE WHEN u.status = 'active' THEN 1 ELSE 0 END) as active_referrals
             FROM users u
             WHERE u.referred_by = :telegram_id
         )
-        SELECT 
+        SELECT
             ud.*,
             ks.active_keys,
             ks.total_keys,
@@ -253,7 +253,7 @@ async def get_dashboard_summary(session: AsyncSession, telegram_id: int):
         CROSS JOIN active_package ap
         CROSS JOIN referral_stats rs;
     """)
-    
+
     result = await session.execute(query, {"telegram_id": telegram_id})
     return result.first()
 ```
@@ -272,7 +272,7 @@ for key in keys:
 ```python
 # Single query con todo incluido
 query = text("""
-    SELECT 
+    SELECT
         vk.id,
         vk.name,
         vk.key_type,
@@ -317,14 +317,14 @@ from config import settings
 engine = create_async_engine(
     settings.database_url,
     poolclass=AsyncAdaptedQueuePool,
-    
+
     # Pool sizing - crítico para rendimiento
     pool_size=10,                   # Máximo de conexiones permanentes
     max_overflow=5,                 # Conexiones extra temporales (burst)
     pool_timeout=30,                # Timeout esperando conexión disponible
     pool_recycle=1800,              # Reciclar conexiones cada 30min (evita stale connections)
     pool_pre_ping=True,             # Verificar conexión antes de usar (evita errors)
-    
+
     # Parámetros de conexión
     connect_args={
         "server_settings": {
@@ -333,10 +333,10 @@ engine = create_async_engine(
             "idle_in_transaction_session_timeout": "60000",  # 60s para transacciones
         }
     },
-    
+
     # No loggear SQL en producción (ahorra I/O)
     echo=False,
-    
+
     # Usar asyncpg (más rápido que psycopg2)
     echo_pool=False,
 )
@@ -361,7 +361,7 @@ async def get_session():
     """
     Obtener sesión de base de datos del pool.
     Usar como context manager para asegurar cleanup correcto.
-    
+
     Usage:
         async with get_session() as session:
             result = await session.execute(query)
@@ -424,25 +424,25 @@ from loguru import logger
 
 class LayeredCache:
     """Caché multi-nivel optimizado."""
-    
+
     def __init__(self, redis_url: str):
         self.redis = redis.from_url(redis_url)
-        
+
         # Nivel 1: Caché en memoria (por proceso worker)
         # Cada worker de Uvicorn tiene su propio caché en memoria
         self._memory_cache: dict[str, Any] = {}
         self._memory_cache_ttl: dict[str, float] = {}
-        
+
         # Límite de caché en memoria (evitar memory leak)
         self._memory_cache_max_size = 1000
-    
+
     async def get(self, key: str) -> Optional[Any]:
         """
         Obtener valor del caché multi-nivel.
         """
         import time
         current_time = time.time()
-        
+
         # Nivel 1: Memoria
         if key in self._memory_cache:
             # Verificar TTL
@@ -454,35 +454,35 @@ class LayeredCache:
                 del self._memory_cache[key]
                 if key in self._memory_cache_ttl:
                     del self._memory_cache_ttl[key]
-        
+
         # Nivel 2: Redis
         try:
             value = await self.redis.get(key)
             if value:
                 import json
                 result = json.loads(value)
-                
+
                 # Promover a memoria
                 self._set_memory(key, result)
-                
+
                 logger.debug(f"Caché HIT Redis: {key}")
                 return result
         except Exception as e:
             logger.error(f"Error leyendo Redis: {e}")
-        
+
         # Caché miss
         logger.debug(f"Caché MISS: {key}")
         return None
-    
+
     async def set(self, key: str, value: Any, ttl_seconds: int = 300):
         """
         Guardar valor en caché multi-nivel.
         """
         import json
-        
+
         # Nivel 1: Memoria
         self._set_memory(key, value)
-        
+
         # Nivel 2: Redis
         try:
             await self.redis.setex(
@@ -492,21 +492,21 @@ class LayeredCache:
             )
         except Exception as e:
             logger.error(f"Error escribiendo Redis: {e}")
-    
+
     def _set_memory(self, key: str, value: Any):
         """Guardar en caché de memoria con LRU."""
         import time
-        
+
         # LRU: si está lleno, eliminar el más viejo
         if len(self._memory_cache) >= self._memory_cache_max_size:
             oldest_key = next(iter(self._memory_cache))
             del self._memory_cache[oldest_key]
             if oldest_key in self._memory_cache_ttl:
                 del self._memory_cache_ttl[oldest_key]
-        
+
         self._memory_cache[key] = value
         self._memory_cache_ttl[key] = time.time() + 300  # 5 min TTL por defecto
-    
+
     async def delete(self, key: str):
         """Eliminar valor del caché en todos los niveles."""
         # Nivel 1: Memoria
@@ -514,13 +514,13 @@ class LayeredCache:
             del self._memory_cache[key]
         if key in self._memory_cache_ttl:
             del self._memory_cache_ttl[key]
-        
+
         # Nivel 2: Redis
         try:
             await self.redis.delete(key)
         except Exception as e:
             logger.error(f"Error eliminando de Redis: {e}")
-    
+
     async def clear_memory(self):
         """Limpiar caché de memoria (útil para debugging)."""
         self._memory_cache.clear()
@@ -538,7 +538,7 @@ def cached(
 ):
     """
     Decorador para cachear resultados de funciones asíncronas.
-    
+
     Usage:
         @cached(prefix="user_profile", ttl_seconds=600)
         async def get_user_profile(telegram_id: int):
@@ -556,19 +556,19 @@ def cached(
                 args_str = str(args) + str(sorted(kwargs.items()))
                 args_hash = hashlib.md5(args_str.encode()).hexdigest()[:8]
                 key = f"{prefix}:{func.__name__}:{args_hash}"
-            
+
             # Intentar caché
             cache = LayeredCache(settings.redis_url)
             cached_value = await cache.get(key)
             if cached_value is not None:
                 return cached_value
-            
+
             # Ejecutar función
             result = await func(*args, **kwargs)
-            
+
             # Guardar en caché
             await cache.set(key, result, ttl_seconds)
-            
+
             return result
         return wrapper
     return decorator
@@ -601,7 +601,7 @@ async def get_cached_dashboard(telegram_id: int) -> dict | None:
 async def set_cached_dashboard(telegram_id: int, data: dict, ttl_seconds: int = 900):
     """
     Guardar dashboard en caché.
-    
+
     TTL por defecto: 15 minutos (900 segundos)
     """
     key = f"dashboard:{telegram_id}"
@@ -671,7 +671,7 @@ logger.info("UVLoop instalado - event loop más rápido")
 
 def create_app() -> FastAPI:
     """Crear aplicación FastAPI optimizada."""
-    
+
     app = FastAPI(
         title="uSipipo VPN API",
         description="API para gestión de VPN uSipipo",
@@ -680,13 +680,13 @@ def create_app() -> FastAPI:
         redoc_url=None,             # Deshabilitar ReDoc en producción
         openapi_url=None,           # Deshabilitar OpenAPI JSON en producción
     )
-    
+
     # Configurar middlewares
     # ... (security headers, rate limiting, etc.)
-    
+
     # Configurar rutas
     # ... (android routes, webhooks, etc.)
-    
+
     # Startup event
     @app.on_event("startup")
     async def startup():
@@ -694,7 +694,7 @@ def create_app() -> FastAPI:
         logger.info(f"Workers: {settings.workers}")
         logger.info(f"HttpTools: instalado")
         logger.info(f"UVLoop: instalado")
-    
+
     return app
 ```
 
@@ -719,29 +719,29 @@ class GZipMiddleware(BaseHTTPMiddleware):
     Comprimir respuestas con gzip para reducir ancho de banda.
     Solo comprime respuestas > 1KB y < 1MB.
     """
-    
+
     def __init__(self, app, minimum_size: int = 1024, maximum_size: int = 1048576):
         super().__init__(app)
         self.minimum_size = minimum_size
         self.maximum_size = maximum_size
-    
+
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        
+
         # Solo comprimir JSON responses
         content_type = response.headers.get("Content-Type", "")
         if "application/json" not in content_type:
             return response
-        
+
         # Obtener body de la respuesta
         body = b""
         async for chunk in response.body_iterator:
             body += chunk
-        
+
         # Solo comprimir si está dentro del rango de tamaño
         if self.minimum_size <= len(body) <= self.maximum_size:
             compressed = gzip.compress(body, compresslevel=6)
-            
+
             # Solo usar compressed si es más pequeño
             if len(compressed) < len(body):
                 response = Response(
@@ -756,7 +756,7 @@ class GZipMiddleware(BaseHTTPMiddleware):
                     media_type=response.media_type,
                 )
                 return response
-        
+
         return response
 ```
 
@@ -821,9 +821,9 @@ async def get_user_dashboard_parallel(telegram_id: int):
                 {"id": telegram_id}
             ),
         )
-        
+
         user_result, keys_result, package_result, referrals_result = results
-        
+
         # Construir respuesta
         return {
             "user": user_result.first(),
@@ -847,17 +847,17 @@ async def get_user_dashboard_parallel(telegram_id: int):
 usipipo.duckdns.org {
     # HTTPS automático con Let's Encrypt
     tls admin@usipipo.com
-    
+
     # Reverse proxy para el backend
     reverse_proxy /api/* localhost:8000
-    
+
     # Reverse proxy para webhooks
     reverse_proxy /webhooks/* localhost:8000
-    
+
     # Servir archivos estáticos de la Mini App
     root * /opt/usipipobot/static
     file_server
-    
+
     # Cache agresivo para archivos estáticos
     @static {
         path /static/*
@@ -871,24 +871,24 @@ usipipo.duckdns.org {
         path *.svg
         path *.ico
     }
-    
+
     header @static {
         Cache-Control "public, max-age=31536000, immutable"
     }
-    
+
     # Cache moderado para HTML (puede cambiar)
     @html {
         path *.html
         path /miniapp/*
     }
-    
+
     header @html {
         Cache-Control "public, max-age=3600, must-revalidate"
     }
-    
+
     # Gzip compression
     encode gzip
-    
+
     # Security headers
     header {
         X-Frame-Options "DENY"
@@ -912,7 +912,7 @@ usipipo.duckdns.org {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const images = document.querySelectorAll('img[data-src]');
-    
+
     const imageObserver = new IntersectionObserver((entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -923,7 +923,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     images.forEach(img => imageObserver.observe(img));
 });
 </script>
@@ -955,9 +955,9 @@ class OptimizedAPIClient:
     - Timeout configurado
     - Certificate pinning
     """
-    
+
     _instance: Optional[httpx.AsyncClient] = None
-    
+
     @classmethod
     def get_client(cls) -> httpx.AsyncClient:
         """
@@ -970,7 +970,7 @@ class OptimizedAPIClient:
                 max_connections=20,
                 keepalive_expiry=30.0,
             )
-            
+
             # Configurar timeouts
             timeout = httpx.Timeout(
                 timeout=30.0,
@@ -979,13 +979,13 @@ class OptimizedAPIClient:
                 write=10.0,
                 pool=5.0,
             )
-            
+
             # Configurar transporte con retries
             transport = httpx.AsyncHTTPTransport(
                 retries=3,                    # Reintentar 3 veces antes de fallar
                 limits=limits,
             )
-            
+
             cls._instance = httpx.AsyncClient(
                 base_url=BACKEND_URL,
                 transport=transport,
@@ -996,9 +996,9 @@ class OptimizedAPIClient:
                     "Accept-Encoding": "gzip, deflate",
                 }
             )
-        
+
         return cls._instance
-    
+
     @classmethod
     async def close(cls):
         """Cerrar el cliente (al salir de la app)."""
@@ -1017,7 +1017,7 @@ import asyncio
 def retry_on_failure(max_retries: int = 3, backoff_factor: float = 0.5):
     """
     Decorador para reintentar requests fallidas con backoff exponencial.
-    
+
     Usage:
         @retry_on_failure(max_retries=3)
         async def fetch_dashboard():
@@ -1027,21 +1027,21 @@ def retry_on_failure(max_retries: int = 3, backoff_factor: float = 0.5):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             last_exception = None
-            
+
             for attempt in range(max_retries):
                 try:
                     return await func(*args, **kwargs)
                 except (httpx.ConnectError, httpx.TimeoutException, httpx.RemoteProtocolError) as e:
                     last_exception = e
-                    
+
                     if attempt < max_retries - 1:
                         # Backoff exponencial: 0.5s, 1s, 2s, ...
                         wait_time = backoff_factor * (2 ** attempt)
                         await asyncio.sleep(wait_time)
-            
+
             # Todos los retries fallaron
             raise last_exception
-        
+
         return wrapper
     return decorator
 ```
@@ -1068,85 +1068,85 @@ class CacheStorage:
     Caché en disco para la APK.
     Los datos se guardan en archivos JSON con TTL.
     """
-    
+
     def __init__(self, cache_dir: str):
         self.cache_dir = cache_dir
         os.makedirs(cache_dir, exist_ok=True)
-    
+
     def _get_cache_path(self, key: str) -> str:
         """Obtener path del archivo de caché."""
         # Sanitizar key para nombre de archivo
         safe_key = key.replace(":", "_").replace("/", "_")
         return os.path.join(self.cache_dir, f"{safe_key}.json")
-    
+
     def get(self, key: str) -> Optional[Any]:
         """
         Obtener valor del caché.
         Retorna None si no existe o está expirado.
         """
         cache_path = self._get_cache_path(key)
-        
+
         if not os.path.exists(cache_path):
             return None
-        
+
         try:
             with open(cache_path, 'r') as f:
                 data = json.load(f)
-            
+
             # Verificar TTL
             expires_at = datetime.fromisoformat(data['expires_at'])
             if datetime.now() > expires_at:
                 # Expirado, eliminar
                 os.remove(cache_path)
                 return None
-            
+
             return data['value']
-        
+
         except Exception as e:
             logger.error(f"Error leyendo caché {key}: {e}")
             return None
-    
+
     def set(self, key: str, value: Any, ttl_minutes: int = 15):
         """
         Guardar valor en caché con TTL.
         """
         cache_path = self._get_cache_path(key)
         expires_at = datetime.now() + timedelta(minutes=ttl_minutes)
-        
+
         try:
             data = {
                 'value': value,
                 'expires_at': expires_at.isoformat(),
                 'created_at': datetime.now().isoformat(),
             }
-            
+
             with open(cache_path, 'w') as f:
                 json.dump(data, f)
-            
+
             logger.debug(f"Caché guardado: {key} (TTL: {ttl_minutes} min)")
-        
+
         except Exception as e:
             logger.error(f"Error guardando caché {key}: {e}")
-    
+
     def delete(self, key: str):
         """Eliminar valor del caché."""
         cache_path = self._get_cache_path(key)
-        
+
         if os.path.exists(cache_path):
             os.remove(cache_path)
             logger.debug(f"Caché eliminado: {key}")
-    
+
     def clear(self):
         """Limpiar todo el caché."""
         for filename in os.listdir(self.cache_dir):
             file_path = os.path.join(self.cache_dir, filename)
-            
+
             if os.path.isfile(file_path):
                 try:
                     os.remove(file_path)
                 except Exception as e:
                     logger.error(f"Error eliminando {file_path}: {e}")
-        
+
         logger.info("Caché limpiado completamente")
 
 
@@ -1196,33 +1196,33 @@ async def performance_metrics():
     """
     import psutil
     import os
-    
+
     process = psutil.Process(os.getpid())
-    
+
     # Uso de CPU y RAM del proceso
     cpu_percent = process.cpu_percent(interval=0.1)
     memory_info = process.memory_info()
-    
+
     # Estadísticas del pool de DB
     pool_stats = get_pool_stats()
-    
+
     # Latencia de PostgreSQL
     async with get_session() as session:
         start = time.time()
         await session.execute(text("SELECT 1"))
         db_latency_ms = (time.time() - start) * 1000
-    
+
     # Estadísticas de Redis
     import redis.asyncio as redis
     r = redis.from_url(settings.redis_url)
-    
+
     start = time.time()
     await r.ping()
     redis_latency_ms = (time.time() - start) * 1000
-    
+
     # Info del sistema
     system_memory = psutil.virtual_memory()
-    
+
     return {
         "process": {
             "cpu_percent": cpu_percent,
@@ -1255,7 +1255,7 @@ async def slow_queries():
     """
     async with get_session() as session:
         result = await session.execute(text("""
-            SELECT 
+            SELECT
                 query,
                 calls,
                 mean_exec_time,
@@ -1266,7 +1266,7 @@ async def slow_queries():
             ORDER BY mean_exec_time DESC
             LIMIT 10
         """))
-        
+
         return {
             "slow_queries": [
                 {

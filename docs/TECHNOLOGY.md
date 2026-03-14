@@ -214,7 +214,7 @@ class Settings(BaseSettings):
     telegram_token: SecretStr
     admin_id: int
     database_url: PostgresDsn
-    
+
     class Config:
         env_file = ".env"
         case_sensitive = False

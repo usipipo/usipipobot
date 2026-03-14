@@ -16,11 +16,7 @@ from config import settings
 from domain.entities.user import User, UserRole
 from infrastructure.persistence.database import get_session_context
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
-from miniapp.services.miniapp_auth import (
-    MiniAppAuthService,
-    TelegramUser,
-    get_miniapp_auth_service,
-)
+from miniapp.services.miniapp_auth import MiniAppAuthService, TelegramUser, get_miniapp_auth_service
 from utils.logger import logger
 
 
@@ -28,9 +24,7 @@ class PaymentRequest(BaseModel):
     """Request model for payment endpoints."""
 
     product_type: str = Field(..., description="Type of product: 'package' or 'slots'")
-    product_id: str = Field(
-        ..., description="Product identifier (e.g., 'basic', 'slots_3')"
-    )
+    product_id: str = Field(..., description="Product identifier (e.g., 'basic', 'slots_3')")
 
 
 class MiniAppContext:
@@ -107,9 +101,7 @@ async def get_current_user(
                 raise HTTPException(status_code=403, detail="USER_NOT_REGISTERED")
 
             # Pass db_user to context so is_admin can check role from database
-            return MiniAppContext(
-                user=result.user, db_user=db_user, query_id=result.query_id
-            )
+            return MiniAppContext(user=result.user, db_user=db_user, query_id=result.query_id)
     except HTTPException:
         raise
     except Exception as e:
@@ -125,10 +117,6 @@ async def require_admin(
 ) -> MiniAppContext:
     """Dependencia que requiere que el usuario sea administrador."""
     if not ctx.is_admin:
-        logger.warning(
-            f"🚫 User {ctx.user.id} attempted admin action without privileges"
-        )
-        raise HTTPException(
-            status_code=403, detail="Acceso denegado: solo administradores"
-        )
+        logger.warning(f"🚫 User {ctx.user.id} attempted admin action without privileges")
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo administradores")
     return ctx

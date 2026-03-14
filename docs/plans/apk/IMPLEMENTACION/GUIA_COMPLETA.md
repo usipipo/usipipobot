@@ -1,7 +1,7 @@
 # 📚 Guía Completa de Implementación por Fases
 
 > **Para:** Equipo de Desarrollo uSipipo
-> 
+>
 > **Propósito:** Cómo implementar la APK Android sin errores, fase por fase
 
 ---
@@ -86,11 +86,11 @@ Cada archivo de fase contiene:
 # FASE XX.Y - Título Descriptivo
 
 > **Documento Base:** documentos originales (03_MODULO_AUTH.md, etc.)
-> 
+>
 > **Duración Estimada:** 1-3 horas
-> 
+>
 > **Prioridad:** ALTA/MEDIA/BAJA
-> 
+>
 > **Prerrequisito:** Fases que deben estar completas antes
 
 ## 📋 Contexto

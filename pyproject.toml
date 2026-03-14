@@ -28,35 +28,35 @@ classifiers = [
 dependencies = [
     # Telegram Bot
     "python-telegram-bot[job-queue]==21.10",
-    
+
     # Database (PostgreSQL + SQLAlchemy Async)
     "sqlalchemy[asyncio]==2.0.48",
     "asyncpg==0.30.0",
     "alembic==1.14.0",
     "psycopg2-binary==2.9.10",
-    
+
     # Configuration & Validation
     "pydantic==2.12.5",
     "pydantic-settings==2.6.1",
     "python-dotenv==1.2.2",
     "PyYAML==6.0.3",
-    
+
     # HTTP Client
     "httpx==0.28.1",
     "aiohttp==3.13.3",
     "redis==7.3.0",
-    
+
     # FastAPI for Webhook API
     "fastapi==0.135.1",
     "uvicorn[standard]==0.41.0",
     "python-multipart==0.0.22",
     "jinja2==3.1.6",
     "itsdangerous==2.2.0",
-    
+
     # Security & Authentication
     "PyJWT==2.12.0",
     "cryptography==46.0.5",
-    
+
     # Utilities
     "punq==0.7.0",
     "loguru==0.7.3",
@@ -65,7 +65,7 @@ dependencies = [
     "cachetools==7.0.5",
     "python-dateutil==2.8.2",
     "pytz==2026.1.post1",
-    
+
     # Optional / Development
     "rich==14.2.0",
     "StrEnum==0.4.15",
@@ -110,6 +110,7 @@ dev = [
     "black",
     "mypy",
     "isort>=8.0.1",
+    "detect-secrets>=1.5.0",
 ]
 
 # =============================================================================

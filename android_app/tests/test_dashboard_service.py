@@ -1,10 +1,11 @@
 """
 Tests for Android dashboard service.
 """
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime, timezone, timedelta
 
+from datetime import datetime, timedelta, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from src.services.dashboard_service import DashboardService
 from src.storage.cache_storage import CacheStorage
 
@@ -15,13 +16,13 @@ class TestDashboardService:
     @pytest.fixture
     def mock_api_client(self):
         """Mock API client."""
-        with patch('src.services.dashboard_service.ApiClient') as mock:
+        with patch("src.services.dashboard_service.ApiClient") as mock:
             yield mock
 
     @pytest.fixture
     def mock_cache_storage(self):
         """Mock cache storage."""
-        with patch('src.services.dashboard_service.CacheStorage') as mock:
+        with patch("src.services.dashboard_service.CacheStorage") as mock:
             yield mock
 
     @pytest.fixture
@@ -36,16 +37,12 @@ class TestDashboardService:
         assert dashboard_service.cache_storage is not None
 
     @pytest.mark.asyncio
-    async def test_get_dashboard_summary_cache_hit(
-        self,
-        dashboard_service,
-        mock_cache_storage
-    ):
+    async def test_get_dashboard_summary_cache_hit(self, dashboard_service, mock_cache_storage):
         """Test getting dashboard data from cache."""
         # Arrange
         cached_data = {
             "user": {"telegram_id": 123456789, "username": "testuser"},
-            "data_summary": {"total_used_bytes": 1000, "total_limit_bytes": 5000}
+            "data_summary": {"total_used_bytes": 1000, "total_limit_bytes": 5000},
         }
         dashboard_service.cache_storage.get = MagicMock(return_value=cached_data)
 
@@ -58,22 +55,19 @@ class TestDashboardService:
 
     @pytest.mark.asyncio
     async def test_get_dashboard_summary_cache_miss(
-        self,
-        dashboard_service,
-        mock_cache_storage,
-        mock_api_client
+        self, dashboard_service, mock_cache_storage, mock_api_client
     ):
         """Test fetching dashboard data from API when cache miss."""
         # Arrange
         dashboard_service.cache_storage.get = MagicMock(return_value=None)
-        
+
         api_response = {
             "user": {"telegram_id": 123456789, "username": "testuser"},
             "data_summary": {"total_used_bytes": 1000, "total_limit_bytes": 5000},
             "active_keys": [],
-            "active_package": None
+            "active_package": None,
         }
-        
+
         mock_response = AsyncMock()
         mock_response.get = AsyncMock(return_value=api_response)
         dashboard_service.api_client = mock_response
@@ -84,8 +78,7 @@ class TestDashboardService:
         # Assert
         assert result == api_response
         dashboard_service.api_client.get.assert_called_once_with(
-            endpoint="/dashboard/summary",
-            use_auth=True
+            endpoint="/dashboard/summary", use_auth=True
         )
 
     @pytest.mark.asyncio
@@ -94,9 +87,9 @@ class TestDashboardService:
         # Arrange
         api_response = {
             "user": {"telegram_id": 123456789, "username": "testuser"},
-            "data_summary": {"total_used_bytes": 2000, "total_limit_bytes": 5000}
+            "data_summary": {"total_used_bytes": 2000, "total_limit_bytes": 5000},
         }
-        
+
         mock_response = AsyncMock()
         mock_response.get = AsyncMock(return_value=api_response)
         dashboard_service.api_client = mock_response
@@ -107,8 +100,7 @@ class TestDashboardService:
         # Assert
         assert result == api_response
         dashboard_service.api_client.get.assert_called_once_with(
-            endpoint="/dashboard/summary",
-            use_auth=True
+            endpoint="/dashboard/summary", use_auth=True
         )
 
     def test_format_bytes(self):
@@ -140,15 +132,15 @@ class TestDashboardService:
     def test_format_relative_time(self):
         """Test relative time formatting."""
         now = datetime.now(timezone.utc)
-        
+
         # Just now
         result = DashboardService.format_relative_time(now.isoformat())
         assert "ahora" in result.lower()
-        
+
         # Invalid input
         result = DashboardService.format_relative_time(None)
         assert result == "Nunca"
-        
+
         result = DashboardService.format_relative_time("invalid")
         assert result == "Desconocido"
 

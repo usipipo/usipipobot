@@ -64,19 +64,19 @@ Simplificar la creación y gestión de conexiones VPN para usuarios no técnicos
 
 ### 3.2 Flujo de Creación de Clave VPN
 ```
-Menú Principal → "Crear Nueva" → Seleccionar Protocolo 
+Menú Principal → "Crear Nueva" → Seleccionar Protocolo
 → Seleccionar Servidor → Generar Clave → Mostrar Configuración
 ```
 
 ### 3.3 Flujo de Compra de GB
 ```
-Menú Principal → "Comprar GB" → Seleccionar Paquete 
+Menú Principal → "Comprar GB" → Seleccionar Paquete
 → Confirmar Pago (Stars) → Aplicar GB a cuenta
 ```
 
 ### 3.4 Flujo de Soporte
 ```
-Menú Principal → "Soporte" → Enviar mensaje 
+Menú Principal → "Soporte" → Enviar mensaje
 → Esperar respuesta del admin → Notificación
 ```
 

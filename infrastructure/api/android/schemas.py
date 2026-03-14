@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field, validator
 import re
+
+from pydantic import BaseModel, Field, validator
 
 
 class OTPRequest(BaseModel):
@@ -10,6 +11,7 @@ class OTPRequest(BaseModel):
     - Username de Telegram (con @ al inicio)
     - Telegram ID (número)
     """
+
     identifier: str = Field(..., min_length=1, max_length=50)
 
     @validator("identifier")
@@ -32,19 +34,14 @@ class OTPRequest(BaseModel):
 
         return v
 
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "identifier": "@juanperez"
-            }
-        }
-    }
+    model_config = {"json_schema_extra": {"example": {"identifier": "@juanperez"}}}
 
 
 class OTPResponse(BaseModel):
     """
     Schema de respuesta para solicitud OTP.
     """
+
     message: str
     expires_in_seconds: int
 
@@ -52,7 +49,7 @@ class OTPResponse(BaseModel):
         "json_schema_extra": {
             "example": {
                 "message": "Código enviado a tu chat de Telegram",
-                "expires_in_seconds": 300
+                "expires_in_seconds": 300,
             }
         }
     }
@@ -62,6 +59,7 @@ class OTPVerify(BaseModel):
     """
     Schema para verificar código OTP.
     """
+
     identifier: str = Field(..., min_length=1, max_length=50)
     otp: str = Field(..., min_length=6, max_length=6)
 
@@ -84,20 +82,14 @@ class OTPVerify(BaseModel):
             raise ValueError("El código OTP debe tener 6 dígitos")
         return v
 
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "identifier": "@juanperez",
-                "otp": "123456"
-            }
-        }
-    }
+    model_config = {"json_schema_extra": {"example": {"identifier": "@juanperez", "otp": "123456"}}}
 
 
 class TokenResponse(BaseModel):
     """
     Schema de respuesta con token JWT.
     """
+
     access_token: str
     token_type: str = "bearer"
     expires_in: int
@@ -112,8 +104,8 @@ class TokenResponse(BaseModel):
                 "user": {
                     "telegram_id": 123456789,
                     "username": "juanperez",
-                    "full_name": "Juan Pérez"
-                }
+                    "full_name": "Juan Pérez",
+                },
             }
         }
     }
@@ -123,6 +115,7 @@ class UserInToken(BaseModel):
     """
     Schema tipado para información de usuario en respuestas de token.
     """
+
     telegram_id: int
     username: str | None = None
     full_name: str | None = None
@@ -132,6 +125,7 @@ class RefreshTokenResponse(BaseModel):
     """
     Schema de respuesta para refresh de token.
     """
+
     access_token: str
     token_type: str = "bearer"
     expires_in: int = 86400
@@ -141,7 +135,7 @@ class RefreshTokenResponse(BaseModel):
             "example": {
                 "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "token_type": "bearer",
-                "expires_in": 86400
+                "expires_in": 86400,
             }
         }
     }
@@ -151,15 +145,10 @@ class LogoutResponse(BaseModel):
     """
     Schema de respuesta para logout.
     """
+
     message: str
 
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "message": "Sesión cerrada"
-            }
-        }
-    }
+    model_config = {"json_schema_extra": {"example": {"message": "Sesión cerrada"}}}
 
 
 class UserProfileResponse(BaseModel):
@@ -169,6 +158,7 @@ class UserProfileResponse(BaseModel):
     Se usa en el endpoint GET /auth/me para devolver
     información del usuario autenticado.
     """
+
     telegram_id: int
     username: str | None
     full_name: str | None
@@ -184,7 +174,7 @@ class UserProfileResponse(BaseModel):
                 "full_name": "Juan Pérez",
                 "status": "active",
                 "has_pending_debt": False,
-                "consumption_mode_enabled": False
+                "consumption_mode_enabled": False,
             }
         }
     }

@@ -10,21 +10,15 @@ import io
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram_bot.features.key_management.keyboards_key_management import (
-    KeyManagementKeyboards,
-)
-from telegram_bot.features.key_management.messages_key_management import (
-    KeyManagementMessages,
-)
+from telegram_bot.features.key_management.keyboards_key_management import KeyManagementKeyboards
+from telegram_bot.features.key_management.messages_key_management import KeyManagementMessages
 from utils.logger import logger
 
 
 class KeyInfoMixin:
     """Mixin para información de llaves VPN (descarga de configs, enlaces)."""
 
-    async def download_wireguard_config(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def download_wireguard_config(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Envía el archivo .conf de una llave WireGuard al usuario."""
         query = update.callback_query
         if query is None or query.data is None:
@@ -68,9 +62,7 @@ class KeyInfoMixin:
                 ),
                 parse_mode="Markdown",
             )
-            logger.info(
-                f"User {user_id} successfully downloaded WireGuard config for key {key_id}"
-            )
+            logger.info(f"User {user_id} successfully downloaded WireGuard config for key {key_id}")
 
         except Exception as e:
             logger.error(f"Error descargando config WireGuard: {e}")
@@ -82,9 +74,7 @@ class KeyInfoMixin:
                 parse_mode="Markdown",
             )
 
-    async def get_outline_link(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def get_outline_link(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra el enlace de acceso ss:// para una llave Outline."""
         query = update.callback_query
         if query is None or query.data is None:
@@ -98,9 +88,7 @@ class KeyInfoMixin:
         logger.info(f"User {user_id} getting Outline link for key {key_id}")
 
         try:
-            config_data = await self.vpn_service.get_outline_config(
-                key_id, current_user_id=user_id
-            )
+            config_data = await self.vpn_service.get_outline_config(key_id, current_user_id=user_id)
             access_url = config_data.get("access_url")
 
             if not access_url or "no disponible" in access_url.lower():
@@ -125,9 +113,7 @@ class KeyInfoMixin:
                 reply_markup=KeyManagementKeyboards.back_to_submenu(),
                 parse_mode="Markdown",
             )
-            logger.info(
-                f"User {user_id} successfully retrieved Outline link for key {key_id}"
-            )
+            logger.info(f"User {user_id} successfully retrieved Outline link for key {key_id}")
 
         except Exception as e:
             logger.error(f"Error obteniendo enlace Outline: {e}")

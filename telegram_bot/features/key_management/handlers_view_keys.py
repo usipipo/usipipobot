@@ -8,12 +8,8 @@ Version: 1.0.0 - Refactor from handlers_key_management.py
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram_bot.features.key_management.keyboards_key_management import (
-    KeyManagementKeyboards,
-)
-from telegram_bot.features.key_management.messages_key_management import (
-    KeyManagementMessages,
-)
+from telegram_bot.features.key_management.keyboards_key_management import KeyManagementKeyboards
+from telegram_bot.features.key_management.messages_key_management import KeyManagementMessages
 from utils.logger import logger
 from utils.telegram_utils import escape_markdown, format_percentage
 
@@ -21,9 +17,7 @@ from utils.telegram_utils import escape_markdown, format_percentage
 class ViewKeysMixin:
     """Mixin para visualización de llaves VPN."""
 
-    async def show_keys_by_type(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_keys_by_type(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra llaves filtradas por tipo."""
         query = update.callback_query
         if query is None or query.data is None:
@@ -38,15 +32,11 @@ class ViewKeysMixin:
         logger.info(f"User {user_id} viewing keys by type: {key_type}")
 
         try:
-            user_status = await self.vpn_service.get_user_status(
-                user_id, current_user_id=user_id
-            )
+            user_status = await self.vpn_service.get_user_status(user_id, current_user_id=user_id)
             all_keys = user_status.get("keys", [])
 
             # Filtrar llaves por tipo
-            filtered_keys = [
-                k for k in all_keys if k.key_type.lower() == key_type.lower()
-            ]
+            filtered_keys = [k for k in all_keys if k.key_type.lower() == key_type.lower()]
 
             if not filtered_keys:
                 message = KeyManagementMessages.NO_KEYS_TYPE.format(
@@ -87,9 +77,7 @@ class ViewKeysMixin:
                 parse_mode="Markdown",
             )
 
-    async def show_key_details(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_key_details(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra detalles de una llave específica."""
         query = update.callback_query
         if query is None or query.data is None:
@@ -113,9 +101,7 @@ class ViewKeysMixin:
                 status = "Activa" if key.is_active else "Inactiva"
                 status_icon = "🟢" if key.is_active else "🔴"
                 usage_percentage = (
-                    (key.used_gb / key.data_limit_gb) * 100
-                    if key.data_limit_gb > 0
-                    else 0
+                    (key.used_gb / key.data_limit_gb) * 100 if key.data_limit_gb > 0 else 0
                 )
 
                 usage_bar = format_percentage(key.used_gb, key.data_limit_gb)
@@ -135,9 +121,7 @@ class ViewKeysMixin:
                     ),
                 )
 
-                keyboard = KeyManagementKeyboards.key_actions(
-                    key_id, key.is_active, key.key_type
-                )
+                keyboard = KeyManagementKeyboards.key_actions(key_id, key.is_active, key.key_type)
 
             await self._safe_edit_message(
                 query,
@@ -157,9 +141,7 @@ class ViewKeysMixin:
                 parse_mode="Markdown",
             )
 
-    def _generate_cyberpunk_progress_bar(
-        self, percentage: float, width: int = 10
-    ) -> str:
+    def _generate_cyberpunk_progress_bar(self, percentage: float, width: int = 10) -> str:
         """Genera una barra de progreso estilo cyberpunk."""
         filled = int((percentage / 100) * width)
         empty = width - filled
@@ -171,9 +153,7 @@ class ViewKeysMixin:
 
         return filled_char * filled + empty_char * empty
 
-    async def show_key_statistics(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_key_statistics(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra estadísticas detalladas de las llaves."""
         query = update.callback_query
         if query is None:
@@ -186,9 +166,7 @@ class ViewKeysMixin:
         logger.info(f"User {user_id} viewing key statistics")
 
         try:
-            user_status = await self.vpn_service.get_user_status(
-                user_id, current_user_id=user_id
-            )
+            user_status = await self.vpn_service.get_user_status(user_id, current_user_id=user_id)
             keys = user_status.get("keys", [])
 
             if not keys:
@@ -198,9 +176,7 @@ class ViewKeysMixin:
                 active_keys = len([k for k in keys if k.is_active])
                 total_usage = sum(k.used_gb for k in keys)
                 total_limit = sum(k.data_limit_gb for k in keys)
-                overall_percentage = (
-                    (total_usage / total_limit * 100) if total_limit > 0 else 0
-                )
+                overall_percentage = (total_usage / total_limit * 100) if total_limit > 0 else 0
 
                 outline_keys = [k for k in keys if k.key_type.lower() == "outline"]
                 wireguard_keys = [k for k in keys if k.key_type.lower() == "wireguard"]
@@ -217,9 +193,7 @@ class ViewKeysMixin:
                     usage_bar=usage_bar,  # No escapar - usa caracteres seguros
                     outline_count=escape_markdown(str(len(outline_keys))),
                     wireguard_count=escape_markdown(str(len(wireguard_keys))),
-                    outline_usage=escape_markdown(
-                        f"{sum(k.used_gb for k in outline_keys):.1f}"
-                    ),
+                    outline_usage=escape_markdown(f"{sum(k.used_gb for k in outline_keys):.1f}"),
                     wireguard_usage=escape_markdown(
                         f"{sum(k.used_gb for k in wireguard_keys):.1f}"
                     ),

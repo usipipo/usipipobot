@@ -229,8 +229,8 @@ Son 100% independientes. El `android_app/main.py` **nunca se ejecuta en el VPS**
 **Trabajar en el backend Android API (rutas REST):**
 ```bash
 # Desde la raíz del repo
-claude "implementa el endpoint POST /api/v1/auth/request-otp 
-        en infrastructure/api/android/auth.py, 
+claude "implementa el endpoint POST /api/v1/auth/request-otp
+        en infrastructure/api/android/auth.py,
         usando Redis para guardar el OTP con TTL de 5 minutos"
 ```
 

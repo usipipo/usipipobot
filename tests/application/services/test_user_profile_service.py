@@ -4,10 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from application.services.referral_service import ReferralStats
-from application.services.user_profile_service import (
-    UserProfileService,
-    UserProfileSummary,
-)
+from application.services.user_profile_service import UserProfileService, UserProfileSummary
 from domain.entities.user import User, UserRole, UserStatus
 
 
