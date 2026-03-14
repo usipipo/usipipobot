@@ -61,20 +61,20 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-android.txt
+          pip install -r android_app/requirements-android.txt
           pip install flake8 mypy
 
       - name: Run linters
         run: |
           echo "=== Running flake8 ==="
-          flake8 src/ tests/ --max-line-length=120 --ignore=E501,W503
+          flake8 android_app/src/ android_app/tests/ --max-line-length=120 --ignore=E501,W503
           echo "=== Running mypy ==="
-          mypy src/ --ignore-missing-imports --no-strict-optional || true
+          mypy android_app/src/ --ignore-missing-imports --no-strict-optional || true
 
       - name: Run tests
         run: |
           echo "=== Running pytest ==="
-          pytest tests/ -v --asyncio-mode=auto --tb=short --cov=src --cov-report=term-missing
+          pytest android_app/tests/ -v --asyncio-mode=auto --tb=short --cov=android_app/src --cov-report=term-missing
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -132,12 +132,14 @@ jobs:
 
       - name: Initialize Buildozer
         run: |
+          cd android_app
           if [ ! -f buildozer.spec ]; then
             buildozer init
           fi
 
       - name: Configure Buildozer for CI
         run: |
+          cd android_app
           # Update buildozer.spec for CI environment
           sed -i 's/orientation = portrait/orientation = portrait/' buildozer.spec
           sed -i 's/version = .*/version = 1.0.0/' buildozer.spec
@@ -146,6 +148,7 @@ jobs:
       - name: Build Debug APK
         run: |
           echo "=== Building Debug APK ==="
+          cd android_app
           # Note: Full build may take 20-30 minutes
           # For CI, we'll do a dry-run to verify configuration
           buildozer android debug 2>&1 | tee build.log || {
@@ -228,7 +231,7 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_B64" ]; then
             echo "Setting up signing key..."
-            echo "$KEYSTORE_B64" | base64 -d > release.keystore
+            echo "$KEYSTORE_B64" | base64 -d > android_app/release.keystore
             echo "Keystore configured"
           else
             echo "WARNING: No signing key found - building unsigned"
@@ -237,6 +240,7 @@ jobs:
       - name: Build Release APK
         run: |
           echo "=== Building Release APK ==="
+          cd android_app
           buildozer android release 2>&1 | tee build_release.log || {
             echo "Build completed with warnings/errors - check log"
             cat build_release.log
