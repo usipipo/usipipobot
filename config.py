@@ -137,6 +137,14 @@ class Settings(BaseSettings):
     )
 
     # =========================================================================
+    # REDIS
+    # =========================================================================
+    REDIS_URL: str = Field(
+        default="redis://localhost:6379/0",
+        description="URL de conexión Redis (redis://host:port/db)",
+    )
+
+    # =========================================================================
     # INFORMACIÓN DE RED DEL SERVIDOR
     # =========================================================================
     SERVER_IP: str = Field(..., description="IP pública principal del VPS")
