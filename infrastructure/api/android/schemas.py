@@ -117,3 +117,37 @@ class TokenResponse(BaseModel):
             }
         }
     }
+
+
+class RefreshTokenResponse(BaseModel):
+    """
+    Schema de respuesta para refresh de token.
+    """
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int = 86400
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "token_type": "bearer",
+                "expires_in": 86400
+            }
+        }
+    }
+
+
+class LogoutResponse(BaseModel):
+    """
+    Schema de respuesta para logout.
+    """
+    message: str
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "message": "Sesión cerrada"
+            }
+        }
+    }
