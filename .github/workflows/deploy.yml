@@ -10,11 +10,11 @@ jobs:
     environment:
       name: production
       url: https://github.com/${{ github.repository }}
-    
+
     permissions:
       contents: read
       packages: read
-    
+
     steps:
       - uses: actions/checkout@v4
 

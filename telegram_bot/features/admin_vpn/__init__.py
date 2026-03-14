@@ -16,9 +16,7 @@ from telegram_bot.features.admin_vpn.handlers_cleanup import CleanupMixin
 from telegram_bot.features.admin_vpn.handlers_key_deletion import KeyDeletionMixin
 from telegram_bot.features.admin_vpn.handlers_key_listing import KeyListingMixin
 from telegram_bot.features.admin_vpn.handlers_key_operations import KeyOperationsMixin
-from telegram_bot.features.admin_vpn.handlers_server_monitoring import (
-    ServerMonitoringMixin,
-)
+from telegram_bot.features.admin_vpn.handlers_server_monitoring import ServerMonitoringMixin
 from telegram_bot.features.admin_vpn.keyboards_admin_vpn import AdminVpnKeyboards
 from telegram_bot.features.admin_vpn.messages_admin_vpn import AdminVpnMessages
 

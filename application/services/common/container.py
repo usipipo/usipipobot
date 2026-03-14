@@ -15,36 +15,22 @@ import punq
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.services.admin_service import AdminService
-from application.services.consumption_billing_service import (
-    ConsumptionBillingService,
-)
-from application.services.consumption_invoice_service import (
-    ConsumptionInvoiceService,
-)
+from application.services.consumption_billing_service import ConsumptionBillingService
+from application.services.consumption_invoice_service import ConsumptionInvoiceService
 from application.services.consumption_vpn_integration_service import (
     ConsumptionVpnIntegrationService,
 )
 from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
-from application.services.ticket_notification_service import (
-    TicketNotificationService,
-)
+from application.services.ticket_notification_service import TicketNotificationService
 from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
-from application.services.vpn_infrastructure_service import (
-    VpnInfrastructureService,
-)
+from application.services.vpn_infrastructure_service import VpnInfrastructureService
 from application.services.vpn_service import VpnService
-from application.services.wallet_management_service import (
-    WalletManagementService,
-)
-from domain.interfaces.iconsumption_billing_repository import (
-    IConsumptionBillingRepository,
-)
-from domain.interfaces.iconsumption_invoice_repository import (
-    IConsumptionInvoiceRepository,
-)
+from application.services.wallet_management_service import WalletManagementService
+from domain.interfaces.iconsumption_billing_repository import IConsumptionBillingRepository
+from domain.interfaces.iconsumption_invoice_repository import IConsumptionInvoiceRepository
 from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
@@ -67,30 +53,18 @@ from infrastructure.persistence.postgresql.crypto_order_repository import (
 from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
 )
-from infrastructure.persistence.postgresql.key_repository import (
-    PostgresKeyRepository,
-)
-from infrastructure.persistence.postgresql.ticket_repository import (
-    TicketRepository,
-)
+from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
+from infrastructure.persistence.postgresql.ticket_repository import TicketRepository
 from infrastructure.persistence.postgresql.transaction_repository import (
     PostgresTransactionRepository,
 )
-from infrastructure.persistence.postgresql.user_repository import (
-    PostgresUserRepository,
-)
-from telegram_bot.features.admin import (
-    get_admin_callback_handlers,
-    get_admin_handlers,
-)
+from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
+from telegram_bot.features.admin import get_admin_callback_handlers, get_admin_handlers
 from telegram_bot.features.key_management import (
     get_key_management_callback_handlers,
     get_key_management_handlers,
 )
-from telegram_bot.features.vpn_keys import (
-    get_vpn_keys_callback_handlers,
-    get_vpn_keys_handler,
-)
+from telegram_bot.features.vpn_keys import get_vpn_keys_callback_handlers, get_vpn_keys_handler
 from utils.logger import logger
 
 T = TypeVar("T")
@@ -373,9 +347,7 @@ def _configure_application_services(container: punq.Container) -> None:
             admin_id=settings.ADMIN_ID,
         )
 
-    def create_consumption_vpn_integration_service() -> (
-        ConsumptionVpnIntegrationService
-    ):
+    def create_consumption_vpn_integration_service() -> ConsumptionVpnIntegrationService:
         return ConsumptionVpnIntegrationService(
             user_repo=create_user_repo(),
             key_repo=create_key_repo(),
@@ -454,9 +426,7 @@ def _configure_handlers(container: punq.Container) -> None:
             )
         )
         handlers.extend(
-            get_vpn_keys_callback_handlers(
-                cast(VpnService, container.resolve(VpnService))
-            )
+            get_vpn_keys_callback_handlers(cast(VpnService, container.resolve(VpnService)))
         )
         handlers.extend(
             get_key_management_callback_handlers(

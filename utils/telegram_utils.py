@@ -36,10 +36,7 @@ from utils.telegram_format_utils import (
     format_relative_time,
     format_user_name,
 )
-from utils.telegram_message_handler import (
-    TelegramHandlerUtils,
-    TelegramUtils,
-)
+from utils.telegram_message_handler import TelegramHandlerUtils, TelegramUtils
 from utils.telegram_validation_utils import (
     escape_markdown,
     sanitize_text,

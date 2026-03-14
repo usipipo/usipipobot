@@ -10,15 +10,11 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from config import settings
+from infrastructure.api.android.router import android_router
 from infrastructure.api.middleware import RateLimitMiddleware, SecurityHeadersMiddleware
 from infrastructure.api.webhooks import tron_dealer_router
 from infrastructure.api.webhooks.tron_dealer import set_services
-from infrastructure.api.android.router import android_router
-from infrastructure.persistence.database import (
-    close_database,
-    get_session_context,
-    init_database,
-)
+from infrastructure.persistence.database import close_database, get_session_context, init_database
 from miniapp import router as miniapp_router
 from utils.logger import logger
 
@@ -26,6 +22,8 @@ from utils.logger import logger
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🔌 Initializing API server...")
+
+    from telegram import Bot
 
     from application.services.crypto_payment_service import CryptoPaymentService
     from application.services.webhook_security_service import WebhookSecurityService
@@ -36,11 +34,8 @@ async def lifespan(app: FastAPI):
         PostgresCryptoTransactionRepository,
         PostgresWebhookTokenRepository,
     )
-    from infrastructure.persistence.postgresql.user_repository import (
-        PostgresUserRepository,
-    )
+    from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
     from miniapp.services.miniapp_notification_service import init_notification_service
-    from telegram import Bot
 
     # Initialize Telegram Bot for Mini App notifications
     bot = Bot(token=settings.TELEGRAM_TOKEN)
@@ -112,9 +107,7 @@ def create_app() -> FastAPI:
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
         logger.error(f"Unhandled exception: {exc}", exc_info=True)
-        return JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
     @app.get("/health")
     async def health_check():
@@ -122,9 +115,7 @@ def create_app() -> FastAPI:
 
     @app.get("/favicon.ico")
     async def favicon():
-        favicon_path = (
-            Path(__file__).parent.parent.parent / "miniapp" / "static" / "favicon.svg"
-        )
+        favicon_path = Path(__file__).parent.parent.parent / "miniapp" / "static" / "favicon.svg"
         if favicon_path.exists():
             return FileResponse(favicon_path, media_type="image/svg+xml")
         return JSONResponse(status_code=404, content={"detail": "Not found"})

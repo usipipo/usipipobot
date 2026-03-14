@@ -2,11 +2,12 @@
 Secure storage for JWT tokens using Android Keystore via keyring.
 Includes encryption for sensitive data like cache.
 """
-import keyring
+
 import base64
-from loguru import logger
 from typing import Optional
 
+import keyring
+from loguru import logger
 from src.config import JWT_STORAGE_SERVICE
 
 # Simple XOR encryption for cache data (not for security, just obfuscation)
@@ -70,18 +71,18 @@ class SecureStorage:
     def encrypt(data: str) -> str:
         """
         Encrypt string data using simple XOR cipher.
-        
+
         Args:
             data: Plain text data to encrypt
-            
+
         Returns:
             Base64-encoded encrypted data
         """
         try:
-            data_bytes = data.encode('utf-8')
+            data_bytes = data.encode("utf-8")
             key_bytes = ENCRYPTION_KEY * (len(data_bytes) // len(ENCRYPTION_KEY) + 1)
             encrypted = bytes(a ^ b for a, b in zip(data_bytes, key_bytes))
-            return base64.b64encode(encrypted).decode('utf-8')
+            return base64.b64encode(encrypted).decode("utf-8")
         except Exception as e:
             logger.error(f"Error encrypting data: {e}")
             raise
@@ -90,18 +91,18 @@ class SecureStorage:
     def decrypt(encrypted_data: str) -> str:
         """
         Decrypt base64-encoded XOR-encrypted data.
-        
+
         Args:
             encrypted_data: Base64-encoded encrypted data
-            
+
         Returns:
             Decrypted plain text data
         """
         try:
-            encrypted_bytes = base64.b64decode(encrypted_data.encode('utf-8'))
+            encrypted_bytes = base64.b64decode(encrypted_data.encode("utf-8"))
             key_bytes = ENCRYPTION_KEY * (len(encrypted_bytes) // len(ENCRYPTION_KEY) + 1)
             decrypted = bytes(a ^ b for a, b in zip(encrypted_bytes, key_bytes))
-            return decrypted.decode('utf-8')
+            return decrypted.decode("utf-8")
         except Exception as e:
             logger.error(f"Error decrypting data: {e}")
             raise
@@ -110,7 +111,7 @@ class SecureStorage:
     def set_secret(key: str, value: str) -> None:
         """
         Store an encrypted secret.
-        
+
         Args:
             key: Secret key name
             value: Secret value to store
@@ -126,10 +127,10 @@ class SecureStorage:
     def get_secret(key: str) -> Optional[str]:
         """
         Retrieve a stored secret.
-        
+
         Args:
             key: Secret key name
-            
+
         Returns:
             Secret value or None if not found
         """
@@ -146,7 +147,7 @@ class SecureStorage:
     def delete_secret(key: str) -> None:
         """
         Delete a stored secret.
-        
+
         Args:
             key: Secret key name
         """

@@ -26,7 +26,7 @@
             <div style="flex: 1;">
                 <div class="key-name">{{ key.name }}</div>
                 <div class="key-meta">
-                    {{ key.key_type.value|upper }} • 
+                    {{ key.key_type.value|upper }} •
                     {% if key.is_active %}
                     <span class="badge badge-active">Activa</span>
                     {% else %}
@@ -35,7 +35,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div style="margin: 12px 0;">
             <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
                 <span>Consumo</span>
@@ -46,14 +46,14 @@
                 <div class="progress-fill" style="width: {{ [usage_percent, 100]|min }}%;"></div>
             </div>
         </div>
-        
+
         <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
             Creada: {{ key.created_at.strftime('%d/%m/%Y') if key.created_at else 'N/A' }}
             {% if key.last_seen_at %}
             | Última actividad: {{ key.last_seen_at.strftime('%d/%m/%Y %H:%M') }}
             {% endif %}
         </div>
-        
+
         <div style="display: flex; gap: 8px;">
             <button class="btn btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px;" onclick="copyKey('{{ key.key_data[:50] }}...')">
                 📋 Copiar

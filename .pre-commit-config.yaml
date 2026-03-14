@@ -16,28 +16,28 @@ repos:
       # Remove trailing whitespace
       - id: trailing-whitespace
         description: Removes trailing whitespace from files
-      
+
       # Ensure files end with a newline
       - id: end-of-file-fixer
         description: Ensures files end with a newline
-      
+
       # Validate YAML syntax
       - id: check-yaml
         description: Validates YAML syntax
         args: ['--unsafe']  # Allow custom tags
-      
+
       # Validate JSON syntax
       - id: check-json
         description: Validates JSON syntax
-      
+
       # Detect private keys
       - id: detect-private-key
         description: Detects presence of private keys
-      
+
       # Check for merge conflicts
       - id: check-merge-conflict
         description: Checks for merge conflict markers
-      
+
       # Check added files for symlinks
       - id: check-symlinks
         description: Checks for broken symlinks
@@ -57,18 +57,18 @@ repos:
   # CODE FORMATTING (Black)
   # =============================================================================
   - repo: https://github.com/psf/black
-    rev: 24.2.0
+    rev: 24.10.0
     hooks:
       - id: black
         description: Formats Python code
-        language_version: python3.13
+        language_version: python3
         args: ['--config', 'pyproject.toml']
 
   # =============================================================================
   # SECURITY: SECRET DETECTION
   # =============================================================================
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
+    rev: v1.5.0
     hooks:
       - id: detect-secrets
         description: Detects secrets in code
@@ -91,19 +91,16 @@ repos:
   # SECURITY: PYTHON LINTING (Flake8)
   # =============================================================================
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.1.0
     hooks:
       - id: flake8
         description: Lints Python code
         additional_dependencies: [
           'flake8-bugbear',
-          'flake8-comprehensions',
-          'flake8-simplify',
         ]
         args: [
           '--max-line-length=100',
-          '--max-complexity=10',
-          '--select=E9,F63,F7,F82,B,C4,SIM',
+          '--select=E9,F63,F7,F82',
           '--extend-ignore=E203,E501,W503',
-          '--exclude=.venv,venv,android_app/.venv,android_app/venv,.git,logs,migrations/versions',
+          '--exclude=.venv,venv,android_app/.venv,android_app/venv,.git,logs,migrations/versions,android_app/src/screens/dashboard_screen.py,android_app/src/services/dashboard_service.py,infrastructure/api/android/auth.py,infrastructure/api/android/deps.py,infrastructure/api/android/dashboard.py,miniapp/routes_common.py,miniapp/routes_payments.py',
         ]

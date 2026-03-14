@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>uSipipo VPN - Cargando...</title>
-    
+
     <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
-    
+
     <style>
         :root {
             --bg-void: #0a0a0f;
@@ -16,13 +16,13 @@
             --text-primary: #e0e0e0;
             --text-secondary: #8a8a9a;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             background: var(--bg-void);
             color: var(--text-primary);
@@ -34,29 +34,29 @@
             justify-content: center;
             padding: 16px;
         }
-        
+
         .loader {
             text-align: center;
             max-width: 320px;
         }
-        
+
         .logo {
             font-size: 48px;
             margin-bottom: 20px;
             animation: pulse 2s infinite;
         }
-        
+
         @keyframes pulse {
-            0%, 100% { 
+            0%, 100% {
                 opacity: 1;
                 transform: scale(1);
             }
-            50% { 
+            50% {
                 opacity: 0.7;
                 transform: scale(1.05);
             }
         }
-        
+
         .spinner {
             width: 50px;
             height: 50px;
@@ -66,11 +66,11 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
-        
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
+
         .title {
             font-size: 24px;
             font-weight: 700;
@@ -80,13 +80,13 @@
             letter-spacing: 2px;
             text-transform: uppercase;
         }
-        
+
         .message {
             font-size: 14px;
             color: var(--text-secondary);
             transition: opacity 0.3s ease;
         }
-        
+
         .error-box {
             background: rgba(255, 0, 170, 0.1);
             border: 1px solid var(--neon-magenta);
@@ -96,40 +96,40 @@
             display: none;
             text-align: left;
         }
-        
+
         .error-box.show {
             display: block;
             animation: fadeIn 0.3s ease;
         }
-        
+
         .error-box.info {
             background: rgba(0, 240, 255, 0.1);
             border-color: var(--neon-cyan);
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         .error-title {
             color: var(--neon-magenta);
             font-weight: 600;
             margin-bottom: 8px;
             font-size: 14px;
         }
-        
+
         .error-box.info .error-title {
             color: var(--neon-cyan);
         }
-        
+
         .error-message {
             font-size: 12px;
             color: var(--text-primary);
             opacity: 0.8;
             line-height: 1.5;
         }
-        
+
         .btn-primary {
             display: inline-block;
             background: var(--neon-cyan);
@@ -142,12 +142,12 @@
             margin-top: 16px;
             transition: all 0.3s ease;
         }
-        
+
         .btn-primary:hover {
             box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
             transform: translateY(-2px);
         }
-        
+
         .debug-info {
             margin-top: 30px;
             font-size: 10px;
@@ -163,26 +163,26 @@
         <div class="spinner" id="spinner"></div>
         <div class="title">uSipipo VPN</div>
         <div class="message" id="message">Inicializando Mini App...</div>
-        
+
         <div class="error-box" id="errorBox">
             <div class="error-title">⚠️ Error de Autenticación</div>
             <div class="error-message" id="errorMessage"></div>
         </div>
-        
+
         <div class="debug-info" id="debugInfo"></div>
     </div>
-    
+
     <script>
         (function() {
             'use strict';
-            
+
             const tg = window.Telegram?.WebApp;
             const errorBox = document.getElementById('errorBox');
             const errorMessage = document.getElementById('errorMessage');
             const messageDiv = document.getElementById('message');
             const spinner = document.getElementById('spinner');
             const debugInfo = document.getElementById('debugInfo');
-            
+
             function showError(msg, debug) {
                 errorBox.classList.add('show');
                 errorMessage.textContent = msg;
@@ -191,11 +191,11 @@
                     debugInfo.textContent = debug;
                 }
             }
-            
+
             function showDebug(msg) {
                 debugInfo.textContent = msg;
             }
-            
+
             if (!tg) {
                 showError(
                     'Esta aplicación solo funciona dentro de Telegram. Por favor, abre la Mini App desde el bot de Telegram.',
@@ -203,15 +203,15 @@
                 );
                 return;
             }
-            
+
             tg.ready();
             tg.expand();
             tg.setHeaderColor('#0a0a0f');
             tg.setBackgroundColor('#0a0a0f');
             tg.enableClosingConfirmation();
-            
+
             showDebug('Platform: ' + tg.platform + ' | Version: ' + tg.version);
-            
+
             messageDiv.textContent = 'Verificando autenticación...';
 
             setTimeout(async function() {

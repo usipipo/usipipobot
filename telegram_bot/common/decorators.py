@@ -14,12 +14,7 @@ from config import settings
 from telegram_bot.common.keyboards import get_miniapp_url
 from telegram_bot.keyboards import MainMenuKeyboard
 from utils.logger import logger
-from utils.spinner import (
-    database_spinner,
-    database_spinner_callback,
-    vpn_spinner,
-    with_spinner,
-)
+from utils.spinner import database_spinner, database_spinner_callback, vpn_spinner, with_spinner
 
 from .messages import CommonMessages
 
@@ -54,9 +49,7 @@ def safe_callback_query(func):
     """
 
     @wraps(func)
-    async def wrapper(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
-    ):
+    async def wrapper(self, update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         await self._handle_callback_query(update, context)
         return await func(self, update, context, *args, **kwargs)
 
@@ -70,9 +63,7 @@ def admin_required(func):
     """
 
     @wraps(func)
-    async def wrapper(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs
-    ):
+    async def wrapper(self, update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         from config import settings
         from telegram_bot.keyboards import MainMenuKeyboard
 

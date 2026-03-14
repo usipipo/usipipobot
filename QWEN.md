@@ -386,19 +386,19 @@ class TestPurchasePackage:
             package_repo=mock_package_repo,
             user_repo=mock_user_repo
         )
-    
+
     @pytest.mark.asyncio
     async def test_purchase_creates_package(self, service, mock_package_repo, mock_user_repo):
         # Arrange
         mock_user_repo.get_by_id.return_value = MagicMock(telegram_id=123)
         mock_package_repo.save.return_value = DataPackage(...)
-        
+
         # Act
         result = await service.purchase_package(
             user_id=123, package_type="basic",
             telegram_payment_id="pay_123", current_user_id=123
         )
-        
+
         # Assert
         assert result is not None
         mock_package_repo.save.assert_called_once()
@@ -530,7 +530,7 @@ Cyberpunk theme with neon colors:
 
 1. **Secrets Management**: All secrets in `.env` (never commit)
 2. **Input Validation**: Pydantic validators on all user inputs
-3. **Authentication**: 
+3. **Authentication**:
    - Telegram: User IDs for bot/miniapp
    - Android: OTP verification with JWT tokens
 4. **JWT Tokens**: Configurable expiration for Android API

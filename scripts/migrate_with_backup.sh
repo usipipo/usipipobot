@@ -60,24 +60,24 @@ echo ""
 # Step 3: Drop all tables except alembic_version
 echo -e "${BLUE}[3/6] Dropping existing tables...${NC}"
 PGPASSWORD=$DB_PASS psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME <<EOF
-DO \$\$ 
+DO \$\$
 DECLARE
     r RECORD;
 BEGIN
     -- Disable foreign key checks temporarily
     SET session_replication_role = 'replica';
-    
+
     -- Drop all tables
     FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename != 'alembic_version') LOOP
         EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
     END LOOP;
-    
+
     -- Drop all custom types
-    FOR r IN (SELECT typname FROM pg_type t JOIN pg_namespace n ON t.typnamespace = n.oid 
+    FOR r IN (SELECT typname FROM pg_type t JOIN pg_namespace n ON t.typnamespace = n.oid
               WHERE n.nspname = 'public' AND t.typtype = 'e') LOOP
         EXECUTE 'DROP TYPE IF EXISTS ' || quote_ident(r.typname) || ' CASCADE';
     END LOOP;
-    
+
     -- Re-enable foreign key checks
     SET session_replication_role = 'origin';
 END \$\$;

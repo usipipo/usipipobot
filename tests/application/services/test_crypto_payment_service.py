@@ -3,10 +3,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from application.services.crypto_payment_service import CryptoPaymentService
-from domain.entities.crypto_transaction import (
-    CryptoTransaction,
-    CryptoTransactionStatus,
-)
+from domain.entities.crypto_transaction import CryptoTransaction, CryptoTransactionStatus
 
 
 class TestCryptoPaymentService:
@@ -109,9 +106,7 @@ class TestCryptoPaymentService:
         assert saved_tx.status == CryptoTransactionStatus.PENDING
 
     @pytest.mark.asyncio
-    async def test_process_webhook_payment_existing_transaction(
-        self, service, mock_crypto_repo
-    ):
+    async def test_process_webhook_payment_existing_transaction(self, service, mock_crypto_repo):
         """Test that existing transactions are not reprocessed."""
         wallet_address = "0x1234567890abcdef1234567890abcdef12345678"
         tx_hash = "0xabc123def456789..."

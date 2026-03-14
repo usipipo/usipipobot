@@ -1,12 +1,13 @@
 """
 Tests for cache storage.
 """
-import pytest
-import os
-import json
-from datetime import datetime, timezone, timedelta
-from unittest.mock import patch, MagicMock
 
+import json
+import os
+from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, patch
+
+import pytest
 from src.storage.cache_storage import CacheStorage
 
 
@@ -16,7 +17,7 @@ class TestCacheStorage:
     @pytest.fixture
     def mock_secure_storage(self):
         """Mock secure storage."""
-        with patch('src.storage.cache_storage.SecureStorage') as mock:
+        with patch("src.storage.cache_storage.SecureStorage") as mock:
             mock.get_secret = MagicMock(return_value=None)
             mock.set_secret = MagicMock()
             yield mock
@@ -24,8 +25,8 @@ class TestCacheStorage:
     @pytest.fixture
     def cache_storage(self, mock_secure_storage, tmp_path):
         """Create cache storage instance with temp directory."""
-        with patch('src.storage.cache_storage.SecureStorage', mock_secure_storage):
-            with patch.object(CacheStorage, '_ensure_cache_dir'):
+        with patch("src.storage.cache_storage.SecureStorage", mock_secure_storage):
+            with patch.object(CacheStorage, "_ensure_cache_dir"):
                 storage = CacheStorage(ttl_seconds=900)
                 storage.cache_file = str(tmp_path / "cache.json")
                 return storage
@@ -57,7 +58,7 @@ class TestCacheStorage:
         expired_entry = {
             "data": "test",
             "cached_at": (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(),
-            "expires_at": (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+            "expires_at": (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat(),
         }
         cache_storage._cache["expired_key"] = expired_entry
 
@@ -97,19 +98,19 @@ class TestCacheStorage:
         """Test cleaning up expired entries."""
         # Arrange
         now = datetime.now(timezone.utc)
-        
+
         # Valid entry
         cache_storage._cache["valid"] = {
             "data": "valid",
             "cached_at": now.isoformat(),
-            "expires_at": (now + timedelta(hours=1)).isoformat()
+            "expires_at": (now + timedelta(hours=1)).isoformat(),
         }
-        
+
         # Expired entry
         cache_storage._cache["expired"] = {
             "data": "expired",
             "cached_at": (now - timedelta(hours=2)).isoformat(),
-            "expires_at": (now - timedelta(hours=1)).isoformat()
+            "expires_at": (now - timedelta(hours=1)).isoformat(),
         }
 
         # Act
@@ -123,17 +124,17 @@ class TestCacheStorage:
         """Test cache statistics."""
         # Arrange
         now = datetime.now(timezone.utc)
-        
+
         cache_storage._cache["valid"] = {
             "data": "valid",
             "cached_at": now.isoformat(),
-            "expires_at": (now + timedelta(hours=1)).isoformat()
+            "expires_at": (now + timedelta(hours=1)).isoformat(),
         }
-        
+
         cache_storage._cache["expired"] = {
             "data": "expired",
             "cached_at": (now - timedelta(hours=2)).isoformat(),
-            "expires_at": (now - timedelta(hours=1)).isoformat()
+            "expires_at": (now - timedelta(hours=1)).isoformat(),
         }
 
         # Act
@@ -148,7 +149,7 @@ class TestCacheStorage:
         """Test setting entry with custom TTL."""
         # Arrange
         custom_ttl = 60  # 1 minute
-        
+
         # Act
         cache_storage.set("custom_ttl_key", "value", ttl_seconds=custom_ttl)
 
@@ -157,7 +158,7 @@ class TestCacheStorage:
         expires_at = datetime.fromisoformat(entry["expires_at"].replace("Z", "+00:00"))
         now = datetime.now(timezone.utc)
         expected_expiry = now + timedelta(seconds=custom_ttl)
-        
+
         # Allow 1 second variance
         assert abs((expires_at - expected_expiry).total_seconds()) < 1
 

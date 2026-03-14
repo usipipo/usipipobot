@@ -5,25 +5,14 @@ Author: uSipipo Team
 Version: 1.0.0 - Support Ticket System
 """
 
-from utils.message_separators import (
-    TELEGRAM_MOBILE_WIDTH,
-    MessageSeparatorBuilder,
-)
+from utils.message_separators import TELEGRAM_MOBILE_WIDTH, MessageSeparatorBuilder
 
 # Separadores
 _SEP_HEADER = (
-    MessageSeparatorBuilder()
-    .compact()
-    .style("double")
-    .length(TELEGRAM_MOBILE_WIDTH)
-    .build()
+    MessageSeparatorBuilder().compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
 )
 _SEP_DIVIDER = (
-    MessageSeparatorBuilder()
-    .compact()
-    .style("simple")
-    .length(TELEGRAM_MOBILE_WIDTH)
-    .build()
+    MessageSeparatorBuilder().compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
 )
 
 
@@ -121,18 +110,12 @@ class TicketMessages:
         _HEADER = f"{_SEP_HEADER}\n" "📋 *MIS TICKETS*\n" f"{_SEP_HEADER}\n\n"
 
         _EMPTY = (
-            "*No tienes tickets activos*\n\n"
-            "¿Necesitas ayuda?\n"
-            "Crea un ticket desde el menú."
+            "*No tienes tickets activos*\n\n" "¿Necesitas ayuda?\n" "Crea un ticket desde el menú."
         )
 
         @classmethod
         def with_tickets(cls, tickets_text: str) -> str:
-            return (
-                cls._HEADER
-                + tickets_text
-                + f"\n{_SEP_DIVIDER}\n👇 *Toca un ticket para ver:*"
-            )
+            return cls._HEADER + tickets_text + f"\n{_SEP_DIVIDER}\n👇 *Toca un ticket para ver:*"
 
     class Detail:
         """Mensajes de detalle de ticket."""
@@ -149,9 +132,7 @@ class TicketMessages:
 
         MESSAGE_USER = "👤 *Tú:*\n" "```\n{message}\n```\n" "🕐 {timestamp}\n\n"
 
-        MESSAGE_ADMIN = (
-            "👨‍💼 *Soporte:*\n" "```\n{message}\n```\n" "🕐 {timestamp}\n\n"
-        )
+        MESSAGE_ADMIN = "👨‍💼 *Soporte:*\n" "```\n{message}\n```\n" "🕐 {timestamp}\n\n"
 
     class Admin:
         """Mensajes para administradores."""

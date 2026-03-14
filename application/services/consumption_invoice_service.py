@@ -5,17 +5,9 @@ from typing import Optional
 
 from config import settings
 from domain.entities.consumption_billing import BillingStatus
-from domain.entities.consumption_invoice import (
-    ConsumptionInvoice,
-    InvoiceStatus,
-    PaymentMethod,
-)
-from domain.interfaces.iconsumption_billing_repository import (
-    IConsumptionBillingRepository,
-)
-from domain.interfaces.iconsumption_invoice_repository import (
-    IConsumptionInvoiceRepository,
-)
+from domain.entities.consumption_invoice import ConsumptionInvoice, InvoiceStatus, PaymentMethod
+from domain.interfaces.iconsumption_billing_repository import IConsumptionBillingRepository
+from domain.interfaces.iconsumption_invoice_repository import IConsumptionInvoiceRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
 
@@ -83,9 +75,7 @@ class ConsumptionInvoiceService:
             return False, "No tienes un ciclo de facturación activo"
 
         # Verificar que el ciclo está cerrado (no pagado aún)
-        billing = await self.billing_repo.get_by_id(
-            user.current_billing_id, current_user_id
-        )
+        billing = await self.billing_repo.get_by_id(user.current_billing_id, current_user_id)
         if not billing:
             return False, "Ciclo de facturación no encontrado"
 
@@ -96,9 +86,7 @@ class ConsumptionInvoiceService:
             return False, "El ciclo de consumo aún está activo"
 
         # Verificar que no tiene una factura pendiente
-        existing_invoice = await self.invoice_repo.get_pending_by_user(
-            user_id, current_user_id
-        )
+        existing_invoice = await self.invoice_repo.get_pending_by_user(user_id, current_user_id)
         if existing_invoice and not existing_invoice.is_expired:
             return False, "Ya tienes una factura pendiente de pago"
 
@@ -123,16 +111,11 @@ class ConsumptionInvoiceService:
         Returns:
             InvoiceGenerationResult con la factura generada o error
         """
-        logger.info(
-            f"🧾 Generando factura - user_id={user_id}, "
-            f"method={payment_method.value}"
-        )
+        logger.info(f"🧾 Generando factura - user_id={user_id}, " f"method={payment_method.value}")
 
         try:
             # Validar que puede generar factura
-            can_generate, error_msg = await self.can_generate_invoice(
-                user_id, current_user_id
-            )
+            can_generate, error_msg = await self.can_generate_invoice(user_id, current_user_id)
             if not can_generate:
                 logger.warning(f"⚠️ No se puede generar factura: {error_msg}")
                 return InvoiceGenerationResult(success=False, error_message=error_msg)
@@ -145,9 +128,7 @@ class ConsumptionInvoiceService:
                     error_message="No se encontró el ciclo de facturación",
                 )
 
-            billing = await self.billing_repo.get_by_id(
-                user.current_billing_id, current_user_id
-            )
+            billing = await self.billing_repo.get_by_id(user.current_billing_id, current_user_id)
             if not billing or billing.id is None:
                 return InvoiceGenerationResult(
                     success=False, error_message="Ciclo de facturación no válido"
@@ -192,9 +173,7 @@ class ConsumptionInvoiceService:
             return InvoiceGenerationResult(
                 success=True,
                 invoice=saved_invoice,
-                wallet_address=(
-                    wallet_address if payment_method == PaymentMethod.CRYPTO else None
-                ),
+                wallet_address=(wallet_address if payment_method == PaymentMethod.CRYPTO else None),
             )
 
         except Exception as e:
@@ -220,9 +199,7 @@ class ConsumptionInvoiceService:
         try:
             invoice = await self.invoice_repo.get_by_id(invoice_id, current_user_id)
             if not invoice:
-                return PaymentResult(
-                    success=False, error_message="Factura no encontrada"
-                )
+                return PaymentResult(success=False, error_message="Factura no encontrada")
 
             if invoice.payment_method != PaymentMethod.CRYPTO:
                 return PaymentResult(
@@ -257,17 +234,13 @@ class ConsumptionInvoiceService:
                     await self.user_repo.save(user, current_user_id)
 
                     # Unblock all user keys
-                    from application.services.common.container import (
-                        get_container,
-                    )
+                    from application.services.common.container import get_container
                     from application.services.consumption_vpn_integration_service import (
                         ConsumptionVpnIntegrationService,
                     )
 
                     container = get_container()
-                    vpn_integration = container.resolve(
-                        ConsumptionVpnIntegrationService
-                    )
+                    vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
                     unblock_result = await vpn_integration.unblock_user_keys(
                         user.telegram_id, current_user_id
                     )
@@ -289,9 +262,7 @@ class ConsumptionInvoiceService:
 
                 return PaymentResult(success=True, invoice_id=invoice_id)
 
-            return PaymentResult(
-                success=False, error_message="No se pudo procesar el pago"
-            )
+            return PaymentResult(success=False, error_message="No se pudo procesar el pago")
 
         except Exception as e:
             logger.error(f"❌ Error procesando pago crypto: {e}")
@@ -314,9 +285,7 @@ class ConsumptionInvoiceService:
         try:
             invoice = await self.invoice_repo.get_by_id(invoice_id, current_user_id)
             if not invoice:
-                return PaymentResult(
-                    success=False, error_message="Factura no encontrada"
-                )
+                return PaymentResult(success=False, error_message="Factura no encontrada")
 
             if invoice.payment_method != PaymentMethod.STARS:
                 return PaymentResult(
@@ -350,17 +319,13 @@ class ConsumptionInvoiceService:
                     await self.user_repo.save(user, current_user_id)
 
                     # Unblock all user keys
-                    from application.services.common.container import (
-                        get_container,
-                    )
+                    from application.services.common.container import get_container
                     from application.services.consumption_vpn_integration_service import (
                         ConsumptionVpnIntegrationService,
                     )
 
                     container = get_container()
-                    vpn_integration = container.resolve(
-                        ConsumptionVpnIntegrationService
-                    )
+                    vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
                     unblock_result = await vpn_integration.unblock_user_keys(
                         user.telegram_id, current_user_id
                     )
@@ -382,17 +347,13 @@ class ConsumptionInvoiceService:
 
                 return PaymentResult(success=True, invoice_id=invoice_id)
 
-            return PaymentResult(
-                success=False, error_message="No se pudo procesar el pago"
-            )
+            return PaymentResult(success=False, error_message="No se pudo procesar el pago")
 
         except Exception as e:
             logger.error(f"❌ Error procesando pago Stars: {e}")
             return PaymentResult(success=False, error_message="Error interno")
 
-    async def _record_transaction(
-        self, invoice: ConsumptionInvoice, current_user_id: int
-    ) -> None:
+    async def _record_transaction(self, invoice: ConsumptionInvoice, current_user_id: int) -> None:
         """
         Registra la transacción en el historial del usuario.
         Este método integra con el sistema de transacciones existente.
@@ -417,9 +378,7 @@ class ConsumptionInvoiceService:
             Cantidad de facturas canceladas
         """
         try:
-            expired_invoices = await self.invoice_repo.get_expired_pending(
-                current_user_id
-            )
+            expired_invoices = await self.invoice_repo.get_expired_pending(current_user_id)
 
             count = 0
             for invoice in expired_invoices:

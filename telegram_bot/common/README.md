@@ -24,7 +24,7 @@ from common.decorators import safe_callback_query, database_operation
 class MyFeatureHandler(BaseHandler):
     def __init__(self, my_service):
         super().__init__(my_service, "MyService")
-    
+
     @safe_callback_query
     @database_operation
     async def my_method(self, update, context):
@@ -73,7 +73,7 @@ class MyHandler(BaseHandler, ListPattern, DetailPattern):
     async def show_items(self, update, context):
         items = await self.service.get_all_items()
         await self.show_list(update, context, items, item_formatter=self.format_item)
-    
+
     def format_item(self, item):
         return f"📦 {item.name} - {item.status}"
 ```
@@ -178,7 +178,7 @@ class MyHandler:
     def __init__(self, service):
         self.service = service
         logger.info("MyHandler inicializado")
-    
+
     async def my_method(self, update, context):
         try:
             query = update.callback_query
@@ -195,7 +195,7 @@ class MyHandler:
 class MyHandler(BaseHandler):
     def __init__(self, service):
         super().__init__(service, "MyService")
-    
+
     @safe_callback_query
     @database_operation
     async def my_method(self, update, context):

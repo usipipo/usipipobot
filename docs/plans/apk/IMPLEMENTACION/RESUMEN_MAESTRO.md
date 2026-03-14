@@ -1,9 +1,9 @@
 # 🎯 IMPLEMENTACIÓN APK uSipipo - Resumen Maestro
 
 > **Creado:** Marzo 2026
-> 
+>
 > **Estado:** Listo para implementación
-> 
+>
 > **Ubicación:** `/home/mowgli/usipipobot/docs/plans/apk/IMPLEMENTACION/`
 
 ---

@@ -147,13 +147,13 @@ async def _send_crypto_confirmation_notification(
 async function payWithStars() {
     // 1. Call API to create invoice
     const response = await fetch('/miniapp/api/create-stars-invoice', ...);
-    
+
     // 2. Show confirmation dialog
     Telegram.WebApp.showConfirm({
         title: '✅ Factura Enviada',
         message: 'Revisa tu chat de Telegram para completar el pago...'
     });
-    
+
     // 3. User opens Telegram to pay
 }
 ```
@@ -163,7 +163,7 @@ async function payWithStars() {
 async function payWithCrypto() {
     // 1. Call API to create crypto order
     const response = await fetch('/miniapp/api/create-crypto-order', ...);
-    
+
     // 2. Show confirmation with option to view in Telegram
     Telegram.WebApp.showConfirm({
         title: '💰 Orden Crypto Creada',

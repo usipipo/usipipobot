@@ -73,14 +73,14 @@ from infrastructure.api.android.router import android_router
 
 def create_app() -> FastAPI:
     app = FastAPI(...)
-    
+
     # Rutas existentes
     app.include_router(miniapp_router, prefix="/miniapp")
     app.include_router(webhook_router, prefix="/webhooks")
-    
+
     # NUEVO: Rutas para APK Android
     app.include_router(android_router)
-    
+
     return app
 ```
 
@@ -111,7 +111,7 @@ router = APIRouter(prefix="/auth", tags=["Android Auth"])
 
 class OTPRequest(BaseModel):
     identifier: str = Field(..., min_length=1, max_length=50)
-    
+
     @validator("identifier")
     def validate_identifier(cls, v):
         v = v.strip()
@@ -127,7 +127,7 @@ class OTPRequest(BaseModel):
 class OTPVerify(BaseModel):
     identifier: str
     otp: str = Field(..., min_length=6, max_length=6)
-    
+
     @validator("otp")
     def validate_otp(cls, v):
         if not v.isdigit():
@@ -155,9 +155,9 @@ async def request_otp(request: OTPRequest, http_request: Request):
     # Rate limiting por IP
     client_ip = http_request.client.host
     redis_key_ip = f"rate:otp:ip:{client_ip}"
-    
+
     r = redis.from_url(settings.redis_url)
-    
+
     # Verificar rate limit por IP (5 por hora)
     ip_count = await r.incr(redis_key_ip)
     if ip_count == 1:
@@ -167,7 +167,7 @@ async def request_otp(request: OTPRequest, http_request: Request):
             status_code=429,
             detail={"error": "rate_limit_exceeded", "message": "Demasiadas solicitudes desde tu IP"}
         )
-    
+
     # Rate limiting por identifier (3 por hora)
     redis_key_identifier = f"rate:otp:identifier:{request.identifier}"
     identifier_count = await r.incr(redis_key_identifier)
@@ -178,7 +178,7 @@ async def request_otp(request: OTPRequest, http_request: Request):
             status_code=429,
             detail={"error": "rate_limit_exceeded", "message": "Demasiadas solicitudes para este usuario"}
         )
-    
+
     # Buscar usuario en DB
     async with get_session() as session:
         if request.identifier.startswith("@"):
@@ -193,34 +193,34 @@ async def request_otp(request: OTPRequest, http_request: Request):
                 text("SELECT telegram_id, username, full_name FROM users WHERE telegram_id = :telegram_id"),
                 {"telegram_id": int(request.identifier)}
             )
-        
+
         user = result.first()
-        
+
         if not user:
             raise HTTPException(
                 status_code=404,
                 detail={"error": "user_not_found", "message": "Usuario no registrado en uSipipo"}
             )
-    
+
     # Generar OTP (6 dígitos)
     otp = f"{secrets.randbelow(1000000):06d}"
-    
+
     # Guardar OTP en Redis con TTL de 5 minutos
     otp_key = f"otp:{user.telegram_id}"
     await r.setex(otp_key, 300, otp)  # 5 minutos
-    
+
     # Enviar OTP por Telegram
     from telegram import Bot
     bot = Bot(token=settings.telegram_token)
-    
+
     await bot.send_message(
         chat_id=user.telegram_id,
         text=f"🔐 *Tu código de verificación uSipipo*:\n\n`{otp[:3]} {otp[3:]}`\n\nVálido por 5 minutos.\n\n⚠️ No compartas este código con nadie.",
         parse_mode="Markdown"
     )
-    
+
     logger.info(f"OTP enviado a usuario {user.telegram_id}")
-    
+
     return {
         "message": "Código enviado a tu chat de Telegram",
         "expires_in_seconds": 300
@@ -233,7 +233,7 @@ async def verify_otp(request: OTPVerify):
     Verificar código OTP y obtener JWT token.
     """
     r = redis.from_url(settings.redis_url)
-    
+
     # Buscar usuario
     async with get_session() as session:
         if request.identifier.startswith("@"):
@@ -246,37 +246,37 @@ async def verify_otp(request: OTPVerify):
                 text("SELECT telegram_id, username, full_name, status FROM users WHERE telegram_id = :telegram_id"),
                 {"telegram_id": int(request.identifier)}
             )
-        
+
         user = result.first()
-        
+
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        
+
         if user.status != "active":
             raise HTTPException(
                 status_code=403,
                 detail={"error": "user_inactive", "message": "Cuenta inactiva o suspendida"}
             )
-    
+
     # Verificar OTP
     otp_key = f"otp:{user.telegram_id}"
     stored_otp = await r.get(otp_key)
-    
+
     if not stored_otp:
         raise HTTPException(
             status_code=401,
             detail={"error": "otp_expired", "message": "Código expirado. Solicita uno nuevo."}
         )
-    
+
     if stored_otp.decode() != request.otp:
         # Incrementar contador de intentos fallidos
         fail_key = f"otp:fail:{user.telegram_id}"
         fail_count = await r.incr(fail_key)
         if fail_count == 1:
             await r.expire(fail_key, 900)  # 15 minutos
-        
+
         attempts_remaining = 3 - fail_count
-        
+
         if attempts_remaining <= 0:
             # Bloquear por 5 minutos
             await r.delete(otp_key)
@@ -284,7 +284,7 @@ async def verify_otp(request: OTPVerify):
                 status_code=429,
                 detail={"error": "too_many_attempts", "message": "Demasiados intentos. Espera 5 minutos."}
             )
-        
+
         raise HTTPException(
             status_code=401,
             detail={
@@ -293,16 +293,16 @@ async def verify_otp(request: OTPVerify):
                 "attempts_remaining": attempts_remaining
             }
         )
-    
+
     # OTP válido, eliminar de Redis
     await r.delete(otp_key)
-    
+
     # Generar JWT token
     import jwt
     from datetime import datetime, timezone, timedelta
-    
+
     now = datetime.now(timezone.utc)
-    
+
     jwt_payload = {
         "sub": str(user.telegram_id),
         "client": "android_apk",
@@ -310,15 +310,15 @@ async def verify_otp(request: OTPVerify):
         "exp": now + timedelta(hours=24),
         "jti": secrets.token_uuid(),
     }
-    
+
     token = jwt.encode(
         jwt_payload,
         settings.secret_key,
         algorithm="HS256"
     )
-    
+
     logger.info(f"Usuario {user.telegram_id} autenticado exitosamente desde APK")
-    
+
     return TokenResponse(
         access_token=token,
         token_type="bearer",
@@ -338,11 +338,11 @@ async def refresh_token(payload: dict = Depends(get_current_user)):
     """
     import jwt
     from datetime import datetime, timezone, timedelta
-    
+
     telegram_id = payload["sub"]
-    
+
     now = datetime.now(timezone.utc)
-    
+
     new_payload = {
         "sub": telegram_id,
         "client": "android_apk",
@@ -350,9 +350,9 @@ async def refresh_token(payload: dict = Depends(get_current_user)):
         "exp": now + timedelta(hours=24),
         "jti": secrets.token_uuid(),
     }
-    
+
     new_token = jwt.encode(new_payload, settings.secret_key, algorithm="HS256")
-    
+
     return {
         "access_token": new_token,
         "token_type": "bearer",
@@ -367,7 +367,7 @@ async def logout(payload: dict = Depends(get_current_user), jti: str = None):
     El token se agrega a la blacklist en Redis.
     """
     r = redis.from_url(settings.redis_url)
-    
+
     # Obtener tiempo restante del token
     exp = payload.get("exp")
     if exp:
@@ -376,9 +376,9 @@ async def logout(payload: dict = Depends(get_current_user), jti: str = None):
             # Agregar a blacklist
             blacklist_key = f"jwt:blacklist:{jti}"
             await r.setex(blacklist_key, ttl, "1")
-    
+
     logger.info(f"Usuario {payload['sub']} cerró sesión")
-    
+
     return {"message": "Sesión cerrada"}
 ```
 
@@ -409,7 +409,7 @@ async def get_current_user(
     Usar como dependencia en endpoints protegidos.
     """
     token = credentials.credentials
-    
+
     try:
         # Decodificar JWT
         payload = jwt.decode(
@@ -418,46 +418,46 @@ async def get_current_user(
             algorithms=["HS256"],
             options={"require": ["exp", "sub", "jti"]}
         )
-        
+
         # Verificar que es un token de Android
         if payload.get("client") != "android_apk":
             raise HTTPException(
                 status_code=401,
                 detail={"error": "invalid_client", "message": "Token no válido para este endpoint"}
             )
-        
+
         # Verificar que no está en blacklist
         jti = payload["jti"]
         r = redis.from_url(settings.redis_url)
-        
+
         is_blacklisted = await r.exists(f"jwt:blacklist:{jti}")
         if is_blacklisted:
             raise HTTPException(
                 status_code=401,
                 detail={"error": "token_revoked", "message": "Sesión cerrada. Inicia sesión nuevamente."}
             )
-        
+
         # Verificar que el usuario existe y está activo
         telegram_id = payload["sub"]
-        
+
         async with get_session() as session:
             result = await session.execute(
                 text("SELECT status FROM users WHERE telegram_id = :telegram_id"),
                 {"telegram_id": int(telegram_id)}
             )
             user = result.first()
-            
+
             if not user:
                 raise HTTPException(status_code=404, detail="Usuario no encontrado")
-            
+
             if user.status != "active":
                 raise HTTPException(
                     status_code=403,
                     detail={"error": "user_inactive", "message": "Cuenta inactiva"}
                 )
-        
+
         return payload
-        
+
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=401,
@@ -473,7 +473,7 @@ async def get_current_user(
 def rate_limiter(limit: int, window: int):
     """
     Decorador para rate limiting personalizado.
-    
+
     Usage:
         @router.post("/endpoint")
         @rate_limiter(limit=5, window=3600)
@@ -486,13 +486,13 @@ def rate_limiter(limit: int, window: int):
     ):
         r = redis.from_url(settings.redis_url)
         telegram_id = payload["sub"]
-        
+
         key = f"rate:{request.url.path}:{telegram_id}"
         count = await r.incr(key)
-        
+
         if count == 1:
             await r.expire(key, window)
-        
+
         if count > limit:
             ttl = await r.ttl(key)
             raise HTTPException(
@@ -503,7 +503,7 @@ def rate_limiter(limit: int, window: int):
                     "retry_after": ttl
                 }
             )
-    
+
     return Depends(rate_limit_checker)
 ```
 
@@ -573,33 +573,33 @@ class CertificatePinMiddleware(BaseHTTPMiddleware):
     Verificar que las peticiones de la APK usan el certificado correcto.
     Esto previene ataques MITM donde un atacante podría interceptar el tráfico.
     """
-    
+
     def __init__(self, app, expected_pins: List[str]):
         super().__init__(app)
         self.expected_pins = expected_pins
-    
+
     async def dispatch(self, request: Request, call_next):
         # Solo aplicar a rutas de Android
         if not request.url.path.startswith("/api/v1/"):
             return await call_next(request)
-        
+
         # Obtener certificado SSL de la conexión
         # Nota: Esto requiere acceso al certificado del cliente,
         # lo cual es complejo en HTTP normal.
         # Una alternativa es verificar el User-Agent y aplicar
         # validaciones adicionales para peticiones de la APK.
-        
+
         user_agent = request.headers.get("User-Agent", "")
-        
+
         if "uSipipo-Android" in user_agent:
             # Peticiones de la APK - aplicar validaciones extra
             # Por ejemplo, verificar headers específicos que solo la APK conoce
-            
+
             apk_secret = request.headers.get("X-APK-Secret")
             if not apk_secret or apk_secret != settings.apk_secret_header:
                 # No es una petición legítima de la APK
                 logger.warning(f"Peticiones sospechosa de APK: {request.client.host}")
-        
+
         return await call_next(request)
 ```
 
@@ -647,12 +647,12 @@ Semana 4:  Launch Público (ilimitado)
 ```python
 class Settings(BaseSettings):
     # ... existing settings ...
-    
+
     # Feature flags para APK Android
     apk_enabled: bool = True
     apk_alpha_mode: bool = False
     apk_allowed_users: list = []  # Telegram IDs de usuarios permitidos en alpha/beta
-    
+
     class Config:
         env_file = ".env"
 ```
@@ -666,7 +666,7 @@ async def check_apk_access(payload: dict = Depends(get_current_user)):
     Usar durante alpha/beta testing.
     """
     telegram_id = int(payload["sub"])
-    
+
     if settings.apk_alpha_mode:
         if telegram_id not in settings.apk_allowed_users:
             raise HTTPException(
@@ -703,17 +703,17 @@ async def apk_usage_metrics():
     async with get_session() as session:
         # Usuarios activos en APK (últimas 24h)
         # Esto requeriría una tabla de sesiones o logs de acceso
-        
+
         # Por ahora, contar autenticaciones exitosas
         result = await session.execute(text("""
             -- Placeholder: implementar tabla de audit_log
-            SELECT COUNT(*) FROM audit_log 
-            WHERE action = 'android_login' 
+            SELECT COUNT(*) FROM audit_log
+            WHERE action = 'android_login'
             AND created_at > NOW() - INTERVAL '24 hours'
         """))
-        
+
         apk_logins_24h = result.scalar() or 0
-        
+
         return {
             "apk_logins_24h": apk_logins_24h,
             # ... más métricas

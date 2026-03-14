@@ -2,14 +2,14 @@
 Cache storage for uSipipo VPN Android APK.
 Provides local encrypted caching with TTL support.
 """
+
 import json
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
-from loguru import logger
 
 from kivy.utils import platform
-
+from loguru import logger
 from src.storage.secure_storage import SecureStorage
 
 
@@ -44,9 +44,10 @@ class CacheStorage:
         Returns:
             Full path to cache.json file
         """
-        if platform == 'android':
+        if platform == "android":
             try:
                 from android.storage import app_storage_path
+
                 cache_dir = app_storage_path()
             except ImportError:
                 # Fallback if running on Android but android module not available
@@ -54,7 +55,7 @@ class CacheStorage:
         else:
             # Desktop (Linux, macOS, Windows)
             cache_dir = os.path.join(os.path.expanduser("~"), ".usipipo_apk")
-        
+
         return os.path.join(cache_dir, "cache.json")
 
     def _ensure_cache_dir(self):
@@ -91,7 +92,7 @@ class CacheStorage:
             expires_at_str = entry.get("expires_at")
             if not expires_at_str:
                 return True
-            
+
             expires_at = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
             return datetime.now(timezone.utc) > expires_at
         except Exception as e:
@@ -101,10 +102,10 @@ class CacheStorage:
     def get(self, key: str) -> Optional[Any]:
         """
         Get value from cache.
-        
+
         Args:
             key: Cache key
-            
+
         Returns:
             Cached value or None if not found/expired
         """
@@ -113,15 +114,15 @@ class CacheStorage:
             if not entry:
                 logger.debug(f"Cache miss for key: {key}")
                 return None
-            
+
             if self._is_expired(entry):
                 logger.debug(f"Cache expired for key: {key}")
                 self.delete(key)
                 return None
-            
+
             logger.debug(f"Cache hit for key: {key}")
             return entry.get("data")
-            
+
         except Exception as e:
             logger.warning(f"Error getting cache key {key}: {e}")
             return None
@@ -129,7 +130,7 @@ class CacheStorage:
     def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None):
         """
         Set value in cache.
-        
+
         Args:
             key: Cache key
             value: Value to cache
@@ -138,24 +139,24 @@ class CacheStorage:
         try:
             ttl = ttl_seconds or self.ttl_seconds
             now = datetime.now(timezone.utc)
-            
+
             entry = {
                 "data": value,
                 "cached_at": now.isoformat(),
-                "expires_at": (now + timedelta(seconds=ttl)).isoformat()
+                "expires_at": (now + timedelta(seconds=ttl)).isoformat(),
             }
-            
+
             self._cache[key] = entry
             self._save_cache()
             logger.debug(f"Cache set for key: {key} (TTL: {ttl}s)")
-            
+
         except Exception as e:
             logger.error(f"Error setting cache key {key}: {e}")
 
     def delete(self, key: str):
         """
         Delete value from cache.
-        
+
         Args:
             key: Cache key
         """
@@ -179,25 +180,22 @@ class CacheStorage:
     def cleanup_expired(self):
         """Remove all expired entries from cache."""
         try:
-            expired_keys = [
-                key for key, entry in self._cache.items()
-                if self._is_expired(entry)
-            ]
-            
+            expired_keys = [key for key, entry in self._cache.items() if self._is_expired(entry)]
+
             for key in expired_keys:
                 del self._cache[key]
-            
+
             if expired_keys:
                 self._save_cache()
                 logger.debug(f"Cleaned up {len(expired_keys)} expired cache entries")
-                
+
         except Exception as e:
             logger.warning(f"Error cleaning up cache: {e}")
 
     def get_stats(self) -> dict:
         """
         Get cache statistics.
-        
+
         Returns:
             Dict with cache stats:
             - total_entries: Total number of entries
@@ -208,16 +206,8 @@ class CacheStorage:
             total = len(self._cache)
             expired = sum(1 for entry in self._cache.values() if self._is_expired(entry))
             size = len(json.dumps(self._cache))
-            
-            return {
-                "total_entries": total,
-                "expired_entries": expired,
-                "size_bytes": size
-            }
+
+            return {"total_entries": total, "expired_entries": expired, "size_bytes": size}
         except Exception as e:
             logger.warning(f"Error getting cache stats: {e}")
-            return {
-                "total_entries": 0,
-                "expired_entries": 0,
-                "size_bytes": 0
-            }
+            return {"total_entries": 0, "expired_entries": 0, "size_bytes": 0}

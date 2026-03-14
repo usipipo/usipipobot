@@ -2,14 +2,9 @@ import uuid
 from typing import Optional
 
 from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
-from domain.entities.crypto_transaction import (
-    CryptoTransaction,
-    CryptoTransactionStatus,
-)
+from domain.entities.crypto_transaction import CryptoTransaction, CryptoTransactionStatus
 from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
-from domain.interfaces.icrypto_transaction_repository import (
-    ICryptoTransactionRepository,
-)
+from domain.interfaces.icrypto_transaction_repository import ICryptoTransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
 
@@ -134,9 +129,7 @@ class CryptoPaymentService:
             return None
 
         try:
-            user = await self.user_repo.get_by_wallet_address(
-                wallet_address, current_user_id=0
-            )
+            user = await self.user_repo.get_by_wallet_address(wallet_address, current_user_id=0)
             return user.telegram_id if user else None
         except Exception as e:
             logger.error(f"Error finding user by wallet: {e}")
@@ -213,11 +206,7 @@ class CryptoPaymentService:
                 telegram_payment_id=crypto_payment_id,
                 current_user_id=user_id,
             )
-            package = (
-                package_result[0]
-                if isinstance(package_result, tuple)
-                else package_result
-            )
+            package = package_result[0] if isinstance(package_result, tuple) else package_result
 
             if package.data_limit_bytes < bytes_to_credit:
                 from domain.entities.data_package import DataPackage
@@ -231,9 +220,7 @@ class CryptoPaymentService:
                     expires_at=package.expires_at,
                     telegram_payment_id=crypto_payment_id,
                 )
-                from domain.interfaces.idata_package_repository import (
-                    IDataPackageRepository,
-                )
+                from domain.interfaces.idata_package_repository import IDataPackageRepository
                 from infrastructure.persistence.postgresql.data_package_repository import (
                     PostgresDataPackageRepository,
                 )
@@ -357,9 +344,7 @@ class CryptoPaymentService:
 
             await bot.close()
 
-            logger.info(
-                f"📬 Crypto confirmation sent to user {user_id}: {product_name}"
-            )
+            logger.info(f"📬 Crypto confirmation sent to user {user_id}: {product_name}")
             return True
 
         except Exception as e:

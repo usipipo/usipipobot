@@ -65,7 +65,7 @@ if [ "$option" == "1" ]; then
     echo "Para obtener el keystore en base64, ejecuta en tu máquina local:"
     echo "  base64 -w 0 tu_keystore.jks"
     echo ""
-    
+
     read -p "Keystore en base64 (pegar valor completo): " KEYSTORE_B64
     read -p "Keystore password: " -s KEYSTORE_PASSWORD
     echo ""
@@ -73,13 +73,13 @@ if [ "$option" == "1" ]; then
     echo ""
     read -p "Key password: " -s KEY_PASSWORD
     echo ""
-    
+
     # Validar que se ingresaron valores
     if [ -z "$KEYSTORE_B64" ]; then
         echo "❌ Debes ingresar el keystore en base64"
         exit 1
     fi
-    
+
 elif [ "$option" == "2" ]; then
     echo ""
     echo "============================================================================="
@@ -91,18 +91,18 @@ elif [ "$option" == "2" ]; then
     echo "    - NO usar para releases en Google Play"
     echo ""
     read -p "¿Continuar con valores placeholder? [y/N]: " confirm
-    
+
     if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
         echo "Operación cancelada."
         exit 0
     fi
-    
+
     # Valores placeholder
     KEYSTORE_B64="UExBQ0VIT0xERVJfS0VZU1RPUkVfQkFTRTY0X05FRURTX1JFQUxfS0VZU1RPUkU="
     KEYSTORE_PASSWORD="placeholder_password"
     KEY_ALIAS="placeholder_alias"
     KEY_PASSWORD="placeholder_key_password"
-    
+
     echo ""
     echo "Usando valores placeholder..."
 else

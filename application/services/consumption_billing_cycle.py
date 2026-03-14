@@ -12,9 +12,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from domain.entities.consumption_billing import BillingStatus, ConsumptionBilling
-from domain.interfaces.iconsumption_billing_repository import (
-    IConsumptionBillingRepository,
-)
+from domain.interfaces.iconsumption_billing_repository import IConsumptionBillingRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
 
@@ -43,9 +41,7 @@ class ConsumptionCycleService:
         self.user_repo = user_repo
         self.cycle_days = cycle_days
 
-    async def record_data_usage(
-        self, user_id: int, mb_used: float, current_user_id: int
-    ) -> bool:
+    async def record_data_usage(self, user_id: int, mb_used: float, current_user_id: int) -> bool:
         """
         Registra consumo de datos para un usuario en modo consumo.
 
@@ -59,23 +55,18 @@ class ConsumptionCycleService:
         """
         try:
             # Obtener ciclo activo
-            billing = await self.billing_repo.get_active_by_user(
-                user_id, current_user_id
-            )
+            billing = await self.billing_repo.get_active_by_user(user_id, current_user_id)
 
             if not billing or billing.id is None:
                 logger.debug(f"Usuario {user_id} no tiene ciclo de consumo activo")
                 return False
 
             # Agregar consumo
-            success = await self.billing_repo.add_consumption(
-                billing.id, mb_used, current_user_id
-            )
+            success = await self.billing_repo.add_consumption(billing.id, mb_used, current_user_id)
 
             if success:
                 logger.debug(
-                    f"📊 Consumo registrado - user_id={user_id}, "
-                    f"mb_used={mb_used:.2f}"
+                    f"📊 Consumo registrado - user_id={user_id}, " f"mb_used={mb_used:.2f}"
                 )
 
             return success
@@ -98,9 +89,7 @@ class ConsumptionCycleService:
             ConsumptionSummary o None si no tiene ciclo activo
         """
         try:
-            billing = await self.billing_repo.get_active_by_user(
-                user_id, current_user_id
-            )
+            billing = await self.billing_repo.get_active_by_user(user_id, current_user_id)
 
             if not billing:
                 # Verificar si tiene ciclo cerrado (deuda pendiente)
@@ -134,9 +123,7 @@ class ConsumptionCycleService:
             logger.error(f"❌ Error obteniendo consumo: {e}")
             return None
 
-    async def close_billing_cycle(
-        self, billing_id: uuid.UUID, current_user_id: int
-    ) -> bool:
+    async def close_billing_cycle(self, billing_id: uuid.UUID, current_user_id: int) -> bool:
         """
         Cierra un ciclo de facturación.
 
@@ -180,9 +167,7 @@ class ConsumptionCycleService:
 
                     container = get_container()
                     if container:
-                        vpn_integration = container.resolve(
-                            ConsumptionVpnIntegrationService
-                        )
+                        vpn_integration = container.resolve(ConsumptionVpnIntegrationService)
                         if vpn_integration:
                             block_result = await vpn_integration.block_user_keys(  # type: ignore
                                 billing.user_id, current_user_id
@@ -210,9 +195,7 @@ class ConsumptionCycleService:
             logger.error(f"❌ Error cerrando ciclo: {e}")
             return False
 
-    async def mark_cycle_as_paid(
-        self, billing_id: uuid.UUID, current_user_id: int
-    ) -> bool:
+    async def mark_cycle_as_paid(self, billing_id: uuid.UUID, current_user_id: int) -> bool:
         """
         Marca un ciclo como pagado.
 
@@ -229,9 +212,7 @@ class ConsumptionCycleService:
                 return False
 
             if not billing.is_closed:
-                logger.warning(
-                    f"No se puede pagar ciclo {billing_id} - no está cerrado"
-                )
+                logger.warning(f"No se puede pagar ciclo {billing_id} - no está cerrado")
                 return False
 
             # Actualizar estado
@@ -248,18 +229,14 @@ class ConsumptionCycleService:
             logger.error(f"❌ Error marcando ciclo como pagado: {e}")
             return False
 
-    async def get_expired_cycles(
-        self, current_user_id: int
-    ) -> List[ConsumptionBilling]:
+    async def get_expired_cycles(self, current_user_id: int) -> List[ConsumptionBilling]:
         """
         Obtiene ciclos que han excedido el tiempo límite.
 
         Returns:
             Lista de ciclos expirados
         """
-        return await self.billing_repo.get_expired_active_cycles(
-            self.cycle_days, current_user_id
-        )
+        return await self.billing_repo.get_expired_active_cycles(self.cycle_days, current_user_id)
 
     async def get_user_billing_history(
         self, user_id: int, current_user_id: int

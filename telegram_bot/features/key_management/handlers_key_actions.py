@@ -8,12 +8,8 @@ Version: 1.0.0 - Refactor from handlers_key_management.py
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram_bot.features.key_management.keyboards_key_management import (
-    KeyManagementKeyboards,
-)
-from telegram_bot.features.key_management.messages_key_management import (
-    KeyManagementMessages,
-)
+from telegram_bot.features.key_management.keyboards_key_management import KeyManagementKeyboards
+from telegram_bot.features.key_management.messages_key_management import KeyManagementMessages
 from utils.logger import logger
 from utils.telegram_utils import escape_markdown
 
@@ -21,9 +17,7 @@ from utils.telegram_utils import escape_markdown
 class KeyActionsMixin:
     """Mixin para acciones sobre llaves VPN (suspender, reactivar)."""
 
-    async def handle_key_action(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def handle_key_action(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Maneja acciones específicas sobre llaves (suspender, reactivar, etc.)."""
         query = update.callback_query
         if query is None or query.data is None:
@@ -68,8 +62,7 @@ class KeyActionsMixin:
                     if context.user_data is not None:
                         context.user_data["rename_key_id"] = key_id
                     message = (
-                        "✏️ Renombrar Llave\n\n"
-                        "Por favor, escribe el nuevo nombre para tu llave:"
+                        "✏️ Renombrar Llave\n\n" "Por favor, escribe el nuevo nombre para tu llave:"
                     )
                     keyboard = KeyManagementKeyboards.cancel_rename()
                     await self._safe_edit_message(
@@ -86,9 +79,7 @@ class KeyActionsMixin:
                     keyboard = KeyManagementKeyboards.back_to_submenu()
 
             if keyboard is None and key is not None:
-                keyboard = KeyManagementKeyboards.key_actions(
-                    key_id, key.is_active, key.key_type
-                )
+                keyboard = KeyManagementKeyboards.key_actions(key_id, key.is_active, key.key_type)
             elif keyboard is None:
                 keyboard = KeyManagementKeyboards.back_to_submenu()
 
