@@ -151,3 +151,31 @@ class LogoutResponse(BaseModel):
             }
         }
     }
+
+
+class UserProfileResponse(BaseModel):
+    """
+    Schema de respuesta con perfil de usuario autenticado.
+
+    Se usa en el endpoint GET /auth/me para devolver
+    información del usuario autenticado.
+    """
+    telegram_id: int
+    username: str | None
+    full_name: str | None
+    status: str
+    has_pending_debt: bool = False
+    consumption_mode_enabled: bool = False
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "telegram_id": 123456789,
+                "username": "juanperez",
+                "full_name": "Juan Pérez",
+                "status": "active",
+                "has_pending_debt": False,
+                "consumption_mode_enabled": False
+            }
+        }
+    }

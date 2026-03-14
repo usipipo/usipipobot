@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Request, Depends
 from infrastructure.api.android.schemas import (
     OTPRequest, OTPResponse, OTPVerify, TokenResponse,
-    RefreshTokenResponse, LogoutResponse
+    RefreshTokenResponse, LogoutResponse, UserProfileResponse
 )
 from infrastructure.api.android.deps import get_current_user
 from sqlalchemy import text
@@ -334,3 +334,57 @@ async def logout(payload: dict = Depends(get_current_user)):
     logger.info(f"Usuario {telegram_id} cerró sesión")
 
     return LogoutResponse(message="Sesión cerrada")
+
+
+@router.get("/me", response_model=UserProfileResponse)
+async def get_current_user_profile(payload: dict = Depends(get_current_user)):
+    """
+    Obtener perfil del usuario autenticado.
+
+    Endpoint protegido que requiere JWT válido.
+    Devuelve información básica del usuario asociado al token.
+
+    **Respuesta:**
+    - `telegram_id`: ID único del usuario
+    - `username`: Username de Telegram
+    - `full_name`: Nombre completo
+    - `status`: Estado de la cuenta (active, suspended, blocked)
+    - `has_pending_debt`: True si tiene deuda pendiente
+    - `consumption_mode_enabled`: True si tiene modo consumo activo
+    """
+    telegram_id = payload["sub"]
+
+    async with get_session_context() as session:
+        result = await session.execute(
+            text(
+                """
+                SELECT telegram_id, username, full_name, status,
+                       has_pending_debt, consumption_mode_enabled
+                FROM users
+                WHERE telegram_id = :telegram_id
+                """
+            ),
+            {"telegram_id": int(telegram_id)}
+        )
+        user = result.first()
+
+        if not user:
+            logger.warning(f"Usuario {telegram_id} no encontrado en DB")
+            raise HTTPException(
+                status_code=404,
+                detail={
+                    "error": "user_not_found",
+                    "message": "Usuario no encontrado"
+                }
+            )
+
+        logger.debug(f"Perfil de usuario {telegram_id} consultado exitosamente")
+
+        return UserProfileResponse(
+            telegram_id=user.telegram_id,
+            username=user.username,
+            full_name=user.full_name,
+            status=user.status,
+            has_pending_debt=user.has_pending_debt or False,
+            consumption_mode_enabled=user.consumption_mode_enabled or False
+        )
