@@ -12,6 +12,7 @@ from kivymd.uix.snackbar import Snackbar
 from loguru import logger
 from datetime import datetime
 from typing import Optional, Dict, Any, List
+import asyncio
 
 from src.services.dashboard_service import DashboardService
 from src.services.auth_service import AuthService
@@ -21,7 +22,7 @@ from src.storage.preferences_storage import PreferencesStorage
 class DashboardScreen(MDScreen):
     """
     Main dashboard screen with complete user overview.
-    
+
     Features:
     - Welcome card with user info
     - Data usage cards with progress bars
@@ -32,33 +33,36 @@ class DashboardScreen(MDScreen):
     - Recent keys list
     - Pull-to-refresh
     - Bottom navigation
+    - Auto-refresh every 60 seconds
+    - Offline detection
     """
 
     # User properties
     username = StringProperty("Usuario")
     full_name = StringProperty("")
     user_avatar = StringProperty("")
-    
+
     # Data properties
     data_used = StringProperty("0 GB")
     data_limit = StringProperty("5 GB")
     data_percentage = NumericProperty(0.0)
     data_progress_color = ListProperty([0, 0.941, 1, 1])  # neon_cyan
-    
+
     # Keys properties
     active_keys_count = NumericProperty(0)
     max_keys = NumericProperty(2)
     recent_keys = ListProperty([])
-    
+    total_keys = NumericProperty(0)  # For "Ver todas" link
+
     # Package properties
     package_type = StringProperty("Sin paquete")
     package_days_remaining = StringProperty("")
     package_color = ListProperty([0.878, 0.878, 0.878, 1])  # text_primary
-    
+
     # Referral properties
     referral_credits = NumericProperty(0)
     referral_count = NumericProperty(0)
-    
+
     # Status properties
     is_authenticated = BooleanProperty(False)
     is_loading = BooleanProperty(True)
@@ -66,9 +70,13 @@ class DashboardScreen(MDScreen):
     has_pending_debt = BooleanProperty(False)
     consumption_mode_enabled = BooleanProperty(False)
     is_offline = BooleanProperty(False)
-    
+
     # Last update
     last_update = StringProperty("")
+
+    # Auto-refresh
+    _auto_refresh_event = None
+    _refresh_interval = 60  # seconds
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -77,20 +85,99 @@ class DashboardScreen(MDScreen):
         self.dialog = None
         self.refresh_layout = None
         self._refresh_callback = None
+        self._offline_check_event = None
 
     def on_enter(self):
         """Called when screen is entered."""
         logger.debug("Dashboard screen entered")
         self.load_dashboard_data()
+        self._start_auto_refresh()
+        self._start_offline_check()
 
     def on_leave(self):
         """Called when screen is left."""
-        pass
+        self._stop_auto_refresh()
+        self._stop_offline_check()
+
+    def _start_auto_refresh(self):
+        """Start auto-refresh timer."""
+        self._stop_auto_refresh()  # Cancel any existing timer
+        self._auto_refresh_event = Clock.schedule_interval(
+            lambda dt: self._auto_refresh_callback(),
+            self._refresh_interval
+        )
+        logger.debug(f"Auto-refresh started (interval: {self._refresh_interval}s)")
+
+    def _stop_auto_refresh(self):
+        """Stop auto-refresh timer."""
+        if self._auto_refresh_event:
+            self._auto_refresh_event.cancel()
+            self._auto_refresh_event = None
+            logger.debug("Auto-refresh stopped")
+
+    def _auto_refresh_callback(self):
+        """Callback for auto-refresh."""
+        if not self.is_offline:
+            logger.debug("Auto-refreshing dashboard data")
+            self.load_dashboard_data(force_refresh=False)
+
+    def _start_offline_check(self):
+        """Start periodic offline check."""
+        self._stop_offline_check()
+        self._offline_check_event = Clock.schedule_interval(
+            lambda dt: self._check_offline_status(),
+            10  # Check every 10 seconds
+        )
+
+    def _stop_offline_check(self):
+        """Stop offline check."""
+        if self._offline_check_event:
+            self._offline_check_event.cancel()
+            self._offline_check_event = None
+
+    def _check_offline_status(self):
+        """Check if device is offline."""
+        was_offline = self.is_offline
+        self.is_offline = not self._has_internet_connection()
+        
+        if self.is_offline != was_offline:
+            if self.is_offline:
+                logger.warning("Device went offline")
+                Snackbar(
+                    text="Sin conexión. Los datos pueden no estar actualizados.",
+                    duration=5,
+                    bg_color=[1, 0.267, 0.267, 1]  # Red
+                ).open()
+            else:
+                logger.info("Device back online")
+                self.load_dashboard_data(force_refresh=True)
+
+    def _has_internet_connection(self) -> bool:
+        """
+        Check if device has internet connection.
+        
+        Returns:
+            True if online, False if offline
+        """
+        try:
+            # Android-specific check
+            from jnius import autoclass
+            Context = autoclass('android.content.Context')
+            ConnectivityManager = autoclass('android.net.ConnectivityManager')
+            activity = autoclass('org.kivy.android.PythonActivity').mActivity
+            cm = activity.getSystemService(Context.CONNECTIVITY_SERVICE)
+            network_info = cm.getActiveNetworkInfo()
+            return network_info is not None and network_info.isConnected()
+        except Exception:
+            # Desktop or error: assume online
+            return True
 
     def setup_pull_to_refresh(self):
-        """Setup pull-to-refresh layout if available."""
-        # TODO: Implement when MDPullRefreshLayout is available
-        pass
+        """Setup pull-to-refresh layout."""
+        # Get the refresh layout from KV if available
+        if self.ids.get('refresh_layout'):
+            self.refresh_layout = self.ids.refresh_layout
+            logger.debug("Pull-to-refresh layout configured")
 
     def load_dashboard_data(self, force_refresh: bool = False):
         """
@@ -187,8 +274,9 @@ class DashboardScreen(MDScreen):
             # Active keys
             active_keys = data.get("active_keys", [])
             self.active_keys_count = len([k for k in active_keys if k.get("is_active", False)])
-            self.max_keys = 2  # Default max keys
-            
+            self.max_keys = data.get("max_keys", 2)  # Get from API or default
+            self.total_keys = len(active_keys)  # For "Ver todas" link
+
             # Recent keys (max 3)
             self.recent_keys = []
             for key in active_keys[:3]:
@@ -338,41 +426,101 @@ class DashboardScreen(MDScreen):
     def on_profile_pressed(self):
         """Handle profile button press."""
         logger.info("Navigating to profile screen")
-        # TODO: Navigate to profile screen
-        # self.manager.current = "profile"
+        if self.manager:
+            self.manager.current = "profile"
 
     def on_keys_pressed(self):
         """Handle VPN keys button press."""
         logger.info("Navigating to keys screen")
-        # TODO: Navigate to keys screen
-        # self.manager.current = "keys_list"
+        if self.manager:
+            self.manager.current = "keys_list"
 
     def on_buy_pressed(self):
         """Handle buy packages button press."""
         logger.info("Navigating to shop screen")
-        # TODO: Navigate to shop screen
-        # self.manager.current = "shop"
+        if self.manager:
+            self.manager.current = "shop"
 
     def on_support_pressed(self):
         """Handle support button press."""
         logger.info("Navigating to support screen")
-        # TODO: Navigate to tickets screen
-        # self.manager.current = "tickets"
+        if self.manager:
+            self.manager.current = "tickets"
 
     def on_new_key_pressed(self):
         """Handle new key quick action."""
         logger.info("Navigating to create key screen")
-        # TODO: Navigate to create key screen
-        # self.manager.current = "create_key"
+        if self.manager:
+            self.manager.current = "create_key"
 
     def on_buy_gb_pressed(self):
         """Handle buy GB quick action."""
         logger.info("Navigating to shop screen")
-        # TODO: Navigate to shop screen
-        # self.manager.current = "shop"
+        if self.manager:
+            self.manager.current = "shop"
 
     def on_key_detail_pressed(self, key_id: str):
         """Handle key detail navigation."""
         logger.info(f"Viewing key detail: {key_id}")
-        # TODO: Navigate to key detail screen
-        # self.manager.current = "key_detail"
+        if self.manager:
+            # Pass key_id to detail screen
+            from kivy.app import App
+            app = App.get_running_app()
+            if hasattr(app, 'current_key_id'):
+                app.current_key_id = key_id
+            self.manager.current = "key_detail"
+
+    def on_menu_pressed(self):
+        """Handle hamburger menu button press."""
+        logger.info("Opening navigation drawer")
+        # Open navigation drawer if available
+        if self.ids.get('nav_drawer'):
+            self.ids.nav_drawer.set_state("open")
+        else:
+            # Fallback: show menu dialog
+            self._show_menu_dialog()
+
+    def _show_menu_dialog(self):
+        """Show menu dialog as fallback."""
+        menu_items = [
+            ("👤 Perfil", lambda x: self._navigate_and_close("profile")),
+            ("🔑 Mis Claves", lambda x: self._navigate_and_close("keys_list")),
+            ("💰 Comprar Paquete", lambda x: self._navigate_and_close("shop")),
+            ("🎁 Referidos", lambda x: self._navigate_and_close("referrals")),
+            ("🔧 Soporte", lambda x: self._navigate_and_close("tickets")),
+            ("⚙️ Configuración", lambda x: self._navigate_and_close("settings")),
+        ]
+        
+        buttons = [
+            MDFlatButton(
+                text=item[0],
+                theme_text_color="Custom",
+                text_color=[0, 0.941, 1, 1],
+                on_release=item[1]
+            )
+            for item in menu_items
+        ]
+        
+        buttons.append(
+            MDFlatButton(
+                text="CANCELAR",
+                theme_text_color="Custom",
+                text_color=[0.878, 0.878, 0.878, 1],
+                on_release=self.dismiss_dialog
+            )
+        )
+        
+        if not self.dialog:
+            self.dialog = MDDialog(
+                title="Menú",
+                type="simple",
+                items=[],
+                buttons=buttons
+            )
+        self.dialog.open()
+
+    def _navigate_and_close(self, screen_name: str):
+        """Navigate to screen and close dialog."""
+        self.dismiss_dialog(None)
+        if self.manager and self.manager.has_screen(screen_name):
+            self.manager.current = screen_name

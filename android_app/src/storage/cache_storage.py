@@ -4,9 +4,11 @@ Provides local encrypted caching with TTL support.
 """
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Optional
 from loguru import logger
+
+from kivy.utils import platform
 
 from src.storage.secure_storage import SecureStorage
 
@@ -14,7 +16,7 @@ from src.storage.secure_storage import SecureStorage
 class CacheStorage:
     """
     Local cache storage with TTL support.
-    
+
     Uses encrypted JSON file for persistence.
     Cache entries automatically expire based on TTL.
     """
@@ -22,19 +24,38 @@ class CacheStorage:
     def __init__(self, ttl_seconds: int = 900):
         """
         Initialize cache storage.
-        
+
         Args:
             ttl_seconds: Default TTL for cache entries (default: 15 minutes)
         """
         self.ttl_seconds = ttl_seconds
-        self.cache_file = os.path.join(
-            os.path.expanduser("~"),
-            ".usipipo_apk",
-            "cache.json"
-        )
+        self.cache_file = self._get_cache_path()
         self._ensure_cache_dir()
         self._cache: dict = {}
         self._load_cache()
+
+    def _get_cache_path(self) -> str:
+        """
+        Get cache file path appropriate for the platform.
+
+        On Android, uses the app's data directory.
+        On desktop, uses ~/.usipipo_apk.
+
+        Returns:
+            Full path to cache.json file
+        """
+        if platform == 'android':
+            try:
+                from android.storage import app_storage_path
+                cache_dir = app_storage_path()
+            except ImportError:
+                # Fallback if running on Android but android module not available
+                cache_dir = os.path.join(os.path.expanduser("~"), ".usipipo_apk")
+        else:
+            # Desktop (Linux, macOS, Windows)
+            cache_dir = os.path.join(os.path.expanduser("~"), ".usipipo_apk")
+        
+        return os.path.join(cache_dir, "cache.json")
 
     def _ensure_cache_dir(self):
         """Ensure cache directory exists."""
@@ -200,7 +221,3 @@ class CacheStorage:
                 "expired_entries": 0,
                 "size_bytes": 0
             }
-
-
-# Import timedelta for the set method
-from datetime import timedelta

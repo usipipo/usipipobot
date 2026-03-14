@@ -48,7 +48,7 @@ class ActivePackageInfo(BaseModel):
 class DashboardSummaryResponse(BaseModel):
     """
     Complete dashboard summary response.
-    
+
     Contains all data needed to render the dashboard in a single call.
     """
     user: UserInfo
@@ -58,6 +58,7 @@ class DashboardSummaryResponse(BaseModel):
     referral_credits: int = 0
     has_pending_debt: bool = False
     consumption_mode_enabled: bool = False
+    max_keys: int = 2  # Maximum number of VPN keys allowed per user
 
     model_config = {
         "json_schema_extra": {
@@ -97,7 +98,8 @@ class DashboardSummaryResponse(BaseModel):
                     "data_used_bytes": 1288490188,
                     "expires_at": "2026-03-15T00:00:00Z",
                     "days_remaining": 28
-                }
+                },
+                "max_keys": 2
             }
         }
     }

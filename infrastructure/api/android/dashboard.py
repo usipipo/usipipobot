@@ -133,7 +133,10 @@ async def get_dashboard_summary(payload: dict = Depends(get_current_user)):
             )
         
         logger.info(f"Dashboard summary fetched for user {telegram_id}")
-        
+
+        # Max keys per user (configurable, default 2)
+        max_keys = 2
+
         return DashboardSummaryResponse(
             user=UserInfo(
                 telegram_id=user_row.telegram_id,
@@ -156,5 +159,6 @@ async def get_dashboard_summary(payload: dict = Depends(get_current_user)):
             active_package=active_package,
             referral_credits=user_row.referral_credits or 0,
             has_pending_debt=user_row.has_pending_debt or False,
-            consumption_mode_enabled=user_row.consumption_mode_enabled or False
+            consumption_mode_enabled=user_row.consumption_mode_enabled or False,
+            max_keys=max_keys
         )
