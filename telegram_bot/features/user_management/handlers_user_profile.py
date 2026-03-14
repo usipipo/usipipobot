@@ -37,22 +37,14 @@ class UserProfileMixin:
             is_admin = str(telegram_id) == str(self.settings.ADMIN_ID)
 
             if is_admin and admin_service:
-                stats = await admin_service.get_dashboard_stats(
-                    current_user_id=telegram_id
-                )
+                stats = await admin_service.get_dashboard_stats(current_user_id=telegram_id)
                 text = self._format_admin_dashboard(user_name, stats)
             else:
-                status_data = await self.vpn_service.get_user_status(
-                    telegram_id, telegram_id
-                )
+                status_data = await self.vpn_service.get_user_status(telegram_id, telegram_id)
                 user_entity = status_data.get("user")
 
                 join_date = "N/A"
-                if (
-                    user_entity
-                    and hasattr(user_entity, "created_at")
-                    and user_entity.created_at
-                ):
+                if user_entity and hasattr(user_entity, "created_at") and user_entity.created_at:
                     join_date = user_entity.created_at.strftime("%Y-%m-%d")
 
                 status_text = "Inactivo ⚠️"
@@ -122,9 +114,7 @@ class UserProfileMixin:
                 status_text = "Activo" if profile.status == "active" else "Inactivo"
 
                 total_gb = profile.total_used_gb + profile.free_data_remaining_gb
-                data_percentage = (
-                    (profile.total_used_gb / total_gb * 100) if total_gb > 0 else 0
-                )
+                data_percentage = (profile.total_used_gb / total_gb * 100) if total_gb > 0 else 0
 
                 text = self.messages.Info.HEADER + self.messages.Info.USER_INFO(
                     name=profile.full_name or "N/A",
@@ -145,9 +135,7 @@ class UserProfileMixin:
                     credits=profile.referral_credits,
                 )
             else:
-                status_data = await self.vpn_service.get_user_status(
-                    telegram_id, telegram_id
-                )
+                status_data = await self.vpn_service.get_user_status(telegram_id, telegram_id)
                 user_entity = status_data.get("user")
 
                 if not user_entity:
@@ -164,9 +152,7 @@ class UserProfileMixin:
                 days_since_join = 0
                 if hasattr(user_entity, "created_at") and user_entity.created_at:
                     join_date = user_entity.created_at.strftime("%Y-%m-%d")
-                    days_since_join = (
-                        datetime.now(timezone.utc) - user_entity.created_at
-                    ).days
+                    days_since_join = (datetime.now(timezone.utc) - user_entity.created_at).days
 
                 status_text = "Inactivo"
                 if (

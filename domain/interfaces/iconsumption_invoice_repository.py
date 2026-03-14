@@ -10,9 +10,7 @@ class IConsumptionInvoiceRepository(Protocol):
     Define cómo interactuamos con la tabla de invoices en la BD.
     """
 
-    async def save(
-        self, invoice: ConsumptionInvoice, current_user_id: int
-    ) -> ConsumptionInvoice:
+    async def save(self, invoice: ConsumptionInvoice, current_user_id: int) -> ConsumptionInvoice:
         """Guarda una nueva factura o actualiza una existente."""
         ...
 
@@ -28,9 +26,7 @@ class IConsumptionInvoiceRepository(Protocol):
         """Recupera todas las facturas asociadas a un ciclo de facturación."""
         ...
 
-    async def get_by_user(
-        self, user_id: int, current_user_id: int
-    ) -> List[ConsumptionInvoice]:
+    async def get_by_user(self, user_id: int, current_user_id: int) -> List[ConsumptionInvoice]:
         """Recupera todas las facturas de un usuario."""
         ...
 
@@ -49,9 +45,7 @@ class IConsumptionInvoiceRepository(Protocol):
         """Recupera todas las facturas con un estado específico."""
         ...
 
-    async def get_expired_pending(
-        self, current_user_id: int
-    ) -> List[ConsumptionInvoice]:
+    async def get_expired_pending(self, current_user_id: int) -> List[ConsumptionInvoice]:
         """
         Recupera facturas pendientes que han expirado.
         Útil para limpieza periódica.
@@ -64,9 +58,7 @@ class IConsumptionInvoiceRepository(Protocol):
         """Marca una factura como pagada."""
         ...
 
-    async def mark_as_expired(
-        self, invoice_id: uuid.UUID, current_user_id: int
-    ) -> bool:
+    async def mark_as_expired(self, invoice_id: uuid.UUID, current_user_id: int) -> bool:
         """Marca una factura como expirada."""
         ...
 

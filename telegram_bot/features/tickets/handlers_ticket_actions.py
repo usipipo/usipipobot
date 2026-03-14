@@ -61,9 +61,7 @@ class TicketActionsMixin:
 
         ticket_id_map = context.user_data.get("ticket_id_map")
         if not ticket_id_map or str(ticket_id_simple) not in ticket_id_map:
-            logger.error(
-                f"❌ Ticket ID {ticket_id_simple} not found in mapping for reply"
-            )
+            logger.error(f"❌ Ticket ID {ticket_id_simple} not found in mapping for reply")
             await self._safe_edit_message(
                 query,
                 context,
@@ -102,9 +100,7 @@ class TicketActionsMixin:
             )
             keyboard = TicketKeyboards.cancel_action()
 
-            await self._safe_edit_message(
-                query, context, text=message, reply_markup=keyboard
-            )
+            await self._safe_edit_message(query, context, text=message, reply_markup=keyboard)
 
             return TICKET_REPLYING
 
@@ -161,9 +157,7 @@ class TicketActionsMixin:
             ticket_id = UUID(ticket_uuid_str)
 
             # Llamar a service para guardar respuesta real
-            result = await self.ticket_service.add_user_message(
-                ticket_id, user_id, message_text
-            )
+            result = await self.ticket_service.add_user_message(ticket_id, user_id, message_text)
 
             if not result:
                 await update.message.reply_text(
@@ -234,9 +228,7 @@ class TicketActionsMixin:
 
         ticket_id_map = context.user_data.get("ticket_id_map")
         if not ticket_id_map or str(ticket_id_simple) not in ticket_id_map:
-            logger.error(
-                f"❌ Ticket ID {ticket_id_simple} not found in mapping for close"
-            )
+            logger.error(f"❌ Ticket ID {ticket_id_simple} not found in mapping for close")
             await self._safe_edit_message(
                 query,
                 context,
@@ -257,9 +249,7 @@ class TicketActionsMixin:
             )
             return TICKET_MENU
 
-        logger.info(
-            f"🎫 User {user_id} closing ticket {ticket_id} (simple_id: {ticket_id_simple})"
-        )
+        logger.info(f"🎫 User {user_id} closing ticket {ticket_id} (simple_id: {ticket_id_simple})")
 
         try:
             # Usar UUID real para cerrar ticket en DB

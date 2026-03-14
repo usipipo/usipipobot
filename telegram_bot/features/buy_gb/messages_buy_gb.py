@@ -47,12 +47,8 @@ class BuyGbMessages:
         def format_packages_list() -> str:
             lines = []
             for pkg in PACKAGE_OPTIONS:
-                bonus_text = (
-                    f" (+{pkg.bonus_percent}% bonus)" if pkg.bonus_percent > 0 else ""
-                )
-                lines.append(
-                    f"⭐ **{pkg.name}** - {pkg.data_gb} GB - {pkg.stars} ⭐{bonus_text}"
-                )
+                bonus_text = f" (+{pkg.bonus_percent}% bonus)" if pkg.bonus_percent > 0 else ""
+                lines.append(f"⭐ **{pkg.name}** - {pkg.data_gb} GB - {pkg.stars} ⭐{bonus_text}")
             return "\n".join(lines)
 
     class Payment:
@@ -173,15 +169,9 @@ class BuyGbMessages:
                 return ""
             lines = []
             for pkg in packages:
-                percentage = (
-                    (pkg["used_gb"] / pkg["total_gb"] * 100)
-                    if pkg["total_gb"] > 0
-                    else 0
-                )
+                percentage = (pkg["used_gb"] / pkg["total_gb"] * 100) if pkg["total_gb"] > 0 else 0
                 progress = _progress_bar(percentage)
-                days, hours = pkg.get("days_remaining", 0), pkg.get(
-                    "hours_remaining", 0
-                )
+                days, hours = pkg.get("days_remaining", 0), pkg.get("hours_remaining", 0)
 
                 lines.append(f"┌──────────────────────────┐")
                 lines.append(f"│ 📦 {pkg['name'][:18]:<18} │")
@@ -191,9 +181,7 @@ class BuyGbMessages:
                 )
                 gb_text = f"{pkg['used_gb']:.1f}/{pkg['total_gb']:.0f} GB"
                 lines.append(f"│ ├ {gb_text}{' ' * (12 - len(gb_text))}│")
-                lines.append(
-                    f"│ └ ⏱️ {days}d {hours}h{' ' * (13 - len(f'{days}d {hours}h'))}│"
-                )
+                lines.append(f"│ └ ⏱️ {days}d {hours}h{' ' * (13 - len(f'{days}d {hours}h'))}│")
                 lines.append(f"└──────────────────────────┘")
                 lines.append("")
             return "\n".join(lines)
@@ -231,9 +219,7 @@ class BuyGbMessages:
                         pkg["hours_remaining"] = pkg.get("hours_remaining", 0)
                     packages_with_time.append(pkg)
 
-                lines.append(
-                    BuyGbMessages.Data.format_packages_list(packages_with_time)
-                )
+                lines.append(BuyGbMessages.Data.format_packages_list(packages_with_time))
 
             lines.append(BuyGbMessages.Data.format_free_plan(summary["free_plan"]))
             lines.append("")

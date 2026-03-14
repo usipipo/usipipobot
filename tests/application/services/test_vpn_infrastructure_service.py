@@ -12,9 +12,7 @@ from domain.entities.vpn_key import KeyType, VpnKey
 
 
 @pytest.fixture
-def vpn_infra_service(
-    mock_key_repo, mock_user_repo, mock_outline_client, mock_wireguard_client
-):
+def vpn_infra_service(mock_key_repo, mock_user_repo, mock_outline_client, mock_wireguard_client):
     return VpnInfrastructureService(
         key_repository=mock_key_repo,
         user_repository=mock_user_repo,
@@ -97,9 +95,7 @@ class TestEnableKey:
     async def test_enable_key_not_found(self, vpn_infra_service, mock_key_repo):
         mock_key_repo.get_by_id.return_value = None
 
-        result = await vpn_infra_service.enable_key(
-            key_id=str(uuid.uuid4()), key_type="wireguard"
-        )
+        result = await vpn_infra_service.enable_key(key_id=str(uuid.uuid4()), key_type="wireguard")
 
         assert result["success"] is False
         assert "not found" in result["error"].lower()
@@ -213,9 +209,7 @@ class TestDeleteKeyComplete:
 
 class TestGetServerMetrics:
     @pytest.mark.asyncio
-    async def test_get_server_metrics(
-        self, vpn_infra_service, mock_key_repo, mock_outline_client
-    ):
+    async def test_get_server_metrics(self, vpn_infra_service, mock_key_repo, mock_outline_client):
         mock_outline_client.get_server_info.return_value = {
             "is_healthy": True,
             "total_keys": 10,
@@ -274,9 +268,7 @@ class TestCleanupGhostKeys:
 
 class TestListServerKeys:
     @pytest.mark.asyncio
-    async def test_list_server_keys(
-        self, vpn_infra_service, mock_key_repo, sample_outline_key
-    ):
+    async def test_list_server_keys(self, vpn_infra_service, mock_key_repo, sample_outline_key):
         mock_key_repo.get_all_keys.return_value = [sample_outline_key]
 
         result = await vpn_infra_service.list_server_keys(server_type="outline")

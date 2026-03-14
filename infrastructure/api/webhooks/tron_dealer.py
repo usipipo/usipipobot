@@ -27,9 +27,7 @@ _security_service_instance: Optional[WebhookSecurityService] = None
 _payment_service_instance: Optional[CryptoPaymentService] = None
 
 
-def set_services(
-    security_service: WebhookSecurityService, payment_service: CryptoPaymentService
-):
+def set_services(security_service: WebhookSecurityService, payment_service: CryptoPaymentService):
     global _security_service_instance, _payment_service_instance
     _security_service_instance = security_service
     _payment_service_instance = payment_service
@@ -66,9 +64,7 @@ async def handle_tron_dealer_webhook(
 
     if x_signature:
         if not security.verify_hmac_signature(raw_body, x_signature, x_timestamp):
-            logger.warning(
-                f"[{request_id}] Invalid HMAC signature from IP: {client_ip}"
-            )
+            logger.warning(f"[{request_id}] Invalid HMAC signature from IP: {client_ip}")
             raise HTTPException(status_code=401, detail="Invalid signature")
 
     if x_timestamp:

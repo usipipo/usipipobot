@@ -32,9 +32,7 @@ class WireGuardClient:
 
         os.makedirs(self.clients_dir, exist_ok=True)
 
-    async def _run_cmd(
-        self, cmd: str, require_admin: bool = False, retries: int = 2
-    ) -> str:
+    async def _run_cmd(self, cmd: str, require_admin: bool = False, retries: int = 2) -> str:
         """
         Ejecuta comandos de WireGuard con reintentos para errores transitorios.
 
@@ -160,9 +158,7 @@ class WireGuardClient:
             if os.path.exists(psk_file_path):
                 os.remove(psk_file_path)
 
-        client_conf = self._build_client_config(
-            priv_key, client_ip, server_pub_key, psk
-        )
+        client_conf = self._build_client_config(priv_key, client_ip, server_pub_key, psk)
         client_file = self.clients_dir / f"{self.interface}-{client_name}.conf"
         client_file.write_text(client_conf)
         os.chmod(client_file, 0o600)
@@ -176,13 +172,10 @@ class WireGuardClient:
             "file_path": str(client_file),
         }
 
-    def _build_client_config(
-        self, priv_key: str, ip: str, server_pub: str, psk: str
-    ) -> str:
+    def _build_client_config(self, priv_key: str, ip: str, server_pub: str, psk: str) -> str:
         dns = f"{settings.WG_CLIENT_DNS_1 or '1.1.1.1'}"
         endpoint = (
-            settings.WG_ENDPOINT
-            or f"{settings.SERVER_IP}:{settings.WG_SERVER_PORT or '51820'}"
+            settings.WG_ENDPOINT or f"{settings.SERVER_IP}:{settings.WG_SERVER_PORT or '51820'}"
         )
 
         return f"""[Interface]
@@ -203,16 +196,12 @@ PersistentKeepalive = 15
         try:
             content = self.conf_path.read_text()
 
-            pk_pattern = (
-                rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
-            )
+            pk_pattern = rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
             match = re.search(pk_pattern, content, flags=re.DOTALL)
 
             if match:
                 found_pub_key = match.group(1).strip()
-                await self._run_cmd(
-                    f"wg set {self.interface} peer {found_pub_key} remove"
-                )
+                await self._run_cmd(f"wg set {self.interface} peer {found_pub_key} remove")
             elif pub_key:
                 await self._run_cmd(f"wg set {self.interface} peer {pub_key} remove")
 
@@ -239,16 +228,12 @@ PersistentKeepalive = 15
         """
         try:
             if not self.conf_path.exists():
-                logger.warning(
-                    f"Archivo de configuración no encontrado: {self.conf_path}"
-                )
+                logger.warning(f"Archivo de configuración no encontrado: {self.conf_path}")
                 return {"transfer_total": 0}
 
             content = self.conf_path.read_text()
 
-            pk_pattern = (
-                rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
-            )
+            pk_pattern = rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
             match = re.search(pk_pattern, content, flags=re.DOTALL)
 
             if not match:
@@ -321,9 +306,7 @@ PersistentKeepalive = 15
                 self._usage_cache = (usage, datetime.now())
                 return usage
             except Exception as e:
-                error_msg = (
-                    str(e) if str(e) else repr(e) or "Unknown error (empty exception)"
-                )
+                error_msg = str(e) if str(e) else repr(e) or "Unknown error (empty exception)"
                 logger.error(f"Error obteniendo métricas WG: {error_msg}", error=e)
                 return []
 
@@ -339,9 +322,7 @@ PersistentKeepalive = 15
 
             content = self.conf_path.read_text()
 
-            pk_pattern = (
-                rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
-            )
+            pk_pattern = rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
             match = re.search(pk_pattern, content, flags=re.DOTALL)
 
             if not match:
@@ -350,9 +331,7 @@ PersistentKeepalive = 15
 
             pub_key = match.group(1).strip()
 
-            await self._run_cmd(
-                f"wg set {self.interface} peer {pub_key} allowed-ips 0.0.0.0/32"
-            )
+            await self._run_cmd(f"wg set {self.interface} peer {pub_key} allowed-ips 0.0.0.0/32")
 
             new_content = content.replace(
                 f"### CLIENT {client_name}", f"### CLIENT {client_name} [DISABLED]"
@@ -378,9 +357,7 @@ PersistentKeepalive = 15
 
             content = self.conf_path.read_text()
 
-            pk_pattern = (
-                rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
-            )
+            pk_pattern = rf"### CLIENT {re.escape(client_name)}.*?PublicKey\s*=\s*([^\n]+)"
             match = re.search(pk_pattern, content, flags=re.DOTALL)
 
             if not match:
@@ -400,9 +377,7 @@ PersistentKeepalive = 15
 
             original_ip = ip_match.group(1)
 
-            await self._run_cmd(
-                f"wg set {self.interface} peer {pub_key} allowed-ips {original_ip}"
-            )
+            await self._run_cmd(f"wg set {self.interface} peer {pub_key} allowed-ips {original_ip}")
 
             new_content = content.replace(
                 f"### CLIENT {client_name} [DISABLED]", f"### CLIENT {client_name}"

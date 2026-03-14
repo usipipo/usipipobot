@@ -21,9 +21,7 @@ class SpinnerManager:
     @staticmethod
     def get_random_spinner_message(operation_type: str = "default") -> str:
         """Obtiene un mensaje de spinner con emoji animado."""
-        base_message = SpinnerStyles.MESSAGES.get(
-            operation_type, SpinnerStyles.MESSAGES["default"]
-        )
+        base_message = SpinnerStyles.MESSAGES.get(operation_type, SpinnerStyles.MESSAGES["default"])
 
         try:
             frame_index = int(time.time() * 10) % len(SpinnerStyles.SPINNER_FRAMES)
@@ -31,9 +29,7 @@ class SpinnerManager:
             return f"{frame} {base_message}"
         except AttributeError as e:
             logger.error(f"❌ Error en get_random_spinner_message: {e}")
-            logger.error(
-                f"Atributos disponibles en SpinnerStyles: {dir(SpinnerStyles)}"
-            )
+            logger.error(f"Atributos disponibles en SpinnerStyles: {dir(SpinnerStyles)}")
             return f"🌀 {base_message}"
 
     @staticmethod
@@ -95,9 +91,7 @@ class SpinnerManager:
                                 text=text, reply_markup=reply_markup
                             )
                         except Exception as e2:
-                            logger.warning(
-                                f"⚠️  Edit falló de nuevo, enviando mensaje nuevo: {e2}"
-                            )
+                            logger.warning(f"⚠️  Edit falló de nuevo, enviando mensaje nuevo: {e2}")
                             await context.bot.send_message(
                                 chat_id=chat_id,
                                 text=text,
@@ -106,9 +100,7 @@ class SpinnerManager:
                     elif "message is not modified" in error_msg:
                         logger.debug("ℹ️  Mensaje no modificado (mismo contenido)")
                     else:
-                        logger.warning(
-                            f"⚠️  Error editando mensaje, enviando nuevo: {e}"
-                        )
+                        logger.warning(f"⚠️  Error editando mensaje, enviando nuevo: {e}")
                         await context.bot.send_message(
                             chat_id=chat_id,
                             text=text,
@@ -125,9 +117,7 @@ class SpinnerManager:
                         logger.warning(
                             f"⚠️  Error de parsing Markdown, reintentando sin parse_mode: {e}"
                         )
-                        await update.message.reply_text(
-                            text=text, reply_markup=reply_markup
-                        )
+                        await update.message.reply_text(text=text, reply_markup=reply_markup)
                     else:
                         raise
 
@@ -146,9 +136,7 @@ class SpinnerManager:
         """
         try:
             if update.callback_query:
-                await update.callback_query.edit_message_text(
-                    text=text, parse_mode=parse_mode
-                )
+                await update.callback_query.edit_message_text(text=text, parse_mode=parse_mode)
             elif update.message:
                 await update.message.reply_text(text=text, parse_mode=parse_mode)
             else:
@@ -197,9 +185,7 @@ class SpinnerManager:
                     )
                     return -1
                 msg = cast(Message, callback_message)
-                spinner_message = await msg.reply_text(
-                    text=message_text, parse_mode="Markdown"
-                )
+                spinner_message = await msg.reply_text(text=message_text, parse_mode="Markdown")
             elif update.message:
                 spinner_message = await update.message.reply_text(
                     text=message_text, parse_mode="Markdown"
@@ -210,9 +196,7 @@ class SpinnerManager:
                 )
                 return -1
 
-            logger.info(
-                f"✅ Spinner enviado: {message_text} (ID: {spinner_message.message_id})"
-            )
+            logger.info(f"✅ Spinner enviado: {message_text} (ID: {spinner_message.message_id})")
             return spinner_message.message_id
 
         except Exception as e:

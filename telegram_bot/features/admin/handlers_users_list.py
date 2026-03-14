@@ -74,9 +74,7 @@ class UsersListMixin:
                 )
                 return ADMIN_MENU
 
-            message = (
-                AdminMessages.Users.HEADER + f"📊 Total: {total_users} usuarios\n\n"
-            )
+            message = AdminMessages.Users.HEADER + f"📊 Total: {total_users} usuarios\n\n"
             keyboard = AdminKeyboards.users_list_paginated(users, page, total_pages)
 
             await SpinnerManager.replace_spinner_with_message(
@@ -107,9 +105,7 @@ class UsersListMixin:
 
         return await self._show_users_page(update, context, page)
 
-    async def _show_users_page(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE, page: int
-    ):
+    async def _show_users_page(self, update: Update, context: ContextTypes.DEFAULT_TYPE, page: int):
         """Muestra una página específica de usuarios."""
         query = update.callback_query
         user = update.effective_user
@@ -147,9 +143,7 @@ class UsersListMixin:
                 )
                 return ADMIN_MENU
 
-            message = (
-                AdminMessages.Users.HEADER + f"📊 Total: {total_users} usuarios\n\n"
-            )
+            message = AdminMessages.Users.HEADER + f"📊 Total: {total_users} usuarios\n\n"
             keyboard = AdminKeyboards.users_list_paginated(users, page, total_pages)
 
             await self._safe_edit_message(

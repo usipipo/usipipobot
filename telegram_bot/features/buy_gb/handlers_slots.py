@@ -58,9 +58,7 @@ class SlotsMixin:
                     parse_mode="Markdown",
                 )
 
-    async def select_slot_payment_method(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def select_slot_payment_method(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra opciones de método de pago para slots."""
         query = update.callback_query
         if not query or not query.data:

@@ -117,9 +117,7 @@ class TronDealerClient:
     def headers(self):
         return {"x-api-key": self.api_key, "Content-Type": "application/json"}
 
-    async def _make_request(
-        self, endpoint: str, data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _make_request(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Make a POST request to TronDealer API.
 
@@ -148,9 +146,7 @@ class TronDealerClient:
                 logger.debug("Created new httpx.AsyncClient for TronDealer")
 
             # Make the async request
-            response = await self._client.post(
-                url, headers=self.headers, json=data, timeout=30.0
-            )
+            response = await self._client.post(url, headers=self.headers, json=data, timeout=30.0)
 
             logger.debug(f"TronDealer API response status: {response.status_code}")
 
@@ -201,9 +197,7 @@ class TronDealerClient:
                 raise TronDealerApiError(response.status_code, error_msg)
 
             # Check success flag in response body
-            if isinstance(response_data, dict) and not response_data.get(
-                "success", True
-            ):
+            if isinstance(response_data, dict) and not response_data.get("success", True):
                 error_msg = response_data.get("error", "Request failed")
                 logger.warning(f"TronDealer API business error: {error_msg}")
                 raise TronDealerApiError(response.status_code, error_msg)
@@ -225,9 +219,7 @@ class TronDealerClient:
                 f"Unexpected error in TronDealer API call: {type(e).__name__}: {e}",
                 exc_info=True,
             )
-            raise TronDealerApiError(
-                500, f"Unexpected error: {type(e).__name__}: {str(e)}"
-            )
+            raise TronDealerApiError(500, f"Unexpected error: {type(e).__name__}: {str(e)}")
 
     async def assign_wallet(self, label: Optional[str] = None) -> BscWallet:
         """
@@ -252,34 +244,24 @@ class TronDealerClient:
 
             # Validate response structure
             if not isinstance(response_data, dict):
-                logger.error(
-                    f"Invalid response type from assign_wallet: {type(response_data)}"
-                )
+                logger.error(f"Invalid response type from assign_wallet: {type(response_data)}")
                 raise TronDealerApiError(500, "Invalid response format: expected dict")
 
             wallet_data = response_data.get("wallet")
             if not wallet_data:
                 logger.error(f"Missing 'wallet' field in response: {response_data}")
-                raise TronDealerApiError(
-                    500, "Invalid response format: missing wallet data"
-                )
+                raise TronDealerApiError(500, "Invalid response format: missing wallet data")
 
             if not isinstance(wallet_data, dict):
                 logger.error(f"Invalid wallet data type: {type(wallet_data)}")
-                raise TronDealerApiError(
-                    500, "Invalid response format: wallet data is not a dict"
-                )
+                raise TronDealerApiError(500, "Invalid response format: wallet data is not a dict")
 
             # Validate required fields
             required_fields = ["id", "address"]
             for field in required_fields:
                 if field not in wallet_data:
-                    logger.error(
-                        f"Missing required field '{field}' in wallet data: {wallet_data}"
-                    )
-                    raise TronDealerApiError(
-                        500, f"Invalid response format: missing {field}"
-                    )
+                    logger.error(f"Missing required field '{field}' in wallet data: {wallet_data}")
+                    raise TronDealerApiError(500, f"Invalid response format: missing {field}")
 
             wallet = BscWallet(
                 id=wallet_data["id"],
@@ -289,9 +271,7 @@ class TronDealerClient:
                 created_at=wallet_data.get("created_at"),
             )
 
-            logger.info(
-                f"Successfully assigned wallet {wallet.address} with id {wallet.id}"
-            )
+            logger.info(f"Successfully assigned wallet {wallet.address} with id {wallet.id}")
             return wallet
 
         except TronDealerApiError:
@@ -303,9 +283,7 @@ class TronDealerClient:
             )
             raise TronDealerApiError(500, f"Wallet assignment failed: {str(e)}")
         if not wallet_data:
-            raise TronDealerApiError(
-                500, "Invalid response format: missing wallet data"
-            )
+            raise TronDealerApiError(500, "Invalid response format: missing wallet data")
 
         return BscWallet(
             id=wallet_data["id"],
@@ -325,21 +303,15 @@ class TronDealerClient:
         Returns:
             WalletBalance: Wallet with balances
         """
-        response_data = await self._make_request(
-            "wallets/balance", {"address": address}
-        )
+        response_data = await self._make_request("wallets/balance", {"address": address})
 
         wallet_data = response_data.get("wallet")
         balances_data = response_data.get("balances")
 
         if not wallet_data:
-            raise TronDealerApiError(
-                500, "Invalid response format: missing wallet data"
-            )
+            raise TronDealerApiError(500, "Invalid response format: missing wallet data")
         if not balances_data:
-            raise TronDealerApiError(
-                500, "Invalid response format: missing balances data"
-            )
+            raise TronDealerApiError(500, "Invalid response format: missing balances data")
 
         return WalletBalance(
             address=wallet_data["address"],
@@ -425,9 +397,7 @@ class TronDealerClient:
 
         payment_data = response_data.get("payment")
         if not payment_data:
-            raise TronDealerApiError(
-                500, "Invalid response format: missing payment data"
-            )
+            raise TronDealerApiError(500, "Invalid response format: missing payment data")
 
         return PaymentOrder(
             order_id=payment_data.get("order_id", ""),
@@ -454,10 +424,6 @@ class TronDealerClient:
 
         qr_data = response_data.get("qr_code")
         if not qr_data:
-            raise TronDealerApiError(
-                500, "Invalid response format: missing qr_code data"
-            )
+            raise TronDealerApiError(500, "Invalid response format: missing qr_code data")
 
-        return PaymentQRCode(
-            qr_code=qr_data.get("code", ""), expires_at=qr_data.get("expires_at")
-        )
+        return PaymentQRCode(qr_code=qr_data.get("code", ""), expires_at=qr_data.get("expires_at"))

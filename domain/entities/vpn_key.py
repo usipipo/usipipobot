@@ -37,9 +37,7 @@ class VpnKey:
     last_seen_at: Optional[datetime] = None  # Última actividad del cliente
 
     data_limit_bytes: int = 5 * 1024**3  # 5 GB por defecto
-    billing_reset_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    billing_reset_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: Optional[datetime] = None  # Fecha de expiración de la clave
 
     def __post_init__(self):
@@ -97,9 +95,7 @@ class VpnKey:
             self.expires_at = self.expires_at.astimezone(timezone.utc)
 
     def __repr__(self):
-        return (
-            f"<VpnKey(name={self.name}, type={self.key_type}, active={self.is_active})>"
-        )
+        return f"<VpnKey(name={self.name}, type={self.key_type}, active={self.is_active})>"
 
     @property
     def used_mb(self) -> float:

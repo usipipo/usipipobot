@@ -67,17 +67,13 @@ class TestShowTicketsMenu:
     """Tests para mostrar el menú de tickets."""
 
     @pytest.mark.asyncio
-    async def test_show_tickets_menu(
-        self, admin_handler, mock_update, mock_context, mock_settings
-    ):
+    async def test_show_tickets_menu(self, admin_handler, mock_update, mock_context, mock_settings):
         """Test que el menú de tickets se muestra correctamente."""
         mock_query = MagicMock(spec=CallbackQuery)
         mock_query.data = "admin_tickets_menu"
         mock_update.callback_query = mock_query
 
-        with patch(
-            "application.services.ticket_service.TicketService"
-        ) as mock_ticket_service:
+        with patch("application.services.ticket_service.TicketService") as mock_ticket_service:
             mock_service_instance = MagicMock()
             mock_service_instance.count_open_tickets = AsyncMock(return_value=5)
             mock_ticket_service.return_value = mock_service_instance
@@ -100,9 +96,7 @@ class TestShowOpenTickets:
         mock_query.data = "admin_tickets_open"
         mock_update.callback_query = mock_query
 
-        with patch(
-            "application.services.ticket_service.TicketService"
-        ) as mock_ticket_service:
+        with patch("application.services.ticket_service.TicketService") as mock_ticket_service:
             mock_service_instance = MagicMock()
             mock_service_instance.get_pending_tickets = AsyncMock(return_value=[])
             mock_ticket_service.return_value = mock_service_instance
@@ -132,9 +126,7 @@ class TestShowOpenTickets:
             )
         ]
 
-        with patch(
-            "application.services.ticket_service.TicketService"
-        ) as mock_ticket_service:
+        with patch("application.services.ticket_service.TicketService") as mock_ticket_service:
             mock_service_instance = MagicMock()
             mock_service_instance.get_pending_tickets = AsyncMock(return_value=tickets)
             mock_ticket_service.return_value = mock_service_instance
@@ -246,16 +238,12 @@ class TestCategoryFilter:
         mock_query.data = "admin_tickets_filter_vpn"
         mock_update.callback_query = mock_query
 
-        with patch(
-            "application.services.ticket_service.TicketService"
-        ) as mock_ticket_service:
+        with patch("application.services.ticket_service.TicketService") as mock_ticket_service:
             mock_service_instance = MagicMock()
             mock_service_instance.get_tickets_by_category = AsyncMock(return_value=[])
             mock_ticket_service.return_value = mock_service_instance
 
-            result = await admin_handler.filter_tickets_by_category(
-                mock_update, mock_context
-            )
+            result = await admin_handler.filter_tickets_by_category(mock_update, mock_context)
 
             assert result == VIEWING_TICKETS
 
@@ -272,13 +260,9 @@ class TestViewAdminTicket:
         mock_query.data = f"admin_ticket_{uuid.uuid4()}"
         mock_update.callback_query = mock_query
 
-        with patch(
-            "application.services.ticket_service.TicketService"
-        ) as mock_ticket_service:
+        with patch("application.services.ticket_service.TicketService") as mock_ticket_service:
             mock_service_instance = MagicMock()
-            mock_service_instance.get_ticket_with_messages = AsyncMock(
-                return_value=None
-            )
+            mock_service_instance.get_ticket_with_messages = AsyncMock(return_value=None)
             mock_ticket_service.return_value = mock_service_instance
 
             result = await admin_handler.view_admin_ticket(mock_update, mock_context)
@@ -305,13 +289,9 @@ class TestViewAdminTicket:
             created_at=datetime.now(timezone.utc),
         )
 
-        with patch(
-            "application.services.ticket_service.TicketService"
-        ) as mock_ticket_service:
+        with patch("application.services.ticket_service.TicketService") as mock_ticket_service:
             mock_service_instance = MagicMock()
-            mock_service_instance.get_ticket_with_messages = AsyncMock(
-                return_value=(ticket, [])
-            )
+            mock_service_instance.get_ticket_with_messages = AsyncMock(return_value=(ticket, []))
             mock_ticket_service.return_value = mock_service_instance
 
             result = await admin_handler.view_admin_ticket(mock_update, mock_context)

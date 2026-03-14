@@ -13,26 +13,13 @@ from utils.message_separators import (
 
 # Separadores predefinidos para consistencia visual
 _SEP_HEADER = (
-    MessageSeparatorBuilder()
-    .compact()
-    .style("double")
-    .length(TELEGRAM_MOBILE_WIDTH)
-    .build()
+    MessageSeparatorBuilder().compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
 )
 _SEP_DIVIDER = (
-    MessageSeparatorBuilder()
-    .compact()
-    .style("simple")
-    .length(TELEGRAM_MOBILE_WIDTH)
-    .build()
+    MessageSeparatorBuilder().compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
 )
 _SEP_DECORATIVE = (
-    MessageSeparatorBuilder()
-    .compact()
-    .style("bold")
-    .length(9)
-    .with_emoji("🔹", "both")
-    .build()
+    MessageSeparatorBuilder().compact().style("bold").length(9).with_emoji("🔹", "both").build()
 )
 
 
@@ -45,9 +32,7 @@ class OperationsMessages:
         # Header del menú con estructura moderna/tech
         _HEADER = f"{_SEP_HEADER}\n" "🔧 *CENTRO DE OPERACIONES*\n" f"{_SEP_HEADER}\n"
 
-        _CREDITS_INDICATOR = (
-            "\n" "💎 *Créditos disponibles:* `{credits}`\n" f"{_SEP_DIVIDER}\n"
-        )
+        _CREDITS_INDICATOR = "\n" "💎 *Créditos disponibles:* `{credits}`\n" f"{_SEP_DIVIDER}\n"
 
         _TREE_STRUCTURE = (
             "\n"
@@ -144,9 +129,7 @@ class OperationsMessages:
             .build()
         )
 
-        HISTORY_HEADER = (
-            section_separator("Historial de Transacciones", "📜") + f"{_SEP_DOUBLE}\n"
-        )
+        HISTORY_HEADER = section_separator("Historial de Transacciones", "📜") + f"{_SEP_DOUBLE}\n"
 
         NO_TRANSACTIONS = (
             section_separator("Sin Transacciones", "📭")
@@ -163,14 +146,12 @@ class OperationsMessages:
         )
 
         HISTORY_FOOTER = (
-            f"{_SEP_DOUBLE}\n\n"
-            "💵 Total: {total_usdt} USDT | 📦 {total_count} transacciones"
+            f"{_SEP_DOUBLE}\n\n" "💵 Total: {total_usdt} USDT | 📦 {total_count} transacciones"
         )
 
         PAGE_FOOTER = "\n📄 Página {page}"
 
     class Success:
         OPERATION_COMPLETED = (
-            "✅ **Operacion Completada**\n\n"
-            "Tu solicitud ha sido procesada exitosamente."
+            "✅ **Operacion Completada**\n\n" "Tu solicitud ha sido procesada exitosamente."
         )

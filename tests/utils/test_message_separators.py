@@ -127,12 +127,7 @@ class TestMessageSeparatorBuilder:
     def test_chaining_methods(self):
         """Test encadenamiento de métodos."""
         result = (
-            MessageSeparatorBuilder()
-            .compact()
-            .style("double")
-            .length(15)
-            .with_emoji("✨")
-            .build()
+            MessageSeparatorBuilder().compact().style("double").length(15).with_emoji("✨").build()
         )
 
         assert "✨" in result

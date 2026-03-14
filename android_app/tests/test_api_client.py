@@ -1,4 +1,5 @@
 """Tests for api_client module."""
+
 import pytest
 import pytest_asyncio
 from src.services.api_client import ApiClient

@@ -69,13 +69,9 @@ def get_buy_gb_callback_handlers(data_package_service: DataPackageService):
         CallbackQueryHandler(handler.view_data_summary, pattern="^view_data_summary$"),
         CallbackQueryHandler(handler.show_slots_menu, pattern="^buy_slots_menu$"),
         # Slots payment handlers
-        CallbackQueryHandler(
-            handler.select_slot_payment_method, pattern="^select_slot_payment_"
-        ),
+        CallbackQueryHandler(handler.select_slot_payment_method, pattern="^select_slot_payment_"),
         CallbackQueryHandler(handler.pay_slots_with_stars, pattern="^pay_slots_stars_"),
-        CallbackQueryHandler(
-            handler.pay_slots_with_crypto, pattern="^pay_slots_crypto_"
-        ),
+        CallbackQueryHandler(handler.pay_slots_with_crypto, pattern="^pay_slots_crypto_"),
     ]
 
 

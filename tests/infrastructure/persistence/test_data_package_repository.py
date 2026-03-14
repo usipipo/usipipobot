@@ -63,9 +63,7 @@ def sample_model():
 
 class TestSaveNewPackage:
     @pytest.mark.asyncio
-    async def test_save_new_package_sets_id(
-        self, repository, mock_session, sample_data_package
-    ):
+    async def test_save_new_package_sets_id(self, repository, mock_session, sample_data_package):
         mock_session.get.return_value = None
 
         result = await repository.save(sample_data_package, current_user_id=123456789)
@@ -87,9 +85,7 @@ class TestSaveNewPackage:
 
 class TestGetById:
     @pytest.mark.asyncio
-    async def test_get_by_id_returns_entity(
-        self, repository, mock_session, sample_model
-    ):
+    async def test_get_by_id_returns_entity(self, repository, mock_session, sample_model):
         package_id = sample_model.id
         mock_session.get.return_value = sample_model
 
@@ -102,9 +98,7 @@ class TestGetById:
         assert result.data_limit_bytes == sample_model.data_limit_bytes
 
     @pytest.mark.asyncio
-    async def test_get_by_id_returns_none_when_not_found(
-        self, repository, mock_session
-    ):
+    async def test_get_by_id_returns_none_when_not_found(self, repository, mock_session):
         package_id = uuid.uuid4()
         mock_session.get.return_value = None
 
@@ -115,9 +109,7 @@ class TestGetById:
 
 class TestGetByUser:
     @pytest.mark.asyncio
-    async def test_get_by_user_returns_list(
-        self, repository, mock_session, sample_model
-    ):
+    async def test_get_by_user_returns_list(self, repository, mock_session, sample_model):
         scalars_mock = MagicMock()
         scalars_mock.all.return_value = [sample_model]
         result_mock = MagicMock()
@@ -131,9 +123,7 @@ class TestGetByUser:
         assert result[0].user_id == 123456789
 
     @pytest.mark.asyncio
-    async def test_get_get_by_user_returns_empty_list_on_error(
-        self, repository, mock_session
-    ):
+    async def test_get_get_by_user_returns_empty_list_on_error(self, repository, mock_session):
         mock_session.execute.side_effect = [None, Exception("DB error")]
 
         result = await repository.get_by_user(123456789, current_user_id=123456789)
@@ -146,9 +136,7 @@ class TestUpdateUsage:
     async def test_update_usage_returns_true_on_success(self, repository, mock_session):
         package_id = uuid.uuid4()
 
-        result = await repository.update_usage(
-            package_id, 1024, current_user_id=123456789
-        )
+        result = await repository.update_usage(package_id, 1024, current_user_id=123456789)
 
         mock_session.execute.assert_called()
         mock_session.commit.assert_called_once()
@@ -159,9 +147,7 @@ class TestUpdateUsage:
         package_id = uuid.uuid4()
         mock_session.execute.side_effect = [None, Exception("DB error")]
 
-        result = await repository.update_usage(
-            package_id, 1024, current_user_id=123456789
-        )
+        result = await repository.update_usage(package_id, 1024, current_user_id=123456789)
 
         mock_session.rollback.assert_called_once()
         assert result is False

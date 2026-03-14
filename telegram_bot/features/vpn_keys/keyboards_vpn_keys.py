@@ -35,9 +35,7 @@ class VpnKeysKeyboards:
         Returns:
             InlineKeyboardMarkup: Teclado de cancelación
         """
-        keyboard = [
-            [InlineKeyboardButton("❌ Cancelar", callback_data="cancel_create_key")]
-        ]
+        keyboard = [[InlineKeyboardButton("❌ Cancelar", callback_data="cancel_create_key")]]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
@@ -53,25 +51,17 @@ class VpnKeysKeyboards:
         """
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "✏️ Renombrar", callback_data="key_rename_{key_id}"
-                ),
+                InlineKeyboardButton("✏️ Renombrar", callback_data="key_rename_{key_id}"),
                 # Delete button removed - prevents abuse of free 5GB
             ],
         ]
 
         if is_admin:
             keyboard.append(
-                [
-                    InlineKeyboardButton(
-                        "🔧 Admin Options", callback_data="key_admin_{key_id}"
-                    )
-                ]
+                [InlineKeyboardButton("🔧 Admin Options", callback_data="key_admin_{key_id}")]
             )
 
-        keyboard.append(
-            [InlineKeyboardButton("🔙 Volver", callback_data="back_to_keys")]
-        )
+        keyboard.append([InlineKeyboardButton("🔙 Volver", callback_data="back_to_keys")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -88,23 +78,17 @@ class VpnKeysKeyboards:
         """
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "🔑 Comprar Slots Extra", callback_data="buy_slots_menu"
-                ),
+                InlineKeyboardButton("🔑 Comprar Slots Extra", callback_data="buy_slots_menu"),
                 InlineKeyboardButton("📦 Ver Planes", callback_data="buy_gb_menu"),
             ],
             [
-                InlineKeyboardButton(
-                    "🗑️ Gestionar Llaves", callback_data="key_management"
-                ),
+                InlineKeyboardButton("🗑️ Gestionar Llaves", callback_data="key_management"),
                 InlineKeyboardButton("🔙 Volver", callback_data="main_menu"),
             ],
         ]
 
         if is_admin:
-            keyboard.insert(
-                0, [InlineKeyboardButton("🔧 Panel Admin", callback_data="admin")]
-            )
+            keyboard.insert(0, [InlineKeyboardButton("🔧 Panel Admin", callback_data="admin")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -127,19 +111,13 @@ class VpnKeysKeyboards:
             icon = "🌐" if key.type.lower() == "outline" else "🔒"
             button_text = f"{icon} {key.name}"
             callback_data = f"key_details_{key.id}"
-            keyboard.append(
-                [InlineKeyboardButton(button_text, callback_data=callback_data)]
-            )
+            keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
 
         # Opciones adicionales
-        keyboard.append(
-            [InlineKeyboardButton("➕ Crear Nueva", callback_data="create_key")]
-        )
+        keyboard.append([InlineKeyboardButton("➕ Crear Nueva", callback_data="create_key")])
 
         if is_admin:
-            keyboard.append(
-                [InlineKeyboardButton("🔧 Admin Keys", callback_data="admin_keys")]
-            )
+            keyboard.append([InlineKeyboardButton("🔧 Admin Keys", callback_data="admin_keys")])
 
         keyboard.append([InlineKeyboardButton("🔙 Volver", callback_data="main_menu")])
 

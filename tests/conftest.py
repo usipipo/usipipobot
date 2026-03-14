@@ -62,9 +62,7 @@ def mock_outline_client():
     )
     client.delete_key = AsyncMock(return_value=True)
     client.get_metrics = AsyncMock(return_value={"outline-key-123": 1024})
-    client.get_server_info = AsyncMock(
-        return_value={"is_healthy": True, "total_keys": 5}
-    )
+    client.get_server_info = AsyncMock(return_value={"is_healthy": True, "total_keys": 5})
     return client
 
 

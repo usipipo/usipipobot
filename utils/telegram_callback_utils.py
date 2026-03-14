@@ -115,9 +115,7 @@ def is_admin(user_id: int) -> bool:
     return user_id == int(settings.ADMIN_ID)
 
 
-def calculate_page_bounds(
-    total_items: int, page: int, items_per_page: int = 10
-) -> tuple:
+def calculate_page_bounds(total_items: int, page: int, items_per_page: int = 10) -> tuple:
     """
     Calculate page bounds for pagination.
 

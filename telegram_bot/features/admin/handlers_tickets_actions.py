@@ -32,9 +32,7 @@ class TicketsActionsMixin:
         for msg in messages:
             prefix = "👨‍💼 *Admin:*" if msg.is_from_admin else "👤 *Usuario:*"
             timestamp = msg.created_at.strftime("%d/%m %H:%M")
-            lines.append(
-                f"{prefix}\n" f"```\n{msg.message[:200]}\n```\n" f"🕐 {timestamp}\n"
-            )
+            lines.append(f"{prefix}\n" f"```\n{msg.message[:200]}\n```\n" f"🕐 {timestamp}\n")
         return "\n".join(lines)
 
     @admin_required
@@ -116,9 +114,7 @@ class TicketsActionsMixin:
             return VIEWING_TICKETS
 
     @admin_required
-    async def start_ticket_reply(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def start_ticket_reply(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Inicia respuesta a un ticket."""
         query = update.callback_query
         await self._safe_answer_query(query)
@@ -156,9 +152,7 @@ class TicketsActionsMixin:
         return REPLYING_TO_TICKET
 
     @admin_required
-    async def send_ticket_reply(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def send_ticket_reply(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Envía respuesta del admin al ticket."""
         if not update.effective_user or not update.message:
             return VIEWING_TICKETS
@@ -242,9 +236,7 @@ class TicketsActionsMixin:
         return VIEWING_TICKETS
 
     @admin_required
-    async def close_admin_ticket(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def close_admin_ticket(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Cierra un ticket desde el panel admin."""
         query = update.callback_query
         await self._safe_answer_query(query)
@@ -321,9 +313,7 @@ class TicketsActionsMixin:
         return VIEWING_TICKETS
 
     @admin_required
-    async def reopen_admin_ticket(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def reopen_admin_ticket(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Reabre un ticket cerrado."""
         query = update.callback_query
         await self._safe_answer_query(query)
@@ -363,9 +353,7 @@ class TicketsActionsMixin:
 
             # Reopen ticket
             admin_id = update.effective_user.id if update.effective_user else 0
-            result = await ticket_service.reopen_ticket(
-                ticket_id=ticket.id, admin_id=admin_id
-            )
+            result = await ticket_service.reopen_ticket(ticket_id=ticket.id, admin_id=admin_id)
 
             if result:
                 await self._safe_edit_message(

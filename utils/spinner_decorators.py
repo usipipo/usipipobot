@@ -16,9 +16,7 @@ from utils.logger import logger
 from utils.spinner_core import SpinnerManager
 
 
-def _extract_update_context(
-    args: tuple, kwargs: dict
-) -> tuple[Optional[Update], Optional[Any]]:
+def _extract_update_context(args: tuple, kwargs: dict) -> tuple[Optional[Update], Optional[Any]]:
     """Extrae update y context de los argumentos de una función."""
     update = None
     context = None
@@ -68,9 +66,7 @@ def with_spinner(
                         await asyncio.sleep(1.0 - duration)
                 if spinner_message_id and context:
                     if update.callback_query:
-                        logger.info(
-                            f"🔄 Spinner para callback será reemplazado por el handler"
-                        )
+                        logger.info(f"🔄 Spinner para callback será reemplazado por el handler")
                     else:
                         logger.info(f"🗑️  Eliminando spinner ID: {spinner_message_id}")
                         success = await SpinnerManager.delete_spinner_message(
@@ -159,9 +155,7 @@ def with_animated_spinner(
                     )
                 return result
             except Exception as e:
-                logger.error(
-                    f"Error en función con spinner animado {func.__name__}: {e}"
-                )
+                logger.error(f"Error en función con spinner animado {func.__name__}: {e}")
                 if animation_task:
                     animation_task.cancel()
                     try:
@@ -206,14 +200,10 @@ def _create_callback_spinner_decorator(operation_type: str):
                     update, operation_type
                 )
                 logger.info(f"🌀 Spinner enviado con ID: {spinner_message_id}")
-                result = await func(
-                    self, update, context, spinner_message_id, *args[3:], **kwargs
-                )
+                result = await func(self, update, context, spinner_message_id, *args[3:], **kwargs)
                 return result
             except Exception as e:
-                logger.error(
-                    f"❌ Error en función con spinner callback {func.__name__}: {e}"
-                )
+                logger.error(f"❌ Error en función con spinner callback {func.__name__}: {e}")
                 if spinner_message_id and context:
                     try:
                         logger.info(f"🗑️  Intentando eliminar spinner después de error")

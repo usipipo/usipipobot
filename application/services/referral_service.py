@@ -57,14 +57,10 @@ class ReferralService:
         Returns:
             Dict con resultado de la operación
         """
-        logger.info(
-            f"Starting referral registration: new_user={new_user_id}, code={referral_code}"
-        )
+        logger.info(f"Starting referral registration: new_user={new_user_id}, code={referral_code}")
 
         try:
-            referrer = await self.user_repo.get_by_referral_code(
-                referral_code, current_user_id
-            )
+            referrer = await self.user_repo.get_by_referral_code(referral_code, current_user_id)
 
             if not referrer:
                 logger.warning(f"Código de referido no encontrado: {referral_code}")
@@ -124,9 +120,7 @@ class ReferralService:
             )
             return {"success": False, "error": str(e)}
 
-    async def get_referral_stats(
-        self, user_id: int, current_user_id: int
-    ) -> ReferralStats:
+    async def get_referral_stats(self, user_id: int, current_user_id: int) -> ReferralStats:
         """
         Obtiene las estadísticas de referidos de un usuario.
 
@@ -166,9 +160,7 @@ class ReferralService:
         Returns:
             Dict con resultado del canje
         """
-        logger.info(
-            f"Starting credit redemption for data: user={user_id}, credits={credits}"
-        )
+        logger.info(f"Starting credit redemption for data: user={user_id}, credits={credits}")
 
         try:
             user = await self.user_repo.get_by_id(user_id, current_user_id)
@@ -190,9 +182,7 @@ class ReferralService:
 
             actual_credits = gb_to_add * credits_per_gb
 
-            await self.user_repo.update_referral_credits(
-                user_id, -actual_credits, current_user_id
-            )
+            await self.user_repo.update_referral_credits(user_id, -actual_credits, current_user_id)
 
             # Actualizar objeto en memoria para reflejar el descuento
             user.referral_credits -= actual_credits
@@ -227,9 +217,7 @@ class ReferralService:
             logger.error(f"Error canjeando créditos por datos: {e}")
             return {"success": False, "error": str(e)}
 
-    async def redeem_credits_for_slot(
-        self, user_id: int, current_user_id: int
-    ) -> Dict[str, Any]:
+    async def redeem_credits_for_slot(self, user_id: int, current_user_id: int) -> Dict[str, Any]:
         """
         Canjea créditos por un slot de clave adicional.
 

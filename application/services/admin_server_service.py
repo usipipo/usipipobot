@@ -67,9 +67,7 @@ class AdminServerService(IAdminServerService):
                     version=outline_info.get("version"),
                     uptime="Unknown",
                     error_message=(
-                        outline_info.get("error")
-                        if not outline_info.get("is_healthy")
-                        else None
+                        outline_info.get("error") if not outline_info.get("is_healthy") else None
                     ),
                 )
                 status["outline"] = outline_status.__dict__
@@ -103,8 +101,7 @@ class AdminServerService(IAdminServerService):
             active_users = sum(
                 1
                 for u in users
-                if getattr(u, "status", "").lower() == "active"
-                or getattr(u, "is_active", False)
+                if getattr(u, "status", "").lower() == "active" or getattr(u, "is_active", False)
             )
 
             total_keys = len(all_keys)

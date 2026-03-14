@@ -40,8 +40,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
             name=model.name,
             key_data=model.key_data,
             external_id=model.external_id or "",
-            created_at=_normalize_datetime(model.created_at)
-            or datetime.now(timezone.utc),
+            created_at=_normalize_datetime(model.created_at) or datetime.now(timezone.utc),
             is_active=model.is_active,
             used_bytes=model.used_bytes or 0,
             last_seen_at=_normalize_datetime(model.last_seen_at),
@@ -56,9 +55,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
             id=entity.id if entity.id else uuid.uuid4(),
             user_id=entity.user_id,
             key_type=(
-                entity.key_type.value
-                if isinstance(entity.key_type, KeyType)
-                else entity.key_type
+                entity.key_type.value if isinstance(entity.key_type, KeyType) else entity.key_type
             ),
             name=entity.name,
             key_data=entity.key_data,
@@ -104,9 +101,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
             logger.error(f"Error al guardar llave: {e}")
             raise
 
-    async def get_by_user_id(
-        self, telegram_id: int, current_user_id: int
-    ) -> List[VpnKey]:
+    async def get_by_user_id(self, telegram_id: int, current_user_id: int) -> List[VpnKey]:
         await self._set_current_user(current_user_id)
         try:
             query = select(VpnKeyModel).where(
@@ -145,9 +140,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
             logger.error(f"Error al obtener todas las llaves: {e}")
             return []
 
-    async def get_by_id(
-        self, key_id: uuid.UUID, current_user_id: int
-    ) -> Optional[VpnKey]:
+    async def get_by_id(self, key_id: uuid.UUID, current_user_id: int) -> Optional[VpnKey]:
         await self._set_current_user(current_user_id)
         try:
             model = await self.session.get(VpnKeyModel, key_id)
@@ -159,11 +152,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
     async def delete(self, key_id: uuid.UUID, current_user_id: int) -> bool:
         await self._set_current_user(current_user_id)
         try:
-            query = (
-                update(VpnKeyModel)
-                .where(VpnKeyModel.id == key_id)
-                .values(is_active=False)
-            )
+            query = update(VpnKeyModel).where(VpnKeyModel.id == key_id).values(is_active=False)
             await self.session.execute(query)
             await self.session.commit()
             return True
@@ -172,9 +161,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
             logger.error(f"Error al eliminar llave {key_id}: {e}")
             return False
 
-    async def update_usage(
-        self, key_id: uuid.UUID, used_bytes: int, current_user_id: int
-    ) -> bool:
+    async def update_usage(self, key_id: uuid.UUID, used_bytes: int, current_user_id: int) -> bool:
         await self._set_current_user(current_user_id)
         try:
             query = (
@@ -262,11 +249,7 @@ class PostgresKeyRepository(BasePostgresRepository, IKeyRepository):
                 key_uuid = uuid_module.UUID(key_id)
             except ValueError:
                 return False
-            query = (
-                update(VpnKeyModel)
-                .where(VpnKeyModel.id == key_uuid)
-                .values(is_active=False)
-            )
+            query = update(VpnKeyModel).where(VpnKeyModel.id == key_uuid).values(is_active=False)
             await self.session.execute(query)
             await self.session.commit()
             return True

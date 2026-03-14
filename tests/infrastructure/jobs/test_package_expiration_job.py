@@ -17,9 +17,7 @@ class TestExpirePackagesJob:
 
         await expire_packages_job(context)
 
-        mock_service.expire_old_packages.assert_called_once_with(
-            admin_user_id=settings.ADMIN_ID
-        )
+        mock_service.expire_old_packages.assert_called_once_with(admin_user_id=settings.ADMIN_ID)
 
     @pytest.mark.asyncio
     async def test_job_handles_exception(self):

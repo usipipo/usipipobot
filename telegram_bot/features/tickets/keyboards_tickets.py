@@ -35,25 +35,15 @@ class TicketKeyboards:
         """Selección de categoría para el ticket."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "🔌 VPN No Conecta", callback_data="tickets_cat_vpn"
-                ),
-                InlineKeyboardButton(
-                    "💳 Problema de Pago", callback_data="tickets_cat_payment"
-                ),
+                InlineKeyboardButton("🔌 VPN No Conecta", callback_data="tickets_cat_vpn"),
+                InlineKeyboardButton("💳 Problema de Pago", callback_data="tickets_cat_payment"),
             ],
             [
-                InlineKeyboardButton(
-                    "📱 Configuración", callback_data="tickets_cat_config"
-                ),
-                InlineKeyboardButton(
-                    "🐛 Error/Reporte", callback_data="tickets_cat_bug"
-                ),
+                InlineKeyboardButton("📱 Configuración", callback_data="tickets_cat_config"),
+                InlineKeyboardButton("🐛 Error/Reporte", callback_data="tickets_cat_bug"),
             ],
             [
-                InlineKeyboardButton(
-                    "❓ Otra Consulta", callback_data="tickets_cat_other"
-                ),
+                InlineKeyboardButton("❓ Otra Consulta", callback_data="tickets_cat_other"),
             ],
             [
                 InlineKeyboardButton("🔙 Cancelar", callback_data="tickets_menu"),
@@ -109,20 +99,14 @@ class TicketKeyboards:
             nav_buttons = []
             if page > 0:
                 prev_callback = f"tickets_page_{page - 1}"
-                nav_buttons.append(
-                    InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback)
-                )
+                nav_buttons.append(InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback))
             if has_more:
                 next_callback = f"tickets_page_{page + 1}"
-                nav_buttons.append(
-                    InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback)
-                )
+                nav_buttons.append(InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback))
             keyboard.append(nav_buttons)
 
         # Volver
-        keyboard.append(
-            [InlineKeyboardButton("🔙 Volver", callback_data="tickets_menu")]
-        )
+        keyboard.append([InlineKeyboardButton("🔙 Volver", callback_data="tickets_menu")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -141,16 +125,12 @@ class TicketKeyboards:
 
         if can_reply and status != TicketStatus.CLOSED:
             action_buttons.append(
-                InlineKeyboardButton(
-                    "💬 Responder", callback_data=f"tickets_reply_{ticket_id}"
-                )
+                InlineKeyboardButton("💬 Responder", callback_data=f"tickets_reply_{ticket_id}")
             )
 
         if can_close and status != TicketStatus.CLOSED:
             action_buttons.append(
-                InlineKeyboardButton(
-                    "🔒 Cerrar", callback_data=f"tickets_close_{ticket_id}"
-                )
+                InlineKeyboardButton("🔒 Cerrar", callback_data=f"tickets_close_{ticket_id}")
             )
 
         if action_buttons:
@@ -162,9 +142,7 @@ class TicketKeyboards:
                 InlineKeyboardButton("◀️ Volver a lista", callback_data="tickets_list"),
             ]
         )
-        keyboard.append(
-            [InlineKeyboardButton("🏠 Menú Principal", callback_data="tickets_menu")]
-        )
+        keyboard.append([InlineKeyboardButton("🏠 Menú Principal", callback_data="tickets_menu")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -172,9 +150,7 @@ class TicketKeyboards:
     def admin_menu(open_count: int = 0) -> InlineKeyboardMarkup:
         """Menú principal de administración de tickets."""
         open_text = (
-            f"📂 Tickets Abiertos ({open_count})"
-            if open_count > 0
-            else "📂 Tickets Abiertos"
+            f"📂 Tickets Abiertos ({open_count})" if open_count > 0 else "📂 Tickets Abiertos"
         )
 
         keyboard = [
@@ -182,9 +158,7 @@ class TicketKeyboards:
                 InlineKeyboardButton(open_text, callback_data="admin_tickets_open"),
             ],
             [
-                InlineKeyboardButton(
-                    "📋 Todos los Tickets", callback_data="admin_tickets"
-                ),
+                InlineKeyboardButton("📋 Todos los Tickets", callback_data="admin_tickets"),
             ],
             [
                 InlineKeyboardButton(
@@ -225,22 +199,16 @@ class TicketKeyboards:
                 prev_callback = f"admin_tickets_page_{page - 1}"
                 if filter_status:
                     prev_callback = f"admin_tickets_{filter_status}_page_{page - 1}"
-                nav_buttons.append(
-                    InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback)
-                )
+                nav_buttons.append(InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback))
             if has_more:
                 next_callback = f"admin_tickets_page_{page + 1}"
                 if filter_status:
                     next_callback = f"admin_tickets_{filter_status}_page_{page + 1}"
-                nav_buttons.append(
-                    InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback)
-                )
+                nav_buttons.append(InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback))
             keyboard.append(nav_buttons)
 
         # Volver
-        keyboard.append(
-            [InlineKeyboardButton("🔙 Volver", callback_data="admin_tickets_menu")]
-        )
+        keyboard.append([InlineKeyboardButton("🔙 Volver", callback_data="admin_tickets_menu")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -256,21 +224,15 @@ class TicketKeyboards:
 
         if status != TicketStatus.CLOSED:
             action_buttons.append(
-                InlineKeyboardButton(
-                    "💬 Responder", callback_data=f"admin_ticket_resp_{ticket_id}"
-                )
+                InlineKeyboardButton("💬 Responder", callback_data=f"admin_ticket_resp_{ticket_id}")
             )
             action_buttons.append(
-                InlineKeyboardButton(
-                    "🔒 Cerrar", callback_data=f"admin_ticket_close_{ticket_id}"
-                )
+                InlineKeyboardButton("🔒 Cerrar", callback_data=f"admin_ticket_close_{ticket_id}")
             )
 
         if status == TicketStatus.CLOSED:
             action_buttons.append(
-                InlineKeyboardButton(
-                    "🔄 Reabrir", callback_data=f"admin_ticket_reopen_{ticket_id}"
-                )
+                InlineKeyboardButton("🔄 Reabrir", callback_data=f"admin_ticket_reopen_{ticket_id}")
             )
 
         if action_buttons:
@@ -279,14 +241,10 @@ class TicketKeyboards:
         # Navegación
         keyboard.append(
             [
-                InlineKeyboardButton(
-                    "◀️ Volver a lista", callback_data="admin_tickets"
-                ),
+                InlineKeyboardButton("◀️ Volver a lista", callback_data="admin_tickets"),
             ]
         )
-        keyboard.append(
-            [InlineKeyboardButton("🏠 Menú Admin", callback_data="admin_tickets_menu")]
-        )
+        keyboard.append([InlineKeyboardButton("🏠 Menú Admin", callback_data="admin_tickets_menu")])
 
         return InlineKeyboardMarkup(keyboard)
 
@@ -295,25 +253,15 @@ class TicketKeyboards:
         """Filtro de tickets por categoría."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "🔌 VPN", callback_data="admin_tickets_filter_vpn"
-                ),
-                InlineKeyboardButton(
-                    "💳 Pago", callback_data="admin_tickets_filter_payment"
-                ),
+                InlineKeyboardButton("🔌 VPN", callback_data="admin_tickets_filter_vpn"),
+                InlineKeyboardButton("💳 Pago", callback_data="admin_tickets_filter_payment"),
             ],
             [
-                InlineKeyboardButton(
-                    "📱 Config", callback_data="admin_tickets_filter_config"
-                ),
-                InlineKeyboardButton(
-                    "🐛 Bug", callback_data="admin_tickets_filter_bug"
-                ),
+                InlineKeyboardButton("📱 Config", callback_data="admin_tickets_filter_config"),
+                InlineKeyboardButton("🐛 Bug", callback_data="admin_tickets_filter_bug"),
             ],
             [
-                InlineKeyboardButton(
-                    "❓ Otros", callback_data="admin_tickets_filter_other"
-                ),
+                InlineKeyboardButton("❓ Otros", callback_data="admin_tickets_filter_other"),
             ],
             [
                 InlineKeyboardButton("📊 Todos", callback_data="admin_tickets"),

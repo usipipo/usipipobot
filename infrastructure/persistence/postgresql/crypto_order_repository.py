@@ -58,9 +58,7 @@ class PostgresCryptoOrderRepository(ICryptoOrderRepository):
         models = result.scalars().all()
         return [m.to_entity() for m in models]
 
-    async def mark_completed(
-        self, order_id: uuid.UUID, tx_hash: str
-    ) -> Optional[CryptoOrder]:
+    async def mark_completed(self, order_id: uuid.UUID, tx_hash: str) -> Optional[CryptoOrder]:
         model = await self.session.get(CryptoOrderModel, order_id)
         if not model:
             return None
@@ -108,9 +106,7 @@ class PostgresCryptoOrderRepository(ICryptoOrderRepository):
         )
         return result.scalar() or 0
 
-    async def get_expired_orders_with_wallets(
-        self, limit: int = 100
-    ) -> List[CryptoOrder]:
+    async def get_expired_orders_with_wallets(self, limit: int = 100) -> List[CryptoOrder]:
         """Obtiene órdenes expiradas que tienen wallets asignadas."""
         result = await self.session.execute(
             select(CryptoOrderModel)

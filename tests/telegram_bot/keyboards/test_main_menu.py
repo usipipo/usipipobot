@@ -52,9 +52,7 @@ class TestMainMenuKeyboard:
 
     def test_main_menu_with_admin_without_miniapp(self):
         """Test admin menu without miniapp URL."""
-        result = MainMenuKeyboard.main_menu_with_admin(
-            admin_id=123, current_user_id=123
-        )
+        result = MainMenuKeyboard.main_menu_with_admin(admin_id=123, current_user_id=123)
 
         assert isinstance(result, InlineKeyboardMarkup)
         assert len(result.inline_keyboard) == 4

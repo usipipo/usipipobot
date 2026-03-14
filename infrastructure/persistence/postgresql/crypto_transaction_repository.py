@@ -29,16 +29,12 @@ class PostgresCryptoTransactionRepository(ICryptoTransactionRepository):
 
     async def get_by_tx_hash(self, tx_hash: str) -> Optional[CryptoTransaction]:
         result = await self.session.execute(
-            select(CryptoTransactionModel).where(
-                CryptoTransactionModel.tx_hash == tx_hash
-            )
+            select(CryptoTransactionModel).where(CryptoTransactionModel.tx_hash == tx_hash)
         )
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
 
-    async def get_by_user(
-        self, user_id: int, limit: int = 50
-    ) -> List[CryptoTransaction]:
+    async def get_by_user(self, user_id: int, limit: int = 50) -> List[CryptoTransaction]:
         result = await self.session.execute(
             select(CryptoTransactionModel)
             .where(CryptoTransactionModel.user_id == user_id)

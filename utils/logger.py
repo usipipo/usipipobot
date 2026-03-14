@@ -238,9 +238,7 @@ class Logger:
         log_method(message, *args, **kwargs)
 
     # Método compatible con logger.py
-    def add_log_line(
-        self, message: str, level: str = "INFO", error: Optional[Exception] = None
-    ):
+    def add_log_line(self, message: str, level: str = "INFO", error: Optional[Exception] = None):
         """
         Registra un mensaje en el log (compatible con logger.py).
 
@@ -257,9 +255,7 @@ class Logger:
         self.log(level, message)
 
     # Métodos especializados de bot_logger.py
-    def log_bot_event(
-        self, level: str, message: str, user_id: Optional[int] = None, **kwargs
-    ):
+    def log_bot_event(self, level: str, message: str, user_id: Optional[int] = None, **kwargs):
         """Registra un evento del bot y lo añade al sistema de monitorización."""
         # Log con loguru
         log_method = getattr(_loguru_logger, level.lower(), _loguru_logger.info)
@@ -325,18 +321,14 @@ class Logger:
             message += f" - {details}"
         self.log_bot_event(level, message, user_id)
 
-    def log_referral_event(
-        self, event_type: str, user_id: int, details: Optional[str] = None
-    ):
+    def log_referral_event(self, event_type: str, user_id: int, details: Optional[str] = None):
         """Registra eventos de referidos."""
         message = f"Referral {event_type}"
         if details:
             message += f" - {details}"
         self.log_bot_event("INFO", message, user_id)
 
-    def log_system_event(
-        self, event: str, level: str = "INFO", details: Optional[str] = None
-    ):
+    def log_system_event(self, event: str, level: str = "INFO", details: Optional[str] = None):
         """Registra eventos del sistema."""
         message = f"System: {event}"
         if details:

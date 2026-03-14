@@ -93,8 +93,7 @@ def drop_caches(level: int = 1) -> bool:
         return True
     except PermissionError:
         logger.error(
-            "Permiso denegado para limpiar caché. "
-            "Ejecutar como root o añadir a sudoers."
+            "Permiso denegado para limpiar caché. " "Ejecutar como root o añadir a sudoers."
         )
         return False
     except Exception as e:
@@ -140,16 +139,13 @@ async def memory_cleanup_job(context: ContextTypes.DEFAULT_TYPE) -> None:
         critical = settings.MEMORY_CLEANUP_CRITICAL_PERCENT
 
         logger.debug(
-            f"🧠 RAM: {mem_info['used_gb']:.2f}/{mem_info['total_gb']:.2f} GB "
-            f"({used_percent}%)"
+            f"🧠 RAM: {mem_info['used_gb']:.2f}/{mem_info['total_gb']:.2f} GB " f"({used_percent}%)"
         )
 
         if used_percent < threshold:
             return
 
-        logger.info(
-            f"🚨 RAM alta detectada: {used_percent}% " f"(umbral: {threshold}%)"
-        )
+        logger.info(f"🚨 RAM alta detectada: {used_percent}% " f"(umbral: {threshold}%)")
 
         mem_before = dict(mem_info)
 
@@ -169,9 +165,7 @@ async def memory_cleanup_job(context: ContextTypes.DEFAULT_TYPE) -> None:
         mem_after = get_memory_info()
 
         if mem_after:
-            freed_kb = mem_after.get("available_kb", 0) - mem_before.get(
-                "available_kb", 0
-            )
+            freed_kb = mem_after.get("available_kb", 0) - mem_before.get("available_kb", 0)
             freed_mb = freed_kb / 1024 if freed_kb > 0 else 0
 
             logger.info(

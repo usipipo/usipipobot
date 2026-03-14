@@ -38,9 +38,7 @@ async def test_get_usage_returns_list(wireguard_client):
 @pytest.mark.asyncio
 async def test_get_usage_caches_results(wireguard_client):
     """Test that get_usage caches results to prevent race conditions."""
-    mock_output = (
-        "private\tkey\tport\t0\npubkey1\tkey\tendpoint\tallowed\t0\t100\t200\toff"
-    )
+    mock_output = "private\tkey\tport\t0\npubkey1\tkey\tendpoint\tallowed\t0\t100\t200\toff"
 
     with patch.object(
         wireguard_client, "_run_cmd", new_callable=AsyncMock, return_value=mock_output
@@ -58,12 +56,8 @@ async def test_get_usage_caches_results(wireguard_client):
 @pytest.mark.asyncio
 async def test_get_usage_cache_expires(wireguard_client):
     """Test that cache expires after TTL."""
-    mock_output1 = (
-        "private\tkey\tport\t0\npubkey1\tkey\tendpoint\tallowed\t0\t100\t200\toff"
-    )
-    mock_output2 = (
-        "private\tkey\tport\t0\npubkey2\tkey\tendpoint\tallowed\t0\t300\t400\toff"
-    )
+    mock_output1 = "private\tkey\tport\t0\npubkey1\tkey\tendpoint\tallowed\t0\t100\t200\toff"
+    mock_output2 = "private\tkey\tport\t0\npubkey2\tkey\tendpoint\tallowed\t0\t300\t400\toff"
 
     with patch.object(
         wireguard_client,
@@ -194,9 +188,7 @@ AllowedIPs = 10.0.0.3/32
         wireguard_client.conf_path.exists.return_value = True
         wireguard_client.conf_path.read_text.return_value = config_content
 
-        with patch.object(
-            wireguard_client, "_run_cmd", new_callable=AsyncMock
-        ) as mock_run_cmd:
+        with patch.object(wireguard_client, "_run_cmd", new_callable=AsyncMock) as mock_run_cmd:
             result = await wireguard_client.disable_peer("tg_123_abc123")
 
             assert result is True
@@ -263,9 +255,7 @@ AllowedIPs = 10.0.0.2/32
             new_callable=AsyncMock,
             side_effect=Exception("wg command failed"),
         ):
-            with patch(
-                "infrastructure.api_clients.client_wireguard.logger"
-            ) as mock_logger:
+            with patch("infrastructure.api_clients.client_wireguard.logger") as mock_logger:
                 result = await wireguard_client.disable_peer("tg_123_abc")
 
                 assert result is False
@@ -307,9 +297,7 @@ AllowedIPs = 10.0.0.3/32
         wireguard_client.conf_path.exists.return_value = True
         wireguard_client.conf_path.read_text.return_value = config_content
 
-        with patch.object(
-            wireguard_client, "_run_cmd", new_callable=AsyncMock
-        ) as mock_run_cmd:
+        with patch.object(wireguard_client, "_run_cmd", new_callable=AsyncMock) as mock_run_cmd:
             result = await wireguard_client.enable_peer("tg_123_abc123")
 
             assert result is True
@@ -340,9 +328,7 @@ AllowedIPs = 10.0.0.2/32
         wireguard_client.conf_path.exists.return_value = True
         wireguard_client.conf_path.read_text.return_value = config_content
 
-        with patch.object(
-            wireguard_client, "_run_cmd", new_callable=AsyncMock
-        ) as mock_run_cmd:
+        with patch.object(wireguard_client, "_run_cmd", new_callable=AsyncMock) as mock_run_cmd:
             result = await wireguard_client.enable_peer("tg_123_abc123")
 
             assert result is True
@@ -408,9 +394,7 @@ AllowedIPs = 10.0.0.2/32
             new_callable=AsyncMock,
             side_effect=Exception("wg command failed"),
         ):
-            with patch(
-                "infrastructure.api_clients.client_wireguard.logger"
-            ) as mock_logger:
+            with patch("infrastructure.api_clients.client_wireguard.logger") as mock_logger:
                 result = await wireguard_client.enable_peer("tg_123_abc")
 
                 assert result is False
@@ -452,17 +436,13 @@ AllowedIPs = 10.0.0.3/32
 
         wireguard_client.conf_path.read_text.return_value = config_content
 
-        with patch.object(
-            wireguard_client, "_run_cmd", new_callable=AsyncMock
-        ) as mock_run_cmd:
+        with patch.object(wireguard_client, "_run_cmd", new_callable=AsyncMock) as mock_run_cmd:
             result = await wireguard_client.delete_peer(
                 pub_key="test_pub_key_123", client_name="tg_123_abc123"
             )
 
             assert result is True
-            mock_run_cmd.assert_called_once_with(
-                "wg set wg0 peer test_pub_key_123 remove"
-            )
+            mock_run_cmd.assert_called_once_with("wg set wg0 peer test_pub_key_123 remove")
 
         # Verify config was updated to remove the peer block
         written_content = wireguard_client.conf_path.write_text.call_args[0][0]
@@ -544,9 +524,7 @@ AllowedIPs = 10.0.0.7/32
             assert result is True
 
         # Verify client file was checked and deleted
-        wireguard_client.clients_dir.__truediv__.assert_called_once_with(
-            "wg0-tg_789_xyz789.conf"
-        )
+        wireguard_client.clients_dir.__truediv__.assert_called_once_with("wg0-tg_789_xyz789.conf")
         mock_client_file.exists.assert_called_once()
         mock_client_file.unlink.assert_called_once()
 
@@ -594,9 +572,7 @@ AllowedIPs = 10.0.0.9/32
 
         wireguard_client.conf_path.read_text.return_value = config_content
 
-        with patch.object(
-            wireguard_client, "_run_cmd", new_callable=AsyncMock
-        ) as mock_run_cmd:
+        with patch.object(wireguard_client, "_run_cmd", new_callable=AsyncMock) as mock_run_cmd:
             # Trying to delete a client not in config, but with explicit pub_key
             result = await wireguard_client.delete_peer(
                 pub_key="fallback_pub_key", client_name="tg_not_in_config"
@@ -604,9 +580,7 @@ AllowedIPs = 10.0.0.9/32
 
             assert result is True
             # Should use the provided pub_key for wg command
-            mock_run_cmd.assert_called_once_with(
-                "wg set wg0 peer fallback_pub_key remove"
-            )
+            mock_run_cmd.assert_called_once_with("wg set wg0 peer fallback_pub_key remove")
 
     @pytest.mark.asyncio
     async def test_delete_peer_handles_exception(self, wireguard_client):
@@ -614,9 +588,7 @@ AllowedIPs = 10.0.0.9/32
         wireguard_client.conf_path.read_text.side_effect = Exception("IO error")
 
         with patch("infrastructure.api_clients.client_wireguard.logger") as mock_logger:
-            result = await wireguard_client.delete_peer(
-                pub_key="any_key", client_name="tg_any"
-            )
+            result = await wireguard_client.delete_peer(pub_key="any_key", client_name="tg_any")
 
             assert result is False
             mock_logger.error.assert_called_once()

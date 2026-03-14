@@ -44,9 +44,7 @@ class UsersActionsMixin:
             if result.success:
                 message = AdminMessages.Users.USER_SUSPENDED
             else:
-                message = AdminMessages.Error.OPERATION_FAILED.format(
-                    error=result.message
-                )
+                message = AdminMessages.Error.OPERATION_FAILED.format(error=result.message)
 
             await SpinnerManager.replace_spinner_with_message(
                 update,
@@ -84,9 +82,7 @@ class UsersActionsMixin:
             if result.success:
                 message = AdminMessages.Users.USER_REACTIVATED
             else:
-                message = AdminMessages.Error.OPERATION_FAILED.format(
-                    error=result.message
-                )
+                message = AdminMessages.Error.OPERATION_FAILED.format(error=result.message)
 
             await SpinnerManager.replace_spinner_with_message(
                 update,
@@ -103,9 +99,7 @@ class UsersActionsMixin:
             return ADMIN_MENU
 
     @admin_required
-    async def confirm_delete_user(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def confirm_delete_user(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra confirmación para eliminar usuario."""
         query = update.callback_query
         await self._safe_answer_query(query)
@@ -149,9 +143,7 @@ class UsersActionsMixin:
             if result.success:
                 message = AdminMessages.Users.USER_DELETED
             else:
-                message = AdminMessages.Error.OPERATION_FAILED.format(
-                    error=result.message
-                )
+                message = AdminMessages.Error.OPERATION_FAILED.format(error=result.message)
 
             await SpinnerManager.replace_spinner_with_message(
                 update,
@@ -168,9 +160,7 @@ class UsersActionsMixin:
             return ADMIN_MENU
 
     @admin_required
-    async def cancel_user_action(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def cancel_user_action(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Cancela una acción de usuario."""
         query = update.callback_query
         await self._safe_answer_query(query)

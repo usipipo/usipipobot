@@ -18,9 +18,7 @@ class AdminVpnKeyboards:
         """Main VPN management menu keyboard."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "📊 Estado Servidores", callback_data="vpn_status"
-                ),
+                InlineKeyboardButton("📊 Estado Servidores", callback_data="vpn_status"),
             ],
             [
                 InlineKeyboardButton(
@@ -28,9 +26,7 @@ class AdminVpnKeyboards:
                 ),
             ],
             [
-                InlineKeyboardButton(
-                    "🔵 Gestionar Outline", callback_data="vpn_manage_outline"
-                ),
+                InlineKeyboardButton("🔵 Gestionar Outline", callback_data="vpn_manage_outline"),
             ],
             [
                 InlineKeyboardButton(
@@ -46,9 +42,7 @@ class AdminVpnKeyboards:
         """Actions for a specific server type."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "🔑 Ver Claves", callback_data=f"vpn_list_keys_{server_type}"
-                ),
+                InlineKeyboardButton("🔑 Ver Claves", callback_data=f"vpn_list_keys_{server_type}"),
             ],
             [
                 InlineKeyboardButton(
@@ -63,9 +57,7 @@ class AdminVpnKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def key_actions(
-        key_id: str, is_active: bool, key_type: str
-    ) -> InlineKeyboardMarkup:
+    def key_actions(key_id: str, is_active: bool, key_type: str) -> InlineKeyboardMarkup:
         """Enable/Disable/Delete buttons for a key."""
         keyboard = []
         key_id_short = key_id[:8] if len(key_id) > 8 else key_id
@@ -157,9 +149,7 @@ class AdminVpnKeyboards:
                     callback_data=f"vpn_keys_page_{server_type}_{page - 1}",
                 )
             )
-        nav_row.append(
-            InlineKeyboardButton(f"📄 {page}/{total_pages}", callback_data="noop")
-        )
+        nav_row.append(InlineKeyboardButton(f"📄 {page}/{total_pages}", callback_data="noop"))
         if page < total_pages:
             nav_row.append(
                 InlineKeyboardButton(
@@ -170,11 +160,7 @@ class AdminVpnKeyboards:
         keyboard.append(nav_row)
 
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver", callback_data=f"vpn_manage_{server_type}"
-                )
-            ]
+            [InlineKeyboardButton("🔙 Volver", callback_data=f"vpn_manage_{server_type}")]
         )
         return InlineKeyboardMarkup(keyboard)
 
@@ -187,11 +173,5 @@ class AdminVpnKeyboards:
     @staticmethod
     def back_to_server(server_type: str) -> InlineKeyboardMarkup:
         """Keyboard to go back to server management."""
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver", callback_data=f"vpn_manage_{server_type}"
-                )
-            ]
-        ]
+        keyboard = [[InlineKeyboardButton("🔙 Volver", callback_data=f"vpn_manage_{server_type}")]]
         return InlineKeyboardMarkup(keyboard)

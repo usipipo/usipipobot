@@ -31,9 +31,7 @@ class TicketService:
         """Crea un nuevo ticket de soporte."""
         priority = self._get_priority_for_category(category)
 
-        ticket = Ticket(
-            user_id=user_id, category=category, priority=priority, subject=subject
-        )
+        ticket = Ticket(user_id=user_id, category=category, priority=priority, subject=subject)
 
         saved_ticket = await self.ticket_repo.save(ticket)
         logger.info(f"Ticket created: {saved_ticket.ticket_number} by user {user_id}")

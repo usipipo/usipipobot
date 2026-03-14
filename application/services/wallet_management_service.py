@@ -34,9 +34,7 @@ class WalletManagementService:
         self.crypto_order_repo = crypto_order_repo
         self.crypto_order_repo = crypto_order_repo
 
-    async def assign_wallet(
-        self, user_id: int, label: Optional[str] = None
-    ) -> Optional[BscWallet]:
+    async def assign_wallet(self, user_id: int, label: Optional[str] = None) -> Optional[BscWallet]:
         """
         Assign a BSC wallet to a user and update their profile.
 
@@ -70,9 +68,7 @@ class WalletManagementService:
             async with self.tron_dealer_client as client:
                 wallet = await client.assign_wallet(label=label)
 
-            logger.info(
-                f"Nueva wallet {wallet.address[:10]}... creada para user {user_id}"
-            )
+            logger.info(f"Nueva wallet {wallet.address[:10]}... creada para user {user_id}")
 
             # Update user's wallet address
             success = await self.user_repo.update_wallet_address(
@@ -119,9 +115,7 @@ class WalletManagementService:
             return None
 
         # Primero buscar wallet del mismo usuario
-        existing_wallet = await self.crypto_order_repo.get_reusable_wallet_for_user(
-            user_id
-        )
+        existing_wallet = await self.crypto_order_repo.get_reusable_wallet_for_user(user_id)
 
         if existing_wallet:
             return BscWallet(
@@ -230,9 +224,7 @@ class WalletManagementService:
         """
         if user.wallet_address:
             # TODO: Verify existing wallet is valid
-            logger.debug(
-                f"User {user.telegram_id} already has wallet {user.wallet_address}"
-            )
+            logger.debug(f"User {user.telegram_id} already has wallet {user.wallet_address}")
             # For now, return a minimal wallet object with existing address
             from infrastructure.api_clients.client_tron_dealer import WalletStatus
 
@@ -243,6 +235,4 @@ class WalletManagementService:
                 status=WalletStatus.ACTIVE,
             )
 
-        return await self.assign_wallet(
-            user.telegram_id, label=f"user-{user.telegram_id}"
-        )
+        return await self.assign_wallet(user.telegram_id, label=f"user-{user.telegram_id}")

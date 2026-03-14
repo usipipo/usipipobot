@@ -16,9 +16,7 @@ class ReferralMessages:
         HEADER = "🎁 *Sistema de Referidos*"
 
         @staticmethod
-        def referral_info(
-            code: str, credits: int, total_referrals: int, bot_username: str
-        ) -> str:
+        def referral_info(code: str, credits: int, total_referrals: int, bot_username: str) -> str:
             return f"""
 {ReferralMessages.Menu.HEADER}
 
@@ -132,9 +130,7 @@ Continuar?
         @staticmethod
         def get_share_url(code: str, bot_username: str) -> str:
             share_text = ReferralMessages.Share.get_share_text(code, bot_username)
-            encoded_text = (
-                share_text.replace(" ", "%20").replace("\n", "%0A").replace("!", "%21")
-            )
+            encoded_text = share_text.replace(" ", "%20").replace("\n", "%0A").replace("!", "%21")
             return f"https://t.me/share/url?url=&text={encoded_text}"
 
     class Credits:

@@ -135,9 +135,7 @@ class DataPackageService:
                 raise ValueError(f"Usuario no encontrado: {user_id}")
 
             # Get active packages for quick renewal bonus calculation
-            active_packages = await self.package_repo.get_valid_by_user(
-                user_id, current_user_id
-            )
+            active_packages = await self.package_repo.get_valid_by_user(user_id, current_user_id)
 
             # Calculate bonuses
             total_bonus_percent, bonuses = self.bonus_service.calculate_total_bonus(
@@ -151,9 +149,7 @@ class DataPackageService:
             total_multiplier = 1 + (option.bonus_percent + total_bonus_percent) / 100
             actual_data_bytes = int(data_limit_bytes * total_multiplier)
 
-            expires_at = datetime.now(timezone.utc) + timedelta(
-                days=option.duration_days
-            )
+            expires_at = datetime.now(timezone.utc) + timedelta(days=option.duration_days)
 
             new_package = DataPackage(
                 user_id=user_id,
@@ -226,9 +222,7 @@ class DataPackageService:
         if not user:
             raise ValueError(f"Usuario no encontrado: {user_id}")
 
-        success = await self.user_repo.increment_max_keys(
-            user_id, slots, current_user_id
-        )
+        success = await self.user_repo.increment_max_keys(user_id, slots, current_user_id)
 
         if not success:
             raise ValueError(f"Error al incrementar slots para usuario {user_id}")
@@ -247,9 +241,7 @@ class DataPackageService:
 
         return result
 
-    async def get_user_packages(
-        self, user_id: int, current_user_id: int
-    ) -> List[DataPackage]:
+    async def get_user_packages(self, user_id: int, current_user_id: int) -> List[DataPackage]:
         return await self.package_repo.get_by_user(user_id, current_user_id)
 
     async def get_user_active_packages(
@@ -262,9 +254,7 @@ class DataPackageService:
     ) -> List[DataPackage]:
         return await self.package_repo.get_valid_by_user(user_id, current_user_id)
 
-    async def get_user_data_summary(
-        self, user_id: int, current_user_id: int
-    ) -> Dict[str, Any]:
+    async def get_user_data_summary(self, user_id: int, current_user_id: int) -> Dict[str, Any]:
         logger.debug(f"📊 Obteniendo resumen de datos - user_id={user_id}")
         packages = await self.package_repo.get_valid_by_user(user_id, current_user_id)
         user = await self.user_repo.get_by_id(user_id, current_user_id)
@@ -319,15 +309,11 @@ class DataPackageService:
             "remaining_gb": total_remaining / (1024**3),
         }
 
-    async def consume_data(
-        self, user_id: int, bytes_used: int, current_user_id: int
-    ) -> bool:
+    async def consume_data(self, user_id: int, bytes_used: int, current_user_id: int) -> bool:
         packages = await self.package_repo.get_valid_by_user(user_id, current_user_id)
 
         if not packages:
-            logger.warning(
-                f"Sin paquetes válidos para consumir datos del usuario {user_id}"
-            )
+            logger.warning(f"Sin paquetes válidos para consumir datos del usuario {user_id}")
             return False
 
         remaining_to_consume = bytes_used
@@ -340,9 +326,7 @@ class DataPackageService:
             available = package.remaining_bytes
             if available > 0:
                 to_use = min(remaining_to_consume, available)
-                await self.package_repo.update_usage(
-                    package.id, to_use, current_user_id
-                )
+                await self.package_repo.update_usage(package.id, to_use, current_user_id)
                 remaining_to_consume -= to_use
 
         if remaining_to_consume > 0:
@@ -354,9 +338,7 @@ class DataPackageService:
 
     async def expire_old_packages(self, admin_user_id: int) -> int:
         try:
-            expired_packages = await self.package_repo.get_expired_packages(
-                admin_user_id
-            )
+            expired_packages = await self.package_repo.get_expired_packages(admin_user_id)
 
             count = 0
             for pkg in expired_packages:
