@@ -33,6 +33,48 @@ black .     # format code
 mypy .      # type checking
 ```
 
+### Pre-commit Hooks
+
+The project uses pre-commit hooks for automatic code formatting and quality checks.
+
+**Setup (One-time):**
+```bash
+# Install pre-commit hooks
+./scripts/setup-pre-commit.sh
+# Or manually:
+uv run pre-commit install
+```
+
+**Usage:**
+```bash
+# Hooks run automatically on git commit
+git add .
+git commit -m "feat: new feature"
+
+# Run manually on all files
+uv run pre-commit run --all-files
+
+# Run specific hook
+uv run pre-commit run black --files main.py
+
+# Update hook versions
+uv run pre-commit autoupdate
+```
+
+**Hooks Configured:**
+
+| Hook | Purpose | Auto-fix |
+|------|---------|----------|
+| trailing-whitespace | Remove trailing spaces | ✅ |
+| end-of-file-fixer | Ensure newline at EOF | ✅ |
+| check-yaml | Validate YAML syntax | ❌ |
+| check-json | Validate JSON syntax | ❌ |
+| detect-private-key | Detect leaked secrets | ❌ |
+| isort | Sort imports | ✅ |
+| black | Format code | ✅ |
+| detect-secrets | Advanced secret detection | ❌ |
+| flake8 | Python linting (critical issues only) | ❌ |
+
 ### Running the Bot
 ```bash
 python main.py                           # development
