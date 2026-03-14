@@ -13,6 +13,22 @@
         orientation: "vertical"
         md_bg_color: app.theme_cls.colors.bg_void if hasattr(app.theme_cls, 'colors') and hasattr(app.theme_cls.colors, 'bg_void') else HexColor("#0a0a0f")
 
+        # ==================== OFFLINE BANNER ====================
+        # Visible when device is offline
+        MDLabel:
+            text: "⚠️ Sin conexión. Los datos pueden no estar actualizados."
+            font_style: "Caption"
+            theme_text_color: "Custom"
+            text_color: [1, 1, 1, 1]  # White
+            size_hint_y: None
+            height: dp(30)
+            md_bg_color: [1, 0.267, 0.267, 1]  # Red
+            padding: [dp(10), dp(5)]
+            halign: "center"
+            valign: "center"
+            opacity: 1 if root.is_offline else 0
+            disabled: not root.is_offline
+
         # ==================== TOP BAR ====================
         MDBoxLayout:
             orientation: "horizontal"
@@ -30,6 +46,7 @@
                 size_hint_x: None
                 width: dp(40)
                 pos_hint: {"center_y": 0.5}
+                on_release: root.on_menu_pressed()
 
             # Logo/Title
             MDLabel:
@@ -39,15 +56,40 @@
                 text_color: app.theme_cls.colors.neon_cyan if hasattr(app.theme_cls, 'colors') and hasattr(app.theme_cls.colors, 'neon_cyan') else HexColor("#00f0ff")
                 halign: "center"
 
-            # Profile avatar button
-            MDIconButton:
-                icon: "account-circle"
-                theme_text_color: "Custom"
-                text_color: app.theme_cls.colors.neon_magenta if hasattr(app.theme_cls, 'colors') and hasattr(app.theme_cls.colors, 'neon_magenta') else HexColor("#ff00aa")
+            # Profile avatar button with user photo or initials
+            MDCard:
+                orientation: "vertical"
                 size_hint_x: None
                 width: dp(40)
                 pos_hint: {"center_y": 0.5}
+                radius: [dp(20)]  # Circle
+                ripple_behavior: True
                 on_release: root.on_profile_pressed()
+
+                MDBoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: dp(40)
+
+                    # User photo if available
+                    MDSmallestButton:
+                        icon: "account-circle" if not root.user_avatar else ""
+                        source: root.user_avatar if root.user_avatar else ""
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.colors.neon_magenta if hasattr(app.theme_cls, 'colors') and hasattr(app.theme_cls.colors, 'neon_magenta') else HexColor("#ff00aa")
+                        size_hint: 1, 1
+                        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+
+                    # Fallback initials (shown when no photo)
+                    MDLabel:
+                        text: root.username[:2].upper() if root.username and not root.user_avatar else "??"
+                        font_style: "Caption"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.colors.neon_magenta if hasattr(app.theme_cls, 'colors') and hasattr(app.theme_cls.colors, 'neon_magenta') else HexColor("#ff00aa")
+                        halign: "center"
+                        valign: "center"
+                        opacity: 0 if root.user_avatar else 1
+                        md_bg_color: app.theme_cls.colors.neon_magenta if hasattr(app.theme_cls, 'colors') and hasattr(app.theme_cls.colors, 'neon_magenta') else HexColor("#ff00aa")
 
         # ==================== SCROLLABLE CONTENT ====================
         MDScrollView:
@@ -59,6 +101,135 @@
                 spacing: dp(16)
                 size_hint_y: None
                 height: self.minimum_height
+
+                # ==================== SKELETON LOADER ====================
+                # Visible when loading data
+                MDBoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(16)
+                    size_hint_y: None
+                    height: dp(600)
+                    opacity: 1 if root.is_loading else 0
+                    disabled: not root.is_loading
+
+                    # Skeleton welcome card
+                    MDCard:
+                        orientation: "vertical"
+                        padding: [dp(20), dp(20)]
+                        spacing: dp(10)
+                        size_hint_y: None
+                        height: dp(140)
+                        md_bg_color: [0.2, 0.2, 0.25, 1]
+                        radius: [dp(12)]
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            size_hint_y: None
+                            height: dp(30)
+
+                            Widget:
+                                size_hint_x: None
+                                width: dp(100)
+
+                            MDSeparator:
+                                orientation: "horizontal"
+                                size_hint_x: 0.5
+                                pos_hint: {"center_y": 0.5}
+
+                            Widget:
+                                size_hint_x: None
+                                width: dp(50)
+
+                        Widget:
+                            size_hint_y: None
+                            height: dp(20)
+
+                        MDSeparator:
+                            orientation: "horizontal"
+                            size_hint_x: 0.3
+
+                    # Skeleton data cards
+                    MDGridLayout:
+                        cols: 2
+                        spacing: dp(12)
+                        size_hint_y: None
+                        height: dp(120)
+
+                        MDCard:
+                            md_bg_color: [0.2, 0.2, 0.25, 1]
+                            radius: [dp(12)]
+                        MDCard:
+                            md_bg_color: [0.2, 0.2, 0.25, 1]
+                            radius: [dp(12)]
+
+                    # Skeleton 2x2 grid
+                    MDGridLayout:
+                        cols: 2
+                        spacing: dp(12)
+                        size_hint_y: None
+                        height: dp(200)
+
+                        MDCard:
+                            md_bg_color: [0.2, 0.2, 0.25, 1]
+                            radius: [dp(12)]
+                        MDCard:
+                            md_bg_color: [0.2, 0.2, 0.25, 1]
+                            radius: [dp(12)]
+                        MDCard:
+                            md_bg_color: [0.2, 0.2, 0.25, 1]
+                            radius: [dp(12)]
+                        MDCard:
+                            md_bg_color: [0.2, 0.2, 0.25, 1]
+                            radius: [dp(12)]
+
+                    # Skeleton quick actions
+                    MDGridLayout:
+                        cols: 3
+                        spacing: dp(12)
+                        size_hint_y: None
+                        height: dp(100)
+
+                        MDCard:
+                            md_bg_color: [0.2, 0.2, 0.25, 1]
+                            radius: [dp(12)]
+                        MDCard:
+                            md_bg_color: [0.2, 0.2, 0.25, 1]
+                            radius: [dp(12)]
+                        MDCard:
+                            md_bg_color: [0.2, 0.2, 0.25, 1]
+                            radius: [dp(12)]
+
+                    # Skeleton recent keys
+                    MDCard:
+                        orientation: "vertical"
+                        padding: [dp(16), dp(16)]
+                        spacing: dp(12)
+                        size_hint_y: None
+                        height: dp(180)
+                        md_bg_color: [0.2, 0.2, 0.25, 1]
+                        radius: [dp(12)]
+
+                        MDSeparator:
+                            orientation: "horizontal"
+                            size_hint_x: 0.5
+
+                        MDSeparator:
+                            orientation: "horizontal"
+                            size_hint_x: 0.5
+
+                        MDSeparator:
+                            orientation: "horizontal"
+                            size_hint_x: 0.5
+
+                # ==================== CONTENT (visible when not loading) ====================
+                # Only show content when not loading
+                MDBoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(16)
+                    size_hint_y: None
+                    height: self.minimum_height
+                    opacity: 0 if root.is_loading else 1
+                    disabled: root.is_loading
 
                 # ==================== SUSPENDED OVERLAY ====================
                 # Visible only when user is suspended
@@ -385,7 +556,10 @@
                         spacing: dp(10)
                         md_bg_color: [0.2, 0.15, 0, 1]  # Dark amber tint
                         radius: [dp(12)]
-                        opacity: 1 if root.consumption_mode_enabled else 0.5
+                        opacity: 1 if root.consumption_mode_enabled else 0
+                        disabled: not root.consumption_mode_enabled
+                        size_hint_y: None
+                        height: dp(100) if root.consumption_mode_enabled else 0
 
                         MDIcon:
                             icon: "flash"
