@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Request
 from infrastructure.api.android.schemas import OTPRequest, OTPResponse
 from sqlalchemy import text
-from infrastructure.persistence.database import get_session
+from infrastructure.persistence.database import get_session_context
 from config import settings
 import secrets
 import redis.asyncio as redis
@@ -61,7 +61,7 @@ async def request_otp(request: OTPRequest, http_request: Request):
         )
 
     # Buscar usuario en base de datos
-    async with get_session() as session:
+    async with get_session_context() as session:
         if request.identifier.startswith("@"):
             # Buscar por username
             result = await session.execute(
