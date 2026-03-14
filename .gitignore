@@ -95,9 +95,6 @@ dump.rdb
 .opencode/
 .worktrees/
 
-# Worktrees
-.worktrees/
-
 # Virtual Environments (uv)
 .venv/
 venv/
@@ -108,3 +105,9 @@ android_app/venv/
 # DATABASE BACKUPS
 # =============================================================================
 backups/
+
+# =============================================================================
+# PRE-COMMIT
+# =============================================================================
+.pre-commit/
+.secrets.baseline
