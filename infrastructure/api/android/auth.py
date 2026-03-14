@@ -22,7 +22,7 @@ async def request_otp(request: OTPRequest, http_request: Request):
     - 5 solicitudes por IP por hora
     - 3 solicitudes por usuario por hora
     """
-    r = redis.from_url(settings.redis_url)
+    r = redis.from_url(settings.REDIS_URL)
 
     # Rate limiting por IP (5 por hora)
     client_ip = http_request.client.host if http_request.client else "unknown"
