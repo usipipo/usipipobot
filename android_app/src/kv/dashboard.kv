@@ -1,0 +1,189 @@
+// Dashboard screen KV for uSipipo VPN Android APK
+
+#:import HexColor kivy.utils.HexColor
+
+<DashboardScreen>:
+    name: "dashboard"
+    md_bg_color: app.theme_cls.bg_darkest if hasattr(app.theme_cls, 'bg_darkest') else HexColor("#0a0a0f")
+
+    MDBoxLayout:
+        orientation: "vertical"
+        md_bg_color: app.theme_cls.bg_darkest if hasattr(app.theme_cls, 'bg_darkest') else HexColor("#0a0a0f")
+
+        # App Bar
+        MDBoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: "56dp"
+            padding: "10dp"
+            md_bg_color: app.theme_cls.bg_dark if hasattr(app.theme_cls, 'bg_dark') else HexColor("#12121a")
+
+            MDIcon:
+                icon: "shield-account"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                size_hint_x: None
+                width: "40dp"
+
+            MDLabel:
+                text: "uSipipo VPN"
+                font_style: "Title"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+
+            MDIconButton:
+                icon: "logout"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                on_release: root.on_logout_pressed()
+
+        # Content area
+        MDScrollView:
+            do_scroll_x: False
+
+            MDBoxLayout:
+                orientation: "vertical"
+                padding: "20dp"
+                spacing: "20dp"
+                size_hint_y: None
+                height: self.minimum_height
+
+                # Welcome card
+                MDCard:
+                    orientation: "vertical"
+                    padding: "20dp"
+                    spacing: "10dp"
+                    size_hint_y: None
+                    height: "120dp"
+                    md_bg_color: app.theme_cls.bg_card if hasattr(app.theme_cls, 'bg_card') else HexColor("#1a1a24")
+                    radius: [dp(12)]
+
+                    MDLabel:
+                        text: "Bienvenido"
+                        font_style: "Headline"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                        size_hint_y: None
+                        height: self.texture_size[1]
+
+                    MDLabel:
+                        text: root.username
+                        font_style: "Subtitle"
+                        theme_text_color: "Secondary"
+                        size_hint_y: None
+                        height: self.texture_size[1]
+
+                    MDLabel:
+                        text: "VPN Manager"
+                        font_style: "Caption"
+                        theme_text_color: "Hint"
+                        size_hint_y: None
+                        height: self.texture_size[1]
+
+                # Main actions
+                MDLabel:
+                    text: "Acciones"
+                    font_style: "Title"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+                # VPN Keys card
+                MDCard:
+                    orientation: "horizontal"
+                    padding: "16dp"
+                    spacing: "16dp"
+                    size_hint_y: None
+                    height: "80dp"
+                    md_bg_color: app.theme_cls.bg_card if hasattr(app.theme_cls, 'bg_card') else HexColor("#1a1a24")
+                    radius: [dp(12)]
+                    on_release: root.on_keys_pressed()
+
+                    MDIcon:
+                        icon: "key-variant"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                        font_size: "32sp"
+                        size_hint_x: None
+                        width: "40dp"
+                        pos_hint: {"center_y": 0.5}
+
+                    MDLabel:
+                        text: "Mis Claves VPN"
+                        font_style: "Body"
+                        theme_text_color: "Primary"
+                        pos_hint: {"center_y": 0.5}
+
+                    MDIcon:
+                        icon: "chevron-right"
+                        theme_text_color: "Secondary"
+                        size_hint_x: None
+                        width: "24dp"
+                        pos_hint: {"center_y": 0.5}
+
+                # Data packages card
+                MDCard:
+                    orientation: "horizontal"
+                    padding: "16dp"
+                    spacing: "16dp"
+                    size_hint_y: None
+                    height: "80dp"
+                    md_bg_color: app.theme_cls.bg_card if hasattr(app.theme_cls, 'bg_card') else HexColor("#1a1a24")
+                    radius: [dp(12)]
+                    on_release: root.on_packages_pressed()
+
+                    MDIcon:
+                        icon: "database"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                        font_size: "32sp"
+                        size_hint_x: None
+                        width: "40dp"
+                        pos_hint: {"center_y": 0.5}
+
+                    MDLabel:
+                        text: "Paquetes de Datos"
+                        font_style: "Body"
+                        theme_text_color: "Primary"
+                        pos_hint: {"center_y": 0.5}
+
+                    MDIcon:
+                        icon: "chevron-right"
+                        theme_text_color: "Secondary"
+                        size_hint_x: None
+                        width: "24dp"
+                        pos_hint: {"center_y": 0.5}
+
+                # Support card
+                MDCard:
+                    orientation: "horizontal"
+                    padding: "16dp"
+                    spacing: "16dp"
+                    size_hint_y: None
+                    height: "80dp"
+                    md_bg_color: app.theme_cls.bg_card if hasattr(app.theme_cls, 'bg_card') else HexColor("#1a1a24")
+                    radius: [dp(12)]
+                    on_release: root.on_support_pressed()
+
+                    MDIcon:
+                        icon: "headset"
+                        theme_text_color: "Custom"
+                        text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                        font_size: "32sp"
+                        size_hint_x: None
+                        width: "40dp"
+                        pos_hint: {"center_y": 0.5}
+
+                    MDLabel:
+                        text: "Soporte"
+                        font_style: "Body"
+                        theme_text_color: "Primary"
+                        pos_hint: {"center_y": 0.5}
+
+                    MDIcon:
+                        icon: "chevron-right"
+                        theme_text_color: "Secondary"
+                        size_hint_x: None
+                        width: "24dp"
+                        pos_hint: {"center_y": 0.5}
