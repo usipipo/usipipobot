@@ -6,12 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities.consumption_invoice import ConsumptionInvoice, InvoiceStatus
-from domain.interfaces.iconsumption_invoice_repository import (
-    IConsumptionInvoiceRepository,
-)
-from infrastructure.persistence.postgresql.models.consumption_invoice import (
-    ConsumptionInvoiceModel,
-)
+from domain.interfaces.iconsumption_invoice_repository import IConsumptionInvoiceRepository
+from infrastructure.persistence.postgresql.models.consumption_invoice import ConsumptionInvoiceModel
 
 
 class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
@@ -20,9 +16,7 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def save(
-        self, invoice: ConsumptionInvoice, current_user_id: int
-    ) -> ConsumptionInvoice:
+    async def save(self, invoice: ConsumptionInvoice, current_user_id: int) -> ConsumptionInvoice:
         """Guarda una nueva factura o actualiza una existente."""
         model = ConsumptionInvoiceModel.from_entity(invoice)
         self.session.add(model)
@@ -35,9 +29,7 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
     ) -> Optional[ConsumptionInvoice]:
         """Busca una factura específica por su ID."""
         result = await self.session.execute(
-            select(ConsumptionInvoiceModel).where(
-                ConsumptionInvoiceModel.id == invoice_id
-            )
+            select(ConsumptionInvoiceModel).where(ConsumptionInvoiceModel.id == invoice_id)
         )
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
@@ -54,9 +46,7 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
         models = result.scalars().all()
         return [m.to_entity() for m in models]
 
-    async def get_by_user(
-        self, user_id: int, current_user_id: int
-    ) -> List[ConsumptionInvoice]:
+    async def get_by_user(self, user_id: int, current_user_id: int) -> List[ConsumptionInvoice]:
         """Recupera todas las facturas de un usuario."""
         result = await self.session.execute(
             select(ConsumptionInvoiceModel)
@@ -94,9 +84,7 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
         models = result.scalars().all()
         return [m.to_entity() for m in models]
 
-    async def get_expired_pending(
-        self, current_user_id: int
-    ) -> List[ConsumptionInvoice]:
+    async def get_expired_pending(self, current_user_id: int) -> List[ConsumptionInvoice]:
         """
         Recupera facturas pendientes que han expirado.
         Útil para limpieza periódica.
@@ -129,9 +117,7 @@ class PostgresConsumptionInvoiceRepository(IConsumptionInvoiceRepository):
         await self.session.commit()
         return True
 
-    async def mark_as_expired(
-        self, invoice_id: uuid.UUID, current_user_id: int
-    ) -> bool:
+    async def mark_as_expired(self, invoice_id: uuid.UUID, current_user_id: int) -> bool:
         """Marca una factura como expirada."""
         model = await self.session.get(ConsumptionInvoiceModel, invoice_id)
         if not model:

@@ -458,7 +458,7 @@ sudo -u postgres psql -f /opt/usipipobot/scripts/setup_db_user.sql
 
 ```sql
 -- Agregar columna para wallet encriptada
-ALTER TABLE users 
+ALTER TABLE users
     ADD COLUMN wallet_address_encrypted BYTEA,
     ADD COLUMN wallet_nonce BYTEA;
 
@@ -480,19 +480,19 @@ import os
 
 class EncryptedWalletRepository:
     """Repositorio para wallets con encriptación a nivel de aplicación."""
-    
+
     def __init__(self, session, encryption_key: str):
         self.session = session
         self.cipher = Fernet(encryption_key.encode())
-    
+
     async def save_wallet(self, telegram_id: int, wallet_address: str):
         """Guardar wallet encriptada."""
         # Encriptar con Fernet (AES-128-CBC)
         encrypted = self.cipher.encrypt(wallet_address.encode())
-        
+
         await self.session.execute(
             text("""
-                UPDATE users 
+                UPDATE users
                 SET wallet_address_encrypted = :encrypted,
                     updated_at = NOW()
                 WHERE telegram_id = :telegram_id
@@ -500,19 +500,19 @@ class EncryptedWalletRepository:
             {"telegram_id": telegram_id, "encrypted": encrypted}
         )
         await self.session.commit()
-    
+
     async def get_wallet(self, telegram_id: int) -> str | None:
         """Obtener wallet desencriptada."""
         result = await self.session.execute(
             text("""
-                SELECT wallet_address_encrypted 
-                FROM users 
+                SELECT wallet_address_encrypted
+                FROM users
                 WHERE telegram_id = :telegram_id
             """),
             {"telegram_id": telegram_id}
         )
         row = result.first()
-        
+
         if row and row[0]:
             # Desencriptar
             decrypted = self.cipher.decrypt(row[0])
@@ -701,18 +701,18 @@ from .config import CERT_PINS, BACKEND_URL
 
 class CertificatePinnedTransport(httpx.AsyncHTTPTransport):
     """Transporte HTTP con certificate pinning."""
-    
+
     def __init__(self, pins: List[str]):
         self.pins = pins
-        
+
         # Configurar SSL con pinning
         ssl_context = ssl.create_default_context()
         ssl_context.verify_mode = ssl.CERT_REQUIRED
-        
+
         # Implementar pinning manualmente (httpx no lo soporta nativamente)
         # Se necesita una implementación custom con urllib3
         super().__init__(ssl_context=ssl_context)
-    
+
     async def handle_async_request(self, request):
         # Verificar el pin del certificado antes de enviar la request
         # Implementación simplificada - en producción usar urllib3 con pinning
@@ -720,9 +720,9 @@ class CertificatePinnedTransport(httpx.AsyncHTTPTransport):
 
 def create_api_client() -> httpx.AsyncClient:
     """Crear cliente HTTP con certificate pinning."""
-    
+
     transport = CertificatePinnedTransport(pins=CERT_PINS)
-    
+
     client = httpx.AsyncClient(
         base_url=BACKEND_URL,
         transport=transport,
@@ -732,7 +732,7 @@ def create_api_client() -> httpx.AsyncClient:
             "Accept": "application/json",
         }
     )
-    
+
     return client
 ```
 
@@ -753,12 +753,12 @@ JWT_KEY = "usipipo_jwt_token"
 
 class SecureStorage:
     """Almacenamiento seguro usando el keystore de Android."""
-    
+
     @staticmethod
     def save_jwt(token: str) -> bool:
         """
         Guardar JWT en el keystore de Android.
-        
+
         Returns:
             bool: True si se guardó exitosamente
         """
@@ -769,12 +769,12 @@ class SecureStorage:
         except Exception as e:
             logger.error(f"Error guardando JWT: {e}")
             return False
-    
+
     @staticmethod
     def get_jwt() -> str | None:
         """
         Obtener JWT del keystore.
-        
+
         Returns:
             str | None: El token o None si no existe
         """
@@ -786,12 +786,12 @@ class SecureStorage:
         except Exception as e:
             logger.error(f"Error recuperando JWT: {e}")
             return None
-    
+
     @staticmethod
     def delete_jwt() -> bool:
         """
         Eliminar JWT del keystore.
-        
+
         Returns:
             bool: True si se eliminó exitosamente
         """
@@ -802,7 +802,7 @@ class SecureStorage:
         except Exception as e:
             logger.error(f"Error eliminando JWT: {e}")
             return False
-    
+
     @staticmethod
     def is_jwt_valid() -> bool:
         """
@@ -829,38 +829,38 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
     Middleware que agrega headers de seguridad HTTP a todas las respuestas.
     """
-    
+
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        
+
         # Prevenir clickjacking
         response.headers["X-Frame-Options"] = "DENY"
-        
+
         # Prevenir MIME type sniffing
         response.headers["X-Content-Type-Options"] = "nosniff"
-        
+
         # Prevenir leakage de información por referer
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        
+
         # Habilitar HSTS (solo en producción)
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-        
+
         # Content Security Policy (CSP) - restrictivo para API
         response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
-        
+
         # Permissions Policy (antes Feature Policy)
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        
+
         # Cache control para respuestas sensibles
         if request.url.path.startswith("/api/v1/"):
             response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
-        
+
         # Eliminar headers que revelan información
         response.headers.pop("Server", None)
         response.headers.pop("X-Powered-By", None)
-        
+
         return response
 ```
 
@@ -888,11 +888,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """
     Rate limiting con Redis para múltiples reglas por endpoint.
     """
-    
+
     def __init__(self, app, redis_url: str):
         super().__init__(app)
         self.redis = redis.from_url(redis_url)
-        
+
         # Reglas de rate limiting
         self.rules = {
             # Endpoint: (límite, ventana en segundos)
@@ -904,35 +904,35 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             "GET:/api/v1/notifications/pending": (120, 60),   # 120 por minuto
             "POST:/api/v1/tickets/create": (3, 3600),         # 3 por hora
         }
-    
+
     async def dispatch(self, request: Request, call_next):
         # Obtener identificador único del cliente
         client_id = await self._get_client_identifier(request)
         endpoint = f"{request.method}:{request.url.path}"
-        
+
         # Verificar si hay regla para este endpoint
         if endpoint in self.rules:
             limit, window = self.rules[endpoint]
-            
+
             # Construir key de Redis
             key = f"rate:{endpoint}:{client_id}"
-            
+
             # Obtener conteo actual
             current = await self.redis.get(key)
-            
+
             if current is None:
                 # Primer request, inicializar contador
                 await self.redis.setex(key, window, 1)
             elif int(current) >= limit:
                 # Rate limit excedido
                 ttl = await self.redis.ttl(key)
-                
+
                 # Log para monitoreo
                 logger.warning(
                     f"Rate limit excedido: {endpoint} - IP: {client_id} - "
                     f"Límite: {limit}/{window}s"
                 )
-                
+
                 return JSONResponse(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                     content={
@@ -944,10 +944,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             else:
                 # Incrementar contador
                 await self.redis.incr(key)
-        
+
         response = await call_next(request)
         return response
-    
+
     async def _get_client_identifier(self, request: Request) -> str:
         """
         Obtener identificador único del cliente.
@@ -959,7 +959,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             # Aquí se podría decodificar el JWT para obtener el telegram_id
             # Por ahora, usamos IP
             pass
-        
+
         # Usar IP address como fallback
         # Considerar X-Forwarded-For si hay proxy
         forwarded = request.headers.get("X-Forwarded-For")
@@ -967,7 +967,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             ip = forwarded.split(",")[0].strip()
         else:
             ip = request.client.host if request.client else "unknown"
-        
+
         # Hashear la IP para privacidad en logs
         return hashlib.sha256(ip.encode()).hexdigest()[:16]
 ```
@@ -982,15 +982,15 @@ import re
 
 class OTPRequest(BaseModel):
     """Request para solicitar OTP."""
-    
+
     identifier: str = Field(..., min_length=1, max_length=50)
-    
+
     @field_validator("identifier")
     @classmethod
     def validate_identifier(cls, v: str) -> str:
         """Validar que el identifier sea username o telegram_id válido."""
         v = v.strip()
-        
+
         # Si empieza con @, es username
         if v.startswith("@"):
             # Username: 5-32 caracteres, solo letras, números, guiones bajos
@@ -1005,16 +1005,16 @@ class OTPRequest(BaseModel):
                 raise ValueError("Debe ser un username (@usuario) o telegram_id válido")
             if not (1 <= int(v) <= 9223372036854775807):
                 raise ValueError("telegram_id fuera de rango válido")
-        
+
         return v
 
 
 class OTPVerify(BaseModel):
     """Request para verificar OTP."""
-    
+
     identifier: str
     otp: str = Field(..., min_length=6, max_length=6)
-    
+
     @field_validator("otp")
     @classmethod
     def validate_otp(cls, v: str) -> str:

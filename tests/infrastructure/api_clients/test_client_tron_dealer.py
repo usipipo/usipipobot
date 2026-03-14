@@ -142,9 +142,7 @@ class TestTronDealerClient:
         monkeypatch.setattr(client, "_client", mock_async_client)
 
         # Test
-        transactions = await client.get_transactions(
-            "0xbf1Ce072C22FcD4cb85Dab46BeB5ef4e5C456269"
-        )
+        transactions = await client.get_transactions("0xbf1Ce072C22FcD4cb85Dab46BeB5ef4e5C456269")
 
         assert transactions is not None
         assert isinstance(transactions, TransactionResponse)
@@ -220,9 +218,7 @@ class TestWalletManagementService:
     @pytest.fixture
     def service(self, mock_tron_dealer_client, mock_user_repo):
         """Fixture to create WalletManagementService instance."""
-        from application.services.wallet_management_service import (
-            WalletManagementService,
-        )
+        from application.services.wallet_management_service import WalletManagementService
 
         return WalletManagementService(mock_tron_dealer_client, mock_user_repo)
 
@@ -251,9 +247,7 @@ class TestWalletManagementService:
     async def test_get_balance(self, service, mock_tron_dealer_client):
         """Test balance retrieval."""
         # Mock API response
-        mock_balance = WalletBalance(
-            address="0x1234...", bnb=0.1, usdt=100.50, usdc=50.0
-        )
+        mock_balance = WalletBalance(address="0x1234...", bnb=0.1, usdt=100.50, usdc=50.0)
         mock_tron_dealer_client.get_balance.return_value = mock_balance
 
         # Create mock user
@@ -273,9 +267,7 @@ class TestWalletManagementService:
     async def test_get_transactions(self, service, mock_tron_dealer_client):
         """Test transactions retrieval."""
         # Mock API response
-        mock_response = TransactionResponse(
-            total=1, limit=50, offset=0, transactions=[]
-        )
+        mock_response = TransactionResponse(total=1, limit=50, offset=0, transactions=[])
         mock_tron_dealer_client.get_transactions.return_value = mock_response
 
         # Create mock user

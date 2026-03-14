@@ -9,11 +9,7 @@ from sqlalchemy import ForeignKey, Numeric, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from domain.entities.consumption_invoice import (
-    ConsumptionInvoice,
-    InvoiceStatus,
-    PaymentMethod,
-)
+from domain.entities.consumption_invoice import ConsumptionInvoice, InvoiceStatus, PaymentMethod
 from infrastructure.persistence.postgresql.models.base import Base
 
 
@@ -22,9 +18,7 @@ class ConsumptionInvoiceModel(Base):
 
     __tablename__ = "consumption_invoices"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     billing_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("consumption_billings.id", ondelete="CASCADE"),
@@ -53,12 +47,8 @@ class ConsumptionInvoiceModel(Base):
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True
     )
-    paid_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    transaction_hash: Mapped[Optional[str]] = mapped_column(
-        String(66), nullable=True, index=True
-    )
+    paid_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    transaction_hash: Mapped[Optional[str]] = mapped_column(String(66), nullable=True, index=True)
     telegram_payment_id: Mapped[Optional[str]] = mapped_column(
         String(100), nullable=True, index=True
     )

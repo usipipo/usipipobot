@@ -256,13 +256,13 @@
         {{ user.first_name[0] if user.first_name else '?' }}
     </div>
     {% endif %}
-    
+
     <div class="profile-name">{{ user.first_name }}</div>
     {% if user.username %}
     <div class="profile-username">@{{ user.username }}</div>
     {% endif %}
     <div class="profile-id">ID: {{ user.id }}</div>
-    
+
     {% if user.is_premium %}
     <div class="premium-badge">⭐ Premium</div>
     {% endif %}
@@ -329,7 +329,7 @@
         <span class="section-icon">💳</span>
         <span class="section-title">Historial de Transacciones</span>
     </div>
-    
+
     {% if transactions %}
     <div class="transaction-list">
         {% for tx in transactions %}

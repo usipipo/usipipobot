@@ -7,12 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities.consumption_billing import BillingStatus, ConsumptionBilling
-from domain.interfaces.iconsumption_billing_repository import (
-    IConsumptionBillingRepository,
-)
-from infrastructure.persistence.postgresql.models.consumption_billing import (
-    ConsumptionBillingModel,
-)
+from domain.interfaces.iconsumption_billing_repository import IConsumptionBillingRepository
+from infrastructure.persistence.postgresql.models.consumption_billing import ConsumptionBillingModel
 
 
 class PostgresConsumptionBillingRepository(IConsumptionBillingRepository):
@@ -21,9 +17,7 @@ class PostgresConsumptionBillingRepository(IConsumptionBillingRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def save(
-        self, billing: ConsumptionBilling, current_user_id: int
-    ) -> ConsumptionBilling:
+    async def save(self, billing: ConsumptionBilling, current_user_id: int) -> ConsumptionBilling:
         """Guarda un nuevo ciclo de facturación o actualiza uno existente."""
         model = ConsumptionBillingModel.from_entity(billing)
         self.session.add(model)
@@ -36,16 +30,12 @@ class PostgresConsumptionBillingRepository(IConsumptionBillingRepository):
     ) -> Optional[ConsumptionBilling]:
         """Busca un ciclo de facturación específico por su ID."""
         result = await self.session.execute(
-            select(ConsumptionBillingModel).where(
-                ConsumptionBillingModel.id == billing_id
-            )
+            select(ConsumptionBillingModel).where(ConsumptionBillingModel.id == billing_id)
         )
         model = result.scalar_one_or_none()
         return model.to_entity() if model else None
 
-    async def get_by_user(
-        self, user_id: int, current_user_id: int
-    ) -> List[ConsumptionBilling]:
+    async def get_by_user(self, user_id: int, current_user_id: int) -> List[ConsumptionBilling]:
         """Recupera todos los ciclos de facturación de un usuario."""
         result = await self.session.execute(
             select(ConsumptionBillingModel)

@@ -8,12 +8,8 @@ Version: 1.0.0 - Refactored from handlers_consumption.py
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram_bot.features.consumption.keyboards_consumption import (
-    ConsumptionKeyboards,
-)
-from telegram_bot.features.consumption.messages_consumption import (
-    ConsumptionMessages,
-)
+from telegram_bot.features.consumption.keyboards_consumption import ConsumptionKeyboards
+from telegram_bot.features.consumption.messages_consumption import ConsumptionMessages
 from utils.logger import logger
 from utils.telegram_utils import TelegramUtils
 
@@ -21,9 +17,7 @@ from utils.telegram_utils import TelegramUtils
 class StatusMixin:
     """Mixin para visualización del estado de consumo."""
 
-    async def view_my_consumption(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def view_my_consumption(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra el consumo actual del usuario."""
         query = update.callback_query
         if query:
@@ -35,9 +29,7 @@ class StatusMixin:
         user_id = update.effective_user.id
 
         try:
-            summary = await self.billing_service.get_current_consumption(
-                user_id, user_id
-            )
+            summary = await self.billing_service.get_current_consumption(user_id, user_id)
 
             if not summary:
                 message = ConsumptionMessages.ConsumptionStatus.NO_ACTIVE_CYCLE

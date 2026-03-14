@@ -8,9 +8,7 @@ from domain.entities.ticket import Ticket, TicketCategory, TicketStatus
 from domain.entities.ticket_message import TicketMessage
 from domain.interfaces.iticket_repository import ITicketRepository
 from infrastructure.persistence.postgresql.models.ticket import TicketModel
-from infrastructure.persistence.postgresql.models.ticket_message import (
-    TicketMessageModel,
-)
+from infrastructure.persistence.postgresql.models.ticket_message import TicketMessageModel
 
 
 class TicketRepository(ITicketRepository):
@@ -67,9 +65,7 @@ class TicketRepository(ITicketRepository):
 
     async def get_by_id(self, ticket_id: UUID) -> Optional[Ticket]:
         """Obtiene un ticket por su ID."""
-        result = await self.session.execute(
-            select(TicketModel).where(TicketModel.id == ticket_id)
-        )
+        result = await self.session.execute(select(TicketModel).where(TicketModel.id == ticket_id))
         model = result.scalar_one_or_none()
         return self._to_entity(model) if model else None
 
@@ -95,9 +91,7 @@ class TicketRepository(ITicketRepository):
 
     async def update(self, ticket: Ticket) -> Ticket:
         """Actualiza un ticket existente."""
-        result = await self.session.execute(
-            select(TicketModel).where(TicketModel.id == ticket.id)
-        )
+        result = await self.session.execute(select(TicketModel).where(TicketModel.id == ticket.id))
         model = result.scalar_one()
 
         model.category = ticket.category.value

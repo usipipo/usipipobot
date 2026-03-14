@@ -1,20 +1,22 @@
 """
 Main application class for uSipipo VPN Android APK.
 """
+
+import os
+
 from kivy.lang import Builder
 from kivymd.app import MDApp
 from kivymd.uix.screenmanager import MDScreenManager
 from loguru import logger
-import os
 
 # Importar configuración y colores desde config.py
 from src.config import COLORS
+from src.screens.dashboard_screen import DashboardScreen
+from src.screens.login_screen import LoginScreen
+from src.screens.otp_screen import OtpScreen
 
 # Import screens
 from src.screens.splash_screen import SplashScreen
-from src.screens.login_screen import LoginScreen
-from src.screens.otp_screen import OtpScreen
-from src.screens.dashboard_screen import DashboardScreen
 
 
 class uSipipoApp(MDApp):

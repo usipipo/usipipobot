@@ -58,18 +58,18 @@ class TreeNode:
 class MessageSeparatorBuilder:
     """
     Builder para crear separadores visuales de mensajes.
-    
+
     Uso:
         # Separador compacto simple
         sep = MessageSeparatorBuilder().compact().build()
-        
+
         # Separador con emoji
         sep = MessageSeparatorBuilder()\
             .compact()\
             .style('double')\
             .with_emoji('🔒')\
             .build()
-        
+
         # Estructura de árbol
         tree = MessageSeparatorBuilder()\
             .tree()\
@@ -219,16 +219,10 @@ class MessageSeparatorBuilder:
             # Hijos del nodo
             for j, child in enumerate(node.children):
                 is_last_child = j == len(node.children) - 1
-                child_prefix = (
-                    TreeSymbol.END.value if is_last_child else TreeSymbol.BRANCH.value
-                )
+                child_prefix = TreeSymbol.END.value if is_last_child else TreeSymbol.BRANCH.value
 
                 # Indentación con línea vertical si hay más hermanos
-                indent = (
-                    TreeSymbol.VERTICAL.value
-                    if not is_last_node
-                    else TreeSymbol.SPACE.value
-                )
+                indent = TreeSymbol.VERTICAL.value if not is_last_node else TreeSymbol.SPACE.value
                 lines.append(f"{indent}  {child_prefix} {child.label}")
 
         return "\n".join(lines) if lines else ""
@@ -260,9 +254,7 @@ class SeparatorTemplates:
     @staticmethod
     def double(length: int = 13) -> str:
         """Separador doble."""
-        return (
-            MessageSeparatorBuilder().compact().style("double").length(length).build()
-        )
+        return MessageSeparatorBuilder().compact().style("double").length(length).build()
 
     @staticmethod
     def bold(length: int = 13) -> str:
@@ -299,9 +291,7 @@ SEPARATOR_BOLD = SeparatorTemplates.bold()
 SEPARATOR_MENU = SeparatorTemplates.menu_divider()
 
 
-def compact_separator(
-    style: str = "simple", length: int = 13, emoji: Optional[str] = None
-) -> str:
+def compact_separator(style: str = "simple", length: int = 13, emoji: Optional[str] = None) -> str:
     """
     Función rápida para separador compacto.
 

@@ -116,7 +116,7 @@ except Exception as e:
 class PostgresDataPackageRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
-    
+
     async def save(self, package: DataPackage, current_user_id: int) -> DataPackage:
         try:
             model = DataPackageModel.from_entity(package)
@@ -138,7 +138,7 @@ class PostgresDataPackageRepository:
 class User:
     telegram_id: int
     username: Optional[str] = None
-    
+
     @property
     def is_active(self) -> bool:
         return self.status == UserStatus.ACTIVE
@@ -154,17 +154,17 @@ class TestPurchasePackage:
             package_repo=mock_package_repo,
             user_repo=mock_user_repo
         )
-    
+
     @pytest.mark.asyncio
     async def test_purchase_creates_package(self, service, mock_package_repo, mock_user_repo):
         mock_user_repo.get_by_id.return_value = MagicMock(telegram_id=123)
         mock_package_repo.save.return_value = DataPackage(...)
-        
+
         result = await service.purchase_package(
             user_id=123, package_type="basic",
             telegram_payment_id="pay_123", current_user_id=123
         )
-        
+
         assert result is not None
         mock_package_repo.save.assert_called_once()
 ```
@@ -239,19 +239,19 @@ All menu messages should follow this pattern:
 class FeatureMessages:
     class Menu:
         """Menu messages with visual hierarchy."""
-        
+
         _HEADER = (
             f"{_SEP_HEADER}\n"
             "🔧 *SECTION TITLE*\n"
             f"{_SEP_HEADER}\n"
         )
-        
+
         _DYNAMIC_INDICATOR = (
             "\n"
             "💎 *Metric:* `{value}`\n"
             f"{_SEP_DIVIDER}\n"
         )
-        
+
         _TREE_STRUCTURE = (
             "\n"
             "*Section label:*\n"
@@ -262,12 +262,12 @@ class FeatureMessages:
             "└─ 📜 *Option 2*\n"
             "   └─ Description\n"
         )
-        
+
         _FOOTER = (
             f"\n{_SEP_DIVIDER}\n"
             "👇 *Call to action:*"
         )
-        
+
         @classmethod
         def main_with_data(cls, value: int = 0) -> str:
             """Generate main message with dynamic data."""
@@ -277,7 +277,7 @@ class FeatureMessages:
             message += cls._TREE_STRUCTURE
             message += cls._FOOTER
             return message
-        
+
         # Legacy fallback (without dynamic data)
         MAIN = _HEADER + _TREE_STRUCTURE + _FOOTER
 ```

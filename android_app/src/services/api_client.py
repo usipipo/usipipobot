@@ -1,10 +1,11 @@
 """
 HTTP client for API communication with JWT handling.
 """
+
+from typing import Any, Dict, Optional
+
 import httpx
 from loguru import logger
-from typing import Optional, Dict, Any
-
 from src.config import BASE_URL, REQUEST_TIMEOUT
 from src.storage.secure_storage import SecureStorage
 
@@ -35,10 +36,7 @@ class ApiClient:
         return headers
 
     async def post(
-        self,
-        endpoint: str,
-        data: Dict[str, Any],
-        use_auth: bool = False
+        self, endpoint: str, data: Dict[str, Any], use_auth: bool = False
     ) -> Dict[str, Any]:
         """Make POST request."""
         url = f"{self.base_url}{endpoint}"
@@ -58,11 +56,7 @@ class ApiClient:
                 logger.error(f"Request error: {e}")
                 raise
 
-    async def get(
-        self,
-        endpoint: str,
-        use_auth: bool = False
-    ) -> Dict[str, Any]:
+    async def get(self, endpoint: str, use_auth: bool = False) -> Dict[str, Any]:
         """Make GET request."""
         url = f"{self.base_url}{endpoint}"
         headers = await self._get_headers() if use_auth else {}

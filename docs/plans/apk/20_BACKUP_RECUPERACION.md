@@ -118,49 +118,49 @@ alert() {
 
 cleanup_old_backups() {
     log "Limpiando backups antiguos..."
-    
+
     # Eliminar backups diarios más antiguos que RETENTION_DAYS
     find "$BACKUP_DIR" -name "usipipo_${DB_NAME}_*.sql.gz" -type f -mtime +${RETENTION_DAYS} -delete
-    
+
     # Mantener al menos 1 backup semanal (el más reciente de cada semana)
     # Mantener al menos 1 backup mensual (el más reciente de cada mes)
     # Esto requiere lógica más compleja, simplificado por ahora
-    
+
     log "Limpieza completada"
 }
 
 verify_backup() {
     local backup_file="$1"
-    
+
     log "Verificando backup: $backup_file"
-    
+
     # Verificar que el archivo existe y no está vacío
     if [ ! -f "$backup_file" ]; then
         alert "❌ Backup NO existe: $backup_file"
         return 1
     fi
-    
+
     if [ ! -s "$backup_file" ]; then
         alert "❌ Backup está VACÍO: $backup_file"
         return 1
     fi
-    
+
     # Verificar integridad del gzip
     if ! gzip -t "$backup_file" 2>/dev/null; then
         alert "❌ Backup CORRUPTO (gzip test falló): $backup_file"
         return 1
     fi
-    
+
     # Verificar que contiene SQL válido (buscar CREATE TABLE o INSERT)
     if ! zcat "$backup_file" | head -100 | grep -qE "(CREATE TABLE|INSERT INTO|pg_dump)"; then
         alert "❌ Backup parece inválido (no contiene SQL): $backup_file"
         return 1
     fi
-    
+
     # Obtener tamaño
     local size=$(du -h "$backup_file" | cut -f1)
     log "✅ Backup verificado: $size"
-    
+
     return 0
 }
 
@@ -190,25 +190,25 @@ if PGPASSWORD="${DB_PASSWORD}" pg_dump \
     --no-acl \
     --verbose \
     2>> "$LOG_FILE" | gzip -9 > "$BACKUP_FILE"; then
-    
+
     BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
     log "✅ Backup completado: $BACKUP_SIZE"
-    
+
     # Verificar backup
     if verify_backup "$BACKUP_FILE"; then
         # Calcular checksum
         CHECKSUM=$(md5sum "$BACKUP_FILE" | cut -d' ' -f1)
         echo "$CHECKSUM  $BACKUP_FILE" >> "${BACKUP_DIR}/checksums.txt"
-        
+
         log "Checksum MD5: $CHECKSUM"
-        
+
         # Notificar éxito
         alert "✅ Backup completado exitosamente\\n\\n📊 Base de datos: ${DB_NAME}\\n📦 Tamaño: ${BACKUP_SIZE}\\n📁 Archivo: $(basename $BACKUP_FILE)\\n🔐 Checksum: \`${CHECKSUM:0:16}...\`"
     else
         alert "❌ Backup falló la verificación\\n\\n📁 Archivo: $(basename $BACKUP_FILE)"
         exit 1
     fi
-    
+
 else
     alert "❌❌ Backup FALLÓ\\n\\n📊 Base de datos: ${DB_NAME}\\n\\n⚠️ Revisar logs para más detalles."
     exit 1
@@ -226,7 +226,7 @@ cleanup_old_backups
 
 if [ -n "${REMOTE_BACKUP_HOST:-}" ] && [ -n "${REMOTE_BACKUP_USER:-}" ]; then
     log "Copiando backup a servidor remoto..."
-    
+
     if scp "$BACKUP_FILE" "${REMOTE_BACKUP_USER}@${REMOTE_BACKUP_HOST}:/backups/postgresql/" 2>> "$LOG_FILE"; then
         log "✅ Backup remoto completado"
     else
@@ -345,24 +345,24 @@ CRITICAL_FILES=(
     # Application configs
     "/opt/usipipobot/.env"
     "/opt/usipipobot/config.py"
-    
+
     # System configs
     "/etc/caddy/Caddyfile"
     "/etc/postgresql/15/main/postgresql.conf"
     "/etc/postgresql/15/main/pg_hba.conf"
     "/etc/redis/redis.conf"
-    
+
     # Systemd services
     "/etc/systemd/system/usipipo-backend.service"
     "/etc/systemd/system/usipipo-bot.service"
     "/etc/systemd/system/usipipo-jobs.service"
-    
+
     # VPN configs
     "/etc/wireguard/wg0.conf"
-    
+
     # Scripts personalizados
     "/opt/usipipobot/scripts"
-    
+
     # SSH config (solo configuración, no keys)
     "/etc/ssh/sshd_config"
 )
@@ -381,17 +381,17 @@ done
 # Crear tarball
 log "Creando backup..."
 if tar -czf "$BACKUP_FILE" "${EXISTING_FILES[@]}" 2>> "$LOG_FILE"; then
-    
+
     BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
     log "✅ Backup completado: $BACKUP_SIZE"
-    
+
     # Calcular checksum
     CHECKSUM=$(md5sum "$BACKUP_FILE" | cut -d' ' -f1)
     echo "$CHECKSUM  $BACKUP_FILE" >> "${BACKUP_DIR}/checksums.txt"
-    
+
     # Notificar
     alert "✅ Backup de configuraciones completado\\n\\n📦 Tamaño: ${BACKUP_SIZE}\\n📁 Archivo: $(basename $BACKUP_FILE)"
-    
+
 else
     alert "❌ Backup de configuraciones FALLÓ"
     exit 1
@@ -471,20 +471,20 @@ tar -cf "$TEMP_TAR" "${SECRET_FILES[@]}" 2>/dev/null || true
 log "Encriptando backup..."
 if gpg --yes --batch --recipient "$GPG_RECIPIENT" \
     --encrypt --output "$BACKUP_FILE" "$TEMP_TAR" 2>> "$LOG_FILE"; then
-    
+
     BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
     log "✅ Backup encriptado completado: $BACKUP_SIZE"
-    
+
     # Calcular checksum
     CHECKSUM=$(md5sum "$BACKUP_FILE" | cut -d' ' -f1)
     echo "$CHECKSUM  $BACKUP_FILE" >> "${BACKUP_DIR}/checksums.txt"
-    
+
     # Notificar
     alert "🔐 Backup de secrets encriptado completado\\n\\n📦 Tamaño: ${BACKUP_SIZE}\\n🔒 Encriptado para: ${GPG_RECIPIENT}"
-    
+
     # Limpieza (mantener últimos 5 backups ENCRYPTADOS)
     ls -t "${BACKUP_DIR}"/usipipo_secrets_*.gpg | tail -n +6 | xargs -r rm
-    
+
 else
     alert "❌ Backup de secrets FALLÓ (encriptación)"
     exit 1
@@ -577,13 +577,13 @@ b2 create-bucket "$B2_BUCKET" allPrivate 2>/dev/null || log "Bucket ya existe"
 # Sincronizar backups
 log "Sincronizando backups..."
 if b2 sync "$BACKUP_LOCAL_DIR" "b2://${B2_BUCKET}/backups" 2>> "$LOG_FILE"; then
-    
+
     # Listar archivos en B2
     FILE_COUNT=$(b2 ls "b2://${B2_BUCKET}/backups" | wc -l)
-    
+
     log "✅ Sync completado: $FILE_COUNT archivos en B2"
     alert "☁️ Sync a Backblaze B2 completado\\n\\n📦 Archivos en cloud: ${FILE_COUNT}"
-    
+
 else
     alert "❌ Sync a Backblaze B2 FALLÓ"
     exit 1
@@ -619,7 +619,7 @@ if aws s3 sync "$BACKUP_LOCAL_DIR" "s3://${AWS_BUCKET}/backups" \
     --region "$AWS_REGION" \
     --storage-class STANDARD_IA \
     >> "$LOG_FILE" 2>&1; then
-    
+
     log "✅ Sync a S3 completado"
 else
     log "❌ Sync a S3 FALLÓ"

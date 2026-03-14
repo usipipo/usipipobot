@@ -25,12 +25,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # flake8: noqa: E402
-from application.services.consumption_billing_service import (
-    ConsumptionBillingService,
-)
-from application.services.consumption_invoice_service import (
-    ConsumptionInvoiceService,
-)
+from application.services.consumption_billing_service import ConsumptionBillingService
+from application.services.consumption_invoice_service import ConsumptionInvoiceService
 from config import settings
 from infrastructure.persistence.database import get_session_context
 from infrastructure.persistence.postgresql.consumption_billing_repository import (
@@ -39,9 +35,7 @@ from infrastructure.persistence.postgresql.consumption_billing_repository import
 from infrastructure.persistence.postgresql.consumption_invoice_repository import (
     PostgresConsumptionInvoiceRepository,
 )
-from infrastructure.persistence.postgresql.user_repository import (
-    PostgresUserRepository,
-)
+from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from utils.logger import logger
 
 
@@ -74,9 +68,7 @@ class ConsumptionCronJob:
 
             # Inicializar servicios
             billing_service = ConsumptionBillingService(billing_repo, user_repo)
-            invoice_service = ConsumptionInvoiceService(
-                invoice_repo, billing_repo, user_repo
-            )
+            invoice_service = ConsumptionInvoiceService(invoice_repo, billing_repo, user_repo)
 
             try:
                 logger.info("🔄 Iniciando cron job de consumo...")
@@ -92,9 +84,7 @@ class ConsumptionCronJob:
                         if not cycle.id:
                             continue
 
-                        success = await billing_service.close_billing_cycle(
-                            cycle.id, self.admin_id
-                        )
+                        success = await billing_service.close_billing_cycle(cycle.id, self.admin_id)
 
                         if success:
                             stats["cycles_closed"] += 1
@@ -115,9 +105,7 @@ class ConsumptionCronJob:
                         logger.error(f"❌ Error procesando ciclo {cycle.id}: {e}")
 
                 # 3. Cancelar facturas expiradas
-                expired_invoices = await invoice_service.cancel_expired_invoices(
-                    self.admin_id
-                )
+                expired_invoices = await invoice_service.cancel_expired_invoices(self.admin_id)
 
                 if expired_invoices > 0:
                     logger.info(f"🗑️ Facturas expiradas canceladas: {expired_invoices}")

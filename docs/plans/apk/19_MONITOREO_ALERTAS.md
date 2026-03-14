@@ -49,10 +49,10 @@ alert() {
 check_service() {
     local service=$1
     local display_name=$2
-    
+
     if ! systemctl is-active --quiet "$service"; then
         alert "❌ <b>$display_name</b> está INACTIVO\\n\\nIntentando reiniciar..."
-        
+
         # Intentar reiniciar automáticamente
         if sudo systemctl restart "$service"; then
             alert "✅ <b>$display_name</b> reiniciado exitosamente"
@@ -112,13 +112,13 @@ alert() {
     local level="$1"
     local message="$2"
     local emoji=""
-    
+
     case $level in
         "CRITICAL") emoji="🚨" ;;
         "WARNING") emoji="⚠️" ;;
         "INFO") emoji="ℹ️" ;;
     esac
-    
+
     curl -s -X POST "$ALERT_WEBHOOK" \
         -H "Content-Type: application/json" \
         -d "{
@@ -126,7 +126,7 @@ alert() {
             \"text\": \"${emoji} <b>${level}</b>\\n\\n${message}\",
             \"parse_mode\": \"HTML\"
         }"
-    
+
     log "${level}: ${message}"
 }
 
@@ -192,11 +192,11 @@ if [ -n "$INTERFACE" ]; then
     # RX/TX bytes
     RX_BYTES=$(cat /sys/class/net/$INTERFACE/statistics/rx_bytes)
     TX_BYTES=$(cat /sys/class/net/$INTERFACE/statistics/tx_bytes)
-    
+
     # Convertir a MB
     RX_MB=$((RX_BYTES / 1024 / 1024))
     TX_MB=$((TX_BYTES / 1024 / 1024))
-    
+
     log "Red ($INTERFACE): RX=${RX_MB}MB TX=${TX_MB}MB"
 fi
 
@@ -208,7 +208,7 @@ if command -v vcgencmd &> /dev/null; then
     # Raspberry Pi
     TEMP=$(vcgencmd measure_temp | cut -d"'" -f2)
     log "Temperatura: ${TEMP}"
-    
+
     TEMP_NUM=$(echo "$TEMP" | cut -d"." -f1)
     if [ "$TEMP_NUM" -gt 80 ]; then
         alert "WARNING" "Temperatura ALTA: ${TEMP}\\n\\n⚠️ Considerar mejorar ventilación."
@@ -255,7 +255,7 @@ async def health_check():
         "latency_ms": 0,
         "checks": {}
     }
-    
+
     # Check 1: PostgreSQL
     try:
         async with get_session() as session:
@@ -267,7 +267,7 @@ async def health_check():
     except Exception as e:
         health_status["checks"]["postgresql"] = {"status": "error", "error": str(e)}
         health_status["status"] = "unhealthy"
-    
+
     # Check 2: Redis
     try:
         r = redis.Redis()
@@ -277,7 +277,7 @@ async def health_check():
     except Exception as e:
         health_status["checks"]["redis"] = {"status": "error", "error": str(e)}
         health_status["status"] = "unhealthy"
-    
+
     # Check 3: Outline API
     try:
         async with aiohttp.ClientSession() as session:
@@ -295,7 +295,7 @@ async def health_check():
     except Exception as e:
         health_status["checks"]["outline"] = {"status": "error", "error": str(e)}
         # Outline down no hace unhealthy al backend completo
-    
+
     # Check 4: WireGuard (verificar interfaz)
     try:
         import subprocess
@@ -310,13 +310,13 @@ async def health_check():
             health_status["checks"]["wireguard"] = {"status": "error"}
     except Exception as e:
         health_status["checks"]["wireguard"] = {"status": "error", "error": str(e)}
-    
+
     # Calcular latencia total
     health_status["latency_ms"] = round((time.time() - start_time) * 1000, 2)
-    
+
     # Determinar status code
     status_code = 200 if health_status["status"] == "healthy" else 503
-    
+
     return JSONResponse(status_code=status_code, content=health_status)
 
 
@@ -339,11 +339,11 @@ async def readiness_probe():
     try:
         async with get_session() as session:
             await session.execute(text("SELECT 1"))
-        
+
         r = redis.Redis()
         await r.ping()
         await r.close()
-        
+
         return {"status": "ready"}
     except Exception as e:
         raise HTTPException(
@@ -398,16 +398,16 @@ BODY=$(echo "$RESPONSE" | head -n -1)
 
 if [ "$HTTP_CODE" = "000" ]; then
     alert "❌ Backend NO RESPONDE en ${BACKEND_URL}\\n\\n⚠️ El proceso puede estar colgado o caído.\\n\\nIntentando reiniciar..."
-    
+
     # Intentar reiniciar
     if sudo systemctl restart usipipo-backend; then
         alert "✅ Backend reiniciado"
-        
+
         # Verificar que levantó
         sleep 5
         RESPONSE=$(curl -s -w "\n%{http_code}" "${BACKEND_URL}/health" 2>/dev/null || echo -e "\n000")
         HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-        
+
         if [ "$HTTP_CODE" = "200" ]; then
             alert "✅ Backend levantó correctamente"
         else
@@ -416,14 +416,14 @@ if [ "$HTTP_CODE" = "000" ]; then
     else
         alert "❌❌ NO se pudo reiniciar el backend\\n\\n⚠️ INTERVENCIÓN MANUAL REQUERIDA"
     fi
-    
+
 elif [ "$HTTP_CODE" = "200" ]; then
     log "✅ Backend saludable (HTTP 200)"
-    
+
     # Extraer latencia del response
     LATENCY=$(echo "$BODY" | python3 -c "import sys, json; print(json.load(sys.stdin).get('latency_ms', 'N/A'))" 2>/dev/null || echo "N/A")
     log "Latencia: ${LATENCY}ms"
-    
+
     # Alertar si la latencia es muy alta
     if [ "$LATENCY" != "N/A" ]; then
         LATENCY_INT=${LATENCY%.*}
@@ -431,7 +431,7 @@ elif [ "$HTTP_CODE" = "200" ]; then
             alert "⚠️ Latencia ALTA: ${LATENCY}ms\\n\\nEl backend está respondiendo pero muy lento."
         fi
     fi
-    
+
 elif [ "$HTTP_CODE" = "503" ]; then
     alert "⚠️ Backend responde pero NO está saludable (HTTP 503)\\n\\n${BODY}"
 else
@@ -503,7 +503,7 @@ fi
 # Verificar que el proceso wg-quick está activo
 if ! systemctl is-active --quiet wg-quick@wg0; then
     alert "❌ wg-quick@wg0 NO está activo\\n\\nIntentando reiniciar..."
-    
+
     if sudo systemctl restart wg-quick@wg0; then
         alert "✅ WireGuard reiniciado"
     else
@@ -520,10 +520,10 @@ else
     # Contar peers conectados
     PEER_COUNT=$(echo "$WG_STATS" | grep -c "peer:" || echo "0")
     log "Peers conectados: $PEER_COUNT"
-    
+
     # Obtener última handshake de cada peer
     LAST_HANDSHAKE=$(wg show wg0 latest-handshakes 2>/dev/null || echo "")
-    
+
     # Verificar peers sin handshake reciente (> 10 minutos)
     # Esto requiere parsing más complejo, simplificado para el ejemplo
 fi
@@ -567,7 +567,7 @@ log "=== Outline Monitor ==="
 # Verificar que el servicio Outline está activo
 if ! systemctl is-active --quiet outline-server; then
     alert "❌ outline-server NO está activo\\n\\nIntentando reiniciar..."
-    
+
     if sudo systemctl restart outline-server; then
         alert "✅ Outline reiniciado"
     else
@@ -581,12 +581,12 @@ HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
 
 if [ "$HTTP_CODE" = "200" ]; then
     log "✅ Outline API saludable"
-    
+
     # Extraer información del servidor
     BODY=$(echo "$RESPONSE" | head -n -1)
     SERVER_NAME=$(echo "$BODY" | python3 -c "import sys, json; print(json.load(sys.stdin).get('name', 'N/A'))" 2>/dev/null || echo "N/A")
     log "Server: $SERVER_NAME"
-    
+
 elif [ "$HTTP_CODE" = "000" ]; then
     alert "❌ Outline API NO responde en ${OUTLINE_API_URL}"
 else
@@ -623,11 +623,11 @@ async def monitoring_dashboard():
     cpu_percent = psutil.cpu_percent(interval=1)
     memory = psutil.virtual_memory()
     disk = psutil.disk_usage('/')
-    
+
     # Información de procesos
     backend_process = None
     bot_process = None
-    
+
     for proc in psutil.process_iter(['pid', 'name', 'cmdline', 'memory_percent', 'cpu_percent']):
         try:
             cmdline = ' '.join(proc.info['cmdline'] or [])
@@ -645,39 +645,39 @@ async def monitoring_dashboard():
                 }
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
-    
+
     # Estadísticas de la base de datos
     async with get_session() as session:
         # Usuarios totales y activos
         result = await session.execute(text("""
-            SELECT 
+            SELECT
                 COUNT(*) as total,
                 COUNT(*) FILTER (WHERE status = 'active') as active,
                 COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '24 hours') as new_24h
             FROM users
         """))
         user_stats = result.first()
-        
+
         # Claves VPN activas
         result = await session.execute(text("""
-            SELECT 
+            SELECT
                 COUNT(*) as total,
                 COUNT(*) FILTER (WHERE is_active = true) as active,
                 SUM(used_bytes) as total_used_bytes
             FROM vpn_keys
         """))
         key_stats = result.first()
-        
+
         # Paquetes activos
         result = await session.execute(text("""
-            SELECT 
+            SELECT
                 COUNT(*) as active_packages,
                 SUM(stars_paid) as total_stars
             FROM data_packages
             WHERE is_active = true
         """))
         package_stats = result.first()
-    
+
     # Estado de servicios (systemctl)
     services = {}
     for service in ['postgresql', 'redis', 'caddy', 'usipipo-backend', 'usipipo-bot', 'wg-quick@wg0', 'outline-server']:
@@ -691,7 +691,7 @@ async def monitoring_dashboard():
             services[service] = result.stdout.strip()
         except Exception as e:
             services[service] = f"error: {str(e)}"
-    
+
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "system": {
@@ -741,14 +741,14 @@ async def alerts_history(hours: int = 24):
     # Esto requeriría una tabla de alerts en la DB
     # Por ahora, leer de logs
     import re
-    
+
     alerts = []
     log_files = [
         '/var/log/usipipo/service_health.log',
         '/var/log/usipipo/resource_monitor.log',
         '/var/log/usipipo/backend_monitor.log',
     ]
-    
+
     for log_file in log_files:
         try:
             with open(log_file, 'r') as f:
@@ -765,10 +765,10 @@ async def alerts_history(hours: int = 24):
                             })
         except FileNotFoundError:
             pass
-    
+
     # Ordenar por timestamp (más reciente primero)
     alerts.sort(key=lambda x: x['timestamp'], reverse=True)
-    
+
     # Limitar a últimas 100 alertas
     return {"alerts": alerts[:100]}
 ```

@@ -558,13 +558,13 @@ async def health_check():
     Retorna 200 si todos los servicios están sanos.
     """
     start_time = time.time()
-    
+
     health_status = {
         "status": "healthy",
         "timestamp": time.time(),
         "checks": {}
     }
-    
+
     # Check PostgreSQL
     try:
         async with get_session() as session:
@@ -573,7 +573,7 @@ async def health_check():
     except Exception as e:
         health_status["checks"]["postgresql"] = {"status": "error", "error": str(e)}
         health_status["status"] = "unhealthy"
-    
+
     # Check Redis
     try:
         r = redis.Redis()
@@ -583,7 +583,7 @@ async def health_check():
     except Exception as e:
         health_status["checks"]["redis"] = {"status": "error", "error": str(e)}
         health_status["status"] = "unhealthy"
-    
+
     # Check Outline API
     try:
         async with aiohttp.ClientSession() as session:
@@ -594,7 +594,7 @@ async def health_check():
                     health_status["checks"]["outline"] = {"status": "degraded", "http_status": resp.status}
     except Exception as e:
         health_status["checks"]["outline"] = {"status": "error", "error": str(e)}
-    
+
     status_code = 200 if health_status["status"] == "healthy" else 503
     return JSONResponse(status_code=status_code, content=health_status)
 
@@ -610,24 +610,24 @@ async def metrics_summary():
             text("SELECT COUNT(*) FROM users WHERE status = 'active'")
         )
         active_users = result.scalar()
-        
+
         # Contar claves activas
         result = await session.execute(
             text("SELECT COUNT(*) FROM vpn_keys WHERE is_active = true")
         )
         active_keys = result.scalar()
-        
+
         # Contar paquetes activos
         result = await session.execute(
             text("SELECT COUNT(*) FROM data_packages WHERE is_active = true")
         )
         active_packages = result.scalar()
-    
+
     # Uso de RAM del proceso
     import psutil
     process = psutil.Process()
     memory_info = process.memory_info()
-    
+
     return {
         "active_users": active_users,
         "active_keys": active_keys,
@@ -740,13 +740,13 @@ def signal_handler(sig, frame):
 async def run_job_if_due(job_name: str, job_func: Callable[[], Coroutine], interval: int):
     """Ejecutar un job si ha pasado el intervalo desde la última ejecución."""
     global last_run
-    
+
     current_time = datetime.now(timezone.utc).timestamp()
-    
+
     if current_time - last_run[job_name] >= interval:
         logger.info(f"Ejecutando job: {job_name}")
         start_time = datetime.now(timezone.utc)
-        
+
         try:
             await job_func()
             elapsed = (datetime.now(timezone.utc) - start_time).total_seconds()
@@ -758,13 +758,13 @@ async def run_job_if_due(job_name: str, job_func: Callable[[], Coroutine], inter
         finally:
             # Garbage collection agresivo después de cada job
             gc.collect()
-    
+
     await asyncio.sleep(0.1)  # Pequeña pausa para no bloquear el loop
 
 async def main():
     """Loop principal del runner de jobs."""
     logger.info("Iniciando runner de background jobs")
-    
+
     while running:
         await asyncio.gather(
             run_job_if_due("sync_vpn_usage", sync_vpn_usage, JOB_INTERVALS["sync_vpn_usage"]),
@@ -773,15 +773,15 @@ async def main():
             run_job_if_due("expire_crypto_orders", expire_crypto_orders, JOB_INTERVALS["expire_crypto_orders"]),
             run_job_if_due("memory_cleanup", cleanup_memory, JOB_INTERVALS["memory_cleanup"]),
         )
-        
+
         await asyncio.sleep(1)  # Chequear cada segundo
-    
+
     logger.info("Runner de jobs detenido")
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    
+
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
@@ -810,7 +810,7 @@ async def cleanup_memory():
     try:
         # 1. Garbage collection de Python
         gc.collect()
-        
+
         # 2. Intentar liberar caché de página del kernel (requiere sudo)
         try:
             import subprocess
@@ -827,7 +827,7 @@ async def cleanup_memory():
             logger.debug(f"No se pudo limpiar caché del kernel: {e}")
         except FileNotFoundError:
             logger.debug("Comando 'sync' no encontrado")
-        
+
         # 3. Log de uso de memoria actual
         try:
             with open('/proc/meminfo', 'r') as f:
@@ -838,7 +838,7 @@ async def cleanup_memory():
                 logger.info(f"Uso de memoria del sistema: {usage_percent:.1f}%")
         except Exception as e:
             logger.debug(f"No se pudo leer /proc/meminfo: {e}")
-            
+
     except Exception as e:
         logger.error(f"Error en limpieza de memoria: {e}")
 ```

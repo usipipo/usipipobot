@@ -8,17 +8,9 @@ Version: 3.0.0 - Refactored into mixins
 from typing import Optional
 
 from telegram import Update
-from telegram.ext import (
-    CallbackQueryHandler,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters
 
-from application.services.consumption_billing_service import (
-    ConsumptionBillingService,
-)
+from application.services.consumption_billing_service import ConsumptionBillingService
 from application.services.vpn_service import VpnService
 from config import settings
 from telegram_bot.common.base_handler import BaseHandler
@@ -70,17 +62,13 @@ class KeyManagementHandler(
         if self.billing_service is None:
             return False
         try:
-            summary = await self.billing_service.get_current_consumption(
-                user_id, user_id
-            )
+            summary = await self.billing_service.get_current_consumption(user_id, user_id)
             return summary is not None and summary.is_active
         except Exception as e:
             logger.error(f"Error verificando estado de consumo: {e}")
             return False
 
-    async def show_key_submenu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_key_submenu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Muestra el menú principal de gestión de llaves."""
         query = update.callback_query
 
@@ -100,9 +88,7 @@ class KeyManagementHandler(
                 keys_summary = {"total_count": len(keys)}
 
                 for protocol in settings.get_vpn_protocols():
-                    count = len(
-                        [k for k in keys if k.key_type.lower() == protocol.lower()]
-                    )
+                    count = len([k for k in keys if k.key_type.lower() == protocol.lower()])
                     keys_summary[f"{protocol}_count"] = count
 
                 has_consumption_active = await self._get_consumption_status(user_id)
@@ -112,9 +98,7 @@ class KeyManagementHandler(
                 else:
                     message = KeyManagementMessages.MAIN_MENU.format(
                         total_keys=escape_markdown(str(keys_summary["total_count"])),
-                        outline_count=escape_markdown(
-                            str(keys_summary.get("outline_count", 0))
-                        ),
+                        outline_count=escape_markdown(str(keys_summary.get("outline_count", 0))),
                         wireguard_count=escape_markdown(
                             str(keys_summary.get("wireguard_count", 0))
                         ),
@@ -151,9 +135,7 @@ class KeyManagementHandler(
                 keys_summary = {"total_count": len(keys)}
 
                 for protocol in settings.get_vpn_protocols():
-                    count = len(
-                        [k for k in keys if k.key_type.lower() == protocol.lower()]
-                    )
+                    count = len([k for k in keys if k.key_type.lower() == protocol.lower()])
                     keys_summary[f"{protocol}_count"] = count
 
                 has_consumption_active = await self._get_consumption_status(user_id)
@@ -163,9 +145,7 @@ class KeyManagementHandler(
                 else:
                     message = KeyManagementMessages.MAIN_MENU.format(
                         total_keys=escape_markdown(str(keys_summary["total_count"])),
-                        outline_count=escape_markdown(
-                            str(keys_summary.get("outline_count", 0))
-                        ),
+                        outline_count=escape_markdown(str(keys_summary.get("outline_count", 0))),
                         wireguard_count=escape_markdown(
                             str(keys_summary.get("wireguard_count", 0))
                         ),
@@ -191,9 +171,7 @@ class KeyManagementHandler(
                     parse_mode="Markdown",
                 )
 
-    async def back_to_main_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def back_to_main_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Vuelve al menú principal."""
         query = update.callback_query
         if query is None:
@@ -253,9 +231,7 @@ def get_key_management_callback_handlers(
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_qr_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_change_server_"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_extend_"),
-        CallbackQueryHandler(
-            handler.download_wireguard_config, pattern="^key_download_wg_"
-        ),
+        CallbackQueryHandler(handler.download_wireguard_config, pattern="^key_download_wg_"),
         CallbackQueryHandler(handler.get_outline_link, pattern="^key_get_link_"),
         CallbackQueryHandler(handler.cancel_rename, pattern="^cancel_rename$"),
     ]

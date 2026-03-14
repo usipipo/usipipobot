@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>{% block title %}uSipipo VPN{% endblock %}</title>
-    
+
     <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
     <link rel="stylesheet" href="/miniapp/static/css/cyberpunk.css">
-    
+
     <style>
         :root {
             --bg-void: #0a0a0f;
@@ -42,7 +42,7 @@
         }
 
         body {
-            background: 
+            background:
                 radial-gradient(ellipse at 20% 0%, rgba(0, 240, 255, 0.03) 0%, transparent 50%),
                 radial-gradient(ellipse at 80% 100%, rgba(255, 0, 170, 0.03) 0%, transparent 50%),
                 var(--bg-void);
@@ -381,7 +381,7 @@
             font-size: 28px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 
+            box-shadow:
                 0 0 20px rgba(0, 240, 255, 0.5),
                 0 4px 15px rgba(0, 0, 0, 0.3);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -394,7 +394,7 @@
 
         .fab:hover {
             transform: scale(1.1) translateY(-2px);
-            box-shadow: 
+            box-shadow:
                 0 0 30px rgba(0, 240, 255, 0.8),
                 0 0 60px rgba(255, 0, 170, 0.4),
                 0 8px 25px rgba(0, 0, 0, 0.4);
@@ -402,14 +402,14 @@
 
         .fab:active {
             transform: scale(0.95);
-            box-shadow: 
+            box-shadow:
                 0 0 15px rgba(0, 240, 255, 0.6),
                 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
         .fab:focus {
             outline: none;
-            box-shadow: 
+            box-shadow:
                 0 0 0 3px var(--bg-void),
                 0 0 0 5px var(--neon-cyan),
                 0 0 30px rgba(0, 240, 255, 0.8);

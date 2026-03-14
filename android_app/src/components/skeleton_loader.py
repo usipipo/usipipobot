@@ -2,16 +2,17 @@
 Skeleton loader component for uSipipo VPN Android APK.
 Shows loading placeholder with shimmer effect.
 """
-from kivy.properties import ListProperty
+
 from kivy.animation import Animation
-from kivymd.uix.card import MDCard
 from kivy.clock import Clock
+from kivy.properties import ListProperty
+from kivymd.uix.card import MDCard
 
 
 class SkeletonLoader(MDCard):
     """
     Skeleton loader component for loading states.
-    
+
     Features:
     - Shimmer animation effect
     - Customizable size
@@ -32,8 +33,9 @@ class SkeletonLoader(MDCard):
         """Start shimmer animation."""
         # Simple pulse animation for now
         # Can be enhanced with gradient shimmer effect
-        anim = Animation(md_bg_color=[*self.base_color[:3], 0.8], duration=0.8) + \
-               Animation(md_bg_color=[*self.base_color[:3], 1.0], duration=0.8)
+        anim = Animation(md_bg_color=[*self.base_color[:3], 0.8], duration=0.8) + Animation(
+            md_bg_color=[*self.base_color[:3], 1.0], duration=0.8
+        )
         anim.repeat = True
         anim.start(self)
         self._animation = anim
@@ -53,11 +55,11 @@ class SkeletonLoader(MDCard):
     def create_text_line(cls, width_ratio=1.0, **kwargs):
         """
         Create a skeleton text line.
-        
+
         Args:
             width_ratio: Width ratio relative to parent (0.0-1.0)
             **kwargs: Additional arguments
-            
+
         Returns:
             SkeletonLoader instance configured for text line
         """
@@ -70,11 +72,11 @@ class SkeletonLoader(MDCard):
     def create_card(cls, height=100, **kwargs):
         """
         Create a skeleton card placeholder.
-        
+
         Args:
             height: Card height in dp
             **kwargs: Additional arguments
-            
+
         Returns:
             SkeletonLoader instance configured for card
         """
@@ -87,11 +89,11 @@ class SkeletonLoader(MDCard):
     def create_avatar(cls, size=40, **kwargs):
         """
         Create a skeleton avatar placeholder.
-        
+
         Args:
             size: Avatar size in dp
             **kwargs: Additional arguments
-            
+
         Returns:
             SkeletonLoader instance configured for avatar
         """

@@ -8,12 +8,8 @@ Version: 2.0.0 - Refactored into mixins
 from telegram import Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
-from application.services.consumption_billing_service import (
-    ConsumptionBillingService,
-)
-from application.services.consumption_invoice_service import (
-    ConsumptionInvoiceService,
-)
+from application.services.consumption_billing_service import ConsumptionBillingService
+from application.services.consumption_invoice_service import ConsumptionInvoiceService
 from telegram_bot.features.consumption.handlers_activation import ActivationMixin
 from telegram_bot.features.consumption.handlers_base import ConsumptionBaseHandler
 from telegram_bot.features.consumption.handlers_cancellation import CancellationMixin
@@ -67,32 +63,16 @@ def get_consumption_callback_handlers(
     handler = ConsumptionHandler(billing_service, invoice_service)
 
     return [
-        CallbackQueryHandler(
-            handler.show_consumption_menu, pattern="^consumption_menu$"
-        ),
-        CallbackQueryHandler(
-            handler.start_activation, pattern="^consumption_activate$"
-        ),
-        CallbackQueryHandler(
-            handler.confirm_activation, pattern="^consumption_confirm_activate$"
-        ),
-        CallbackQueryHandler(
-            handler.view_my_consumption, pattern="^consumption_view_status$"
-        ),
+        CallbackQueryHandler(handler.show_consumption_menu, pattern="^consumption_menu$"),
+        CallbackQueryHandler(handler.start_activation, pattern="^consumption_activate$"),
+        CallbackQueryHandler(handler.confirm_activation, pattern="^consumption_confirm_activate$"),
+        CallbackQueryHandler(handler.view_my_consumption, pattern="^consumption_view_status$"),
         CallbackQueryHandler(
             handler.start_invoice_generation, pattern="^consumption_generate_invoice$"
         ),
-        CallbackQueryHandler(
-            handler.generate_invoice_stars, pattern="^consumption_pay_stars$"
-        ),
-        CallbackQueryHandler(
-            handler.generate_invoice_crypto, pattern="^consumption_pay_crypto$"
-        ),
+        CallbackQueryHandler(handler.generate_invoice_stars, pattern="^consumption_pay_stars$"),
+        CallbackQueryHandler(handler.generate_invoice_crypto, pattern="^consumption_pay_crypto$"),
         CallbackQueryHandler(handler.show_info, pattern="^consumption_info$"),
-        CallbackQueryHandler(
-            handler.start_cancellation, pattern="^consumption_cancel$"
-        ),
-        CallbackQueryHandler(
-            handler.confirm_cancellation, pattern="^consumption_confirm_cancel$"
-        ),
+        CallbackQueryHandler(handler.start_cancellation, pattern="^consumption_cancel$"),
+        CallbackQueryHandler(handler.confirm_cancellation, pattern="^consumption_confirm_cancel$"),
     ]
