@@ -102,7 +102,9 @@ class TicketKeyboards:
                 nav_buttons.append(InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback))
             if has_more:
                 next_callback = f"tickets_page_{page + 1}"
-                nav_buttons.append(InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback))
+                nav_buttons.append(
+                    InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback)
+                )
             keyboard.append(nav_buttons)
 
         # Volver
@@ -204,7 +206,9 @@ class TicketKeyboards:
                 next_callback = f"admin_tickets_page_{page + 1}"
                 if filter_status:
                     next_callback = f"admin_tickets_{filter_status}_page_{page + 1}"
-                nav_buttons.append(InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback))
+                nav_buttons.append(
+                    InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback)
+                )
             keyboard.append(nav_buttons)
 
         # Volver

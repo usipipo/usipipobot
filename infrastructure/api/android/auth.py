@@ -360,14 +360,12 @@ async def get_current_user_profile(payload: dict = Depends(get_current_user)):
 
     async with get_session_context() as session:
         result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT telegram_id, username, full_name, status,
                        has_pending_debt, consumption_mode_enabled
                 FROM users
                 WHERE telegram_id = :telegram_id
-                """
-            ),
+                """),
             {"telegram_id": int(telegram_id)},
         )
         user = result.first()

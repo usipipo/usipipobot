@@ -246,7 +246,9 @@ class ReferralHandler:
                     context.user_data.pop("redeem_gb", None)
                     context.user_data.pop("redeem_credits", None)
             else:
-                logger.warning(f"⚠️ Data redemption failed for user {user_id}: insufficient credits")
+                logger.warning(
+                    f"⚠️ Data redemption failed for user {user_id}: insufficient credits"
+                )
                 message = ReferralMessages.Error.INSUFFICIENT_CREDITS
                 keyboard = ReferralKeyboards.redeem_menu(0)
 

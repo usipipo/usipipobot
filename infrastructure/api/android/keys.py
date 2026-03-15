@@ -47,15 +47,13 @@ async def list_keys(payload: dict = Depends(get_current_user)):
     async with get_session_context() as session:
         # Get all keys for user
         result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT id, name, key_type, is_active, used_bytes, data_limit_bytes,
                        created_at, expires_at, last_seen_at, external_id
                 FROM vpn_keys
                 WHERE user_id = :telegram_id
                 ORDER BY is_active DESC, created_at DESC
-                """
-            ),
+                """),
             {"telegram_id": telegram_id},
         )
 
@@ -129,15 +127,13 @@ async def get_key_detail(key_id: str, payload: dict = Depends(get_current_user))
 
     async with get_session_context() as session:
         result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT id, name, key_type, key_data, is_active, used_bytes,
                        data_limit_bytes, created_at, expires_at, last_seen_at,
                        billing_reset_at, external_id
                 FROM vpn_keys
                 WHERE id = :key_id AND user_id = :telegram_id
-                """
-            ),
+                """),
             {"key_id": key_uuid, "telegram_id": telegram_id},
         )
 
@@ -196,12 +192,10 @@ async def can_create_key(payload: dict = Depends(get_current_user)):
     async with get_session_context() as session:
         # Get user info
         user_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT max_keys, role FROM users
                 WHERE telegram_id = :telegram_id
-                """
-            ),
+                """),
             {"telegram_id": telegram_id},
         )
         user_row = user_result.first()
@@ -217,12 +211,10 @@ async def can_create_key(payload: dict = Depends(get_current_user)):
 
         # Get current keys
         keys_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT key_type, is_active FROM vpn_keys
                 WHERE user_id = :telegram_id
-                """
-            ),
+                """),
             {"telegram_id": telegram_id},
         )
 
@@ -506,13 +498,11 @@ async def get_key_usage(key_id: str, payload: dict = Depends(get_current_user)):
 
     async with get_session_context() as session:
         result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT used_bytes, data_limit_bytes, billing_reset_at
                 FROM vpn_keys
                 WHERE id = :key_id AND user_id = :telegram_id
-                """
-            ),
+                """),
             {"key_id": key_uuid, "telegram_id": telegram_id},
         )
 

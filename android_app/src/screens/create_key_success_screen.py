@@ -74,7 +74,7 @@ class CreateKeySuccessScreen(MDScreen):
     def _on_keyboard_down(self, window, key, *args):
         """
         Intercept hardware back button (Android).
-        
+
         Args:
             window: Kivy window
             key: Key code (27 = ESC/back button)

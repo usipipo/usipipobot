@@ -76,7 +76,9 @@ class OperationsKeyboards:
                 nav_buttons.append(InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback))
             if has_more:
                 next_callback = f"transactions_page_{page + 1}"
-                nav_buttons.append(InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback))
+                nav_buttons.append(
+                    InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback)
+                )
             keyboard.append(nav_buttons)
 
         keyboard.append(
