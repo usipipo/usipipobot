@@ -90,6 +90,8 @@ jobs:
     name: Build Debug APK
     needs: test-and-lint
     runs-on: ubuntu-latest
+    # Only build on manual trigger or tags (not on every push/PR)
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
     defaults:
       run:
         working-directory: ${{ env.BUILD_DIR }}
