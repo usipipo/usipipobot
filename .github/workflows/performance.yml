@@ -73,17 +73,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
+          enable-cache: true
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-          pip install pytest-benchmark locust
+          uv sync --dev
+          uv pip install pytest-benchmark locust
 
       - name: Run database migrations
         env:
@@ -95,9 +94,8 @@ jobs:
           SERVER_IPV4: "192.168.1.1"
           WG_PATH: "/tmp/wireguard"
           TRON_DEALER_WEBHOOK_SECRET: "test-tron-dealer-webhook-secret!!"
-          PYTHONPATH: .
         run: |
-          alembic upgrade head
+          uv run alembic upgrade head
 
       - name: Run API benchmark tests
         env:
@@ -109,9 +107,8 @@ jobs:
           SERVER_IPV4: "192.168.1.1"
           WG_PATH: "/tmp/wireguard"
           TRON_DEALER_WEBHOOK_SECRET: "test-tron-dealer-webhook-secret!!"
-          PYTHONPATH: .
         run: |
-          pytest tests/performance/ -v \
+          uv run pytest tests/performance/ -v \
             --benchmark-only \
             --benchmark-json=benchmark.json \
             --tb=short \
@@ -159,16 +156,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
+          enable-cache: true
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          uv sync --dev
 
       - name: Run database performance tests
         env:
@@ -180,9 +176,8 @@ jobs:
           SERVER_IPV4: "192.168.1.1"
           WG_PATH: "/tmp/wireguard"
           TRON_DEALER_WEBHOOK_SECRET: "test-tron-dealer-webhook-secret!!"
-          PYTHONPATH: .
         run: |
-          pytest tests/ -v \
+          uv run pytest tests/ -v \
             -k "performance or benchmark" \
             --benchmark-only \
             --tb=short \
@@ -214,17 +209,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
+          enable-cache: true
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-          pip install locust
+          uv sync --dev
+          uv pip install locust
 
       - name: Run database migrations
         env:
@@ -236,9 +230,8 @@ jobs:
           SERVER_IPV4: "192.168.1.1"
           WG_PATH: "/tmp/wireguard"
           TRON_DEALER_WEBHOOK_SECRET: "test-tron-dealer-webhook-secret!!"
-          PYTHONPATH: .
         run: |
-          alembic upgrade head
+          uv run alembic upgrade head
 
       - name: Start backend server
         env:
@@ -250,9 +243,8 @@ jobs:
           SERVER_IPV4: "127.0.0.1"
           WG_PATH: "/tmp/wireguard"
           TRON_DEALER_WEBHOOK_SECRET: "test-tron-dealer-webhook-secret!!"
-          PYTHONPATH: .
         run: |
-          python main.py &
+          uv run python main.py &
           sleep 10
           echo "Backend server started"
 
