@@ -1,0 +1,480 @@
+#:kivy 2.0.0
+#:import dp kivy.metrics.dp
+#:import Clock kivy.clock.Clock
+
+<KeyDetailScreen>:
+    name: "key_detail"
+
+    # Main layout
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: 0
+        padding: 0
+
+        # Top App Bar
+        MDTopAppBarBar:
+            id: top_app_bar
+            title: root.key_name if root.key_name else "Detalle de Clave"
+            left_action_items: [["arrow-left", lambda x: root.on_back_pressed(), "Volver", dp(24)]]
+            right_action_items: [["dots-vertical", lambda x: root.on_menu_pressed(), "Opciones", dp(24)]]
+            elevation: 2
+            md_bg_color: app.theme_cls.bg_dark
+            specific_text_color: 0, 0.941, 1, 1  # neon_cyan
+
+        # Content area (ScrollView)
+        ScrollView:
+            do_scroll_x: False
+            bar_width: dp(4)
+
+            MDBoxLayout:
+                orientation: "vertical"
+                padding: dp(16)
+                spacing: dp(16)
+                size_hint_y: None
+                height: self.minimum_height
+
+                # Loading state
+                MDScreen:
+                    size_hint_y: None
+                    height: dp(400) if root.is_loading else 0
+                    opacity: 1 if root.is_loading else 0
+
+                    MDSpinner:
+                        size_hint: None, None
+                        size: dp(46), dp(46)
+                        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                        active: True
+
+                # Error state
+                MDBoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(16)
+                    padding: dp(20)
+                    size_hint_y: None
+                    height: self.minimum_height if root.has_error else 0
+                    opacity: 0 if not root.has_error else 1
+
+                    MDIcon:
+                        icon: "alert-circle-outline"
+                        font_size: dp(48)
+                        theme_text_color: "Error"
+                        halign: "center"
+                        size_hint_y: None
+                        height: dp(48)
+
+                    MDLabel:
+                        text: "Error cargando información"
+                        font_style: "H6"
+                        halign: "center"
+                        theme_text_color: "Error"
+                        size_hint_y: None
+                        height: self.texture_size[1] + dp(10)
+
+                    MDRaisedButton:
+                        text: "REINTENTAR"
+                        pos_hint: {"center_x": 0.5}
+                        size_hint_x: None
+                        width: dp(150)
+                        height: dp(40)
+                        on_release: root.load_key_detail()
+
+                # Content (when loaded)
+                MDBoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(16)
+                    size_hint_y: None
+                    height: self.minimum_height if not root.is_loading and not root.has_error else 0
+                    opacity: 0 if root.is_loading or root.has_error else 1
+
+                    # Status card
+                    MDCard:
+                        orientation: "vertical"
+                        padding: dp(16)
+                        spacing: dp(12)
+                        size_hint_y: None
+                        height: self.minimum_height
+                        md_bg_color: 0.102, 0.102, 0.141, 1  # bg_card
+                        radius: [dp(12)]
+                        elevation: 0
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            spacing: dp(12)
+                            size_hint_y: None
+                            height: dp(40)
+
+                            MDIcon:
+                                icon: "check-circle" if root.is_active else "close-circle"
+                                font_size: dp(24)
+                                color: root.status_color
+                                size_hint_x: None
+                                width: dp(24)
+
+                            MDLabel:
+                                text: "ACTIVA" if root.is_active else "INACTIVA"
+                                font_style: "Subtitle1"
+                                font_name: "JetBrainsMono"
+                                theme_text_color: "Custom"
+                                text_color: root.status_color
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                            Widget:
+
+                            MDLabel:
+                                text: root.key_type_display
+                                font_style: "Caption"
+                                theme_text_color: "Secondary"
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                        MDLabel:
+                            text: f"Servidor: {root.server}"
+                            font_style: "Body2"
+                            theme_text_color: "Secondary"
+                            size_hint_y: None
+                            height: self.texture_size[1]
+
+                        MDLabel:
+                            text: f"Creada: {root.created_at}"
+                            font_style: "Caption"
+                            theme_text_color: "Hint"
+                            size_hint_y: None
+                            height: self.texture_size[1]
+
+                    # Data usage card
+                    MDCard:
+                        orientation: "vertical"
+                        padding: dp(16)
+                        spacing: dp(12)
+                        size_hint_y: None
+                        height: self.minimum_height
+                        md_bg_color: 0.102, 0.102, 0.141, 1  # bg_card
+                        radius: [dp(12)]
+                        elevation: 0
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            spacing: dp(8)
+                            size_hint_y: None
+                            height: dp(30)
+
+                            MDIcon:
+                                icon: "chart-pie"
+                                font_size: dp(20)
+                                theme_text_color: "Custom"
+                                color: 0, 0.941, 1, 1  # neon_cyan
+                                size_hint_x: None
+                                width: dp(20)
+
+                            MDLabel:
+                                text: "USO DE DATOS"
+                                font_style: "Subtitle2"
+                                font_name: "JetBrainsMono"
+                                theme_text_color: "Custom"
+                                text_color: 0, 0.941, 1, 1
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                        # Progress bar
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            spacing: dp(8)
+                            size_hint_y: None
+                            height: dp(60)
+
+                            MDLabel:
+                                text: f"{root.used_display} de {root.limit_display}"
+                                font_style: "H6"
+                                font_name: "JetBrainsMono"
+                                theme_text_color: "Primary"
+                                halign: "center"
+                                size_hint_y: None
+                                height: self.texture_size[1] + dp(10)
+
+                            MDSlider:
+                                id: usage_slider
+                                min: 0
+                                max: 100
+                                value: root.usage_percentage
+                                size_hint_y: None
+                                height: dp(40)
+                                disabled: True
+                                # Color will be set in code based on percentage
+
+                            MDBoxLayout:
+                                orientation: "horizontal"
+                                size_hint_y: None
+                                height: dp(20)
+
+                                MDLabel:
+                                    text: f"Restante: {root.remaining_display}"
+                                    font_style: "Caption"
+                                    theme_text_color: "Secondary"
+                                    size_hint_y: None
+                                    height: self.texture_size[1]
+
+                                Widget:
+
+                                MDLabel:
+                                    text: f"{root.usage_percentage:.1f}%"
+                                    font_style: "Caption"
+                                    font_name: "JetBrainsMono"
+                                    theme_text_color: "Custom"
+                                    text_color: root.progress_color
+                                    size_hint_y: None
+                                    height: self.texture_size[1]
+
+                        MDLabel:
+                            text: f"Reset: {root.billing_reset_at}"
+                            font_style: "Caption"
+                            theme_text_color: "Hint"
+                            size_hint_y: None
+                            height: self.texture_size[1]
+
+                    # QR Code card
+                    MDCard:
+                        orientation: "vertical"
+                        padding: dp(16)
+                        spacing: dp(16)
+                        size_hint_y: None
+                        height: self.minimum_height
+                        md_bg_color: 0.102, 0.102, 0.141, 1  # bg_card
+                        radius: [dp(12)]
+                        elevation: 0
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            spacing: dp(8)
+                            size_hint_y: None
+                            height: dp(30)
+
+                            MDIcon:
+                                icon: "qrcode"
+                                font_size: dp(20)
+                                theme_text_color: "Custom"
+                                color: 0, 0.941, 1, 1  # neon_cyan
+                                size_hint_x: None
+                                width: dp(20)
+
+                            MDLabel:
+                                text: "CÓDIGO DE CONEXIÓN"
+                                font_style: "Subtitle2"
+                                font_name: "JetBrainsMono"
+                                theme_text_color: "Custom"
+                                text_color: 0, 0.941, 1, 1
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                        # QR Code display (placeholder for QrDisplay widget)
+                        MDScreen:
+                            size_hint_y: None
+                            height: dp(200)
+                            md_bg_color: 1, 1, 1, 1  # White background for QR
+
+                            # QrDisplay widget will be added in code
+                            # For now, show placeholder
+                            MDLabel:
+                                text: "QR Code\\n(Se generará al cargar)"
+                                font_style: "Body2"
+                                halign: "center"
+                                valign: "middle"
+                                theme_text_color: "Hint"
+
+                        # Connection string (truncated)
+                        MDBoxLayout:
+                            orientation: "vertical"
+                            spacing: dp(8)
+                            size_hint_y: None
+                            height: self.minimum_height
+
+                            MDTextField:
+                                id: connection_string
+                                text: root.key_data[:50] + "..." if len(root.key_data) > 50 else root.key_data
+                                hint_text: "Código de conexión"
+                                read_only: True
+                                mode: "rectangle"
+                                size_hint_y: None
+                                height: dp(48)
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            spacing: dp(8)
+                            size_hint_y: None
+                            height: dp(40)
+
+                            MDRaisedButton:
+                                text: "📋 Copiar"
+                                size_hint_x: 0.5
+                                height: dp(40)
+                                md_bg_color: 0, 0.941, 1, 1
+                                text_color: 0.039, 0.039, 0.059, 1
+                                on_release: root.on_copy_code_pressed()
+
+                            MDRaisedButton:
+                                text: "📤 Compartir"
+                                size_hint_x: 0.5
+                                height: dp(40)
+                                md_bg_color: 0.102, 0.102, 0.141, 1
+                                text_color: 0, 0.941, 1, 1
+                                line_color: 0, 0.941, 1, 1, 0.5
+                                on_release: root.on_share_pressed()
+
+                    # Technical info card
+                    MDCard:
+                        orientation: "vertical"
+                        padding: dp(16)
+                        spacing: dp(8)
+                        size_hint_y: None
+                        height: self.minimum_height
+                        md_bg_color: 0.102, 0.102, 0.141, 1  # bg_card
+                        radius: [dp(12)]
+                        elevation: 0
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            spacing: dp(8)
+                            size_hint_y: None
+                            height: dp(30)
+
+                            MDIcon:
+                                icon: "information-outline"
+                                font_size: dp(20)
+                                theme_text_color: "Custom"
+                                color: 0, 0.941, 1, 1  # neon_cyan
+                                size_hint_x: None
+                                width: dp(20)
+
+                            MDLabel:
+                                text: "INFORMACIÓN TÉCNICA"
+                                font_style: "Subtitle2"
+                                font_name: "JetBrainsMono"
+                                theme_text_color: "Custom"
+                                text_color: 0, 0.941, 1, 1
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            size_hint_y: None
+                            height: dp(30)
+
+                            MDLabel:
+                                text: "Tipo:"
+                                font_style: "Body2"
+                                theme_text_color: "Secondary"
+                                size_hint_x: 0.4
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                            MDLabel:
+                                text: f"{root.key_type_display} (Shadowsocks)" if root.key_type == "outline" else "WireGuard"
+                                font_style: "Body2"
+                                font_name: "JetBrainsMono"
+                                theme_text_color: "Primary"
+                                size_hint_x: 0.6
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            size_hint_y: None
+                            height: dp(30)
+
+                            MDLabel:
+                                text: "Último uso:"
+                                font_style: "Body2"
+                                theme_text_color: "Secondary"
+                                size_hint_x: 0.4
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                            MDLabel:
+                                text: root.last_seen_at
+                                font_style: "Body2"
+                                theme_text_color: "Primary"
+                                size_hint_x: 0.6
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            size_hint_y: None
+                            height: dp(30)
+
+                            MDLabel:
+                                text: "ID externo:"
+                                font_style: "Body2"
+                                theme_text_color: "Secondary"
+                                size_hint_x: 0.4
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                            MDLabel:
+                                text: root.external_id if root.external_id else "N/A"
+                                font_style: "Body2"
+                                font_name: "JetBrainsMono"
+                                theme_text_color: "Primary"
+                                size_hint_x: 0.6
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                    # Connection instructions card
+                    MDCard:
+                        orientation: "vertical"
+                        padding: dp(16)
+                        spacing: dp(12)
+                        size_hint_y: None
+                        height: self.minimum_height
+                        md_bg_color: 0.102, 0.102, 0.141, 1  # bg_card
+                        radius: [dp(12)]
+                        elevation: 0
+
+                        MDBoxLayout:
+                            orientation: "horizontal"
+                            spacing: dp(8)
+                            size_hint_y: None
+                            height: dp(30)
+
+                            MDIcon:
+                                icon: "download-outline"
+                                font_size: dp(20)
+                                theme_text_color: "Custom"
+                                color: 0, 0.941, 1, 1  # neon_cyan
+                                size_hint_x: None
+                                width: dp(20)
+
+                            MDLabel:
+                                text: "CÓMO CONECTARSE"
+                                font_style: "Subtitle2"
+                                font_name: "JetBrainsMono"
+                                theme_text_color: "Custom"
+                                text_color: 0, 0.941, 1, 1
+                                size_hint_y: None
+                                height: self.texture_size[1]
+
+                        MDLabel:
+                            text: "1. Descarga Outline o WireGuard app según el tipo de clave"
+                            font_style: "Body2"
+                            theme_text_color: "Primary"
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(10)
+
+                        MDLabel:
+                            text: "2. Escanea el código QR o pega el código de conexión"
+                            font_style: "Body2"
+                            theme_text_color: "Primary"
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(10)
+
+                        MDLabel:
+                            text: "3. Conéctate y navega de forma segura"
+                            font_style: "Body2"
+                            theme_text_color: "Primary"
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(10)
+
+                # Bottom spacer
+                Widget:
+                    size_hint_y: None
+                    height: dp(80)

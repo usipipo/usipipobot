@@ -1,0 +1,168 @@
+#:kivy 2.0.0
+#:import dp kivy.metrics.dp
+#:import Clock kivy.clock.Clock
+
+<KeysListScreen>:
+    name: "keys_list"
+
+    # Main layout with MDBoxLayout
+    MDBoxLayout:
+        orientation: "vertical"
+        spacing: 0
+        padding: 0
+
+        # Top App Bar
+        MDTopAppBarBar:
+            id: top_app_bar
+            title: "Mis Claves VPN"
+            left_action_items: [["arrow-left", lambda x: root.on_back_pressed(), "Volver", dp(24)]]
+            right_action_items: [["plus", lambda x: root.on_create_key_pressed(), "Nueva Clave", dp(24)]]
+            elevation: 2
+            md_bg_color: app.theme_cls.bg_dark
+            specific_text_color: 0, 0.941, 1, 1  # neon_cyan
+
+        # Content area
+        MDBoxLayout:
+            orientation: "vertical"
+            padding: dp(16)
+            spacing: dp(12)
+
+            # Header with counts
+            MDLabel:
+                text: f"Tienes {root.active_count}/{root.max_keys} claves activas"
+                font_style: "Subtitle1"
+                theme_text_color: "Primary"
+                size_hint_y: None
+                height: self.texture_size[1] + dp(10)
+
+            # Loading state
+            MDScreen:
+                size_hint_y: None
+                height: dp(200) if root.is_loading else 0
+                opacity: 1 if root.is_loading else 0
+
+                MDSpinner:
+                    size_hint: None, None
+                    size: dp(46), dp(46)
+                    pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                    active: True
+
+            # Error state
+            MDBoxLayout:
+                orientation: "vertical"
+                spacing: dp(16)
+                padding: dp(20)
+                size_hint_y: None
+                height: self.minimum_height
+                opacity: 0 if not root.has_error else 1
+                size_hint_y: None if root.has_error else 0
+                height: self.minimum_height if root.has_error else 0
+
+                MDIcon:
+                    icon: "alert-circle-outline"
+                    font_size: dp(48)
+                    theme_text_color: "Error"
+                    halign: "center"
+                    size_hint_y: None
+                    height: dp(48)
+
+                MDLabel:
+                    text: "Error cargando las claves"
+                    font_style: "H6"
+                    halign: "center"
+                    theme_text_color: "Error"
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(10)
+
+                MDLabel:
+                    text: root.error_message
+                    font_style: "Body2"
+                    halign: "center"
+                    theme_text_color: "Hint"
+                    size_hint_y: None
+                    height: self.texture_size[1] + dp(10)
+
+                MDRaisedButton:
+                    text: "REINTENTAR"
+                    pos_hint: {"center_x": 0.5}
+                    size_hint_x: None
+                    width: dp(150)
+                    height: dp(40)
+                    on_release: root.load_keys(force_refresh=True)
+
+            # Keys list (ScrollView with BoxLayout)
+            ScrollView:
+                do_scroll_x: False
+                bar_width: dp(4)
+
+                MDBoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(12)
+                    padding: 0
+                    size_hint_y: None
+                    height: self.minimum_height
+
+                    # Empty state
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: dp(16)
+                        padding: dp(40)
+                        size_hint_y: None
+                        height: self.minimum_height if len(root.keys_list) == 0 and not root.is_loading else 0
+                        opacity: 1 if len(root.keys_list) == 0 and not root.is_loading else 0
+
+                        MDIcon:
+                            icon: "key-outline"
+                            font_size: dp(64)
+                            theme_text_color: "Hint"
+                            halign: "center"
+                            size_hint_y: None
+                            height: dp(64)
+
+                        MDLabel:
+                            text: "No tienes claves VPN"
+                            font_style: "H6"
+                            halign: "center"
+                            theme_text_color: "Hint"
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(10)
+
+                        MDLabel:
+                            text: "Crea tu primera clave para comenzar a usar la VPN"
+                            font_style: "Body2"
+                            halign: "center"
+                            theme_text_color: "Hint"
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(10)
+
+                        MDRaisedButton:
+                            text: "CREAR PRIMERA CLAVE"
+                            pos_hint: {"center_x": 0.5}
+                            size_hint_x: None
+                            width: dp(200)
+                            height: dp(48)
+                            md_bg_color: 0, 0.941, 1, 1  # neon_cyan
+                            text_color: 0.039, 0.039, 0.059, 1  # bg_void
+                            on_release: root.on_create_key_pressed()
+
+                    # Active keys section
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: dp(8)
+                        size_hint_y: None
+                        height: self.minimum_height if len(root.keys_list) > 0 else 0
+
+                        MDLabel:
+                            text: "Claves Activas"
+                            font_style: "Subtitle2"
+                            theme_text_color: "Secondary"
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(10)
+
+                        # Key cards (dynamically populated)
+                        # In code, we'll add VpnKeyCard widgets here
+
+            # Bottom spacer
+            Widget:
+                size_hint_y: None
+                height: dp(80)  # Space for bottom navigation
