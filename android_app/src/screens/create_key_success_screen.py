@@ -6,6 +6,7 @@ Shows success message with QR code and connection instructions after key creatio
 from typing import Any, Dict, Optional
 
 from kivy.clock import Clock
+from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.properties import BooleanProperty, ListProperty, NumericProperty, StringProperty
 from kivymd.uix.button import MDFlatButton
@@ -61,11 +62,27 @@ class CreateKeySuccessScreen(MDScreen):
     def on_enter(self):
         """Called when screen is entered."""
         logger.debug("Create key success screen entered")
+        # Bind to keyboard to intercept back button
+        Window.bind(on_keyboard=self._on_keyboard_down)
         self._load_key_data()
 
     def on_leave(self):
         """Called when screen is left."""
-        pass
+        # Unbind from keyboard
+        Window.unbind(on_keyboard=self._on_keyboard_down)
+
+    def _on_keyboard_down(self, window, key, *args):
+        """
+        Intercept hardware back button (Android).
+        
+        Args:
+            window: Kivy window
+            key: Key code (27 = ESC/back button)
+        """
+        if key == 27:  # ESC / Android back button
+            self._confirm_exit()
+            return True  # Consume the event
+        return False  # Let other keys pass through
 
     def _load_key_data(self):
         """Load key data from app global state."""

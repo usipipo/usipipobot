@@ -8,6 +8,7 @@
 #:import QuickActionButton src.components.quick_action_button.QuickActionButton
 #:import SkeletonLoader src.components.skeleton_loader.SkeletonLoader
 #:import VpnKeyCard src.components.vpn_key_card.VpnKeyCard
+#:import QrDisplay src.components.qr_display.QrDisplay
 
 <NeonButton>:
     height: dp(48)
@@ -194,3 +195,9 @@
             theme_text_color: "Secondary"
             size_hint_x: None
             width: dp(30)
+
+<QrDisplay>:
+    size_hint: None, None
+    size: dp(200), dp(200)
+    allow_stretch: True
+    keep_ratio: True
