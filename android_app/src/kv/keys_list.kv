@@ -90,17 +90,23 @@
                     height: dp(40)
                     on_release: root.load_keys(force_refresh=True)
 
-            # Keys list (ScrollView with BoxLayout)
-            ScrollView:
-                do_scroll_x: False
-                bar_width: dp(4)
+            # Keys list with pull-to-refresh
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
 
-                MDBoxLayout:
-                    orientation: "vertical"
-                    spacing: dp(12)
-                    padding: 0
-                    size_hint_y: None
-                    height: self.minimum_height
+                # Keys list (ScrollView with BoxLayout)
+                ScrollView:
+                    do_scroll_x: False
+                    bar_width: dp(4)
+
+                    MDBoxLayout:
+                        orientation: "vertical"
+                        spacing: dp(12)
+                        padding: 0
+                        size_hint_y: None
+                        height: self.minimum_height
 
                     # Empty state
                     MDBoxLayout:
@@ -159,8 +165,13 @@
                             size_hint_y: None
                             height: self.texture_size[1] + dp(10)
 
-                        # Key cards (dynamically populated)
-                        # In code, we'll add VpnKeyCard widgets here
+                        # Key cards container (dynamically populated)
+                        MDBoxLayout:
+                            id: cards_container
+                            orientation: "vertical"
+                            spacing: dp(12)
+                            size_hint_y: None
+                            height: self.minimum_height
 
             # Bottom spacer
             Widget:

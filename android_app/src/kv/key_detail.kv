@@ -200,7 +200,8 @@
                                 size_hint_y: None
                                 height: dp(40)
                                 disabled: True
-                                # Color will be set in code based on percentage
+                                color: root.progress_color
+                                thumb_color: root.progress_color
 
                             MDBoxLayout:
                                 orientation: "horizontal"
@@ -231,6 +232,50 @@
                             theme_text_color: "Hint"
                             size_hint_y: None
                             height: self.texture_size[1]
+
+                    # Purchase banner (visible when usage >= 60%)
+                    MDCard:
+                        orientation: "horizontal"
+                        padding: dp(16)
+                        spacing: dp(12)
+                        size_hint_y: None
+                        height: dp(70) if root.show_purchase_banner and not root.show_limit_reached_overlay else 0
+                        opacity: 1 if root.show_purchase_banner and not root.show_limit_reached_overlay else 0
+                        md_bg_color: 1, 0.584, 0, 0.15  # amber with transparency
+                        radius: [dp(8)]
+                        elevation: 0
+
+                        MDIcon:
+                            icon: "alert-circle"
+                            font_size: dp(24)
+                            theme_text_color: "Custom"
+                            color: 1, 0.584, 0, 1  # amber
+                            size_hint_x: None
+                            width: dp(24)
+                            pos_hint: {"center_y": 0.5}
+
+                        MDLabel:
+                            text: "Considera comprar más GB para evitar la interrupción del servicio"
+                            font_style: "Body2"
+                            theme_text_color: "Custom"
+                            text_color: 1, 0.584, 0, 1  # amber
+                            valign: "middle"
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(10)
+
+                        Widget:
+                            size_hint_x: None
+                            width: dp(8)
+
+                        MDRaisedButton:
+                            text: "Comprar GB"
+                            height: dp(36)
+                            size_hint_x: None
+                            width: dp(100)
+                            md_bg_color: 1, 0.584, 0, 1  # amber
+                            text_color: 0.039, 0.039, 0.059, 1  # bg_void
+                            pos_hint: {"center_y": 0.5}
+                            on_release: root.on_buy_more_pressed()
 
                     # QR Code card
                     MDCard:
@@ -266,20 +311,14 @@
                                 size_hint_y: None
                                 height: self.texture_size[1]
 
-                        # QR Code display (placeholder for QrDisplay widget)
-                        MDScreen:
+                        # QR Code display (QrDisplay widget)
+                        QrDisplay:
+                            id: qr_display
+                            qr_data: ""
                             size_hint_y: None
                             height: dp(200)
-                            md_bg_color: 1, 1, 1, 1  # White background for QR
-
-                            # QrDisplay widget will be added in code
-                            # For now, show placeholder
-                            MDLabel:
-                                text: "QR Code\\n(Se generará al cargar)"
-                                font_style: "Body2"
-                                halign: "center"
-                                valign: "middle"
-                                theme_text_color: "Hint"
+                            allow_stretch: True
+                            keep_ratio: True
 
                         # Connection string (truncated)
                         MDBoxLayout:
@@ -473,6 +512,67 @@
                             theme_text_color: "Primary"
                             size_hint_y: None
                             height: self.texture_size[1] + dp(10)
+
+                # Limit reached overlay (visible when usage == 100%)
+                MDBoxLayout:
+                    id: limit_overlay
+                    orientation: "vertical"
+                    padding: dp(40)
+                    spacing: dp(16)
+                    size_hint: 1, 1
+                    pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                    opacity: 1 if root.show_limit_reached_overlay else 0
+                    size_hint_y: None if root.show_limit_reached_overlay else 0
+                    height: self.parent.height if root.show_limit_reached_overlay else 0
+                    md_bg_color: 1, 0, 0, 0.15  # red with low transparency
+
+                    # Overlay card
+                    MDCard:
+                        orientation: "vertical"
+                        padding: dp(24)
+                        spacing: dp(16)
+                        size_hint: None, None
+                        size: dp(320), dp(280)
+                        pos_hint: {"center_x": 0.5, "center_y": 0.5}
+                        md_bg_color: 0.102, 0.102, 0.141, 1  # bg_card
+                        radius: [dp(16)]
+                        elevation: 4
+
+                        MDIcon:
+                            icon: "alert-octagon"
+                            font_size: dp(48)
+                            theme_text_color: "Custom"
+                            color: 1, 0.267, 0.267, 1  # error red
+                            halign: "center"
+                            size_hint_y: None
+                            height: dp(48)
+
+                        MDLabel:
+                            text: "⚠️ Límite Alcanzado"
+                            font_style: "H6"
+                            font_name: "JetBrainsMono"
+                            halign: "center"
+                            theme_text_color: "Custom"
+                            text_color: 1, 0.267, 0.267, 1  # error red
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(10)
+
+                        MDLabel:
+                            text: "Has alcanzado el límite de datos de tu plan. Tu conexión VPN se interrumpirá hasta que compres más GB."
+                            font_style: "Body2"
+                            halign: "center"
+                            theme_text_color: "Secondary"
+                            size_hint_y: None
+                            height: self.texture_size[1] + dp(20)
+
+                        MDRaisedButton:
+                            text: "COMPRAR MÁS GB"
+                            size_hint: None, None
+                            size: dp(200), dp(48)
+                            pos_hint: {"center_x": 0.5}
+                            md_bg_color: 1, 0.267, 0.267, 1  # error red
+                            text_color: 0.039, 0.039, 0.059, 1  # bg_void
+                            on_release: root.on_buy_more_pressed()
 
                 # Bottom spacer
                 Widget:

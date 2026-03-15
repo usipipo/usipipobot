@@ -11,6 +11,8 @@ from loguru import logger
 
 # Importar configuración y colores desde config.py
 from src.config import COLORS
+from src.screens.create_key_screen import CreateKeyScreen
+from src.screens.create_key_success_screen import CreateKeySuccessScreen
 from src.screens.dashboard_screen import DashboardScreen
 from src.screens.key_detail_screen import KeyDetailScreen
 from src.screens.keys_list_screen import KeysListScreen
@@ -52,6 +54,8 @@ class uSipipoApp(MDApp):
         self.screen_manager.add_widget(DashboardScreen(name="dashboard"))
         self.screen_manager.add_widget(KeysListScreen(name="keys_list"))
         self.screen_manager.add_widget(KeyDetailScreen(name="key_detail"))
+        self.screen_manager.add_widget(CreateKeyScreen(name="create_key"))
+        self.screen_manager.add_widget(CreateKeySuccessScreen(name="create_key_success"))
 
         logger.info("uSipipoApp construida exitosamente")
         return self.screen_manager

@@ -13,6 +13,7 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import Snackbar
 from loguru import logger
+from src.components.qr_display import QrDisplay
 from src.services.auth_service import AuthService
 from src.services.keys_service import KeysService, VpnKeyData
 
@@ -65,6 +66,10 @@ class KeyDetailScreen(MDScreen):
     is_offline = BooleanProperty(False)
     has_error = BooleanProperty(False)
     error_message = StringProperty("")
+
+    # Warning banners
+    show_purchase_banner = BooleanProperty(False)
+    show_limit_reached_overlay = BooleanProperty(False)
 
     # Key ID
     _key_id = StringProperty("")
@@ -177,6 +182,11 @@ class KeyDetailScreen(MDScreen):
             self.qr_data = key.key_data
             self.external_id = key.external_id or ""
 
+            # Configure QR display
+            qr_display = self.ids.get("qr_display")
+            if qr_display:
+                qr_display.qr_data = key.key_data
+
             self.is_loading = False
             logger.debug(f"Key detail loaded: {key.name}")
 
@@ -195,12 +205,23 @@ class KeyDetailScreen(MDScreen):
 
     def _get_progress_color(self, percentage: float) -> List[float]:
         """Get progress bar color based on percentage."""
-        if percentage <= 60:
-            return [0, 0.941, 1, 1]  # neon_cyan
-        elif percentage <= 85:
+        # Update banner visibility based on percentage
+        if percentage >= 100:
+            self.show_limit_reached_overlay = True
+            self.show_purchase_banner = False
+            return [1, 0.267, 0.267, 1]  # error (red)
+        elif percentage >= 85:
+            self.show_limit_reached_overlay = False
+            self.show_purchase_banner = True
+            return [1, 0.267, 0.267, 1]  # error (red)
+        elif percentage >= 60:
+            self.show_limit_reached_overlay = False
+            self.show_purchase_banner = True
             return [1, 0.584, 0, 1]  # amber
         else:
-            return [1, 0.267, 0.267, 1]  # error
+            self.show_limit_reached_overlay = False
+            self.show_purchase_banner = False
+            return [0, 0.941, 1, 1]  # neon_cyan
 
     def _format_date(self, date_str: Optional[str]) -> str:
         """Format date string for display."""
@@ -221,6 +242,12 @@ class KeyDetailScreen(MDScreen):
         logger.info("Back to keys list")
         if self.manager and self.manager.has_screen("keys_list"):
             self.manager.current = "keys_list"
+
+    def on_buy_more_pressed(self):
+        """Handle buy more GB button press from banner."""
+        logger.info("Navigate to buy more GB")
+        if self.manager and self.manager.has_screen("purchase"):
+            self.manager.current = "purchase"
 
     def on_copy_code_pressed(self):
         """Handle copy connection string button press."""
@@ -248,8 +275,9 @@ class KeyDetailScreen(MDScreen):
             activity = autoclass("org.kivy.android.PythonActivity").mActivity
             vibrator = activity.getSystemService(activity.VIBRATOR_SERVICE)
             vibrator.vibrate(50)  # 50ms vibration
-        except Exception:
-            pass  # Desktop or error: skip haptic
+            logger.debug("Haptic feedback triggered (50ms)")
+        except Exception as e:
+            logger.debug(f"Haptic feedback not available: {e}")  # Desktop or error: skip haptic
 
     def on_share_pressed(self):
         """Handle share button press."""
@@ -476,7 +504,8 @@ class KeyDetailScreen(MDScreen):
         except Exception as e:
             logger.error(f"Error deleting key: {e}")
             error_msg = str(e)
-            if "créditos" in error_msg.lower():
+            # Check for credits-related errors (in Spanish or English)
+            if "créditos" in error_msg.lower() or "credit" in error_msg.lower():
                 error_msg = "Necesitas créditos de referido para eliminar claves. Invita amigos."
             Clock.schedule_once(lambda dt: Snackbar(text=error_msg, duration=4).open())
 
