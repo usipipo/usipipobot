@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.10.0] - 2026-03-15
+
+### Features
+- **Qwen Code AI Integration** - Complete GitHub Actions workflows for AI-powered development
+  - Qwen Code Invoke workflow for issue/PR assistance
+  - Qwen Code Triage workflow for automatic issue labeling
+  - Qwen Code Review workflow for automated PR reviews
+  - Qwen Code Dispatch workflow for event-driven automation
+  - Scheduled triage workflow for untriaged issues
+  - Support for custom API proxy (sipllm.duckdns.org)
+  - OAuth and API key authentication support
+
+### CI/CD
+- Added 7 new GitHub Actions workflows for Qwen Code integration
+- Configured MCP GitHub server for AI agent tool access
+- Added connection test workflow for API validation
+- Implemented concurrency controls for workflow execution
+
+### Documentation
+- Added GITHUB_ACTIONS.md with complete setup guide
+- Created configuration scripts for GitHub variables and secrets
+- Added troubleshooting and verification procedures
+
+### Technical
+- Updated QWEN_MODEL variable to use proxy-compatible model names
+- Configured OpenAI-compatible API endpoint for custom proxies
+- Added debug mode and artifact upload options
+
 ## [v3.9.0] - 2026-03-11
 
 ### Features
