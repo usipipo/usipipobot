@@ -1,0 +1,52 @@
+name: '🧪 Qwen Connection Test'
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+permissions:
+  contents: read
+
+jobs:
+  test-connection:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Test Qwen API Connection'
+        id: 'test_qwen'
+        uses: 'QwenLM/qwen-code-action@v1'
+        env:
+          GITHUB_TOKEN: '${{ github.token }}'
+          TEST_MODE: 'true'
+        with:
+          openai_api_key: '${{ secrets.QWEN_API_KEY }}'
+          openai_base_url: '${{ vars.QWEN_BASE_URL }}'
+          openai_model: '${{ vars.QWEN_MODEL }}'
+          qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'
+          qwen_debug: 'true'
+          upload_artifacts: '${{ vars.UPLOAD_ARTIFACTS }}'
+          workflow_name: 'qwen-test-connection'
+          settings: |-
+            {
+              "model": {
+                "maxSessionTurns": 1
+              },
+              "telemetry": {
+                "enabled": true,
+                "target": "local",
+                "outfile": ".qwen/telemetry.log"
+              },
+              "tools": {
+                "core": [
+                  "run_shell_command(echo)",
+                  "run_shell_command(date)"
+                ]
+              }
+            }
+          prompt: 'Solo responde "✅ Conexión exitosa! Tu proxy sipllm está funcionando correctamente."'
+
+      - name: 'Show Result'
+        if: always()
+        run: |
+          echo "=== Qwen Connection Test Result ==="
+          echo "Status: ${{ steps.test_qwen.outcome }}"
+          echo "Base URL: ${{ vars.QWEN_BASE_URL }}"
+          echo "Model: ${{ vars.QWEN_MODEL }}"
