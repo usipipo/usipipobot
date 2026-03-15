@@ -40,9 +40,7 @@ class TestKeyRepository:
     async def test_get_by_user_id_returns_keys(self, mock_key_repo, sample_vpn_key):
         mock_key_repo.get_by_user_id.return_value = [sample_vpn_key]
 
-        result = await mock_key_repo.get_by_user_id(
-            123456789, current_user_id=123456789
-        )
+        result = await mock_key_repo.get_by_user_id(123456789, current_user_id=123456789)
 
         assert len(result) == 1
         assert result[0].user_id == 123456789
@@ -56,9 +54,7 @@ class TestKeyRepository:
         assert result == []
 
     @pytest.mark.asyncio
-    async def test_get_all_active_returns_only_active(
-        self, mock_key_repo, sample_vpn_key
-    ):
+    async def test_get_all_active_returns_only_active(self, mock_key_repo, sample_vpn_key):
         mock_key_repo.get_all_active.return_value = [sample_vpn_key]
 
         result = await mock_key_repo.get_all_active(current_user_id=123456789)
@@ -70,9 +66,7 @@ class TestKeyRepository:
     async def test_get_by_id_found(self, mock_key_repo, sample_vpn_key):
         mock_key_repo.get_by_id.return_value = sample_vpn_key
 
-        result = await mock_key_repo.get_by_id(
-            sample_vpn_key.id, current_user_id=123456789
-        )
+        result = await mock_key_repo.get_by_id(sample_vpn_key.id, current_user_id=123456789)
 
         assert result is not None
         assert result.id == sample_vpn_key.id
@@ -98,9 +92,7 @@ class TestKeyRepository:
     async def test_update_usage_success(self, mock_key_repo):
         mock_key_repo.update_usage.return_value = True
 
-        result = await mock_key_repo.update_usage(
-            uuid.uuid4(), 1024, current_user_id=123456789
-        )
+        result = await mock_key_repo.update_usage(uuid.uuid4(), 1024, current_user_id=123456789)
 
         assert result is True
         mock_key_repo.update_usage.assert_called_once()
@@ -109,9 +101,7 @@ class TestKeyRepository:
     async def test_reset_data_usage_success(self, mock_key_repo):
         mock_key_repo.reset_data_usage.return_value = True
 
-        result = await mock_key_repo.reset_data_usage(
-            uuid.uuid4(), current_user_id=123456789
-        )
+        result = await mock_key_repo.reset_data_usage(uuid.uuid4(), current_user_id=123456789)
 
         assert result is True
         mock_key_repo.reset_data_usage.assert_called_once()

@@ -104,9 +104,7 @@ class TestBlockUserKeys:
         return key
 
     @pytest.mark.asyncio
-    async def test_block_user_keys_success(
-        self, service, mock_outline_key, mock_wireguard_key
-    ):
+    async def test_block_user_keys_success(self, service, mock_outline_key, mock_wireguard_key):
         user = MagicMock()
         user.has_pending_debt = False
         service.user_repo.get_by_id.return_value = user
@@ -196,9 +194,7 @@ class TestUnblockUserKeys:
         return key
 
     @pytest.mark.asyncio
-    async def test_unblock_user_keys_success(
-        self, service, mock_outline_key, mock_wireguard_key
-    ):
+    async def test_unblock_user_keys_success(self, service, mock_outline_key, mock_wireguard_key):
         user = MagicMock()
         user.has_pending_debt = True
         service.user_repo.get_by_id.return_value = user
@@ -286,9 +282,7 @@ class TestRouteUsageToBilling:
         )
 
         assert result is True
-        service.billing_service.record_data_usage.assert_called_once_with(
-            123, Decimal("50.5"), 123
-        )
+        service.billing_service.record_data_usage.assert_called_once_with(123, Decimal("50.5"), 123)
 
     @pytest.mark.asyncio
     async def test_skips_routing_when_consumption_mode_not_active(self, service):

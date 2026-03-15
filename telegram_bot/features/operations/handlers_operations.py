@@ -8,13 +8,7 @@ Version: 3.1.0 - Creditos + Shop + Historial
 from typing import List, Optional
 
 from telegram import Update
-from telegram.ext import (
-    CallbackQueryHandler,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters
 
 from application.services.referral_service import ReferralService
 from application.services.vpn_service import VpnService
@@ -73,9 +67,7 @@ class OperationsHandler:
                 )
         except Exception as e:
             logger.error(f"Error en operations_menu: {e}")
-            await self._send_error(
-                update, context, OperationsMessages.Error.SYSTEM_ERROR
-            )
+            await self._send_error(update, context, OperationsMessages.Error.SYSTEM_ERROR)
 
     async def show_credits(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not update.callback_query or not update.effective_user:
@@ -91,9 +83,7 @@ class OperationsHandler:
             stats = await self.referral_service.get_referral_stats(user_id, user_id)
             logger.debug(f"⚙️ User {user_id} has {stats.referral_credits} credits")
 
-            message = OperationsMessages.Credits.DISPLAY.format(
-                credits=stats.referral_credits
-            )
+            message = OperationsMessages.Credits.DISPLAY.format(credits=stats.referral_credits)
             keyboard = OperationsKeyboards.credits_menu(stats.referral_credits)
 
             await TelegramUtils.safe_edit_message(
@@ -127,9 +117,7 @@ class OperationsHandler:
             query, context, text=message, reply_markup=keyboard, parse_mode="Markdown"
         )
 
-    async def redeem_credits_for_data(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def redeem_credits_for_data(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Canjear creditos por datos - redirige a referral handler."""
         if not update.callback_query:
             return
@@ -144,9 +132,7 @@ class OperationsHandler:
         referral_handler = ReferralHandler(self.referral_service)
         await referral_handler.confirm_redeem_data(update, context)
 
-    async def redeem_credits_for_slot(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def redeem_credits_for_slot(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Canjear creditos por slot - redirige a referral handler."""
         if not update.callback_query:
             return
@@ -161,9 +147,7 @@ class OperationsHandler:
         referral_handler = ReferralHandler(self.referral_service)
         await referral_handler.confirm_redeem_slot(update, context)
 
-    async def show_buy_slots_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def show_buy_slots_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Mostrar menu de compra de slots con Telegram Stars."""
         if not update.callback_query:
             return
@@ -184,9 +168,7 @@ class OperationsHandler:
         buy_handler = BuyGbHandler(data_package_service)
         await buy_handler.show_slots_menu(update, context)
 
-    async def back_to_main_menu(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def back_to_main_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not update.callback_query or not update.effective_user:
             return
         query = update.callback_query
@@ -249,9 +231,7 @@ class OperationsHandler:
                 message += self._format_orders_list(orders_to_show)
 
                 if has_more or page > 0:
-                    message += OperationsMessages.Transactions.PAGE_FOOTER.format(
-                        page=page + 1
-                    )
+                    message += OperationsMessages.Transactions.PAGE_FOOTER.format(page=page + 1)
 
                 keyboard = OperationsKeyboards.transactions_history_menu(
                     has_more=has_more, page=page
@@ -287,9 +267,7 @@ class OperationsHandler:
         total_usdt = 0.0
 
         for order in orders:
-            color_emoji, icon, text = status_map.get(
-                order.status, ("⚪", "❓", str(order.status))
-            )
+            color_emoji, icon, text = status_map.get(order.status, ("⚪", "❓", str(order.status)))
             date_str = order.created_at.strftime("%d/%m/%Y %H:%M")
             lines.append(
                 OperationsMessages.Transactions.ORDER_ITEM.format(
@@ -331,9 +309,7 @@ class OperationsHandler:
             except ValueError:
                 logger.error(f"Invalid pagination data: {data}")
 
-    async def _send_error(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE, message: str
-    ):
+    async def _send_error(self, update: Update, context: ContextTypes.DEFAULT_TYPE, message: str):
         if update.message:
             await update.message.reply_text(text=message, parse_mode="Markdown")
         elif update.callback_query:
@@ -367,16 +343,10 @@ def get_operations_callback_handlers(
         CallbackQueryHandler(handler.show_credits, pattern="^credits_menu$"),
         CallbackQueryHandler(handler.show_shop, pattern="^shop_menu$"),
         CallbackQueryHandler(handler.back_to_main_menu, pattern="^main_menu$"),
-        CallbackQueryHandler(
-            handler.redeem_credits_for_data, pattern="^credits_redeem_data$"
-        ),
-        CallbackQueryHandler(
-            handler.redeem_credits_for_slot, pattern="^credits_redeem_slot$"
-        ),
+        CallbackQueryHandler(handler.redeem_credits_for_data, pattern="^credits_redeem_data$"),
+        CallbackQueryHandler(handler.redeem_credits_for_slot, pattern="^credits_redeem_slot$"),
         CallbackQueryHandler(handler.show_buy_slots_menu, pattern="^buy_slots_menu$"),
-        CallbackQueryHandler(
-            handler.show_transactions_history, pattern="^transactions_history$"
-        ),
+        CallbackQueryHandler(handler.show_transactions_history, pattern="^transactions_history$"),
         CallbackQueryHandler(
             handler._handle_transactions_pagination, pattern="^transactions_page_"
         ),

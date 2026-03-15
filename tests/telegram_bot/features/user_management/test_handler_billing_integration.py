@@ -57,9 +57,7 @@ class TestUserManagementHandlerBillingService:
             billing_service=None,
         )
 
-    def test_handler_stores_billing_service(
-        self, handler_with_billing, mock_billing_service
-    ):
+    def test_handler_stores_billing_service(self, handler_with_billing, mock_billing_service):
         """Test that handler correctly stores billing_service."""
         assert handler_with_billing.billing_service is mock_billing_service
 
@@ -98,9 +96,7 @@ class TestUserManagementHandlerBillingService:
             await handler_with_billing.main_menu_callback(mock_update, mock_context)
 
             # Verify KeyManagementHandler was created with billing_service
-            mock_key_handler_class.assert_called_once_with(
-                mock_vpn_service, mock_billing_service
-            )
+            mock_key_handler_class.assert_called_once_with(mock_vpn_service, mock_billing_service)
 
             # Verify show_key_submenu was called
             mock_key_handler_instance.show_key_submenu.assert_called_once_with(

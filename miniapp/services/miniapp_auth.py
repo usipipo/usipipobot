@@ -73,9 +73,7 @@ class MiniAppAuthService:
 
             hash_value = parsed_data.get("hash", [None])[0]
             if not hash_value:
-                return MiniAppAuthResult(
-                    success=False, error="Hash no encontrado en initData"
-                )
+                return MiniAppAuthResult(success=False, error="Hash no encontrado en initData")
 
             auth_date_str = parsed_data.get("auth_date", [None])[0]
             if not auth_date_str:
@@ -87,15 +85,11 @@ class MiniAppAuthService:
                 return MiniAppAuthResult(success=False, error="Sesión expirada")
 
             if not self._verify_hash(parsed_data, hash_value):
-                return MiniAppAuthResult(
-                    success=False, error="Hash inválido - datos comprometidos"
-                )
+                return MiniAppAuthResult(success=False, error="Hash inválido - datos comprometidos")
 
             user_data = parsed_data.get("user", [None])[0]
             if not user_data:
-                return MiniAppAuthResult(
-                    success=False, error="Datos de usuario no encontrados"
-                )
+                return MiniAppAuthResult(success=False, error="Datos de usuario no encontrados")
 
             user_info = json.loads(user_data)
             user = TelegramUser(
@@ -121,14 +115,10 @@ class MiniAppAuthService:
 
         except json.JSONDecodeError as e:
             logger.error(f"Error parseando JSON de usuario: {e}")
-            return MiniAppAuthResult(
-                success=False, error="Error parseando datos de usuario"
-            )
+            return MiniAppAuthResult(success=False, error="Error parseando datos de usuario")
         except Exception as e:
             logger.error(f"Error validando initData: {e}")
-            return MiniAppAuthResult(
-                success=False, error=f"Error de validación: {str(e)}"
-            )
+            return MiniAppAuthResult(success=False, error=f"Error de validación: {str(e)}")
 
     def _is_auth_fresh(self, auth_date: int, max_age_hours: int = 24) -> bool:
         """
@@ -167,13 +157,9 @@ class MiniAppAuthService:
         data_check_items.sort()
         data_check_string = "\n".join(data_check_items)
 
-        secret_key = hmac.new(
-            b"WebAppData", self.bot_token.encode(), hashlib.sha256
-        ).digest()
+        secret_key = hmac.new(b"WebAppData", self.bot_token.encode(), hashlib.sha256).digest()
 
-        computed_hash = hmac.new(
-            secret_key, data_check_string.encode(), hashlib.sha256
-        ).hexdigest()
+        computed_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
 
         return computed_hash == hash_value
 

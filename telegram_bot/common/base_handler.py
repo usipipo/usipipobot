@@ -46,9 +46,7 @@ class BaseHandler(ABC):
         """
         return await TelegramUtils.safe_answer_query(query)
 
-    async def _handle_callback_query(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def _handle_callback_query(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """
         Safely handle callback query with answer.
 
@@ -162,9 +160,7 @@ class BaseHandler(ABC):
         Returns:
             bool: True if successful, False if failed
         """
-        return await TelegramUtils.safe_edit_message(
-            query, context, text, reply_markup, parse_mode
-        )
+        return await TelegramUtils.safe_edit_message(query, context, text, reply_markup, parse_mode)
 
     async def _edit_message_with_keyboard(
         self,

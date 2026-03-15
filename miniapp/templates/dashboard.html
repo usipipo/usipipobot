@@ -40,7 +40,7 @@
         <span>Mis Claves VPN</span>
         <span style="color: var(--text-muted);">{{ keys_count }}/{{ max_keys }}</span>
     </div>
-    
+
     {% if keys %}
     <div class="key-list">
         {% for key in keys %}
@@ -51,7 +51,7 @@
             <div class="key-content">
                 <div class="key-name">{{ key.name }}</div>
                 <div class="key-meta">
-                    {{ key.key_type.value|upper }} • 
+                    {{ key.key_type.value|upper }} •
                     <span class="badge badge-active">Activa</span>
                 </div>
             </div>

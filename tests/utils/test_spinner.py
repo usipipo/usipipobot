@@ -34,9 +34,7 @@ class TestReplaceSpinnerWithMessage:
         )
 
         # Verify spinner was deleted
-        context.bot.delete_message.assert_called_once_with(
-            chat_id=12345, message_id=999
-        )
+        context.bot.delete_message.assert_called_once_with(chat_id=12345, message_id=999)
         # Verify callback message was edited
         update.callback_query.edit_message_text.assert_called_once_with(
             text="Test message", reply_markup=None, parse_mode="Markdown"
@@ -142,9 +140,7 @@ class TestSafeEditMessage:
     async def test_safe_edit_message_not_modified(self):
         """Test handling of message not modified error."""
         query = MagicMock()
-        query.edit_message_text = AsyncMock(
-            side_effect=BadRequest("Message is not modified")
-        )
+        query.edit_message_text = AsyncMock(side_effect=BadRequest("Message is not modified"))
         context = MagicMock()
 
         result = await TelegramUtils.safe_edit_message(query, context, "Same content")

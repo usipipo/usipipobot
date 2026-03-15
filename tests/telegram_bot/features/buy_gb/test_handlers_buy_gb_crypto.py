@@ -74,9 +74,7 @@ class TestBuyGbHandler:
         """Test successful crypto payment initiation."""
         from unittest.mock import patch
 
-        with patch(
-            "application.services.common.container.get_service"
-        ) as mock_get_service:
+        with patch("application.services.common.container.get_service") as mock_get_service:
             wallet_service_mock = AsyncMock()
             wallet_mock = MagicMock()
             wallet_mock.address = "0x1234567890abcdef"

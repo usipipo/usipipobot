@@ -3,8 +3,30 @@ name: "CodeQL"
 on:
   push:
     branches: ["main"]
+    paths:
+      - 'domain/**'
+      - 'application/**'
+      - 'infrastructure/**'
+      - 'telegram_bot/**'
+      - 'miniapp/**'
+      - 'utils/**'
+      - 'config.py'
+      - 'main.py'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
   pull_request:
     branches: ["main"]
+    paths:
+      - 'domain/**'
+      - 'application/**'
+      - 'infrastructure/**'
+      - 'telegram_bot/**'
+      - 'miniapp/**'
+      - 'utils/**'
+      - 'config.py'
+      - 'main.py'
+      - 'requirements*.txt'
+      - 'pyproject.toml'
   schedule:
     - cron: "0 0 * * 0"
 

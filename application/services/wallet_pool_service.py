@@ -53,9 +53,7 @@ class WalletPoolService:
         """
         try:
             # Paso 1: Buscar wallet reutilizable del mismo usuario
-            existing_wallet = await self.crypto_order_repo.get_reusable_wallet_for_user(
-                user_id
-            )
+            existing_wallet = await self.crypto_order_repo.get_reusable_wallet_for_user(user_id)
 
             if existing_wallet:
                 logger.info(
@@ -85,9 +83,7 @@ class WalletPoolService:
                 )
 
             # Paso 3: Crear nueva wallet si no hay reutilizables
-            logger.info(
-                f"No hay wallets reutilizables, creando nueva para user {user_id}"
-            )
+            logger.info(f"No hay wallets reutilizables, creando nueva para user {user_id}")
             return await self._create_new_wallet(user_id, label)
 
         except Exception as e:
@@ -102,9 +98,7 @@ class WalletPoolService:
             async with self.tron_dealer_client as client:
                 wallet = await client.assign_wallet(label=label)
 
-            logger.info(
-                f"Nueva wallet {wallet.address[:10]}... " f"creada para user {user_id}"
-            )
+            logger.info(f"Nueva wallet {wallet.address[:10]}... " f"creada para user {user_id}")
 
             # Actualizar dirección del usuario
             success = await self.user_repo.update_wallet_address(
@@ -154,8 +148,8 @@ class WalletPoolService:
             dict: Estadísticas del pool
         """
         try:
-            expired_orders = (
-                await self.crypto_order_repo.get_expired_orders_with_wallets(limit=1000)
+            expired_orders = await self.crypto_order_repo.get_expired_orders_with_wallets(
+                limit=1000
             )
 
             unique_wallets = set(order.wallet_address for order in expired_orders)

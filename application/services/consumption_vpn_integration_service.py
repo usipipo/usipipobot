@@ -1,12 +1,8 @@
 from decimal import Decimal
 from typing import Any, Dict, Optional, Tuple
 
-from application.services.consumption_billing_service import (
-    ConsumptionBillingService,
-)
-from application.services.vpn_infrastructure_service import (
-    VpnInfrastructureService,
-)
+from application.services.consumption_billing_service import ConsumptionBillingService
+from application.services.vpn_infrastructure_service import VpnInfrastructureService
 from domain.interfaces.ikey_repository import IKeyRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
@@ -27,9 +23,7 @@ class ConsumptionVpnIntegrationService:
         self.vpn_infra_service = vpn_infra_service
         self.billing_service = billing_service
 
-    async def block_user_keys(
-        self, user_id: int, current_user_id: int
-    ) -> Dict[str, Any]:
+    async def block_user_keys(self, user_id: int, current_user_id: int) -> Dict[str, Any]:
         """
         Bloquea todas las claves VPN de un usuario.
 
@@ -67,9 +61,7 @@ class ConsumptionVpnIntegrationService:
             for key in keys:
                 try:
                     key_type = key.key_type.value
-                    result = await self.vpn_infra_service.disable_key(
-                        str(key.id), key_type
-                    )
+                    result = await self.vpn_infra_service.disable_key(str(key.id), key_type)
 
                     if result.get("success"):
                         keys_blocked += 1
@@ -106,9 +98,7 @@ class ConsumptionVpnIntegrationService:
                 "errors": [f"Error al bloquear claves: {str(e)}"],
             }
 
-    async def unblock_user_keys(
-        self, user_id: int, current_user_id: int
-    ) -> Dict[str, Any]:
+    async def unblock_user_keys(self, user_id: int, current_user_id: int) -> Dict[str, Any]:
         """
         Desbloquea todas las claves VPN de un usuario y limpia su deuda.
 
@@ -146,9 +136,7 @@ class ConsumptionVpnIntegrationService:
             for key in keys:
                 try:
                     key_type = key.key_type.value
-                    result = await self.vpn_infra_service.enable_key(
-                        str(key.id), key_type
-                    )
+                    result = await self.vpn_infra_service.enable_key(str(key.id), key_type)
 
                     if result.get("success"):
                         keys_unblocked += 1

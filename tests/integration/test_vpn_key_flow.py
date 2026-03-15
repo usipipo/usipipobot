@@ -69,9 +69,7 @@ class TestVpnKeyFlow:
         )
 
     @pytest.mark.asyncio
-    async def test_create_outline_key_success(
-        self, vpn_service, mock_user_repo, mock_key_repo
-    ):
+    async def test_create_outline_key_success(self, vpn_service, mock_user_repo, mock_key_repo):
         """Flujo completo de creación de clave Outline."""
         telegram_id = 12345
 
@@ -119,9 +117,7 @@ class TestVpnKeyFlow:
         mock_user_repo.get_by_id = AsyncMock(return_value=existing_user)
         mock_key_repo.get_by_user_id = AsyncMock(return_value=existing_user.keys)
 
-        can_create, message = await vpn_service.can_user_create_key(
-            existing_user, telegram_id
-        )
+        can_create, message = await vpn_service.can_user_create_key(existing_user, telegram_id)
 
         assert can_create is False
         assert "límite" in message.lower() or "limit" in message.lower()

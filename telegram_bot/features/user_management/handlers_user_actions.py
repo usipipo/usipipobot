@@ -73,9 +73,7 @@ class UserActionsMixin:
 
             await update.message.reply_text(
                 text=self.messages.Error.REGISTRATION_FAILED,
-                reply_markup=MainMenuKeyboard.main_menu(
-                    miniapp_url=self._get_miniapp_url()
-                ),
+                reply_markup=MainMenuKeyboard.main_menu(miniapp_url=self._get_miniapp_url()),
             )
 
     async def _process_referral(self, new_user_id: int, referral_code: str):
@@ -101,13 +99,11 @@ class UserActionsMixin:
 
             if result.get("success"):
                 logger.info(
-                    f"Referido procesado: usuario {new_user_id} "
-                    f"con codigo {referral_code}"
+                    f"Referido procesado: usuario {new_user_id} " f"con codigo {referral_code}"
                 )
             else:
                 logger.warning(
-                    f"Referido no procesado para {new_user_id}: "
-                    f"{result.get('error')}"
+                    f"Referido no procesado para {new_user_id}: " f"{result.get('error')}"
                 )
 
         except Exception as e:

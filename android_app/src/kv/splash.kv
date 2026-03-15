@@ -1,0 +1,62 @@
+// Splash screen KV for uSipipo VPN Android APK
+
+#:import HexColor kivy.utils.HexColor
+
+<SplashScreen>:
+    name: "splash"
+    md_bg_color: app.theme_cls.bg_darkest if hasattr(app.theme_cls, 'bg_darkest') else HexColor("#0a0a0f")
+
+    MDBoxLayout:
+        orientation: "vertical"
+        md_bg_color: app.theme_cls.bg_darkest if hasattr(app.theme_cls, 'bg_darkest') else HexColor("#0a0a0f")
+        padding: "20dp"
+        spacing: "20dp"
+
+        # Logo area
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            pos_hint: {"center_x": 0.5}
+
+            # Logo icon (placeholder - usar Image con logo real)
+            MDIcon:
+                icon: "shield-account"
+                font_size: "96sp"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                pos_hint: {"center_x": 0.5}
+                size_hint_x: None
+                width: self.texture_size[0]
+
+            # App name
+            MDLabel:
+                text: root.logo_text
+                font_style: "Headline"
+                halign: "center"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                size_hint_y: None
+                height: self.texture_size[1]
+                font_name: "Roboto"
+
+            # Tagline
+            MDLabel:
+                text: "VPN Manager"
+                font_style: "Subtitle"
+                halign: "center"
+                theme_text_color: "Secondary"
+                size_hint_y: None
+                height: self.texture_size[1]
+
+        # Loading indicator
+        MDBoxLayout:
+            size_hint_y: None
+            height: "50dp"
+            pos_hint: {"center_x": 0.5}
+
+            MDSpinner:
+                size_hint: None, None
+                size: "46dp", "46dp"
+                pos_hint: {"center_x": 0.5}
+                active: True

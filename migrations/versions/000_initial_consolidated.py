@@ -26,12 +26,9 @@ def upgrade() -> None:
         "CREATE TYPE package_type_enum AS ENUM "
         "('basic', 'estandar', 'avanzado', 'premium', 'unlimited')"
     )
+    op.execute("CREATE TYPE crypto_tx_status AS ENUM ('pending', 'confirmed', 'failed')")
     op.execute(
-        "CREATE TYPE crypto_tx_status AS ENUM ('pending', 'confirmed', 'failed')"
-    )
-    op.execute(
-        "CREATE TYPE crypto_order_status AS ENUM "
-        "('pending', 'completed', 'failed', 'expired')"
+        "CREATE TYPE crypto_order_status AS ENUM " "('pending', 'completed', 'failed', 'expired')"
     )
 
     # users table
@@ -67,9 +64,7 @@ def upgrade() -> None:
             server_default="10737418240",
             nullable=False,
         ),
-        sa.Column(
-            "free_data_used_bytes", sa.BigInteger(), server_default="0", nullable=False
-        ),
+        sa.Column("free_data_used_bytes", sa.BigInteger(), server_default="0", nullable=False),
         sa.PrimaryKeyConstraint("telegram_id"),
     )
 
@@ -85,9 +80,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.BigInteger(), nullable=False),
         sa.Column(
             "key_type",
-            postgresql.ENUM(
-                "wireguard", "outline", name="key_type_enum", create_type=False
-            ),
+            postgresql.ENUM("wireguard", "outline", name="key_type_enum", create_type=False),
             nullable=False,
         ),
         sa.Column("name", sa.String(), nullable=False),
@@ -143,9 +136,7 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("data_limit_bytes", sa.BigInteger(), nullable=False),
-        sa.Column(
-            "data_used_bytes", sa.BigInteger(), server_default="0", nullable=False
-        ),
+        sa.Column("data_used_bytes", sa.BigInteger(), server_default="0", nullable=False),
         sa.Column("stars_paid", sa.Integer(), nullable=False),
         sa.Column(
             "purchased_at",
@@ -231,9 +222,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.BigInteger(), nullable=False),
         sa.Column("wallet_address", sa.String(length=42), nullable=False),
         sa.Column("amount", sa.Float(), nullable=False),
-        sa.Column(
-            "token_symbol", sa.String(length=10), server_default="USDT", nullable=False
-        ),
+        sa.Column("token_symbol", sa.String(length=10), server_default="USDT", nullable=False),
         sa.Column("tx_hash", sa.String(length=66), unique=True, nullable=False),
         sa.Column(
             "status",
@@ -337,16 +326,10 @@ def upgrade() -> None:
     op.create_index("ix_vpn_keys_user_id", "vpn_keys", ["user_id"])
     op.create_index("ix_data_packages_user_id", "data_packages", ["user_id"])
     op.create_index("ix_transactions_user_id", "transactions", ["user_id"])
-    op.create_index(
-        "ix_crypto_transactions_user_id", "crypto_transactions", ["user_id"]
-    )
-    op.create_index(
-        "ix_crypto_transactions_tx_hash", "crypto_transactions", ["tx_hash"]
-    )
+    op.create_index("ix_crypto_transactions_user_id", "crypto_transactions", ["user_id"])
+    op.create_index("ix_crypto_transactions_tx_hash", "crypto_transactions", ["tx_hash"])
     op.create_index("ix_crypto_orders_user_id", "crypto_orders", ["user_id"])
-    op.create_index(
-        "ix_crypto_orders_wallet_address", "crypto_orders", ["wallet_address"]
-    )
+    op.create_index("ix_crypto_orders_wallet_address", "crypto_orders", ["wallet_address"])
     op.create_index("ix_crypto_orders_status", "crypto_orders", ["status"])
     op.create_index("ix_crypto_orders_expires_at", "crypto_orders", ["expires_at"])
     op.create_index("ix_crypto_orders_tx_hash", "crypto_orders", ["tx_hash"])

@@ -2,14 +2,9 @@ import uuid
 from typing import Optional
 
 from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
-from domain.entities.crypto_transaction import (
-    CryptoTransaction,
-    CryptoTransactionStatus,
-)
+from domain.entities.crypto_transaction import CryptoTransaction, CryptoTransactionStatus
 from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
-from domain.interfaces.icrypto_transaction_repository import (
-    ICryptoTransactionRepository,
-)
+from domain.interfaces.icrypto_transaction_repository import ICryptoTransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
 from utils.logger import logger
 
@@ -134,9 +129,7 @@ class CryptoPaymentService:
             return None
 
         try:
-            user = await self.user_repo.get_by_wallet_address(
-                wallet_address, current_user_id=0
-            )
+            user = await self.user_repo.get_by_wallet_address(wallet_address, current_user_id=0)
             return user.telegram_id if user else None
         except Exception as e:
             logger.error(f"Error finding user by wallet: {e}")
@@ -178,6 +171,14 @@ class CryptoPaymentService:
                     f"Successfully credited {slots} slots to user {user_id} via crypto payment. "
                     f"New max_keys: {result['new_max_keys']}"
                 )
+
+                # Send confirmation notification via Telegram
+                await self._send_crypto_confirmation_notification(
+                    user_id=user_id,
+                    product_name=f"+{slots} Claves VPN",
+                    amount_usdt=amount,
+                )
+
                 return True
 
             # Es un paquete de datos normal
@@ -205,11 +206,7 @@ class CryptoPaymentService:
                 telegram_payment_id=crypto_payment_id,
                 current_user_id=user_id,
             )
-            package = (
-                package_result[0]
-                if isinstance(package_result, tuple)
-                else package_result
-            )
+            package = package_result[0] if isinstance(package_result, tuple) else package_result
 
             if package.data_limit_bytes < bytes_to_credit:
                 from domain.entities.data_package import DataPackage
@@ -223,9 +220,7 @@ class CryptoPaymentService:
                     expires_at=package.expires_at,
                     telegram_payment_id=crypto_payment_id,
                 )
-                from domain.interfaces.idata_package_repository import (
-                    IDataPackageRepository,
-                )
+                from domain.interfaces.idata_package_repository import IDataPackageRepository
                 from infrastructure.persistence.postgresql.data_package_repository import (
                     PostgresDataPackageRepository,
                 )
@@ -236,6 +231,28 @@ class CryptoPaymentService:
             logger.info(
                 f"Successfully credited {gb_to_credit} GB ({bytes_to_credit} bytes) to user {user_id} via crypto payment"
             )
+
+            # Send confirmation notification via Telegram
+            package_option = None
+            from application.services.data_package_service import PACKAGE_OPTIONS
+
+            for pkg in PACKAGE_OPTIONS:
+                if pkg.package_type.value == package_type:
+                    package_option = pkg
+                    break
+
+            product_name = (
+                f"Paquete {package_option.name} ({package_option.data_gb} GB)"
+                if package_option
+                else f"{gb_to_credit} GB Datos"
+            )
+
+            await self._send_crypto_confirmation_notification(
+                user_id=user_id,
+                product_name=product_name,
+                amount_usdt=amount,
+            )
+
             return True
         except Exception as e:
             logger.error(f"Error crediting user {user_id}: {e}")
@@ -285,6 +302,57 @@ class CryptoPaymentService:
             )
 
         return history
+
+    async def _send_crypto_confirmation_notification(
+        self,
+        user_id: int,
+        product_name: str,
+        amount_usdt: float,
+    ) -> bool:
+        """
+        Send payment confirmation notification for crypto payments.
+
+        Args:
+            user_id: Telegram user ID
+            product_name: Name of purchased product
+            amount_usdt: Amount paid in USDT
+
+        Returns:
+            True if notification was sent successfully
+        """
+        try:
+            from telegram import Bot
+
+            from config import settings
+
+            bot = Bot(token=settings.TELEGRAM_TOKEN)
+
+            message = (
+                f"✅ *¡Pago Crypto Confirmado!*\n\n"
+                f"💰 Producto: *{product_name}*\n"
+                f"💳 Monto: *{amount_usdt:.2f} USDT*\n"
+                f"🔗 Red: *BSC (BEP20)*\n\n"
+                f"Tu producto ha sido activado inmediatamente.\n"
+                f"Revisa tu sección de claves VPN para ver los cambios."
+            )
+
+            await bot.send_message(
+                chat_id=user_id,
+                text=message,
+                parse_mode="Markdown",
+            )
+
+            await bot.close()
+
+            logger.info(f"📬 Crypto confirmation sent to user {user_id}: {product_name}")
+            return True
+
+        except Exception as e:
+            logger.error(
+                f"Error sending crypto confirmation to user {user_id}: {e}",
+                exc_info=True,
+            )
+            return False
 
     async def check_and_expire_orders(self) -> int:
         if not self.crypto_order_repo:

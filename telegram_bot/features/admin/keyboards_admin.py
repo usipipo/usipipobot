@@ -27,25 +27,17 @@ class AdminKeyboards:
                 InlineKeyboardButton("🔑 Llaves VPN", callback_data="admin_show_keys"),
             ],
             [
-                InlineKeyboardButton(
-                    "📊 Dashboard", callback_data="admin_server_status"
-                ),
-                InlineKeyboardButton(
-                    "⚙️ Configuración", callback_data="admin_settings"
-                ),
+                InlineKeyboardButton("📊 Dashboard", callback_data="admin_server_status"),
+                InlineKeyboardButton("⚙️ Configuración", callback_data="admin_settings"),
             ],
             [
                 InlineKeyboardButton(tickets_text, callback_data="admin_tickets_menu"),
             ],
             [
-                InlineKeyboardButton(
-                    "🔧 Mantenimiento", callback_data="admin_maintenance"
-                ),
+                InlineKeyboardButton("🔧 Mantenimiento", callback_data="admin_maintenance"),
             ],
             [
-                InlineKeyboardButton(
-                    "⚡ Gestionar Servidores VPN", callback_data="admin_vpn"
-                ),
+                InlineKeyboardButton("⚡ Gestionar Servidores VPN", callback_data="admin_vpn"),
             ],
             [
                 InlineKeyboardButton("📋 Ver Logs", callback_data="admin_logs"),
@@ -72,24 +64,14 @@ class AdminKeyboards:
     def back_to_users() -> InlineKeyboardMarkup:
         """Teclado para volver a lista de usuarios."""
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver a Usuarios", callback_data="admin_show_users"
-                )
-            ]
+            [InlineKeyboardButton("🔙 Volver a Usuarios", callback_data="admin_show_users")]
         ]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
     def back_to_keys() -> InlineKeyboardMarkup:
         """Teclado para volver a lista de llaves."""
-        keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver a Llaves", callback_data="admin_show_keys"
-                )
-            ]
-        ]
+        keyboard = [[InlineKeyboardButton("🔙 Volver a Llaves", callback_data="admin_show_keys")]]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
@@ -102,9 +84,7 @@ class AdminKeyboards:
         for user in users:
             status_icon = "✅" if user.get("status") == "active" else "❌"
             full_name = (
-                user.get("full_name")
-                or user.get("username")
-                or f"User {user.get('user_id')}"
+                user.get("full_name") or user.get("username") or f"User {user.get('user_id')}"
             )
             if len(full_name) > 20:
                 full_name = full_name[:20] + "..."
@@ -120,18 +100,12 @@ class AdminKeyboards:
         nav_row = []
         if page > 1:
             nav_row.append(
-                InlineKeyboardButton(
-                    "⬅️ Anterior", callback_data=f"users_page_{page - 1}"
-                )
+                InlineKeyboardButton("⬅️ Anterior", callback_data=f"users_page_{page - 1}")
             )
-        nav_row.append(
-            InlineKeyboardButton(f"📄 {page}/{total_pages}", callback_data="noop")
-        )
+        nav_row.append(InlineKeyboardButton(f"📄 {page}/{total_pages}", callback_data="noop"))
         if page < total_pages:
             nav_row.append(
-                InlineKeyboardButton(
-                    "➡️ Siguiente", callback_data=f"users_page_{page + 1}"
-                )
+                InlineKeyboardButton("➡️ Siguiente", callback_data=f"users_page_{page + 1}")
             )
         keyboard.append(nav_row)
 
@@ -146,9 +120,7 @@ class AdminKeyboards:
         if is_active:
             keyboard.append(
                 [
-                    InlineKeyboardButton(
-                        "⏸️ Suspender", callback_data=f"user_suspend_{user_id}"
-                    ),
+                    InlineKeyboardButton("⏸️ Suspender", callback_data=f"user_suspend_{user_id}"),
                 ]
             )
         else:
@@ -161,18 +133,12 @@ class AdminKeyboards:
             )
 
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "🗑️ Eliminar Usuario", callback_data=f"user_delete_{user_id}"
-                )
-            ]
+            [InlineKeyboardButton("🗑️ Eliminar Usuario", callback_data=f"user_delete_{user_id}")]
         )
 
         keyboard.append(
             [
-                InlineKeyboardButton(
-                    "🔙 Volver a Usuarios", callback_data="admin_show_users"
-                ),
+                InlineKeyboardButton("🔙 Volver a Usuarios", callback_data="admin_show_users"),
                 InlineKeyboardButton("🏠 Menú Admin", callback_data="admin"),
             ]
         )
@@ -184,9 +150,7 @@ class AdminKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton("🔑 Todas", callback_data="keys_filter_all"),
-                InlineKeyboardButton(
-                    "⚡ WireGuard", callback_data="keys_filter_wireguard"
-                ),
+                InlineKeyboardButton("⚡ WireGuard", callback_data="keys_filter_wireguard"),
                 InlineKeyboardButton("🔵 Outline", callback_data="keys_filter_outline"),
             ],
             [InlineKeyboardButton("🔙 Menú Admin", callback_data="admin")],
@@ -202,9 +166,7 @@ class AdminKeyboards:
 
         for key in keys:
             status_icon = "✅" if key.get("is_active") else "❌"
-            key_type_icon = (
-                "⚡" if key.get("key_type", "").lower() == "wireguard" else "🔵"
-            )
+            key_type_icon = "⚡" if key.get("key_type", "").lower() == "wireguard" else "🔵"
             key_name = key.get("key_name") or f"Key {str(key.get('key_id', ''))[:8]}"
             if len(key_name) > 15:
                 key_name = key_name[:15] + "..."
@@ -227,18 +189,12 @@ class AdminKeyboards:
         nav_row = []
         if page > 1:
             nav_row.append(
-                InlineKeyboardButton(
-                    "⬅️ Anterior", callback_data=f"keys_page_{page - 1}"
-                )
+                InlineKeyboardButton("⬅️ Anterior", callback_data=f"keys_page_{page - 1}")
             )
-        nav_row.append(
-            InlineKeyboardButton(f"📄 {page}/{total_pages}", callback_data="noop")
-        )
+        nav_row.append(InlineKeyboardButton(f"📄 {page}/{total_pages}", callback_data="noop"))
         if page < total_pages:
             nav_row.append(
-                InlineKeyboardButton(
-                    "➡️ Siguiente", callback_data=f"keys_page_{page + 1}"
-                )
+                InlineKeyboardButton("➡️ Siguiente", callback_data=f"keys_page_{page + 1}")
             )
         keyboard.append(nav_row)
 
@@ -268,18 +224,12 @@ class AdminKeyboards:
             )
 
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "🗑️ Eliminar Llave", callback_data=f"admin_key_delete_{key_id}"
-                )
-            ]
+            [InlineKeyboardButton("🗑️ Eliminar Llave", callback_data=f"admin_key_delete_{key_id}")]
         )
 
         keyboard.append(
             [
-                InlineKeyboardButton(
-                    "🔙 Volver a Llaves", callback_data="admin_show_keys"
-                ),
+                InlineKeyboardButton("🔙 Volver a Llaves", callback_data="admin_show_keys"),
                 InlineKeyboardButton("🏠 Menú Admin", callback_data="admin"),
             ]
         )
@@ -290,9 +240,7 @@ class AdminKeyboards:
         """Teclado de confirmación para acciones peligrosas."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "✅ Confirmar", callback_data=f"confirm_{action}_{target_id}"
-                ),
+                InlineKeyboardButton("✅ Confirmar", callback_data=f"confirm_{action}_{target_id}"),
                 InlineKeyboardButton("❌ Cancelar", callback_data=f"cancel_{action}"),
             ]
         ]
@@ -303,9 +251,7 @@ class AdminKeyboards:
         """Teclado de acciones del dashboard."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "👥 Ver Usuarios", callback_data="admin_show_users"
-                ),
+                InlineKeyboardButton("👥 Ver Usuarios", callback_data="admin_show_users"),
                 InlineKeyboardButton("🔑 Ver Llaves", callback_data="admin_show_keys"),
             ],
             [InlineKeyboardButton("🔙 Menú Admin", callback_data="admin")],
@@ -321,12 +267,8 @@ class AdminKeyboards:
                 InlineKeyboardButton("📊 Límites", callback_data="settings_limits"),
             ],
             [
-                InlineKeyboardButton(
-                    "⚙️ Configuración", callback_data="admin_settings"
-                ),
-                InlineKeyboardButton(
-                    "🔧 Mantenimiento", callback_data="admin_maintenance"
-                ),
+                InlineKeyboardButton("⚙️ Configuración", callback_data="admin_settings"),
+                InlineKeyboardButton("🔧 Mantenimiento", callback_data="admin_maintenance"),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="admin")],
         ]
@@ -337,12 +279,8 @@ class AdminKeyboards:
         """Teclado del menú de mantenimiento."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "🔄 Reiniciar WG", callback_data="restart_wireguard"
-                ),
-                InlineKeyboardButton(
-                    "🔄 Reiniciar OL", callback_data="restart_outline"
-                ),
+                InlineKeyboardButton("🔄 Reiniciar WG", callback_data="restart_wireguard"),
+                InlineKeyboardButton("🔄 Reiniciar OL", callback_data="restart_outline"),
             ],
             [
                 InlineKeyboardButton("🧹 Limpiar Logs", callback_data="clear_logs"),
@@ -355,19 +293,13 @@ class AdminKeyboards:
     @staticmethod
     def back_to_settings() -> InlineKeyboardMarkup:
         """Teclado para volver a configuración."""
-        keyboard = [
-            [InlineKeyboardButton("🔙 Volver a Config", callback_data="admin_settings")]
-        ]
+        keyboard = [[InlineKeyboardButton("🔙 Volver a Config", callback_data="admin_settings")]]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
     def back_to_maintenance() -> InlineKeyboardMarkup:
         """Teclado para volver a mantenimiento."""
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver a Mantenimiento", callback_data="admin_maintenance"
-                )
-            ]
+            [InlineKeyboardButton("🔙 Volver a Mantenimiento", callback_data="admin_maintenance")]
         ]
         return InlineKeyboardMarkup(keyboard)

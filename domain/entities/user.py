@@ -69,8 +69,7 @@ class User:
         active_keys = [
             k
             for k in self.keys
-            if getattr(k, "is_active", True)
-            and getattr(k, "key_type", None) == key_type
+            if getattr(k, "is_active", True) and getattr(k, "key_type", None) == key_type
         ]
         return len(active_keys)
 

@@ -45,9 +45,7 @@ async def expire_crypto_orders_job(context: ContextTypes.DEFAULT_TYPE) -> None:
         for order in pending_orders:
             if order.is_expired:
                 # Marcar como expirada en la base de datos
-                success = await crypto_payment_service.crypto_order_repo.mark_expired(
-                    order.id
-                )
+                success = await crypto_payment_service.crypto_order_repo.mark_expired(order.id)
 
                 if success:
                     expired_count += 1
@@ -86,13 +84,9 @@ async def expire_crypto_orders_job(context: ContextTypes.DEFAULT_TYPE) -> None:
                                 parse_mode="Markdown",
                             )
                             notified_count += 1
-                            logger.info(
-                                f"📨 Usuario {order.user_id} notificado de orden expirada"
-                            )
+                            logger.info(f"📨 Usuario {order.user_id} notificado de orden expirada")
                         except Exception as e:
-                            logger.error(
-                                f"❌ Error notificando al usuario {order.user_id}: {e}"
-                            )
+                            logger.error(f"❌ Error notificando al usuario {order.user_id}: {e}")
 
         if expired_count > 0:
             logger.info(

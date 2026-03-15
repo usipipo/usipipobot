@@ -41,9 +41,7 @@ class TestConsumptionHandlersRegistration:
                 "ConsumptionInvoiceService": mock_invoice_service,
             }
             service_name = (
-                service_class.__name__
-                if hasattr(service_class, "__name__")
-                else str(service_class)
+                service_class.__name__ if hasattr(service_class, "__name__") else str(service_class)
             )
             for key, value in services.items():
                 if key in service_name:
@@ -103,9 +101,7 @@ class TestConsumptionHandlersRegistration:
         assert len(handlers) > 0
 
     @patch("telegram_bot.handlers.handler_initializer.get_container")
-    def test_get_consumption_handlers_returns_list(
-        self, mock_get_container, mock_container
-    ):
+    def test_get_consumption_handlers_returns_list(self, mock_get_container, mock_container):
         """
         Verifica que _get_consumption_handlers retorna una lista.
         """

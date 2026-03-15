@@ -52,9 +52,7 @@ def get_ticket_conversation_handler(
                 CallbackQueryHandler(handler.start_create, pattern="^tickets_create$"),
                 CallbackQueryHandler(handler.show_list, pattern="^tickets_list$"),
                 CallbackQueryHandler(handler.cancel, pattern="^main_menu$"),
-                CallbackQueryHandler(
-                    handler.exit_to_help, pattern="^tickets_menu_exit$"
-                ),
+                CallbackQueryHandler(handler.exit_to_help, pattern="^tickets_menu_exit$"),
             ],
             TICKET_SELECTING_CATEGORY: [
                 CallbackQueryHandler(handler.select_category, pattern="^tickets_cat_"),
@@ -68,9 +66,7 @@ def get_ticket_conversation_handler(
                 CallbackQueryHandler(handler.cancel, pattern="^tickets_menu$"),
             ],
             TICKET_CONFIRMING: [
-                CallbackQueryHandler(
-                    handler.confirm_create, pattern="^tickets_confirm$"
-                ),
+                CallbackQueryHandler(handler.confirm_create, pattern="^tickets_confirm$"),
                 CallbackQueryHandler(handler.cancel, pattern="^tickets_menu$"),
             ],
             TICKET_VIEWING: [

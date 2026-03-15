@@ -45,8 +45,7 @@ async def sync_vpn_usage_job(context: ContextTypes.DEFAULT_TYPE) -> None:
                 logger.error(f"❌ Error sincronizando llave {key.id}: {e}")
 
         logger.info(
-            f"✅ Sincronización completada. "
-            f"Exitosas: {synced_count}, Errores: {error_count}"
+            f"✅ Sincronización completada. " f"Exitosas: {synced_count}, Errores: {error_count}"
         )
 
     except Exception as e:

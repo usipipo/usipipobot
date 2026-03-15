@@ -95,16 +95,22 @@ dump.rdb
 .opencode/
 .worktrees/
 
-# Worktrees
-.worktrees/
-
-# =============================================================================
-# PLANES Y DOCUMENTACIÓN INTERNA
-# =============================================================================
-# Excluir todos los planes del repositorio - no publicar en GitHub
-docs/plans/
+# Virtual Environments (uv)
+.venv/
+venv/
+android_app/.venv/
+android_app/venv/
 
 # =============================================================================
 # DATABASE BACKUPS
 # =============================================================================
 backups/
+
+# =============================================================================
+# PRE-COMMIT
+# =============================================================================
+.pre-commit/
+.secrets.baseline
+
+.qwen/
+gha-creds-*.json

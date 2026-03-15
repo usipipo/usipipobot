@@ -1,0 +1,208 @@
+// OTP screen KV for uSipipo VPN Android APK
+
+#:import HexColor kivy.utils.HexColor
+
+<OtpScreen>:
+    name: "otp"
+    md_bg_color: app.theme_cls.bg_darkest if hasattr(app.theme_cls, 'bg_darkest') else HexColor("#0a0a0f")
+
+    MDBoxLayout:
+        orientation: "vertical"
+        md_bg_color: app.theme_cls.bg_darkest if hasattr(app.theme_cls, 'bg_darkest') else HexColor("#0a0a0f")
+        padding: "20dp"
+        spacing: "15dp"
+
+        # Header with back button
+        MDBoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: "56dp"
+
+            MDIconButton:
+                icon: "arrow-left"
+                on_release: root.on_back_pressed()
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+
+            MDLabel:
+                text: "Verificación"
+                font_style: "Title"
+                halign: "center"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+
+            # Spacer for centering
+            MDBoxLayout:
+                size_hint_x: 1
+
+        # Content area
+        MDBoxLayout:
+            orientation: "vertical"
+            padding: "0dp", "20dp", "0dp", "0dp"
+
+            MDBoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+
+                MDIcon:
+                    icon: "shield-check"
+                    font_size: "64sp"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                    pos_hint: {"center_x": 0.5}
+                    size_hint_x: None
+                    width: self.texture_size[0]
+
+                MDLabel:
+                    text: "Código de Verificación"
+                    font_style: "Headline"
+                    halign: "center"
+                    theme_text_color: "Custom"
+                    text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+                MDLabel:
+                    text: f"Ingresa el código enviado a\\n{root.identifier}"
+                    font_style: "Subtitle"
+                    halign: "center"
+                    theme_text_color: "Secondary"
+                    size_hint_y: None
+                    height: self.texture_size[1]
+
+        # Timer display
+        MDBoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: "40dp"
+            pos_hint: {"center_x": 0.5}
+
+            MDIcon:
+                icon: "timer-outline"
+                theme_text_color: "Secondary"
+                size_hint_x: None
+                width: "24dp"
+
+            MDLabel:
+                text: root.get_time_display() if root.time_remaining > 0 else "00:00"
+                font_style: "Body"
+                theme_text_color: "Secondary"
+                size_hint_x: None
+                width: self.texture_size[0]
+
+        # OTP Input component
+        BoxLayout:
+            id: otp_input_container
+            size_hint_y: None
+            height: "80dp"
+            padding: "10dp", "20dp", "10dp", "10dp"
+
+            # Note: OtpInput will be added programmatically or via factory
+            # For now, using individual text fields as placeholder
+            MDTextField:
+                id: otp_1
+                mode: "rectangle"
+                max_text_length: 1
+                halign: "center"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "40dp"
+                input_filter: "int"
+                multiline: False
+            MDTextField:
+                id: otp_2
+                mode: "rectangle"
+                max_text_length: 1
+                halign: "center"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "40dp"
+                input_filter: "int"
+                multiline: False
+            MDTextField:
+                id: otp_3
+                mode: "rectangle"
+                max_text_length: 1
+                halign: "center"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "40dp"
+                input_filter: "int"
+                multiline: False
+            MDTextField:
+                id: otp_4
+                mode: "rectangle"
+                max_text_length: 1
+                halign: "center"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "40dp"
+                input_filter: "int"
+                multiline: False
+            MDTextField:
+                id: otp_5
+                mode: "rectangle"
+                max_text_length: 1
+                halign: "center"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "40dp"
+                input_filter: "int"
+                multiline: False
+            MDTextField:
+                id: otp_6
+                mode: "rectangle"
+                max_text_length: 1
+                halign: "center"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "40dp"
+                input_filter: "int"
+                multiline: False
+                on_text_validate: root.on_verify_pressed()
+
+        # Verify button
+        MDRaisedButton:
+            text: "VERIFICAR"
+            size_hint_x: 1
+            size_hint_y: None
+            height: "48dp"
+            md_bg_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+            on_release: root.on_verify_pressed()
+            disabled: root.is_loading
+
+        # Loading indicator
+        MDBoxLayout:
+            size_hint_y: None
+            height: "40dp" if root.is_loading else "0dp"
+            opacity: 1 if root.is_loading else 0
+
+            MDSpinner:
+                size_hint: None, None
+                size: "36dp", "36dp"
+                pos_hint: {"center_x": 0.5}
+                active: True
+
+        # Resend link
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            padding: "0dp", "20dp", "0dp", "0dp"
+
+            MDLabel:
+                text: "¿No recibiste el código?"
+                font_style: "Caption"
+                halign: "center"
+                theme_text_color: "Secondary"
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            MDTextButton:
+                text: "Reenviar código"
+                pos_hint: {"center_x": 0.5}
+                size_hint_x: None
+                width: self.texture_size[0]
+                disabled: root.time_remaining > 0 or root.is_resending
+                on_release: root.on_resend_pressed()

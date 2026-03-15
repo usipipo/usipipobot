@@ -38,12 +38,8 @@ class ServerMonitoringMixin:
             wg_metrics = await self.vpn_service.get_server_metrics("wireguard")
             ol_metrics = await self.vpn_service.get_server_metrics("outline")
 
-            wg_health = (
-                "✅ Saludable" if wg_metrics.get("is_healthy") else "❌ No disponible"
-            )
-            ol_health = (
-                "✅ Saludable" if ol_metrics.get("is_healthy") else "❌ No disponible"
-            )
+            wg_health = "✅ Saludable" if wg_metrics.get("is_healthy") else "❌ No disponible"
+            ol_health = "✅ Saludable" if ol_metrics.get("is_healthy") else "❌ No disponible"
 
             message = AdminVpnMessages.SERVER_STATUS.format(
                 wg_health=wg_health,
@@ -89,9 +85,7 @@ class ServerMonitoringMixin:
 
         server_type = query.data.replace("vpn_manage_", "")
 
-        message = AdminVpnMessages.SERVER_MANAGE_HEADER.format(
-            server_type=server_type.upper()
-        )
+        message = AdminVpnMessages.SERVER_MANAGE_HEADER.format(server_type=server_type.upper())
 
         await self._safe_edit_message(
             query,
@@ -132,9 +126,7 @@ class ServerMonitoringMixin:
             )
 
             if server_type == "outline":
-                message += (
-                    f"🏷️ **Nombre servidor:** {metrics.get('server_name', 'N/A')}\n"
-                )
+                message += f"🏷️ **Nombre servidor:** {metrics.get('server_name', 'N/A')}\n"
 
             if metrics.get("error"):
                 message += f"\n⚠️ **Error:** {metrics.get('error')}"

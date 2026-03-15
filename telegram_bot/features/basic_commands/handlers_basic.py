@@ -31,9 +31,7 @@ class BasicHandler:
 
         try:
             if update.message:
-                await update.message.reply_text(
-                    text=BasicMessages.HELP_TEXT, parse_mode="Markdown"
-                )
+                await update.message.reply_text(text=BasicMessages.HELP_TEXT, parse_mode="Markdown")
         except Exception as e:
             logger.error(f"❌ Error en /help para usuario {user_id}: {e}")
 

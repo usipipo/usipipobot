@@ -121,9 +121,7 @@ class MiniAppPaymentService:
             return invoice_url
 
         except ValueError as e:
-            logger.error(
-                f"Validation error creating Stars invoice for user {user_id}: {e}"
-            )
+            logger.error(f"Validation error creating Stars invoice for user {user_id}: {e}")
             return None
         except Exception as e:
             logger.error(
@@ -152,9 +150,7 @@ class MiniAppPaymentService:
             Order details including wallet address and QR code.
         """
         try:
-            from application.services.wallet_management_service import (
-                WalletManagementService,
-            )
+            from application.services.wallet_management_service import WalletManagementService
             from utils.qr_generator import QrGenerator
 
             logger.info(
@@ -168,9 +164,7 @@ class MiniAppPaymentService:
 
             # Assign wallet to user
             logger.debug(f"Assigning wallet for user {user_id}")
-            wallet = await wallet_service.assign_wallet(
-                user_id, label=f"miniapp-user-{user_id}"
-            )
+            wallet = await wallet_service.assign_wallet(user_id, label=f"miniapp-user-{user_id}")
 
             if not wallet:
                 logger.error(
@@ -238,21 +232,16 @@ class MiniAppPaymentService:
                 "wallet_address": wallet.address,
                 "amount_usdt": amount_usdt,
                 "qr_code_url": qr_url,
-                "expires_at": (
-                    order.expires_at.isoformat() if order.expires_at else None
-                ),
+                "expires_at": (order.expires_at.isoformat() if order.expires_at else None),
             }
 
         except TronDealerApiError as e:
             logger.error(
-                f"TronDealer API error for user {user_id}: "
-                f"{e.status_code} - {e.message}"
+                f"TronDealer API error for user {user_id}: " f"{e.status_code} - {e.message}"
             )
             return None
         except ValueError as e:
-            logger.error(
-                f"Validation error creating crypto order for user {user_id}: {e}"
-            )
+            logger.error(f"Validation error creating crypto order for user {user_id}: {e}")
             return None
         except Exception as e:
             logger.error(

@@ -12,6 +12,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
 
 from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import (
@@ -33,7 +34,6 @@ from infrastructure.persistence.postgresql.data_package_repository import (
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from miniapp.routes_common import MiniAppContext, PaymentRequest, get_current_user
 from miniapp.services.miniapp_payment_service import MiniAppPaymentService
-from pydantic import BaseModel, Field
 from utils.logger import logger
 
 
@@ -41,12 +41,8 @@ class ConfirmPaymentRequest(BaseModel):
     """Request model for confirming a payment."""
 
     product_type: str = Field(..., description="Type of product: 'package' or 'slots'")
-    product_id: str = Field(
-        ..., description="Product identifier (e.g., 'basic', 'slots_3')"
-    )
-    transaction_id: str = Field(
-        ..., description="Unique transaction ID from invoice creation"
-    )
+    product_id: str = Field(..., description="Product identifier (e.g., 'basic', 'slots_3')")
+    transaction_id: str = Field(..., description="Unique transaction ID from invoice creation")
 
 
 router = APIRouter(tags=["Mini App - Payments"])
@@ -56,9 +52,7 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 @router.get("/purchase", response_class=HTMLResponse)
-async def purchase_page(
-    request: Request, ctx: MiniAppContext = Depends(get_current_user)
-):
+async def purchase_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
     """Página para comprar paquetes de datos y slots."""
     logger.info(f"💎 MiniApp purchase page accessed by user {ctx.user.id}")
     # Convert PackageOption objects to dict for template
@@ -116,9 +110,7 @@ async def api_create_stars_invoice(
             # DEFENSE: Verify user exists before creating invoice
             existing_user = await user_repo.get_by_id(ctx.user.id, ctx.user.id)
             if not existing_user:
-                logger.error(
-                    f"User {ctx.user.id} not found in database - cannot create invoice"
-                )
+                logger.error(f"User {ctx.user.id} not found in database - cannot create invoice")
                 return JSONResponse(
                     status_code=400,
                     content={
@@ -130,21 +122,84 @@ async def api_create_stars_invoice(
             data_package_service = DataPackageService(package_repo, user_repo)
             payment_service = MiniAppPaymentService(data_package_service)
 
+            # Get notification service to send invoice via Telegram Bot
+            from miniapp.services.miniapp_notification_service import get_notification_service
+
+            notification_service = get_notification_service()
+            if not notification_service:
+                logger.error("Notification service not initialized")
+                return JSONResponse(
+                    status_code=500,
+                    content={
+                        "success": False,
+                        "error": "Servicio de notificaciones no disponible. Intenta nuevamente.",
+                    },
+                )
+
             # Generate unique transaction ID for this purchase
             import uuid
 
             transaction_id = str(uuid.uuid4())[:16]
 
-            invoice_url = payment_service.create_stars_invoice_url(
+            # Get product details for invoice
+            if payment_req.product_type == "package":
+                package_opt = payment_service.get_package_option(payment_req.product_id)
+                if not package_opt:
+                    logger.error(f"Package not found: {payment_req.product_id}")
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "success": False,
+                            "error": "Paquete no válido.",
+                        },
+                    )
+
+                title = f"Paquete {package_opt.name}"
+                description = f"{package_opt.data_gb} GB de datos VPN"
+                payload = f"data_package_{payment_req.product_id}_{ctx.user.id}_{transaction_id}"
+                amount = package_opt.stars
+
+            elif payment_req.product_type == "slots":
+                slots_str = payment_req.product_id.replace("slots_", "")
+                slots = int(slots_str)
+                slot_opt = payment_service.get_slot_option(slots)
+
+                if not slot_opt:
+                    logger.error(f"Slot option not found: {slots}")
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "success": False,
+                            "error": "Opción de slots no válida.",
+                        },
+                    )
+
+                title = slot_opt.name
+                description = f"Añade {slots} claves VPN adicionales"
+                payload = f"key_slots_{slots}_{ctx.user.id}_{transaction_id}"
+                amount = slot_opt.stars
+            else:
+                logger.error(f"Invalid product type: {payment_req.product_type}")
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "success": False,
+                        "error": "Tipo de producto no válido.",
+                    },
+                )
+
+            # Send invoice via Telegram Bot
+            invoice_sent = await notification_service.send_stars_invoice(
                 user_id=ctx.user.id,
-                product_type=payment_req.product_type,
-                product_id=payment_req.product_id,
-                transaction_id=transaction_id,
+                title=title,
+                description=description,
+                payload=payload,
+                amount=amount,
             )
 
-            if not invoice_url:
+            if not invoice_sent:
                 logger.warning(
-                    f"Failed to create Stars invoice for user {ctx.user.id}: service returned None"
+                    f"Failed to create Stars invoice for user {ctx.user.id}: notification service returned None"
                 )
                 return JSONResponse(
                     status_code=400,
@@ -163,14 +218,12 @@ async def api_create_stars_invoice(
             )
             return {
                 "success": True,
-                "invoice_url": invoice_url,
+                "message": "Factura enviada a tu Telegram. Revisa tu chat para pagar.",
                 "transaction_id": transaction_id,
             }
 
     except Exception as e:
-        logger.error(
-            f"Error creating stars invoice for user {ctx.user.id}: {e}", exc_info=True
-        )
+        logger.error(f"Error creating stars invoice for user {ctx.user.id}: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={
@@ -224,6 +277,11 @@ async def api_create_crypto_order(
             data_package_service = DataPackageService(package_repo, user_repo)
             miniapp_payment_service = MiniAppPaymentService(data_package_service)
 
+            # Get notification service
+            from miniapp.services.miniapp_notification_service import get_notification_service
+
+            notification_service = get_notification_service()
+
             order_data = await miniapp_payment_service.create_crypto_order(
                 user_id=ctx.user.id,
                 product_type=payment_req.product_type,
@@ -247,19 +305,35 @@ async def api_create_crypto_order(
                     },
                 )
 
+            # Send notification via Telegram Bot with QR code
+            if notification_service:
+                product_name = (
+                    f"Paquete {payment_req.product_id.upper()}"
+                    if payment_req.product_type == "package"
+                    else f"+{payment_req.product_id.replace('slots_', '')} Claves"
+                )
+
+                await notification_service.send_crypto_payment_notification(
+                    user_id=ctx.user.id,
+                    order_id=order_data.get("order_id", "N/A"),
+                    wallet_address=order_data["wallet_address"],
+                    amount_usdt=order_data["amount_usdt"],
+                    qr_code_url=order_data["qr_code_url"],
+                    product_name=product_name,
+                )
+
             logger.info(
                 f"Successfully created crypto order for user {ctx.user.id}: "
                 f"order_id={order_data.get('order_id')}"
             )
             return {
                 "success": True,
+                "message": "Orden crypto creada. Revisa tu Telegram para pagar.",
                 **order_data,
             }
 
     except Exception as e:
-        logger.error(
-            f"Error creating crypto order for user {ctx.user.id}: {e}", exc_info=True
-        )
+        logger.error(f"Error creating crypto order for user {ctx.user.id}: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={
@@ -289,9 +363,7 @@ async def api_confirm_payment(
             # Verify user exists
             existing_user = await user_repo.get_by_id(ctx.user.id, ctx.user.id)
             if not existing_user:
-                logger.error(
-                    f"User {ctx.user.id} not found in database - cannot confirm payment"
-                )
+                logger.error(f"User {ctx.user.id} not found in database - cannot confirm payment")
                 return JSONResponse(
                     status_code=400,
                     content={
@@ -302,6 +374,11 @@ async def api_confirm_payment(
 
             data_package_service = DataPackageService(package_repo, user_repo)
             payment_service = MiniAppPaymentService(data_package_service)
+
+            # Get notification service
+            from miniapp.services.miniapp_notification_service import get_notification_service
+
+            notification_service = get_notification_service()
 
             if confirm_req.product_type == "package":
                 # Validate package exists
@@ -331,14 +408,21 @@ async def api_confirm_payment(
                     f"{confirm_req.product_id}, package_id={package.id}"
                 )
 
+                # Send confirmation notification via Telegram
+                if notification_service:
+                    product_name = f"Paquete {package_opt.name} ({package_opt.data_gb} GB)"
+                    await notification_service.send_payment_confirmation(
+                        user_id=ctx.user.id,
+                        product_name=product_name,
+                        payment_method="Telegram Stars",
+                    )
+
                 return {
                     "success": True,
                     "message": "Paquete comprado exitosamente",
                     "package_id": str(package.id),
                     "data_bytes": package.remaining_bytes,
-                    "expires_at": (
-                        package.expires_at.isoformat() if package.expires_at else None
-                    ),
+                    "expires_at": (package.expires_at.isoformat() if package.expires_at else None),
                 }
 
             elif confirm_req.product_type == "slots":
@@ -361,9 +445,7 @@ async def api_confirm_payment(
                 # Validate slots option exists
                 slot_opt = payment_service.get_slot_option(slots)
                 if not slot_opt:
-                    logger.warning(
-                        f"Invalid slots option for user {ctx.user.id}: {slots}"
-                    )
+                    logger.warning(f"Invalid slots option for user {ctx.user.id}: {slots}")
                     return JSONResponse(
                         status_code=400,
                         content={
@@ -385,6 +467,15 @@ async def api_confirm_payment(
                     f"+{result['slots_added']} slots, new_max={result['new_max_keys']}"
                 )
 
+                # Send confirmation notification via Telegram
+                if notification_service:
+                    product_name = f"+{slots} Claves VPN"
+                    await notification_service.send_payment_confirmation(
+                        user_id=ctx.user.id,
+                        product_name=product_name,
+                        payment_method="Telegram Stars",
+                    )
+
                 return {
                     "success": True,
                     "message": "Slots comprados exitosamente",
@@ -405,9 +496,7 @@ async def api_confirm_payment(
                 )
 
     except Exception as e:
-        logger.error(
-            f"Error confirming payment for user {ctx.user.id}: {e}", exc_info=True
-        )
+        logger.error(f"Error confirming payment for user {ctx.user.id}: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={

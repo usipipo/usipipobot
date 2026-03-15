@@ -34,11 +34,7 @@ class CommonKeyboards:
             InlineKeyboardMarkup: Back to main menu keyboard
         """
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver al Menú Principal", callback_data="main_menu"
-                )
-            ]
+            [InlineKeyboardButton("🔙 Volver al Menú Principal", callback_data="main_menu")]
         ]
         return InlineKeyboardMarkup(keyboard)
 
@@ -134,9 +130,7 @@ class CommonKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def navigation_row(
-        back_callback: str = "back", help_callback: str = "help"
-    ) -> list:
+    def navigation_row(back_callback: str = "back", help_callback: str = "help") -> list:
         """
         Standard navigation row for keyboards.
 
@@ -160,11 +154,7 @@ class CommonKeyboards:
         Returns:
             list: Main navigation row buttons
         """
-        return [
-            InlineKeyboardButton(
-                "🔙 Volver al Menú Principal", callback_data="main_menu"
-            )
-        ]
+        return [InlineKeyboardButton("🔙 Volver al Menú Principal", callback_data="main_menu")]
 
     @staticmethod
     def action_buttons(
@@ -188,9 +178,7 @@ class CommonKeyboards:
         keyboard = []
 
         # Primary action row
-        keyboard.append(
-            [InlineKeyboardButton(primary_text, callback_data=primary_callback)]
-        )
+        keyboard.append([InlineKeyboardButton(primary_text, callback_data=primary_callback)])
 
         # Secondary action row (if provided)
         if secondary_text and secondary_callback:
@@ -227,13 +215,9 @@ class CommonKeyboards:
         # Pagination row
         nav_row = []
         if has_prev:
-            nav_row.append(
-                InlineKeyboardButton("⬅️ Anterior", callback_data=prev_callback)
-            )
+            nav_row.append(InlineKeyboardButton("⬅️ Anterior", callback_data=prev_callback))
         if has_next:
-            nav_row.append(
-                InlineKeyboardButton("Siguiente ➡️", callback_data=next_callback)
-            )
+            nav_row.append(InlineKeyboardButton("Siguiente ➡️", callback_data=next_callback))
 
         if nav_row:
             keyboard.append(nav_row)
@@ -273,9 +257,7 @@ class CommonKeyboards:
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def main_menu(
-        is_admin: bool = False, miniapp_url: str | None = None
-    ) -> InlineKeyboardMarkup:
+    def main_menu(is_admin: bool = False, miniapp_url: str | None = None) -> InlineKeyboardMarkup:
         """
         Main menu keyboard.
 

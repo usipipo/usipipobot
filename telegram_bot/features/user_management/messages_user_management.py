@@ -35,18 +35,10 @@ def _format_key_slots(used: int, total: int) -> str:
 # ============================================
 
 _SEP_HEADER = (
-    MessageSeparatorBuilder()
-    .compact()
-    .style("double")
-    .length(TELEGRAM_MOBILE_WIDTH)
-    .build()
+    MessageSeparatorBuilder().compact().style("double").length(TELEGRAM_MOBILE_WIDTH).build()
 )
 _SEP_DIVIDER = (
-    MessageSeparatorBuilder()
-    .compact()
-    .style("simple")
-    .length(TELEGRAM_MOBILE_WIDTH)
-    .build()
+    MessageSeparatorBuilder().compact().style("simple").length(TELEGRAM_MOBILE_WIDTH).build()
 )
 _SEP_BOLD = MessageSeparatorBuilder().compact().style("bold").length(9).build()
 
@@ -88,8 +80,7 @@ class UserManagementMessages:
         )
 
         RETURNING_USER_SIMPLIFIED = (
-            "👋 *¡Bienvenido de vuelta!*\n\n"
-            "Usa el menú de abajo para gestionar tu VPN:\n"
+            "👋 *¡Bienvenido de vuelta!*\n\n" "Usa el menú de abajo para gestionar tu VPN:\n"
         )
 
         HELP_TEXT = (
@@ -357,13 +348,10 @@ class UserManagementMessages:
         HEADER = "📜 *Historial de Transacciones*\n\n"
 
         NO_TRANSACTIONS = (
-            "📜 *Historial de Transacciones*\n\n"
-            "No tienes transacciones registradas aún."
+            "📜 *Historial de Transacciones*\n\n" "No tienes transacciones registradas aún."
         )
 
-        TRANSACTION_ITEM = (
-            "{number}\\. `{date}` \\- {description}\n" "   {amount} | {status}"
-        )
+        TRANSACTION_ITEM = "{number}\\. `{date}` \\- {description}\n" "   {amount} | {status}"
 
         FOOTER = "\n\n📄 _Ver más_ | 🏠 _Menú principal_"
 
@@ -381,8 +369,7 @@ class UserManagementMessages:
         )
 
         STATUS_FAILED = (
-            "❌ **Error obteniendo estado**\n\n"
-            "No pude cargar tu información. Intenta más tarde."
+            "❌ **Error obteniendo estado**\n\n" "No pude cargar tu información. Intenta más tarde."
         )
 
         INFO_FAILED = (

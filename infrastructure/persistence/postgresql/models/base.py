@@ -36,9 +36,7 @@ class UserModel(Base):
     full_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     language_code: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -52,23 +50,17 @@ class UserModel(Base):
     referral_credits: Mapped[int] = mapped_column(Integer, server_default="0")
     wallet_address: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
-    free_data_limit_bytes: Mapped[int] = mapped_column(
-        BigInteger, server_default="10737418240"
-    )
+    free_data_limit_bytes: Mapped[int] = mapped_column(BigInteger, server_default="10737418240")
     free_data_used_bytes: Mapped[int] = mapped_column(BigInteger, server_default="0")
 
     # Bonus tracking fields
     purchase_count: Mapped[int] = mapped_column(Integer, server_default="0")
     loyalty_bonus_percent: Mapped[int] = mapped_column(Integer, server_default="0")
     welcome_bonus_used: Mapped[bool] = mapped_column(Boolean, server_default="false")
-    referred_users_with_purchase: Mapped[int] = mapped_column(
-        Integer, server_default="0"
-    )
+    referred_users_with_purchase: Mapped[int] = mapped_column(Integer, server_default="0")
 
     # Consumption billing fields
-    consumption_mode_enabled: Mapped[bool] = mapped_column(
-        Boolean, server_default="false"
-    )
+    consumption_mode_enabled: Mapped[bool] = mapped_column(Boolean, server_default="false")
     has_pending_debt: Mapped[bool] = mapped_column(Boolean, server_default="false")
     current_billing_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         SQLUUID(as_uuid=True), ForeignKey("consumption_billings.id"), nullable=True
@@ -109,22 +101,14 @@ class VpnKeyModel(Base):
     key_data: Mapped[str] = mapped_column(String, nullable=False)
     external_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     used_bytes: Mapped[int] = mapped_column(BigInteger, server_default="0")
-    last_seen_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    data_limit_bytes: Mapped[int] = mapped_column(
-        BigInteger, server_default="10737418240"
-    )
+    last_seen_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    data_limit_bytes: Mapped[int] = mapped_column(BigInteger, server_default="10737418240")
     billing_reset_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    expires_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     owner: Mapped["UserModel"] = relationship(back_populates="keys")
 
@@ -157,9 +141,7 @@ class DataPackageModel(Base):
     purchased_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     telegram_payment_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
@@ -183,16 +165,12 @@ class TransactionModel(Base):
     description: Mapped[str] = mapped_column(String, nullable=False)
     reference_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     telegram_payment_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 # Import ticket models after all models defined to resolve forward references
 # Import ticket models after all models defined to resolve forward references
-from infrastructure.persistence.postgresql.models.ticket import (  # noqa: E402, F401
-    TicketModel,
-)
+from infrastructure.persistence.postgresql.models.ticket import TicketModel  # noqa: E402, F401
 from infrastructure.persistence.postgresql.models.ticket_message import (  # noqa: E402, F401
     TicketMessageModel,
 )

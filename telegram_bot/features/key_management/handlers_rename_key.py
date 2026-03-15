@@ -8,12 +8,8 @@ Version: 1.0.0 - Refactor from handlers_key_management.py
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from telegram_bot.features.key_management.keyboards_key_management import (
-    KeyManagementKeyboards,
-)
-from telegram_bot.features.key_management.messages_key_management import (
-    KeyManagementMessages,
-)
+from telegram_bot.features.key_management.keyboards_key_management import KeyManagementKeyboards
+from telegram_bot.features.key_management.messages_key_management import KeyManagementMessages
 from utils.logger import logger
 from utils.telegram_utils import escape_markdown
 
@@ -33,9 +29,7 @@ class RenameKeyMixin:
 
         await self.show_key_submenu(update, context)
 
-    async def process_rename_key(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
+    async def process_rename_key(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Procesa el mensaje de texto con el nuevo nombre para la llave."""
         if context.user_data is None:
             return
@@ -51,15 +45,11 @@ class RenameKeyMixin:
         user_id = update.effective_user.id
 
         try:
-            logger.info(
-                f"User {user_id} attempting to rename key {key_id} to '{new_name}'"
-            )
+            logger.info(f"User {user_id} attempting to rename key {key_id} to '{new_name}'")
             # Limpiar estado
             del context.user_data["rename_key_id"]
 
-            success = await self.vpn_service.rename_key(
-                key_id, new_name, current_user_id=user_id
-            )
+            success = await self.vpn_service.rename_key(key_id, new_name, current_user_id=user_id)
 
             if success:
                 message = KeyManagementMessages.Actions.KEY_RENAMED.format(
@@ -67,9 +57,7 @@ class RenameKeyMixin:
                 )
                 logger.info(f"User {user_id} renamed key {key_id} to '{new_name}'")
             else:
-                message = (
-                    "❌ No se pudo renombrar la llave. Por favor, intenta de nuevo."
-                )
+                message = "❌ No se pudo renombrar la llave. Por favor, intenta de nuevo."
 
             # Volver a los detalles de la llave
             await update.message.reply_text(

@@ -40,12 +40,8 @@ class AdminService(IAdminService):
         payment_repository,
         ticket_repo: ITicketRepository | None = None,
     ):
-        self._stats_service = AdminStatsService(
-            user_repository, key_repository, payment_repository
-        )
-        self._user_service = AdminUserService(
-            user_repository, key_repository, payment_repository
-        )
+        self._stats_service = AdminStatsService(user_repository, key_repository, payment_repository)
+        self._user_service = AdminUserService(user_repository, key_repository, payment_repository)
         self._key_service = AdminKeyService(key_repository, user_repository)
         self._server_service = AdminServerService(user_repository, key_repository)
         self.ticket_repo = ticket_repo
@@ -70,17 +66,13 @@ class AdminService(IAdminService):
         self, page: int = 1, per_page: int = 10, current_user_id: int | None = None
     ) -> Dict:
         """Obtener usuarios paginados."""
-        return await self._user_service.get_users_paginated(
-            page, per_page, current_user_id
-        )
+        return await self._user_service.get_users_paginated(page, per_page, current_user_id)
 
     async def get_user_by_id(self, user_id: int) -> Optional[Dict]:
         """Obtener información detallada de un usuario."""
         return await self._user_service.get_user_by_id(user_id)
 
-    async def update_user_status(
-        self, user_id: int, status: str
-    ) -> AdminOperationResult:
+    async def update_user_status(self, user_id: int, status: str) -> AdminOperationResult:
         """Actualizar estado del usuario (ACTIVE, SUSPENDED, BLOCKED)."""
         return await self._user_service.update_user_status(user_id, status)
 
@@ -88,9 +80,7 @@ class AdminService(IAdminService):
         self, user_id: int, role: str, duration_days: Optional[int] = None
     ) -> AdminOperationResult:
         """Asignar rol a un usuario."""
-        return await self._user_service.assign_role_to_user(
-            user_id, role, duration_days
-        )
+        return await self._user_service.assign_role_to_user(user_id, role, duration_days)
 
     async def block_user(self, user_id: int) -> AdminOperationResult:
         """Bloquear un usuario."""
@@ -128,9 +118,7 @@ class AdminService(IAdminService):
         """Eliminar completamente una clave (servidores + BD)."""
         return await self._key_service.delete_user_key_complete(key_id)
 
-    async def toggle_key_status(
-        self, key_id: str, active: bool = True
-    ) -> Dict[str, Any]:
+    async def toggle_key_status(self, key_id: str, active: bool = True) -> Dict[str, Any]:
         """Activa o desactiva una llave VPN sin eliminarla."""
         return await self._key_service.toggle_key_status(key_id, active)
 

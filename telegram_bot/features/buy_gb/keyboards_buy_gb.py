@@ -35,17 +35,11 @@ class BuyGbKeyboards:
             keyboard.append(row)
 
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "🔑 Comprar Claves Extra", callback_data="buy_slots_menu"
-                )
-            ]
+            [InlineKeyboardButton("🔑 Comprar Claves Extra", callback_data="buy_slots_menu")]
         )
         keyboard.append(
             [
-                InlineKeyboardButton(
-                    "📊 Ver Mis Datos", callback_data="view_data_summary"
-                ),
+                InlineKeyboardButton("📊 Ver Mis Datos", callback_data="view_data_summary"),
                 InlineKeyboardButton("🔙 Volver", callback_data="operations_menu"),
             ]
         )
@@ -74,20 +68,14 @@ class BuyGbKeyboards:
                     )
                 ]
             )
-        keyboard.append(
-            [InlineKeyboardButton("🔙 Volver a Paquetes", callback_data="buy_gb_menu")]
-        )
+        keyboard.append([InlineKeyboardButton("🔙 Volver a Paquetes", callback_data="buy_gb_menu")])
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
     def slot_payment_method_selection(slots: int) -> InlineKeyboardMarkup:
         """Teclado para seleccionar método de pago para slots (Stars o Crypto)."""
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "⭐ Pagar con Stars", callback_data=f"pay_slots_stars_{slots}"
-                )
-            ],
+            [InlineKeyboardButton("⭐ Pagar con Stars", callback_data=f"pay_slots_stars_{slots}")],
             [
                 InlineKeyboardButton(
                     "💰 Pagar con Crypto", callback_data=f"pay_slots_crypto_{slots}"
@@ -111,9 +99,7 @@ class BuyGbKeyboards:
         keyboard = [
             [
                 InlineKeyboardButton("📦 Comprar Otro", callback_data="buy_gb_menu"),
-                InlineKeyboardButton(
-                    "📊 Ver Mis Datos", callback_data="view_data_summary"
-                ),
+                InlineKeyboardButton("📊 Ver Mis Datos", callback_data="view_data_summary"),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
         ]
@@ -123,11 +109,7 @@ class BuyGbKeyboards:
     def payment_method_selection(package_type: str) -> InlineKeyboardMarkup:
         """Teclado para seleccionar método de pago (Stars o Crypto)."""
         keyboard = [
-            [
-                InlineKeyboardButton(
-                    "⭐ Pagar con Stars", callback_data=f"pay_stars_{package_type}"
-                )
-            ],
+            [InlineKeyboardButton("⭐ Pagar con Stars", callback_data=f"pay_stars_{package_type}")],
             [
                 InlineKeyboardButton(
                     "💰 Pagar con Crypto", callback_data=f"pay_crypto_{package_type}"

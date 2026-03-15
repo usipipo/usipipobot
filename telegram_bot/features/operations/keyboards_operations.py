@@ -16,17 +16,13 @@ class OperationsKeyboards:
         keyboard = [
             # Sección de Beneficios y Referidos
             [
-                InlineKeyboardButton(
-                    f"🎁 Créditos ({credits})", callback_data="credits_menu"
-                ),
+                InlineKeyboardButton(f"🎁 Créditos ({credits})", callback_data="credits_menu"),
                 InlineKeyboardButton("👥 Referidos", callback_data="referral_menu"),
             ],
             # Sección de Compras e Historial
             [
                 InlineKeyboardButton("🛒 Shop", callback_data="shop_menu"),
-                InlineKeyboardButton(
-                    "📜 Historial", callback_data="transactions_history"
-                ),
+                InlineKeyboardButton("📜 Historial", callback_data="transactions_history"),
             ],
             # Volver
             [InlineKeyboardButton("🔙 Volver", callback_data="main_menu")],
@@ -44,12 +40,8 @@ class OperationsKeyboards:
     def credits_menu(credits: int) -> InlineKeyboardMarkup:
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "✨ Canjear por GB", callback_data="credits_redeem_data"
-                ),
-                InlineKeyboardButton(
-                    "🔑 Canjear por Slot", callback_data="credits_redeem_slot"
-                ),
+                InlineKeyboardButton("✨ Canjear por GB", callback_data="credits_redeem_data"),
+                InlineKeyboardButton("🔑 Canjear por Slot", callback_data="credits_redeem_slot"),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
         ]
@@ -62,23 +54,17 @@ class OperationsKeyboards:
                 InlineKeyboardButton("📦 Paquetes de GB", callback_data="buy_gb_menu"),
             ],
             [
-                InlineKeyboardButton(
-                    "🔑 Slots Adicionales", callback_data="buy_slots_menu"
-                ),
+                InlineKeyboardButton("🔑 Slots Adicionales", callback_data="buy_slots_menu"),
             ],
             [
-                InlineKeyboardButton(
-                    "✨ Extras con Creditos", callback_data="credits_menu"
-                ),
+                InlineKeyboardButton("✨ Extras con Creditos", callback_data="credits_menu"),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
     @staticmethod
-    def transactions_history_menu(
-        has_more: bool = False, page: int = 0
-    ) -> InlineKeyboardMarkup:
+    def transactions_history_menu(has_more: bool = False, page: int = 0) -> InlineKeyboardMarkup:
         """Teclado para el historial de transacciones."""
         keyboard = []
 
@@ -87,21 +73,13 @@ class OperationsKeyboards:
             nav_buttons = []
             if page > 0:
                 prev_callback = f"transactions_page_{page - 1}"
-                nav_buttons.append(
-                    InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback)
-                )
+                nav_buttons.append(InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback))
             if has_more:
                 next_callback = f"transactions_page_{page + 1}"
-                nav_buttons.append(
-                    InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback)
-                )
+                nav_buttons.append(InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback))
             keyboard.append(nav_buttons)
 
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    "🔙 Volver a Operaciones", callback_data="operations_menu"
-                )
-            ]
+            [InlineKeyboardButton("🔙 Volver a Operaciones", callback_data="operations_menu")]
         )
         return InlineKeyboardMarkup(keyboard)

@@ -1,0 +1,111 @@
+// Login screen KV for uSipipo VPN Android APK
+
+#:import HexColor kivy.utils.HexColor
+
+<LoginScreen>:
+    name: "login"
+    md_bg_color: app.theme_cls.bg_darkest if hasattr(app.theme_cls, 'bg_darkest') else HexColor("#0a0a0f")
+
+    MDBoxLayout:
+        orientation: "vertical"
+        md_bg_color: app.theme_cls.bg_darkest if hasattr(app.theme_cls, 'bg_darkest') else HexColor("#0a0a0f")
+        padding: "20dp"
+        spacing: "15dp"
+
+        # Header
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            padding: "0dp", "40dp", "0dp", "20dp"
+
+            MDIcon:
+                icon: "shield-key"
+                font_size: "64sp"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                pos_hint: {"center_x": 0.5}
+                size_hint_x: None
+                width: self.texture_size[0]
+
+            MDLabel:
+                text: "Iniciar Sesión"
+                font_style: "Headline"
+                halign: "center"
+                theme_text_color: "Custom"
+                text_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            MDLabel:
+                text: "Ingresa tu usuario de Telegram"
+                font_style: "Subtitle"
+                halign: "center"
+                theme_text_color: "Secondary"
+                size_hint_y: None
+                height: self.texture_size[1]
+
+        # Spacer
+        MDBoxLayout:
+            size_hint_y: 0.3
+
+        # Identifier input field
+        MDTextField:
+            id: identifier_field
+            hint_text: "@usuario o ID"
+            mode: "rectangle"
+            icon_left: "account"
+            size_hint_x: 1
+            size_hint_y: None
+            height: "56dp"
+            font_size: "16sp"
+            multiline: False
+            on_text_validate: root.on_login_pressed()
+
+        # Login button
+        MDRaisedButton:
+            text: "SOLICITAR CÓDIGO"
+            size_hint_x: 1
+            size_hint_y: None
+            height: "48dp"
+            md_bg_color: app.theme_cls.accent_color if hasattr(app.theme_cls, 'accent_color') else HexColor("#00f0ff")
+            on_release: root.on_login_pressed()
+            disabled: root.is_loading
+
+        # Loading indicator (shown when loading)
+        MDBoxLayout:
+            size_hint_y: None
+            height: "40dp" if root.is_loading else "0dp"
+            opacity: 1 if root.is_loading else 0
+
+            MDSpinner:
+                size_hint: None, None
+                size: "36dp", "36dp"
+                pos_hint: {"center_x": 0.5}
+                active: True
+
+        # Spacer
+        MDBoxLayout:
+            size_hint_y: 0.5
+
+        # Signup link
+        MDBoxLayout:
+            orientation: "vertical"
+            size_hint_y: None
+            height: self.minimum_height
+            padding: "0dp", "20dp", "0dp", "0dp"
+
+            MDLabel:
+                text: "¿No tienes cuenta?"
+                font_style: "Caption"
+                halign: "center"
+                theme_text_color: "Secondary"
+                size_hint_y: None
+                height: self.texture_size[1]
+
+            MDTextButton:
+                text: "Abrir bot de Telegram"
+                pos_hint: {"center_x": 0.5}
+                size_hint_x: None
+                width: self.texture_size[0]
+                on_release: root.on_signup_pressed()

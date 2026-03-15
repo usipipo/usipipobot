@@ -30,9 +30,7 @@ class IAdminUserService(ABC):
         pass
 
     @abstractmethod
-    async def get_users_paginated(
-        self, page: int, per_page: int, current_user_id: int
-    ) -> Dict:
+    async def get_users_paginated(self, page: int, per_page: int, current_user_id: int) -> Dict:
         """Obtener usuarios paginados."""
         pass
 
@@ -42,9 +40,7 @@ class IAdminUserService(ABC):
         pass
 
     @abstractmethod
-    async def update_user_status(
-        self, user_id: int, status: str
-    ) -> AdminOperationResult:
+    async def update_user_status(self, user_id: int, status: str) -> AdminOperationResult:
         """Actualizar estado del usuario."""
         pass
 

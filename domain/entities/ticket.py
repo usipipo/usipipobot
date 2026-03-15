@@ -69,9 +69,7 @@ class Ticket:
         """Verifica si el ticket está cerrado."""
         return self.status == TicketStatus.CLOSED
 
-    def update_status(
-        self, new_status: TicketStatus, admin_id: Optional[int] = None
-    ) -> None:
+    def update_status(self, new_status: TicketStatus, admin_id: Optional[int] = None) -> None:
         """Actualiza el estado del ticket."""
         self.status = new_status
         self.updated_at = datetime.now(timezone.utc)

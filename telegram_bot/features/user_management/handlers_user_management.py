@@ -8,13 +8,7 @@ Version: 3.0.0 - Refactored into mixins
 from typing import Optional
 
 from telegram import Update
-from telegram.ext import (
-    CallbackQueryHandler,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters
 
 from application.services.consumption_billing_service import ConsumptionBillingService
 from application.services.user_profile_service import UserProfileService

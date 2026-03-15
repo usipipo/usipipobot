@@ -2,13 +2,14 @@
 
 <div align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.13-blue?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![uv](https://img.shields.io/badge/Package%20Manager-uv-C744B2?style=flat)](https://github.com/astral-sh/uv)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python Telegram Bot](https://img.shields.io/pypi/v/python-telegram-bot?color=2CA5E0&label=python-telegram-bot&logo=telegram&logoColor=white)](https://github.com/python-telegram-bot/python-telegram-bot)
 [![CodeQL](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml)
 [![Docker Build](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml)
-[![Tests](https://img.shields.io/badge/Tests-385%20passing-success?style=flat)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-406%20passing-success?style=flat)](#testing)
 [![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture-purple?style=flat)](#arquitectura)
 [![FastAPI](https://img.shields.io/pypi/v/fastapi?color=009688&label=FastAPI&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 
@@ -91,17 +92,19 @@ usipipobot/
 
 | Componente | Tecnología | Versión |
 |------------|------------|---------|
-| **Lenguaje** | Python | 3.11+ |
-| **Bot Framework** | python-telegram-bot | 21+ |
+| **Lenguaje** | Python | 3.13+ |
+| **Package Manager** | uv | latest |
+| **Bot Framework** | python-telegram-bot | 21.10 |
 | **Database** | PostgreSQL + SQLAlchemy | 2.0 async |
-| **API Server** | FastAPI + Uvicorn | 0.109+ |
-| **Validación** | Pydantic | v2 |
-| **DI Container** | punq | latest |
+| **API Server** | FastAPI + Uvicorn | 0.135.1 |
+| **Validación** | Pydantic | v2.12 |
+| **DI Container** | punq | 0.7.0 |
 | **HTTP Clients** | httpx, aiohttp | latest |
 | **Auth** | PyJWT + cryptography | latest |
 | **Logging** | Loguru | latest |
 | **Testing** | pytest + pytest-asyncio | latest |
 | **Migrations** | Alembic | latest |
+| **Android APK** | Kivy + KivyMD | 2.3.1 / 1.2.0 |
 
 ---
 
@@ -109,33 +112,74 @@ usipipobot/
 
 #### Requisitos Previos
 
-- Python 3.11+
+- Python 3.13+ (bot principal)
+- Python 3.13+ (android_app)
 - PostgreSQL 15+
 - Linux (Ubuntu 22.04+ recomendado)
+- uv package manager
 
-#### Pasos de Instalación
+#### Instalar uv
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source ~/.bashrc  # o reinicia la terminal
+```
+
+#### Pasos de Instalación (Bot Principal)
 
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/usipipo/usipipobot.git
 cd usipipobot
 
-# 2. Crear entorno virtual
-python3 -m venv venv
-source venv/bin/activate
+# 2. Crear entorno virtual e instalar dependencias con uv
+uv sync --dev
 
-# 3. Instalar dependencias
-pip install -r requirements.txt
-
-# 4. Configurar variables de entorno
+# 3. Configurar variables de entorno
 cp example.env .env
 # Editar .env con tus credenciales
 
-# 5. Ejecutar migraciones
-alembic upgrade head
+# 4. Ejecutar migraciones
+uv run alembic upgrade head
+
+# 5. Configurar pre-commit (recomendado)
+./scripts/setup-pre-commit.sh
 
 # 6. Iniciar el bot
-python main.py
+uv run python main.py
+```
+
+#### Android APK (Desarrollo en Desktop Linux)
+
+```bash
+cd android_app
+
+# 1. Instalar dependencias del sistema (solo Linux)
+sudo apt-get install -y libgl1-mesa-dev libgl1-mesa-glx libgles2-mesa-dev \
+    libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good
+
+# 2. Crear entorno virtual e instalar dependencias
+uv sync
+
+# 3. Ejecutar en desktop (pruebas de UI)
+uv run python main.py
+
+# 4. Ejecutar tests
+uv run pytest
+
+# 5. Build APK (requiere Android SDK)
+uv run buildozer -v android debug
+```
+
+#### Testing
+
+```bash
+# Bot principal (398 tests)
+uv run pytest
+
+# Android app (8 tests)
+cd android_app
+uv run pytest
 ```
 
 #### Instalación con Docker

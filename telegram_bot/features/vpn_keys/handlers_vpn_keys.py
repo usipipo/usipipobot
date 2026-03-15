@@ -66,9 +66,7 @@ class VpnKeysHandler:
         )
 
         if not can_create:
-            logger.warning(
-                f"⚠️ User {telegram_id} reached key limit ({user.max_keys} keys)"
-            )
+            logger.warning(f"⚠️ User {telegram_id} reached key limit ({user.max_keys} keys)")
             # Obtener cantidad de claves usadas para mostrar en el mensaje
             keys = await self.vpn_service.get_user_keys(telegram_id, telegram_id)
             used_keys = len([k for k in keys if k.is_active])
@@ -144,9 +142,7 @@ class VpnKeysHandler:
         if not update.effective_user or not update.message or not update.message.text:
             return ConversationHandler.END
         key_name = update.message.text
-        tmp_key_type = (
-            context.user_data.get("tmp_key_type") if context.user_data else None
-        )
+        tmp_key_type = context.user_data.get("tmp_key_type") if context.user_data else None
         if not tmp_key_type:
             return ConversationHandler.END
         key_type: str = tmp_key_type
@@ -159,9 +155,7 @@ class VpnKeysHandler:
                 telegram_id, key_type, key_name, current_user_id=telegram_id
             )
 
-            logger.info(
-                f"✅ Key {new_key.id} created successfully for user {telegram_id}"
-            )
+            logger.info(f"✅ Key {new_key.id} created successfully for user {telegram_id}")
 
             safe_name = "".join(x for x in key_name if x.isalnum())
             file_id = f"{telegram_id}_{safe_name}"

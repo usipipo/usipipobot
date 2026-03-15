@@ -34,9 +34,7 @@ class AdminVpnMessages:
 
     KEYS_LIST_HEADER = "🔑 **Lista de Claves {server_type}**\n\n"
 
-    NO_KEYS = (
-        "📭 **Sin Claves**\n\n" "No hay claves {server_type} registradas en el sistema."
-    )
+    NO_KEYS = "📭 **Sin Claves**\n\n" "No hay claves {server_type} registradas en el sistema."
 
     KEY_DETAILS = (
         "🔑 **Detalles de la Clave**\n\n"
@@ -68,8 +66,7 @@ class AdminVpnMessages:
 
     # Success messages
     KEY_ENABLED = (
-        "✅ **Clave Habilitada**\n\n"
-        "La clave ha sido habilitada exitosamente en el servidor."
+        "✅ **Clave Habilitada**\n\n" "La clave ha sido habilitada exitosamente en el servidor."
     )
 
     KEY_DISABLED = (
@@ -82,14 +79,11 @@ class AdminVpnMessages:
         "La clave ha sido eliminada completamente del servidor y la base de datos."
     )
 
-    OPERATION_CANCELLED = (
-        "❌ **Operación Cancelada**\n\n" "La acción ha sido cancelada."
-    )
+    OPERATION_CANCELLED = "❌ **Operación Cancelada**\n\n" "La acción ha sido cancelada."
 
     # Error messages
     ERROR_KEY_NOT_FOUND = (
-        "❌ **Clave No Encontrada**\n\n"
-        "La clave especificada no existe en el sistema."
+        "❌ **Clave No Encontrada**\n\n" "La clave especificada no existe en el sistema."
     )
 
     ERROR_SERVER_UNAVAILABLE = (
@@ -99,9 +93,7 @@ class AdminVpnMessages:
     )
 
     ERROR_OPERATION_FAILED = (
-        "❌ **Operación Fallida**\n\n"
-        "No se pudo completar la operación.\n"
-        "Error: {error}"
+        "❌ **Operación Fallida**\n\n" "No se pudo completar la operación.\n" "Error: {error}"
     )
 
     CONFIRM_DELETE_KEY = (
@@ -114,6 +106,5 @@ class AdminVpnMessages:
     )
 
     SERVER_MANAGE_HEADER = (
-        "⚡ **Gestión de {server_type}**\n\n"
-        "Selecciona una acción para administrar las claves."
+        "⚡ **Gestión de {server_type}**\n\n" "Selecciona una acción para administrar las claves."
     )

@@ -40,10 +40,8 @@ class PostgresDataPackageRepository(BasePostgresRepository, IDataPackageReposito
             data_limit_bytes=model.data_limit_bytes,
             data_used_bytes=model.data_used_bytes or 0,
             stars_paid=model.stars_paid,
-            purchased_at=_normalize_datetime(model.purchased_at)
-            or datetime.now(timezone.utc),
-            expires_at=_normalize_datetime(model.expires_at)
-            or datetime.now(timezone.utc),
+            purchased_at=_normalize_datetime(model.purchased_at) or datetime.now(timezone.utc),
+            expires_at=_normalize_datetime(model.expires_at) or datetime.now(timezone.utc),
             is_active=model.is_active,
             telegram_payment_id=model.telegram_payment_id,
         )
@@ -66,9 +64,7 @@ class PostgresDataPackageRepository(BasePostgresRepository, IDataPackageReposito
             telegram_payment_id=entity.telegram_payment_id,
         )
 
-    async def save(
-        self, data_package: DataPackage, current_user_id: int
-    ) -> DataPackage:
+    async def save(self, data_package: DataPackage, current_user_id: int) -> DataPackage:
         await self._set_current_user(current_user_id)
         try:
             if data_package.id:
@@ -98,9 +94,7 @@ class PostgresDataPackageRepository(BasePostgresRepository, IDataPackageReposito
             logger.error(f"Error al guardar paquete de datos: {e}")
             raise
 
-    async def get_by_id(
-        self, package_id: uuid.UUID, current_user_id: int
-    ) -> Optional[DataPackage]:
+    async def get_by_id(self, package_id: uuid.UUID, current_user_id: int) -> Optional[DataPackage]:
         await self._set_current_user(current_user_id)
         try:
             model = await self.session.get(DataPackageModel, package_id)
@@ -109,23 +103,17 @@ class PostgresDataPackageRepository(BasePostgresRepository, IDataPackageReposito
             logger.error(f"Error al obtener paquete {package_id}: {e}")
             return None
 
-    async def get_by_user(
-        self, telegram_id: int, current_user_id: int
-    ) -> List[DataPackage]:
+    async def get_by_user(self, telegram_id: int, current_user_id: int) -> List[DataPackage]:
         await self._set_current_user(current_user_id)
         try:
-            query = select(DataPackageModel).where(
-                DataPackageModel.user_id == telegram_id
-            )
+            query = select(DataPackageModel).where(DataPackageModel.user_id == telegram_id)
             result = await self.session.execute(query)
             return [self._model_to_entity(m) for m in result.scalars().all()]
         except Exception as e:
             logger.error(f"Error al listar paquetes del usuario {telegram_id}: {e}")
             return []
 
-    async def get_active_by_user(
-        self, telegram_id: int, current_user_id: int
-    ) -> List[DataPackage]:
+    async def get_active_by_user(self, telegram_id: int, current_user_id: int) -> List[DataPackage]:
         await self._set_current_user(current_user_id)
         try:
             query = select(DataPackageModel).where(
@@ -135,14 +123,10 @@ class PostgresDataPackageRepository(BasePostgresRepository, IDataPackageReposito
             result = await self.session.execute(query)
             return [self._model_to_entity(m) for m in result.scalars().all()]
         except Exception as e:
-            logger.error(
-                f"Error al obtener paquetes activos del usuario {telegram_id}: {e}"
-            )
+            logger.error(f"Error al obtener paquetes activos del usuario {telegram_id}: {e}")
             return []
 
-    async def get_valid_by_user(
-        self, telegram_id: int, current_user_id: int
-    ) -> List[DataPackage]:
+    async def get_valid_by_user(self, telegram_id: int, current_user_id: int) -> List[DataPackage]:
         await self._set_current_user(current_user_id)
         try:
             now = datetime.now(timezone.utc)
@@ -154,9 +138,7 @@ class PostgresDataPackageRepository(BasePostgresRepository, IDataPackageReposito
             result = await self.session.execute(query)
             return [self._model_to_entity(m) for m in result.scalars().all()]
         except Exception as e:
-            logger.error(
-                f"Error al obtener paquetes validos del usuario {telegram_id}: {e}"
-            )
+            logger.error(f"Error al obtener paquetes validos del usuario {telegram_id}: {e}")
             return []
 
     async def update_usage(
