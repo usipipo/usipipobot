@@ -102,10 +102,20 @@ class CreateKeyScreen(MDScreen):
         def run_check():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            return loop.run_until_complete(self._check_capability_async())
+            try:
+                return loop.run_until_complete(self._check_capability_async())
+            finally:
+                loop.close()
 
         with ThreadPoolExecutor() as executor:
-            executor.submit(run_check)
+            future = executor.submit(run_check)
+            try:
+                future.result(timeout=10)  # Wait for result with timeout
+            except Exception as e:
+                logger.error(f"Error checking capability: {e}")
+                Clock.schedule_once(
+                    lambda dt: Snackbar(text="Error verificando límites", duration=3).open()
+                )
 
     async def _check_capability_async(self):
         """Check capability asynchronously."""
@@ -186,6 +196,8 @@ class CreateKeyScreen(MDScreen):
 
         # Validation when moving forward
         if step > self.current_step:
+            # Safety check: Protocol should already be selected via auto-advance
+            # This is a fallback for edge cases or manual navigation
             if self.current_step == 1 and not self.selected_protocol:
                 Snackbar(text="Selecciona un protocolo", duration=2).open()
                 return
@@ -270,10 +282,22 @@ class CreateKeyScreen(MDScreen):
         def run_create():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            return loop.run_until_complete(self._create_key_async())
+            try:
+                return loop.run_until_complete(self._create_key_async())
+            finally:
+                loop.close()
 
         with ThreadPoolExecutor() as executor:
-            executor.submit(run_create)
+            future = executor.submit(run_create)
+            # Don't block - async operation will handle UI updates via Clock
+            # Just log any immediate errors
+            try:
+                future.result(timeout=30)  # Wait up to 30s for key creation
+            except Exception as e:
+                logger.error(f"Error in key creation thread: {e}")
+                Clock.schedule_once(
+                    lambda dt: self._on_create_error(f"Error de conexión: {str(e)}")
+                )
 
     async def _create_key_async(self):
         """Create key asynchronously."""
