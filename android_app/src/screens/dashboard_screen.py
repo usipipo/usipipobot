@@ -220,7 +220,8 @@ class DashboardScreen(MDScreen):
 
         except Exception as e:
             logger.error(f"Error fetching dashboard data: {e}")
-            Clock.schedule_once(lambda dt: self._handle_load_error(e))
+            error_obj = e
+            Clock.schedule_once(lambda dt: self._handle_load_error(error_obj))
 
     def _fetch_dashboard(self, force_refresh: bool = False):
         """Fetch dashboard data (async wrapper)."""

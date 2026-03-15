@@ -37,16 +37,14 @@ async def get_dashboard_summary(payload: dict = Depends(get_current_user)):
     async with get_session_context() as session:
         # Fetch user data
         user_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT
                     telegram_id, username, full_name, photo_url, status, role,
                     referral_credits, has_pending_debt, consumption_mode_enabled,
                     last_login
                 FROM users
                 WHERE telegram_id = :telegram_id
-            """
-            ),
+            """),
             {"telegram_id": telegram_id},
         )
         user_row = user_result.first()
@@ -60,8 +58,7 @@ async def get_dashboard_summary(payload: dict = Depends(get_current_user)):
 
         # Fetch VPN keys (active and recent, max 10)
         keys_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT
                     id, name, key_type, is_active,
                     COALESCE(data_used_bytes, 0) as used_bytes,
@@ -70,8 +67,7 @@ async def get_dashboard_summary(payload: dict = Depends(get_current_user)):
                 WHERE telegram_id = :telegram_id
                 ORDER BY created_at DESC
                 LIMIT 10
-            """
-            ),
+            """),
             {"telegram_id": telegram_id},
         )
         keys_rows = keys_result.all()
@@ -81,8 +77,7 @@ async def get_dashboard_summary(payload: dict = Depends(get_current_user)):
 
         # Fetch active package (if any)
         package_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT
                     package_type, data_limit_bytes,
                     COALESCE(data_used_bytes, 0) as data_used_bytes,
@@ -93,8 +88,7 @@ async def get_dashboard_summary(payload: dict = Depends(get_current_user)):
                   AND expires_at > NOW()
                 ORDER BY created_at DESC
                 LIMIT 1
-            """
-            ),
+            """),
             {"telegram_id": telegram_id},
         )
         package_row = package_result.first()

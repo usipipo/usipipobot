@@ -295,8 +295,9 @@ class CreateKeyScreen(MDScreen):
                 future.result(timeout=30)  # Wait up to 30s for key creation
             except Exception as e:
                 logger.error(f"Error in key creation thread: {e}")
+                error_msg = str(e)
                 Clock.schedule_once(
-                    lambda dt: self._on_create_error(f"Error de conexión: {str(e)}")
+                    lambda dt: self._on_create_error(f"Error de conexión: {error_msg}")
                 )
 
     async def _create_key_async(self):
