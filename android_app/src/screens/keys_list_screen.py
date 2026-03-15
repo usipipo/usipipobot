@@ -13,6 +13,7 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import Snackbar
 from loguru import logger
+from src.components.vpn_key_card import VpnKeyCard
 from src.services.auth_service import AuthService
 from src.services.keys_service import KeysService, VpnKeyData
 
@@ -87,7 +88,13 @@ class KeysListScreen(MDScreen):
 
     def _auto_refresh_callback(self):
         """Callback for auto-refresh."""
-        if not self.is_offline:
+        # Only refresh if screen is current and not already loading
+        if (
+            not self.is_offline
+            and self.manager
+            and self.manager.current == self.name
+            and not self.is_loading
+        ):
             logger.debug("Auto-refreshing keys list")
             self.load_keys(force_refresh=False)
 
@@ -163,30 +170,27 @@ class KeysListScreen(MDScreen):
             self.active_count = data.get("active_count", 0)
             self.max_keys = data.get("max_keys", 2)
 
-            # Convert to UI-friendly format
-            self.keys_list = []
+            # Get cards container
+            cards_container = self.ids.get("cards_container")
+            if cards_container:
+                cards_container.clear_widgets()
+
+            # Create VpnKeyCard widgets for each key
             for key in keys:
-                key_ui = {
-                    "id": key.id,
-                    "name": key.name,
-                    "type": key.key_type,
-                    "server": key.server_display,
-                    "is_active": key.is_active,
-                    "used": self.keys_service.format_bytes(key.used_bytes),
-                    "limit": self.keys_service.format_bytes(key.data_limit_bytes),
-                    "percentage": key.usage_percentage,
-                    "created_at": key.created_at,
-                    "expires_at": key.expires_at,
-                    "last_seen_at": key.last_seen_at,
-                    "color": [0, 0.941, 1, 1] if key.key_type == "outline" else [0.6, 0, 1, 1],
-                    "status_color": (
-                        [0, 1, 0.255, 1] if key.is_active else [0.541, 0.541, 0.604, 1]
-                    ),
-                }
-                self.keys_list.append(key_ui)
+                card = VpnKeyCard()
+                card.key_name = key.name
+                card.key_type = key.key_type
+                card.is_active = key.is_active
+                card.key_usage = f"{self.keys_service.format_bytes(key.used_bytes)} / {self.keys_service.format_bytes(key.data_limit_bytes)}"
+
+                # Bind tap event to navigate to detail
+                card.bind(on_release=lambda instance, k=key: self.on_key_card_pressed(k.id))
+
+                if cards_container:
+                    cards_container.add_widget(card)
 
             self.is_loading = False
-            logger.debug(f"Keys list updated: {len(self.keys_list)} keys")
+            logger.debug(f"Keys list updated: {len(keys)} keys rendered as cards")
 
         except Exception as e:
             logger.error(f"Error updating keys list: {e}")
@@ -430,7 +434,8 @@ class KeysListScreen(MDScreen):
         except Exception as e:
             logger.error(f"Error deleting key: {e}")
             error_msg = str(e)
-            if "créditos" in error_msg.lower() or "créditos" in error_msg.lower():
+            # Check for credits-related errors (in Spanish or English)
+            if "créditos" in error_msg.lower() or "credit" in error_msg.lower():
                 error_msg = "Necesitas créditos de referido para eliminar claves. Invita amigos."
             Clock.schedule_once(lambda dt: Snackbar(text=error_msg, duration=4).open())
 

@@ -27,6 +27,15 @@ class VpnKeyData:
         self.billing_reset_at = data.get("billing_reset_at")
 
     @property
+    def server_display(self) -> str:
+        """Get server display name based on key type."""
+        if self.key_type == "outline":
+            return "Outline"
+        elif self.key_type == "wireguard":
+            return "WireGuard"
+        return self.server or "Unknown"
+
+    @property
     def used_gb(self) -> float:
         """Get used data in GB."""
         return self.used_bytes / (1024**3)
@@ -47,15 +56,6 @@ class VpnKeyData:
         if self.data_limit_bytes == 0:
             return 0.0
         return min(100.0, (self.used_bytes / self.data_limit_bytes) * 100)
-
-    @property
-    def server_display(self) -> str:
-        """Get server display name."""
-        if self.key_type == "outline":
-            return "Outline"
-        elif self.key_type == "wireguard":
-            return "WireGuard"
-        return "Unknown"
 
 
 class KeysService:
