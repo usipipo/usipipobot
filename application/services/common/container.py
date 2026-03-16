@@ -242,6 +242,10 @@ def _configure_application_services(container: punq.Container) -> None:
                 ConsumptionVpnIntegrationService,
                 container.resolve(ConsumptionVpnIntegrationService),
             ),
+            subscription_service=cast(
+                SubscriptionService,
+                container.resolve(SubscriptionService),
+            ),
         )
 
     def create_admin_service() -> AdminService:

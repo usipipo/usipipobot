@@ -14,6 +14,8 @@ from infrastructure.api_clients.client_outline import OutlineClient
 from infrastructure.api_clients.client_wireguard import WireGuardClient
 from utils.logger import logger
 
+from .subscription_service import SubscriptionService
+
 
 class VpnService:
     """Service for managing VPN keys and user operations."""
@@ -26,6 +28,7 @@ class VpnService:
         outline_client: OutlineClient,
         wireguard_client: WireGuardClient,
         vpn_integration_service=None,
+        subscription_service: Optional[SubscriptionService] = None,
     ):
         self.user_repo = user_repo
         self.key_repo = key_repo
@@ -33,6 +36,7 @@ class VpnService:
         self.outline_client = outline_client
         self.wireguard_client = wireguard_client
         self.vpn_integration_service = vpn_integration_service
+        self.subscription_service = subscription_service
 
     async def create_key(
         self, telegram_id: int, key_type: str, key_name: str, current_user_id: int
@@ -78,8 +82,8 @@ class VpnService:
         else:
             raise ValueError("Tipo de llave no soportado")
 
-        # Determinar límite de datos según plan
-        data_limit_bytes = self._get_user_data_limit(user)
+        # Determinar límite de datos según suscripción
+        data_limit_bytes = await self._get_user_data_limit(telegram_id, current_user_id)
 
         new_key = VpnKey(
             id=str(uuid.uuid4()),
@@ -129,8 +133,10 @@ class VpnService:
             # Fallback to admin if key not found or no user_id
             await self.key_repo.update_usage(key_id, used_bytes, settings.ADMIN_ID)
 
-    def _get_user_data_limit(self, user: User) -> int:
-        """Retorna el límite de datos en bytes según el plan del usuario."""
+    async def _get_user_data_limit(self, user_id: int, current_user_id: int) -> int:
+        """Retorna el límite de datos en bytes según la suscripción del usuario."""
+        if self.subscription_service:
+            return await self.subscription_service.get_user_data_limit(user_id, current_user_id)
         return settings.FREE_PLAN_DATA_LIMIT_GB * (1024**3)
 
     async def can_user_create_key(
