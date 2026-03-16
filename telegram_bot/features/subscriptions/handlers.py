@@ -72,44 +72,63 @@ class SubscriptionHandler:
             else:
                 await update.message.reply_text(error_msg)
 
-    async def select_plan(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle plan selection."""
+    async def select_payment_method(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Muestra opciones de método de pago para una suscripción."""
         query = update.callback_query
-        plan_type = query.data.replace("sub_", "")
+        if not query or not query.data:
+            return
+        await query.answer()
+
+        # Extraer plan_type de select_sub_payment_{plan_type}
+        plan_type = query.data.replace("select_sub_payment_", "")
 
         try:
-            # Get plan details
+            plan_option = self.subscription_service.get_plan_option(plan_type)
+            if not plan_option:
+                await query.edit_message_text(
+                    text="❌ Plan no válido",
+                    reply_markup=SubscriptionKeyboards.subscription_menu(),
+                    parse_mode="Markdown",
+                )
+                return
+
+            message = SubscriptionMessages.Payment.select_method(
+                plan_name=plan_option.name,
+                stars=plan_option.stars,
+                usdt=plan_option.usdt,
+                duration=plan_option.duration_months * 30,
+            )
+
+            keyboard = SubscriptionKeyboards.sub_payment_method_selection(plan_type)
+
+            await query.edit_message_text(
+                text=message, reply_markup=keyboard, parse_mode="Markdown"
+            )
+
+        except Exception as e:
+            logger.error(f"Error en select_payment_method: {e}")
+            await query.edit_message_text(
+                text="❌ Error al cargar métodos de pago",
+                reply_markup=SubscriptionKeyboards.subscription_menu(),
+                parse_mode="Markdown",
+            )
+
+    async def pay_with_stars(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Procesa pago de suscripción con Telegram Stars."""
+        query = update.callback_query
+        if not query or not query.data:
+            return
+        await query.answer()
+
+        plan_type = query.data.replace("pay_sub_stars_", "")
+        user_id = update.effective_user.id
+
+        try:
             plan_option = self.subscription_service.get_plan_option(plan_type)
             if not plan_option:
                 await query.answer("❌ Plan no válido", show_alert=True)
                 return
 
-            # Show confirmation
-            message = SubscriptionMessages.PurchaseConfirmation.confirm_purchase(
-                plan_name=plan_option.name,
-                stars=plan_option.stars,
-                duration=plan_option.duration_months * 30,
-            )
-            keyboard = SubscriptionKeyboards.confirm_purchase(plan_type)
-
-            await query.edit_message_text(
-                text=message,
-                reply_markup=keyboard,
-                parse_mode="Markdown",
-            )
-
-        except Exception as e:
-            logger.error(f"Error selecting plan: {e}")
-            await query.answer("❌ Error al seleccionar plan", show_alert=True)
-
-    async def confirm_purchase(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle purchase confirmation."""
-        query = update.callback_query
-        plan_type = query.data.replace("sub_confirm_", "")
-
-        user_id = update.effective_user.id
-
-        try:
             # Check for existing subscription
             is_premium = await self.subscription_service.is_premium_user(user_id, settings.ADMIN_ID)
             if is_premium:
@@ -119,17 +138,10 @@ class SubscriptionHandler:
                 )
                 return
 
-            # Get plan details
-            plan_option = self.subscription_service.get_plan_option(plan_type)
-            if not plan_option:
-                await query.answer("❌ Plan no válido", show_alert=True)
-                return
+            # TODO: Implement Telegram Stars invoice
+            # Por ahora, simulamos activación directa
+            payment_id = f"sub_stars_{user_id}_{plan_type}"
 
-            # TODO: Implement actual payment with Telegram Stars
-            # For now, simulate successful activation
-            payment_id = f"sub_{user_id}_{plan_type}"
-
-            # Activate subscription
             subscription = await self.subscription_service.activate_subscription(
                 user_id=user_id,
                 plan_type=plan_type,
@@ -138,7 +150,6 @@ class SubscriptionHandler:
                 current_user_id=settings.ADMIN_ID,
             )
 
-            # Show success message
             expires_at = subscription.expires_at.strftime("%d/%m/%Y")
             message = SubscriptionMessages.Success.subscription_activated(
                 plan_name=plan_option.name,
@@ -152,14 +163,77 @@ class SubscriptionHandler:
                 parse_mode="Markdown",
             )
 
-            logger.info(f"💎 Subscription activated for user {user_id}: {plan_option.name}")
+            logger.info(
+                f"💎 Subscription activated with Stars for user {user_id}: {plan_option.name}"
+            )
 
         except ValueError as e:
             logger.warning(f"Subscription activation failed for user {user_id}: {e}")
             await query.answer(str(e), show_alert=True)
         except Exception as e:
-            logger.error(f"Error confirming purchase: {e}")
-            await query.answer("❌ Error al procesar compra", show_alert=True)
+            logger.error(f"Error in pay_with_stars: {e}")
+            await query.answer("❌ Error al procesar pago", show_alert=True)
+
+    async def pay_with_crypto(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Procesa pago de suscripción con Crypto (USDT/BSC)."""
+        query = update.callback_query
+        if not query or not query.data:
+            return
+        await query.answer()
+
+        plan_type = query.data.replace("pay_sub_crypto_", "")
+        user_id = update.effective_user.id
+
+        try:
+            plan_option = self.subscription_service.get_plan_option(plan_type)
+            if not plan_option:
+                await query.answer("❌ Plan no válido", show_alert=True)
+                return
+
+            # Check for existing subscription
+            is_premium = await self.subscription_service.is_premium_user(user_id, settings.ADMIN_ID)
+            if is_premium:
+                await query.answer(
+                    "⚠️ Ya tienes una suscripción activa",
+                    show_alert=True,
+                )
+                return
+
+            # TODO: Implement crypto payment flow (similar to buy_gb)
+            # Por ahora, simulamos activación directa
+            payment_id = f"sub_crypto_{user_id}_{plan_type}"
+
+            subscription = await self.subscription_service.activate_subscription(
+                user_id=user_id,
+                plan_type=plan_type,
+                stars_paid=plan_option.stars,
+                payment_id=payment_id,
+                current_user_id=settings.ADMIN_ID,
+            )
+
+            expires_at = subscription.expires_at.strftime("%d/%m/%Y")
+            message = SubscriptionMessages.Success.subscription_activated(
+                plan_name=plan_option.name,
+                stars=plan_option.stars,
+                expires_at=expires_at,
+            )
+
+            await query.edit_message_text(
+                text=message,
+                reply_markup=SubscriptionKeyboards.subscription_status(),
+                parse_mode="Markdown",
+            )
+
+            logger.info(
+                f"💎 Subscription activated with Crypto for user {user_id}: {plan_option.name}"
+            )
+
+        except ValueError as e:
+            logger.warning(f"Subscription activation failed for user {user_id}: {e}")
+            await query.answer(str(e), show_alert=True)
+        except Exception as e:
+            logger.error(f"Error in pay_with_crypto: {e}")
+            await query.answer("❌ Error al procesar pago", show_alert=True)
 
     async def view_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """View subscription status."""
@@ -222,9 +296,8 @@ def get_subscription_callback_handlers():
 
     return [
         CallbackQueryHandler(handler.show_subscriptions, pattern="^subscriptions$"),
-        CallbackQueryHandler(handler.select_plan, pattern="^sub_1_month$"),
-        CallbackQueryHandler(handler.select_plan, pattern="^sub_3_months$"),
-        CallbackQueryHandler(handler.select_plan, pattern="^sub_6_months$"),
-        CallbackQueryHandler(handler.confirm_purchase, pattern="^sub_confirm_"),
+        CallbackQueryHandler(handler.select_payment_method, pattern="^select_sub_payment_"),
+        CallbackQueryHandler(handler.pay_with_stars, pattern="^pay_sub_stars_"),
+        CallbackQueryHandler(handler.pay_with_crypto, pattern="^pay_sub_crypto_"),
         CallbackQueryHandler(handler.view_status, pattern="^sub_status$"),
     ]

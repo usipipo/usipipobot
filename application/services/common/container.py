@@ -23,6 +23,7 @@ from application.services.consumption_vpn_integration_service import (
 from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
+from application.services.subscription_payment_service import SubscriptionPaymentService
 from application.services.subscription_service import SubscriptionService
 from application.services.ticket_notification_service import TicketNotificationService
 from application.services.ticket_service import TicketService
@@ -384,6 +385,12 @@ def _configure_application_services(container: punq.Container) -> None:
             user_repo=create_user_repo(),
         )
 
+    def create_subscription_payment_service() -> SubscriptionPaymentService:
+        return SubscriptionPaymentService(
+            subscription_service=create_subscription_service(),
+            crypto_payment_service=create_crypto_payment_service(),
+        )
+
     container.register(
         VpnInfrastructureService,
         factory=create_vpn_infrastructure_service,
@@ -427,6 +434,10 @@ def _configure_application_services(container: punq.Container) -> None:
     container.register(
         SubscriptionService,
         factory=create_subscription_service,
+    )
+    container.register(
+        SubscriptionPaymentService,
+        factory=create_subscription_payment_service,
     )
 
 

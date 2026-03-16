@@ -19,6 +19,7 @@ class SubscriptionOption:
     plan_type: PlanType
     duration_months: int
     stars: int
+    usdt: float
     data_limit: str = "Unlimited"
     bonus_percent: int = 0
 
@@ -29,12 +30,14 @@ SUBSCRIPTION_OPTIONS: List[SubscriptionOption] = [
         plan_type=PlanType.ONE_MONTH,
         duration_months=1,
         stars=360,
+        usdt=2.99,
     ),
     SubscriptionOption(
         name="3 Months",
         plan_type=PlanType.THREE_MONTHS,
         duration_months=3,
         stars=960,
+        usdt=7.99,
         bonus_percent=11,  # ~10% discount
     ),
     SubscriptionOption(
@@ -42,6 +45,7 @@ SUBSCRIPTION_OPTIONS: List[SubscriptionOption] = [
         plan_type=PlanType.SIX_MONTHS,
         duration_months=6,
         stars=1560,
+        usdt=12.99,
         bonus_percent=13,  # ~15% discount
     ),
 ]
