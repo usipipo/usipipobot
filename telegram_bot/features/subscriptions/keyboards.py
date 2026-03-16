@@ -16,15 +16,39 @@ class SubscriptionKeyboards:
         """Keyboard para el menú de suscripciones."""
         keyboard = [
             [
-                InlineKeyboardButton("🥇 1 Mes - 360 ⭐", callback_data="sub_1_month"),
+                InlineKeyboardButton(
+                    "🥇 1 Mes - 360 ⭐", callback_data="select_sub_payment_1_month"
+                ),
             ],
             [
-                InlineKeyboardButton("🥈 3 Meses - 960 ⭐", callback_data="sub_3_months"),
+                InlineKeyboardButton(
+                    "🥈 3 Meses - 960 ⭐", callback_data="select_sub_payment_3_months"
+                ),
             ],
             [
-                InlineKeyboardButton("🥉 6 Meses - 1560 ⭐", callback_data="sub_6_months"),
+                InlineKeyboardButton(
+                    "🥉 6 Meses - 1560 ⭐", callback_data="select_sub_payment_6_months"
+                ),
             ],
             [InlineKeyboardButton("« Volver", callback_data="operations_menu")],
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def sub_payment_method_selection(plan_type: str) -> InlineKeyboardMarkup:
+        """Keyboard para seleccionar método de pago para suscripciones (Stars o Crypto)."""
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "⭐ Pagar con Stars", callback_data=f"pay_sub_stars_{plan_type}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "💰 Pagar con Crypto", callback_data=f"pay_sub_crypto_{plan_type}"
+                )
+            ],
+            [InlineKeyboardButton("🔙 Volver a Suscripciones", callback_data="subscriptions")],
         ]
         return InlineKeyboardMarkup(keyboard)
 
