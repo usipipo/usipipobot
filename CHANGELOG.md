@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.9.1] - 2026-03-16
+
+### Changed
+- **Subscriptions Payment Flow** - Rediseñado flujo de pago para seguir mismo patrón que paquetes y slots
+  - Agregada selección de método de pago (Stars/Crypto) para suscripciones
+  - Mensajes de pago con formato consistente (precio en Stars y USDT)
+  - Teclados inline siguiendo patrón de `buy_gb` module
+- **Shop Menu** - Movido botón de Suscripciones al menú Shop desde Operaciones
+  - Menú Shop ahora incluye: Paquetes de GB, Slots Adicionales, Suscripciones, Extras con Créditos
+  - Menú de Operaciones simplificado sin sección de Suscripciones
+
+### Fixed
+- **UI Consistency** - Botones de compra de suscripciones ahora siguen patrón consistente con resto del shop
+- **Payment Selection** - Usuarios ahora pueden seleccionar método de pago (Stars/Crypto) antes de confirmar
+
+### Technical
+- Added `SubscriptionMessages.Payment` class for payment method selection messages
+- Added `SubscriptionKeyboards.sub_payment_method_selection()` for payment keyboards
+- Refactored `SubscriptionHandler` with new payment flow methods
+- Updated callback handlers to use new payment selection pattern
+
 ## [v3.10.0] - 2026-03-15
 
 ### Features
