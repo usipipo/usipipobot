@@ -70,6 +70,33 @@ class SubscriptionMessages:
             + _FOOTER
         )
 
+    class Payment:
+        """Mensajes para selección de método de pago."""
+
+        _HEADER = f"{_SEP_HEADER}\n" "💳 *MÉTODO DE PAGO*\n" f"{_SEP_HEADER}\n"
+
+        _SELECT_METHOD_BODY = (
+            "\n"
+            "*Plan:* {plan_name}\n"
+            "*Precio:* {stars} Stars ⭐ | ${usdt} USDT\n"
+            "*Duración:* {duration} días\n"
+            "*Datos:* 🌐 Ilimitados\n"
+            f"{_SEP_DIVIDER}\n"
+            "Selecciona tu método de pago:\n"
+        )
+
+        @classmethod
+        def select_method(cls, plan_name: str, stars: int, usdt: float, duration: int) -> str:
+            """Generate payment method selection message."""
+            message = cls._HEADER
+            message += cls._SELECT_METHOD_BODY.format(
+                plan_name=plan_name,
+                stars=stars,
+                usdt=usdt,
+                duration=duration,
+            )
+            return message
+
     class SubscriptionInfo:
         """Mensajes para información de suscripción activa."""
 
