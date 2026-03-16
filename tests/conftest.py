@@ -119,6 +119,6 @@ def sample_data_package():
         user_id=123456789,
         package_type=PackageType.BASIC,
         data_limit_bytes=10 * 1024**3,
-        stars_paid=600,
+        stars_paid=250,  # Nuevo precio: $2.50 USD
         expires_at=datetime.now(timezone.utc) + timedelta(days=35),
     )

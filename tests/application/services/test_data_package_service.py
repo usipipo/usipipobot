@@ -41,19 +41,21 @@ class TestGetAvailablePackages:
         assert len(packages) == 5
         assert packages[0].name == "Básico"
         assert packages[0].data_gb == 10
-        assert packages[0].stars == 600
+        assert packages[0].stars == 250  # Nuevo precio: $2.50 USD
 
     def test_premium_has_bonus(self, service):
         packages = service.get_available_packages()
         premium = [p for p in packages if p.name == "Premium"][0]
 
         assert premium.bonus_percent == 20
+        assert premium.stars == 1440  # Nuevo precio: $14.40 USD
 
     def test_unlimited_has_highest_bonus(self, service):
         packages = service.get_available_packages()
         unlimited = [p for p in packages if p.name == "Ilimitado"][0]
 
         assert unlimited.bonus_percent == 25
+        assert unlimited.stars == 1800  # Nuevo precio: $18.00 USD
 
 
 class TestPurchasePackage:
@@ -73,7 +75,7 @@ class TestPurchasePackage:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=12 * 1024**3,  # 10GB + 20% welcome bonus
-            stars_paid=600,
+            stars_paid=250,  # Nuevo precio: $2.50 USD
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
 
@@ -111,7 +113,7 @@ class TestGetUserPackages:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=600,
+                stars_paid=250,  # Nuevo precio: $2.50 USD
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35),
             )
         ]
@@ -130,7 +132,7 @@ class TestGetUserDataSummary:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=600,
+                stars_paid=250,  # Nuevo precio: $2.50 USD
                 data_used_bytes=5 * 1024**3,
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35),
             ),
@@ -138,7 +140,7 @@ class TestGetUserDataSummary:
                 user_id=123,
                 package_type=PackageType.PREMIUM,
                 data_limit_bytes=144 * 1024**3,  # 120 GB + 20% bonus
-                stars_paid=1800,
+                stars_paid=1440,  # Nuevo precio: $14.40 USD
                 data_used_bytes=20 * 1024**3,
                 expires_at=datetime.now(timezone.utc) + timedelta(days=35),
             ),
@@ -163,7 +165,7 @@ class TestGetUserDataSummary:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=600,
+                stars_paid=250,  # Nuevo precio: $2.50 USD
                 data_used_bytes=int(3.2 * 1024**3),
                 expires_at=expires_at,
                 purchased_at=datetime.now(timezone.utc) - timedelta(days=20),
@@ -194,7 +196,7 @@ class TestConsumeData:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=600,
+            stars_paid=250,  # Nuevo precio: $2.50 USD
             data_used_bytes=0,
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
@@ -220,7 +222,7 @@ class TestConsumeData:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=600,
+            stars_paid=250,  # Nuevo precio: $2.50 USD
             data_used_bytes=0,
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
@@ -240,7 +242,7 @@ class TestExpireOldPackages:
             user_id=123,
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,
-            stars_paid=600,
+            stars_paid=250,  # Nuevo precio: $2.50 USD
             data_used_bytes=0,
             expires_at=datetime.now(timezone.utc) - timedelta(days=1),
         )

@@ -66,8 +66,8 @@ class TestBuyGbHandler:
         assert "Seleccionar Método de Pago" in message
         assert "Básico" in message
         assert "10 GB" in message
-        assert "600 ⭐" in message
-        assert "5.00 USDT" in message
+        assert "250 ⭐" in message  # Nuevo precio: $2.50 USD
+        assert "2.08 USDT" in message  # 250 / 120 = 2.08 USDT
 
     @pytest.mark.asyncio
     async def test_pay_with_crypto_success(self, handler, mock_update):
@@ -111,5 +111,5 @@ class TestBuyGbHandler:
             assert "Pago con USDT" in message
             assert "Básico" in message
             assert "10 GB" in message
-            assert "5.0 USDT" in message
+            assert "2.0833333333333335 USDT" in message  # 250 / 120 = 2.0833... USDT
             assert "0x1234567890abcdef" in message
