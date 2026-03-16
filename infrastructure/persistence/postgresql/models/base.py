@@ -76,6 +76,11 @@ class UserModel(Base):
     data_packages: Mapped[List["DataPackageModel"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    subscription_plans: Mapped[List["SubscriptionPlanModel"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        foreign_keys="SubscriptionPlanModel.user_id",
+    )
     tickets: Mapped[list["TicketModel"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
@@ -168,8 +173,10 @@ class TransactionModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
-# Import ticket models after all models defined to resolve forward references
-# Import ticket models after all models defined to resolve forward references
+# Import models after all models defined to resolve forward references
+from infrastructure.persistence.postgresql.models.subscription_plan import (  # noqa: E402, F401
+    SubscriptionPlanModel,
+)
 from infrastructure.persistence.postgresql.models.ticket import TicketModel  # noqa: E402, F401
 from infrastructure.persistence.postgresql.models.ticket_message import (  # noqa: E402, F401
     TicketMessageModel,
