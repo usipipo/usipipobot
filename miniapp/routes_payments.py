@@ -178,6 +178,30 @@ async def api_create_stars_invoice(
                 description = f"Añade {slots} claves VPN adicionales"
                 payload = f"key_slots_{slots}_{ctx.user.id}_{transaction_id}"
                 amount = slot_opt.stars
+
+            elif payment_req.product_type == "subscription":
+                # Handle subscription plans
+                from application.services.common.container import get_service
+                from application.services.subscription_service import SubscriptionService
+
+                subscription_service = get_service(SubscriptionService)
+                plan_opt = subscription_service.get_plan_option(payment_req.product_id)
+
+                if not plan_opt:
+                    logger.error(f"Subscription plan not found: {payment_req.product_id}")
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "success": False,
+                            "error": "Plan de suscripción no válido.",
+                        },
+                    )
+
+                title = f"Suscripción {plan_opt.name}"
+                description = f"{plan_opt.duration_months} meses de datos ilimitados"
+                payload = f"subscription_{payment_req.product_id}_{ctx.user.id}_{transaction_id}"
+                amount = plan_opt.stars
+
             else:
                 logger.error(f"Invalid product type: {payment_req.product_type}")
                 return JSONResponse(
@@ -481,6 +505,73 @@ async def api_confirm_payment(
                     "message": "Slots comprados exitosamente",
                     "slots_added": result["slots_added"],
                     "new_max_keys": result["new_max_keys"],
+                }
+
+            elif confirm_req.product_type == "subscription":
+                # Handle subscription activation
+                from application.services.common.container import get_service
+                from application.services.subscription_service import SubscriptionService
+
+                subscription_service = get_service(SubscriptionService)
+
+                # Validate subscription plan
+                plan_opt = subscription_service.get_plan_option(confirm_req.product_id)
+                if not plan_opt:
+                    logger.warning(
+                        f"Invalid subscription plan for user {ctx.user.id}: {confirm_req.product_id}"
+                    )
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "success": False,
+                            "error": "Plan de suscripción no válido.",
+                        },
+                    )
+
+                # Check if user already has active subscription
+                is_premium = await subscription_service.is_premium_user(ctx.user.id, ctx.user.id)
+                if is_premium:
+                    logger.warning(f"User {ctx.user.id} already has active subscription")
+                    return JSONResponse(
+                        status_code=400,
+                        content={
+                            "success": False,
+                            "error": "Ya tienes una suscripción activa.",
+                        },
+                    )
+
+                # Activate subscription
+                subscription = await subscription_service.activate_subscription(
+                    user_id=ctx.user.id,
+                    plan_type=confirm_req.product_id,
+                    stars_paid=plan_opt.stars,
+                    payment_id=f"miniapp_{confirm_req.transaction_id}",
+                    current_user_id=ctx.user.id,
+                )
+
+                logger.info(
+                    f"Subscription activated successfully for user {ctx.user.id}: "
+                    f"{confirm_req.product_id}, subscription_id={subscription.id}"
+                )
+
+                # Send confirmation notification via Telegram
+                if notification_service:
+                    product_name = f"Suscripción {plan_opt.name} ({plan_opt.duration_months} meses)"
+                    await notification_service.send_payment_confirmation(
+                        user_id=ctx.user.id,
+                        product_name=product_name,
+                        payment_method="Telegram Stars",
+                    )
+
+                return {
+                    "success": True,
+                    "message": "Suscripción activada exitosamente",
+                    "subscription_id": str(subscription.id),
+                    "plan_type": subscription.plan_type.value,
+                    "expires_at": (
+                        subscription.expires_at.isoformat() if subscription.expires_at else None
+                    ),
+                    "days_remaining": subscription.days_remaining,
                 }
 
             else:

@@ -24,6 +24,10 @@ class OperationsKeyboards:
                 InlineKeyboardButton("🛒 Shop", callback_data="shop_menu"),
                 InlineKeyboardButton("📜 Historial", callback_data="transactions_history"),
             ],
+            # Sección de Suscripciones
+            [
+                InlineKeyboardButton("💎 Suscripciones", callback_data="subscriptions"),
+            ],
             # Volver
             [InlineKeyboardButton("🔙 Volver", callback_data="main_menu")],
         ]
@@ -76,9 +80,7 @@ class OperationsKeyboards:
                 nav_buttons.append(InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback))
             if has_more:
                 next_callback = f"transactions_page_{page + 1}"
-                nav_buttons.append(
-                    InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback)
-                )
+                nav_buttons.append(InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback))
             keyboard.append(nav_buttons)
 
         keyboard.append(
