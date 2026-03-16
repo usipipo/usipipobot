@@ -24,10 +24,6 @@ class OperationsKeyboards:
                 InlineKeyboardButton("🛒 Shop", callback_data="shop_menu"),
                 InlineKeyboardButton("📜 Historial", callback_data="transactions_history"),
             ],
-            # Sección de Suscripciones
-            [
-                InlineKeyboardButton("💎 Suscripciones", callback_data="subscriptions"),
-            ],
             # Volver
             [InlineKeyboardButton("🔙 Volver", callback_data="main_menu")],
         ]
@@ -59,6 +55,9 @@ class OperationsKeyboards:
             ],
             [
                 InlineKeyboardButton("🔑 Slots Adicionales", callback_data="buy_slots_menu"),
+            ],
+            [
+                InlineKeyboardButton("💎 Suscripciones", callback_data="subscriptions"),
             ],
             [
                 InlineKeyboardButton("✨ Extras con Creditos", callback_data="credits_menu"),
