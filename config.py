@@ -57,7 +57,11 @@ class Settings(BaseSettings):
     API_PORT: int = Field(default=8000, ge=1024, le=65535, description="Puerto de la API")
 
     CORS_ORIGINS: List[str] = Field(
-        default=["*"],
+        default=[
+            "*",  # Development only - will be rejected in production
+            "https://web.telegram.org",  # Telegram Web
+            "https://*.telegram.org",  # Telegram subdomains
+        ],
         description="Orígenes permitidos para CORS",
     )
 
@@ -450,11 +454,18 @@ class Settings(BaseSettings):
             self.WG_ENDPOINT = f"{self.SERVER_IP}:{self.WG_SERVER_PORT}"
 
         if self.is_production and "*" in self.CORS_ORIGINS:
-            raise ValueError(
-                "CORS_ORIGINS no puede contener '*' en producción. "
-                "Define los orígenes permitidos. Ejemplo: "
-                'CORS_ORIGINS=["https://usipipo.duckdns.org"]'
+            # Allow telegram.org subdomains but reject full wildcard
+            allowed_wildcards = ["https://*.telegram.org", "*.telegram.org"]
+            has_unsafe_wildcard = any(
+                origin == "*" or ("*" in origin and "telegram.org" not in origin)
+                for origin in self.CORS_ORIGINS
             )
+            if has_unsafe_wildcard:
+                raise ValueError(
+                    "CORS_ORIGINS no puede contener '*' en producción. "
+                    "Define los orígenes permitidos. Ejemplo: "
+                    'CORS_ORIGINS=["https://usipipo.duckdns.org", "https://*.telegram.org"]'
+                )
 
         if self.ADMIN_ID not in self.AUTHORIZED_USERS:
             self.AUTHORIZED_USERS.append(self.ADMIN_ID)
