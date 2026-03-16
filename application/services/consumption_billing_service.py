@@ -25,6 +25,7 @@ from domain.interfaces.iuser_repository import IUserRepository
 from .consumption_billing_activation import ConsumptionActivationService
 from .consumption_billing_cycle import ConsumptionCycleService
 from .consumption_billing_dtos import ActivationResult, CancellationResult, ConsumptionSummary
+from .subscription_service import SubscriptionService
 
 
 class ConsumptionBillingService:
@@ -41,9 +42,11 @@ class ConsumptionBillingService:
         self,
         billing_repo: IConsumptionBillingRepository,
         user_repo: IUserRepository,
+        subscription_service: Optional[SubscriptionService] = None,
     ):
         self.billing_repo = billing_repo
         self.user_repo = user_repo
+        self.subscription_service = subscription_service
         self.price_per_mb = Decimal(str(settings.CONSUMPTION_PRICE_PER_MB_USD))
         self.cycle_days = settings.CONSUMPTION_CYCLE_DAYS
 
@@ -82,8 +85,18 @@ class ConsumptionBillingService:
     # DELEGACIÓN A ConsumptionCycleService
     # ============================================
 
+    async def is_premium_user(self, user_id: int, current_user_id: int) -> bool:
+        """Check if user has an active subscription (unlimited data)."""
+        if not self.subscription_service:
+            return False
+        return await self.subscription_service.is_premium_user(user_id, current_user_id)
+
     async def record_data_usage(self, user_id: int, mb_used: float, current_user_id: int) -> bool:
         """Registra consumo de datos para un usuario en modo consumo."""
+        # Skip usage tracking for premium users (unlimited data)
+        if await self.is_premium_user(user_id, current_user_id):
+            return False  # No need to track usage for premium users
+
         return await self._cycle.record_data_usage(user_id, mb_used, current_user_id)
 
     async def get_current_consumption(

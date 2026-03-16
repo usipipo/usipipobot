@@ -19,6 +19,7 @@ from miniapp.routes_common import MiniAppContext, PaymentRequest, get_current_us
 from miniapp.routes_keys import router as keys_router
 from miniapp.routes_payments import router as payments_router
 from miniapp.routes_public import router as public_router
+from miniapp.routes_subscriptions import router as subscriptions_router
 from miniapp.routes_user import router as user_router
 
 # Main router with prefix
@@ -30,6 +31,7 @@ router.include_router(public_router)
 router.include_router(user_router)
 router.include_router(keys_router)
 router.include_router(payments_router)
+router.include_router(subscriptions_router)
 router.include_router(admin_router)
 
 # Re-export for backwards compatibility and external use

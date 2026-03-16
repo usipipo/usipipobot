@@ -18,6 +18,7 @@ from application.services.consumption_billing_service import ConsumptionBillingS
 from application.services.consumption_invoice_service import ConsumptionInvoiceService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
+from application.services.subscription_service import SubscriptionService
 from application.services.ticket_notification_service import TicketNotificationService
 from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
@@ -54,6 +55,10 @@ from telegram_bot.features.operations.handlers_operations import (
 from telegram_bot.features.referral.handlers_referral import (
     get_referral_callback_handlers,
     get_referral_handlers,
+)
+from telegram_bot.features.subscriptions.handlers import (
+    get_subscription_callback_handlers,
+    get_subscription_handlers,
 )
 from telegram_bot.features.tickets.handlers_registration import (
     get_ticket_callback_handlers,
@@ -157,13 +162,18 @@ def _get_core_handlers(
         get_user_management_handlers(vpn_service, user_profile_service, billing_service)
     )
     handlers.extend(get_user_callback_handlers(vpn_service, user_profile_service, billing_service))
-    logger.info("User management handlers configured")
+    logger.info("✅ User management handlers configured")
+
+    # Subscription handlers
+    handlers.extend(get_subscription_handlers())
+    handlers.extend(get_subscription_callback_handlers())
+    logger.info("✅ Subscription handlers configured")
 
     # 3. Handlers con MessageHandler genéricos (TEXT) al final
     # Estos capturan cualquier mensaje de texto, deben ir después de los ConversationHandler
     handlers.extend(get_key_management_handlers(vpn_service, billing_service))
     handlers.extend(get_key_management_callback_handlers(vpn_service, billing_service))
-    logger.info("Key management handlers configured")
+    logger.info("✅ Key management handlers configured")
 
     return handlers
 

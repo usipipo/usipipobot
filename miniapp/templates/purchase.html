@@ -6,7 +6,115 @@
 <div class="glitch-title" style="margin-bottom: 20px;">Tienda</div>
 
 <div class="terminal-output">
-    Selecciona un paquete de datos o slots adicionales...
+    Selecciona un paquete de datos, slots o suscripción premium...
+</div>
+
+<!-- Premium Subscriptions Section -->
+<div style="margin-top: 20px;">
+    <div style="font-size: 14px; color: var(--accent-magenta); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+        💎 Suscripciones Premium
+    </div>
+    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+        Datos ilimitados para tus claves VPN
+    </div>
+    <div class="packages-grid">
+        <div class="package-card featured" style="border-color: var(--accent-magenta);">
+            <div style="position: absolute; top: 12px; right: 12px;">
+                <span class="badge badge-active" style="background: var(--accent-magenta);">POPULAR</span>
+            </div>
+            <div style="font-size: 24px; margin-bottom: 8px;">👑</div>
+            <div class="package-name">1 Mes Premium</div>
+            <div class="package-data">Datos Ilimitados</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                Velocidad máxima sin límites de consumo
+            </div>
+            <div class="package-price">
+                ⭐ 360
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+                Telegram Stars
+            </div>
+            <div style="font-size: 10px; color: var(--accent-green); margin-bottom: 16px;">
+                💰 3.00 USDT
+            </div>
+            <button class="btn btn-primary btn-full"
+                    onclick="showPaymentMethods('subscription', 'one_month', 360, 3.00)">
+                Activar Premium
+            </button>
+        </div>
+
+        <div class="package-card featured" style="border-color: var(--accent-cyan);">
+            <div style="position: absolute; top: 12px; right: 12px;">
+                <span class="badge badge-active">+11% BONUS</span>
+            </div>
+            <div style="font-size: 24px; margin-bottom: 8px;">🥈</div>
+            <div class="package-name">3 Meses Premium</div>
+            <div class="package-data">Datos Ilimitados</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                Ahorra comprando trimestral
+            </div>
+            <div class="package-price">
+                ⭐ 960
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+                Telegram Stars
+            </div>
+            <div style="font-size: 10px; color: var(--accent-green); margin-bottom: 16px;">
+                💰 8.00 USDT
+            </div>
+            <button class="btn btn-primary btn-full"
+                    onclick="showPaymentMethods('subscription', 'three_months', 960, 8.00)">
+                Activar Premium
+            </button>
+        </div>
+
+        <div class="package-card featured" style="border-color: var(--accent-yellow);">
+            <div style="position: absolute; top: 12px; right: 12px;">
+                <span class="badge badge-active" style="background: var(--accent-yellow); color: #000;">+13% BONUS</span>
+            </div>
+            <div style="font-size: 24px; margin-bottom: 8px;">🥉</div>
+            <div class="package-name">6 Meses Premium</div>
+            <div class="package-data">Datos Ilimitados</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                Máximo ahorro semestral
+            </div>
+            <div class="package-price">
+                ⭐ 1560
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+                Telegram Stars
+            </div>
+            <div style="font-size: 10px; color: var(--accent-green); margin-bottom: 16px;">
+                💰 13.00 USDT
+            </div>
+            <button class="btn btn-primary btn-full"
+                    onclick="showPaymentMethods('subscription', 'six_months', 1560, 13.00)">
+                Activar Premium
+            </button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+        <div class="card-title">🌟 Beneficios Premium</div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 12px; color: var(--text-secondary);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-cyan);">✓</span>
+                <span>Datos ilimitados</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-cyan);">✓</span>
+                <span>Velocidad prioritaria</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-cyan);">✓</span>
+                <span>Sin límites de consumo</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-cyan);">✓</span>
+                <span>Soporte prioritario</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Packages Section -->
