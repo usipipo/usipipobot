@@ -329,6 +329,10 @@ def _configure_application_services(container: punq.Container) -> None:
         return ConsumptionBillingService(
             billing_repo=create_consumption_billing_repo(),
             user_repo=create_user_repo(),
+            subscription_service=cast(
+                SubscriptionService,
+                container.resolve(SubscriptionService),
+            ),
         )
 
     def create_consumption_invoice_service() -> ConsumptionInvoiceService:
