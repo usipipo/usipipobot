@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.11.0] - 2026-03-17
+
+### Removed
+- **Android APK Application** - Complete removal of Android mobile app from repository
+  - Removed `android_app/` directory (Kivy + KivyMD application)
+  - Removed `infrastructure/api/android/` REST API endpoints
+  - Removed `tests/infrastructure/api/android/` test suite
+  - Removed `.github/workflows/android-ci.yml` CI/CD pipeline
+  - Removed `scripts/setup_android_secrets*.sh` configuration scripts
+  - Removed `docs/plans/apk/` Android documentation (~21 files)
+
+### Changed
+- **Project Structure** - Repository now contains only Telegram Bot + Mini App Web platforms
+  - Updated `QWEN.md` to reflect two-platform ecosystem
+  - Updated `README.md` removing Android references
+  - Updated `docs/GITHUB_ACTIONS.md` removing Android workflow documentation
+  - Updated `pyproject.toml` removing android_app imports and description
+  - Updated `.gitignore` removing android_app paths
+
+### Technical
+- Removed `android_router` from `infrastructure/api/server.py`
+- Updated test scripts (`test_auth_flow.sh`, `test_otp_flow.sh`) to use `miniapp_web` client
+- Mini App Web fully intact with 27 registered routes
+- Backend infrastructure unchanged and fully functional
+
+### Migration Notes
+- Users of Android APK should migrate to Telegram Mini App Web
+- All backend APIs remain compatible with existing Bot and Mini App
+- No database schema changes required
+
 ## [v3.9.1] - 2026-03-16
 
 ### Changed
