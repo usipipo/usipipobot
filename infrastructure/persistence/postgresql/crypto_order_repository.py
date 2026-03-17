@@ -158,3 +158,15 @@ class PostgresCryptoOrderRepository(ICryptoOrderRepository):
         )
         row = result.scalar_one_or_none()
         return row if row else None
+
+    async def get_by_tron_dealer_order_id(
+        self, tron_dealer_order_id: str, current_user_id: int
+    ) -> Optional[CryptoOrder]:
+        """Busca una orden por el ID de orden de TronDealer."""
+        result = await self.session.execute(
+            select(CryptoOrderModel).where(
+                CryptoOrderModel.tron_dealer_order_id == tron_dealer_order_id
+            )
+        )
+        model = result.scalar_one_or_none()
+        return model.to_entity() if model else None

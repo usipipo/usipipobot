@@ -52,3 +52,10 @@ class ICryptoOrderRepository(ABC):
     async def get_any_reusable_wallet(self) -> Optional[str]:
         """Busca cualquier wallet reutilizable de órdenes expiradas."""
         pass
+
+    @abstractmethod
+    async def get_by_tron_dealer_order_id(
+        self, tron_dealer_order_id: str, current_user_id: int
+    ) -> Optional[CryptoOrder]:
+        """Busca una orden por el ID de orden de TronDealer."""
+        pass

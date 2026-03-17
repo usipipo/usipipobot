@@ -199,3 +199,21 @@ class PostgresDataPackageRepository(BasePostgresRepository, IDataPackageReposito
         except Exception as e:
             logger.error(f"Error al obtener paquetes expirados: {e}")
             return []
+
+    async def get_by_telegram_payment_id(
+        self, telegram_payment_id: str, current_user_id: int
+    ) -> Optional[DataPackage]:
+        """Busca un paquete por el ID de pago de Telegram."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = select(DataPackageModel).where(
+                DataPackageModel.telegram_payment_id == telegram_payment_id
+            )
+            result = await self.session.execute(query)
+            model = result.scalars().first()
+            return self._model_to_entity(model) if model else None
+        except Exception as e:
+            logger.error(
+                f"Error al obtener paquete por telegram_payment_id {telegram_payment_id}: {e}"
+            )
+            return None

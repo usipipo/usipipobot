@@ -21,6 +21,7 @@ from application.services.data_package_service import (
     DataPackageService,
 )
 from config import settings
+from domain.entities.crypto_order import CryptoOrderStatus
 from infrastructure.api.routes.miniapp_common import (
     MiniAppContext,
     PaymentRequest,
@@ -35,6 +36,9 @@ from infrastructure.persistence.postgresql.crypto_transaction_repository import 
 )
 from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
+)
+from infrastructure.persistence.postgresql.subscription_repository import (
+    PostgresSubscriptionRepository,
 )
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from miniapp.services.miniapp_payment_service import MiniAppPaymentService
@@ -592,6 +596,106 @@ async def api_confirm_payment(
 
     except Exception as e:
         logger.error(f"Error confirming payment for user {ctx.user.id}: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": "Error interno del servidor. Por favor intenta nuevamente.",
+            },
+        )
+
+
+@router.get("/api/payment-status/{transaction_id}")
+async def get_payment_status(
+    transaction_id: str,
+    ctx: MiniAppContext = Depends(get_current_user),
+):
+    """
+    API: Check payment completion status for Mini App frontend polling.
+
+    Checks DataPackage, CryptoOrder, and Subscription tables for matching transaction_id.
+    Returns status: "completed", "pending", or "not_found".
+
+    Response formats:
+    - Completed package: {success, status, type, product_id, data_gb, activated_at}
+    - Completed crypto: {success, status, type, amount_usdt, confirmed_at}
+    - Completed subscription: {success, status, type, plan_type, activated_at}
+    - Pending crypto: {success, status, type, amount_usdt, confirmed_at: None}
+    - Not found: {success, status: "pending", message}
+    """
+    try:
+        logger.info(f"Checking payment status for transaction: {transaction_id}")
+
+        async with get_session_context() as session:
+            # Initialize repositories
+            package_repo = PostgresDataPackageRepository(session)
+            crypto_order_repo = PostgresCryptoOrderRepository(session)
+            subscription_repo = PostgresSubscriptionRepository(session)
+
+            # 1. Check DataPackage table for matching telegram_payment_id
+            package = await package_repo.get_by_telegram_payment_id(
+                f"miniapp_{transaction_id}", ctx.user.id
+            )
+
+            if package:
+                # Calculate data_gb from data_limit_bytes
+                data_gb = package.data_limit_bytes // (1024**3)
+
+                return {
+                    "success": True,
+                    "status": "completed",
+                    "type": "package",
+                    "product_id": package.package_type.value,
+                    "data_gb": data_gb,
+                    "activated_at": (
+                        package.purchased_at.isoformat() if package.purchased_at else None
+                    ),
+                }
+
+            # 2. Check CryptoOrder table for matching tron_dealer_order_id
+            crypto_order = await crypto_order_repo.get_by_tron_dealer_order_id(
+                transaction_id, ctx.user.id
+            )
+
+            if crypto_order:
+                is_completed = crypto_order.status == CryptoOrderStatus.COMPLETED
+
+                return {
+                    "success": True,
+                    "status": "completed" if is_completed else "pending",
+                    "type": "crypto",
+                    "amount_usdt": crypto_order.amount_usdt,
+                    "confirmed_at": (
+                        crypto_order.confirmed_at.isoformat() if crypto_order.confirmed_at else None
+                    ),
+                }
+
+            # 3. Check Subscription table for matching payment_id
+            subscription = await subscription_repo.get_by_payment_id(
+                f"miniapp_{transaction_id}", ctx.user.id
+            )
+
+            if subscription:
+                return {
+                    "success": True,
+                    "status": "completed",
+                    "type": "subscription",
+                    "plan_type": subscription.plan_type.value,
+                    "activated_at": (
+                        subscription.starts_at.isoformat() if subscription.starts_at else None
+                    ),
+                }
+
+            # 4. Transaction not found - payment not yet detected
+            logger.info(f"Payment not detected for transaction: {transaction_id}")
+            return {
+                "success": True,
+                "status": "pending",
+                "message": "Payment not yet detected. Please complete payment in Telegram.",
+            }
+
+    except Exception as e:
+        logger.error(f"Error checking payment status for {transaction_id}: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={

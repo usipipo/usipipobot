@@ -47,3 +47,9 @@ class IDataPackageRepository(Protocol):
     async def get_expired_packages(self, current_user_id: int) -> List[DataPackage]:
         """Recupera todos los paquetes activos que han expirado."""
         ...
+
+    async def get_by_telegram_payment_id(
+        self, telegram_payment_id: str, current_user_id: int
+    ) -> Optional[DataPackage]:
+        """Busca un paquete por el ID de pago de Telegram."""
+        ...

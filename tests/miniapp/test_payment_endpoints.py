@@ -395,3 +395,237 @@ class TestConfirmPayment:
         data = response.json()
         assert data["success"] is False
         assert "error" in data
+
+
+class TestPaymentStatus:
+    """Tests for /api/payment-status/{transaction_id} endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_payment_status_pending(self, client):
+        """Test that transaction not found returns pending status."""
+        # Mock repositories to return None (no transaction found)
+        with (
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresDataPackageRepository"
+            ) as mock_pkg_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresCryptoOrderRepository"
+            ) as mock_crypto_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresSubscriptionRepository"
+            ) as mock_sub_repo,
+        ):
+            # Setup mocks to return None
+            mock_pkg_repo.return_value.get_by_telegram_payment_id = AsyncMock(return_value=None)
+            mock_crypto_repo.return_value.get_by_tron_dealer_order_id = AsyncMock(return_value=None)
+            mock_sub_repo.return_value.get_by_payment_id = AsyncMock(return_value=None)
+
+            response = await client.get("/api/v1/miniapp/api/payment-status/txn_nonexistent")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["status"] == "pending"
+        assert "message" in data
+        assert "Payment not yet detected" in data["message"]
+
+    @pytest.mark.asyncio
+    async def test_payment_status_completed_package(self, client):
+        """Test that completed package returns correct data."""
+        from datetime import datetime, timezone
+        from uuid import uuid4
+
+        from domain.entities.data_package import DataPackage, PackageType
+
+        # Mock a completed package
+        mock_package = DataPackage(
+            id=uuid4(),
+            user_id=12345,
+            package_type=PackageType.BASIC,
+            data_limit_bytes=10737418240,  # 10 GB
+            data_used_bytes=0,
+            stars_paid=250,
+            telegram_payment_id="miniapp_txn_123abc",
+            purchased_at=datetime.now(timezone.utc),
+            expires_at=datetime.now(timezone.utc),
+            is_active=True,
+        )
+
+        with (
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresDataPackageRepository"
+            ) as mock_pkg_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresCryptoOrderRepository"
+            ) as mock_crypto_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresSubscriptionRepository"
+            ) as mock_sub_repo,
+        ):
+            # Package repo returns the package
+            mock_pkg_repo.return_value.get_by_telegram_payment_id = AsyncMock(
+                return_value=mock_package
+            )
+            mock_crypto_repo.return_value.get_by_tron_dealer_order_id = AsyncMock(return_value=None)
+            mock_sub_repo.return_value.get_by_payment_id = AsyncMock(return_value=None)
+
+            response = await client.get("/api/v1/miniapp/api/payment-status/txn_123abc")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["status"] == "completed"
+        assert data["type"] == "package"
+        assert data["product_id"] == "basic"
+        assert data["data_gb"] == 10
+        assert "activated_at" in data
+
+    @pytest.mark.asyncio
+    async def test_payment_status_completed_crypto(self, client):
+        """Test that completed crypto order returns correct data."""
+        from datetime import datetime, timezone
+        from uuid import uuid4
+
+        from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
+
+        # Mock a completed crypto order
+        mock_crypto_order = CryptoOrder(
+            id=uuid4(),
+            user_id=12345,
+            package_type="basic",
+            amount_usdt=3.00,
+            wallet_address="0x1234567890abcdef1234567890abcdef12345678",
+            tron_dealer_order_id="txn_crypto_456def",
+            status=CryptoOrderStatus.COMPLETED,
+            created_at=datetime.now(timezone.utc),
+            expires_at=datetime.now(timezone.utc),
+            tx_hash="0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+            confirmed_at=datetime.now(timezone.utc),
+        )
+
+        with (
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresDataPackageRepository"
+            ) as mock_pkg_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresCryptoOrderRepository"
+            ) as mock_crypto_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresSubscriptionRepository"
+            ) as mock_sub_repo,
+        ):
+            # Package repo returns None
+            mock_pkg_repo.return_value.get_by_telegram_payment_id = AsyncMock(return_value=None)
+            # Crypto repo returns the completed order
+            mock_crypto_repo.return_value.get_by_tron_dealer_order_id = AsyncMock(
+                return_value=mock_crypto_order
+            )
+            mock_sub_repo.return_value.get_by_payment_id = AsyncMock(return_value=None)
+
+            response = await client.get("/api/v1/miniapp/api/payment-status/txn_crypto_456def")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["status"] == "completed"
+        assert data["type"] == "crypto"
+        assert data["amount_usdt"] == 3.00
+        assert "confirmed_at" in data
+
+    @pytest.mark.asyncio
+    async def test_payment_status_pending_crypto(self, client):
+        """Test that pending crypto order returns pending status."""
+        from datetime import datetime, timezone
+        from uuid import uuid4
+
+        from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
+
+        # Mock a pending crypto order
+        mock_crypto_order = CryptoOrder(
+            id=uuid4(),
+            user_id=12345,
+            package_type="basic",
+            amount_usdt=3.00,
+            wallet_address="0x1234567890abcdef1234567890abcdef12345678",
+            tron_dealer_order_id="txn_pending_789ghi",
+            status=CryptoOrderStatus.PENDING,
+            created_at=datetime.now(timezone.utc),
+            expires_at=datetime.now(timezone.utc),
+            tx_hash=None,
+            confirmed_at=None,
+        )
+
+        with (
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresDataPackageRepository"
+            ) as mock_pkg_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresCryptoOrderRepository"
+            ) as mock_crypto_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresSubscriptionRepository"
+            ) as mock_sub_repo,
+        ):
+            mock_pkg_repo.return_value.get_by_telegram_payment_id = AsyncMock(return_value=None)
+            mock_crypto_repo.return_value.get_by_tron_dealer_order_id = AsyncMock(
+                return_value=mock_crypto_order
+            )
+            mock_sub_repo.return_value.get_by_payment_id = AsyncMock(return_value=None)
+
+            response = await client.get("/api/v1/miniapp/api/payment-status/txn_pending_789ghi")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["status"] == "pending"
+        assert data["type"] == "crypto"
+        assert data["amount_usdt"] == 3.00
+
+    @pytest.mark.asyncio
+    async def test_payment_status_completed_subscription(self, client):
+        """Test that completed subscription returns correct data."""
+        from datetime import datetime, timedelta, timezone
+        from uuid import uuid4
+
+        from domain.entities.subscription_plan import PlanType, SubscriptionPlan
+
+        # Mock a completed subscription
+        now = datetime.now(timezone.utc)
+        mock_subscription = SubscriptionPlan(
+            id=uuid4(),
+            user_id=12345,
+            plan_type=PlanType.ONE_MONTH,
+            stars_paid=500,
+            payment_id="miniapp_txn_sub_999xyz",
+            starts_at=now,
+            expires_at=now + timedelta(days=30),
+            is_active=True,
+            created_at=now,
+            updated_at=now,
+        )
+
+        with (
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresDataPackageRepository"
+            ) as mock_pkg_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresCryptoOrderRepository"
+            ) as mock_crypto_repo,
+            patch(
+                "infrastructure.api.routes.miniapp_payments.PostgresSubscriptionRepository"
+            ) as mock_sub_repo,
+        ):
+            mock_pkg_repo.return_value.get_by_telegram_payment_id = AsyncMock(return_value=None)
+            mock_crypto_repo.return_value.get_by_tron_dealer_order_id = AsyncMock(return_value=None)
+            # Subscription repo returns the subscription
+            mock_sub_repo.return_value.get_by_payment_id = AsyncMock(return_value=mock_subscription)
+
+            response = await client.get("/api/v1/miniapp/api/payment-status/txn_sub_999xyz")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["status"] == "completed"
+        assert data["type"] == "subscription"
+        assert data["plan_type"] == "one_month"
+        assert "activated_at" in data
