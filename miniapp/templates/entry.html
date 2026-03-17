@@ -238,8 +238,8 @@
                             }
                         });
 
+                        // Check for 403 - user not registered
                         if (response.status === 403) {
-                            // User not registered - show message to start bot first
                             const errorData = await response.json();
                             if (errorData.detail === 'USER_NOT_REGISTERED') {
                                 errorBox.classList.add('info');
@@ -256,32 +256,32 @@
                             }
                         }
 
+                        // Check for other errors
                         if (!response.ok) {
-                            throw new Error('API Error: ' + response.status);
+                            const errorData = await response.json().catch(() => ({}));
+                            throw new Error('API Error: ' + response.status + ' - ' + (errorData.detail || 'Unknown error'));
                         }
 
                         // User is registered, proceed to dashboard
                         messageDiv.textContent = 'Redirigiendo al dashboard...';
 
-                        const dashboardUrl = new URL('/api/v1/miniapp/', window.location.origin);
+                        // CRITICAL: Redirect to dashboard endpoint directly, not root
+                        const dashboardUrl = new URL('/api/v1/miniapp/dashboard', window.location.origin);
                         dashboardUrl.searchParams.set('tgWebAppData', initData);
 
-                        showDebug('Redirecting to: /api/v1/miniapp/?tgWebAppData=...');
+                        showDebug('Redirecting to: /api/v1/miniapp/dashboard?tgWebAppData=...');
 
                         setTimeout(function() {
                             window.location.replace(dashboardUrl.toString());
                         }, 300);
 
                     } catch (fetchError) {
-                        // If API check fails, try redirect anyway (backward compatibility)
-                        messageDiv.textContent = 'Redirigiendo al dashboard...';
-
-                        const dashboardUrl = new URL('/api/v1/miniapp/', window.location.origin);
-                        dashboardUrl.searchParams.set('tgWebAppData', initData);
-
-                        setTimeout(function() {
-                            window.location.replace(dashboardUrl.toString());
-                        }, 300);
+                        // API error - show error instead of redirecting to JSON error page
+                        console.error('Authentication error:', fetchError);
+                        showError(
+                            'Error de autenticación. Por favor, intenta de nuevo.',
+                            'Fetch error: ' + fetchError.message
+                        );
                     }
 
                 } catch (e) {
