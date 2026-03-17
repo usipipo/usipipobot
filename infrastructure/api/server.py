@@ -11,10 +11,17 @@ from fastapi.staticfiles import StaticFiles
 
 from config import settings
 from infrastructure.api.middleware import RateLimitMiddleware, SecurityHeadersMiddleware
+from infrastructure.api.routes import (
+    miniapp_admin_router,
+    miniapp_keys_router,
+    miniapp_payments_router,
+    miniapp_public_router,
+    miniapp_subscriptions_router,
+    miniapp_user_router,
+)
 from infrastructure.api.webhooks import tron_dealer_router
 from infrastructure.api.webhooks.tron_dealer import set_services
 from infrastructure.persistence.database import close_database, get_session_context, init_database
-from miniapp import router as miniapp_router
 from utils.logger import logger
 
 
@@ -89,13 +96,22 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.API_RATE_LIMIT)
 
+    # Register webhooks
     app.include_router(tron_dealer_router, prefix="/api/v1/webhooks")
-    app.include_router(miniapp_router)
 
+    # Register Mini App routes with new /api/v1/miniapp prefix
+    app.include_router(miniapp_user_router, prefix="/api/v1/miniapp")
+    app.include_router(miniapp_keys_router, prefix="/api/v1/miniapp")
+    app.include_router(miniapp_payments_router, prefix="/api/v1/miniapp")
+    app.include_router(miniapp_subscriptions_router, prefix="/api/v1/miniapp")
+    app.include_router(miniapp_admin_router, prefix="/api/v1/miniapp")
+    app.include_router(miniapp_public_router, prefix="/api/v1/miniapp")
+
+    # Mount static files for Mini App with new prefix
     miniapp_static_dir = Path(__file__).parent.parent.parent / "miniapp" / "static"
     if miniapp_static_dir.exists():
         app.mount(
-            "/miniapp/static",
+            "/api/v1/miniapp/static",
             StaticFiles(directory=str(miniapp_static_dir)),
             name="miniapp-static",
         )

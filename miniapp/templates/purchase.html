@@ -326,7 +326,7 @@ async function payWithStars() {
             hasInitData: !!Telegram.WebApp.initData
         });
 
-        const response = await fetch('/miniapp/api/create-stars-invoice', {
+        const response = await fetch('/api/v1/miniapp/api/create-stars-invoice', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -400,7 +400,7 @@ async function payWithCrypto() {
             hasInitData: !!Telegram.WebApp.initData
         });
 
-        const response = await fetch('/miniapp/api/create-crypto-order', {
+        const response = await fetch('/api/v1/miniapp/api/create-crypto-order', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

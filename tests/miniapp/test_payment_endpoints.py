@@ -42,7 +42,9 @@ async def client():
     mock_notification_service.send_crypto_payment_notification.return_value = True
     mock_notification_service.send_payment_confirmation.return_value = True
 
-    with patch("miniapp.routes_payments.PostgresUserRepository") as mock_repo_class:
+    with patch(
+        "infrastructure.api.routes.miniapp_payments.PostgresUserRepository"
+    ) as mock_repo_class:
         mock_repo = AsyncMock()
         mock_repo.get_by_id.return_value = mock_user
         mock_repo_class.return_value = mock_repo
@@ -73,7 +75,7 @@ class TestCreateStarsInvoice:
     async def test_create_stars_invoice_package_success(self, client):
         """Test creating a Stars invoice for a package."""
         response = await client.post(
-            "/miniapp/api/create-stars-invoice",
+            "/api/v1/miniapp/api/create-stars-invoice",
             json={"product_type": "package", "product_id": "basic"},
         )
 
@@ -88,7 +90,7 @@ class TestCreateStarsInvoice:
     async def test_create_stars_invoice_slots_success(self, client):
         """Test creating a Stars invoice for slots."""
         response = await client.post(
-            "/miniapp/api/create-stars-invoice",
+            "/api/v1/miniapp/api/create-stars-invoice",
             json={"product_type": "slots", "product_id": "slots_3"},
         )
 
@@ -102,7 +104,7 @@ class TestCreateStarsInvoice:
     async def test_create_stars_invoice_invalid_product(self, client):
         """Test creating invoice with invalid product."""
         response = await client.post(
-            "/miniapp/api/create-stars-invoice",
+            "/api/v1/miniapp/api/create-stars-invoice",
             json={"product_type": "package", "product_id": "invalid"},
         )
 
@@ -114,7 +116,7 @@ class TestCreateStarsInvoice:
     async def test_create_stars_invoice_missing_params(self, client):
         """Test creating invoice without required params - Pydantic validation."""
         response = await client.post(
-            "/miniapp/api/create-stars-invoice",
+            "/api/v1/miniapp/api/create-stars-invoice",
             json={},
         )
 
@@ -132,7 +134,7 @@ class TestCreateCryptoOrder:
         """Test that crypto order endpoint validates product_type and product_id."""
         # Valid request structure but invalid product should return 400 (after auth)
         response = await client.post(
-            "/miniapp/api/create-crypto-order",
+            "/api/v1/miniapp/api/create-crypto-order",
             json={"product_type": "package", "product_id": "invalid"},
         )
 
@@ -145,7 +147,7 @@ class TestCreateCryptoOrder:
     async def test_create_crypto_order_missing_params(self, client):
         """Test creating order without required params - Pydantic validation."""
         response = await client.post(
-            "/miniapp/api/create-crypto-order",
+            "/api/v1/miniapp/api/create-crypto-order",
             json={},
         )
 
@@ -158,7 +160,7 @@ class TestCreateCryptoOrder:
     async def test_create_crypto_order_missing_product_type(self, client):
         """Test creating order without product_type - Pydantic validation."""
         response = await client.post(
-            "/miniapp/api/create-crypto-order",
+            "/api/v1/miniapp/api/create-crypto-order",
             json={"product_id": "basic"},
         )
 
@@ -170,7 +172,7 @@ class TestCreateCryptoOrder:
     async def test_create_crypto_order_missing_product_id(self, client):
         """Test creating order without product_id - Pydantic validation."""
         response = await client.post(
-            "/miniapp/api/create-crypto-order",
+            "/api/v1/miniapp/api/create-crypto-order",
             json={"product_type": "package"},
         )
 
@@ -285,13 +287,15 @@ class TestConfirmPayment:
         mock_package.remaining_bytes = 1073741824  # 1 GB
         mock_package.expires_at.isoformat.return_value = "2025-04-04T12:00:00"
 
-        with patch("miniapp.routes_payments.DataPackageService") as mock_service_class:
+        with patch(
+            "infrastructure.api.routes.miniapp_payments.DataPackageService"
+        ) as mock_service_class:
             mock_service = AsyncMock()
             mock_service.purchase_package.return_value = (mock_package, {})
             mock_service_class.return_value = mock_service
 
             response = await client.post(
-                "/miniapp/api/confirm-payment",
+                "/api/v1/miniapp/api/confirm-payment",
                 json={
                     "product_type": "package",
                     "product_id": "basic",
@@ -308,7 +312,9 @@ class TestConfirmPayment:
     @pytest.mark.asyncio
     async def test_confirm_payment_slots_success(self, client):
         """Test confirming payment for slots adds the slots."""
-        with patch("miniapp.routes_payments.DataPackageService") as mock_service_class:
+        with patch(
+            "infrastructure.api.routes.miniapp_payments.DataPackageService"
+        ) as mock_service_class:
             mock_service = AsyncMock()
             mock_service.purchase_key_slots.return_value = {
                 "slots_added": 3,
@@ -318,7 +324,7 @@ class TestConfirmPayment:
             mock_service_class.return_value = mock_service
 
             response = await client.post(
-                "/miniapp/api/confirm-payment",
+                "/api/v1/miniapp/api/confirm-payment",
                 json={
                     "product_type": "slots",
                     "product_id": "slots_3",
@@ -337,7 +343,7 @@ class TestConfirmPayment:
     async def test_confirm_payment_invalid_product(self, client):
         """Test confirming payment with invalid product returns error."""
         response = await client.post(
-            "/miniapp/api/confirm-payment",
+            "/api/v1/miniapp/api/confirm-payment",
             json={
                 "product_type": "package",
                 "product_id": "invalid_package",
@@ -354,7 +360,7 @@ class TestConfirmPayment:
     async def test_confirm_payment_missing_transaction_id(self, client):
         """Test confirming payment without transaction_id fails validation."""
         response = await client.post(
-            "/miniapp/api/confirm-payment",
+            "/api/v1/miniapp/api/confirm-payment",
             json={
                 "product_type": "package",
                 "product_id": "basic",
@@ -369,13 +375,15 @@ class TestConfirmPayment:
     @pytest.mark.asyncio
     async def test_confirm_payment_service_error(self, client):
         """Test handling of service errors during payment confirmation."""
-        with patch("miniapp.routes_payments.DataPackageService") as mock_service_class:
+        with patch(
+            "infrastructure.api.routes.miniapp_payments.DataPackageService"
+        ) as mock_service_class:
             mock_service = AsyncMock()
             mock_service.purchase_package.side_effect = Exception("Database error")
             mock_service_class.return_value = mock_service
 
             response = await client.post(
-                "/miniapp/api/confirm-payment",
+                "/api/v1/miniapp/api/confirm-payment",
                 json={
                     "product_type": "package",
                     "product_id": "basic",

@@ -287,7 +287,7 @@
 
 {% block content %}
 <div class="logs-header">
-    <a href="/miniapp/settings" class="back-link">← Volver a Ajustes</a>
+    <a href="/api/v1/miniapp/settings" class="back-link">← Volver a Ajustes</a>
     <div class="page-title">🖥️ Diagnósticos</div>
     <div class="page-subtitle">Logs del sistema en tiempo real</div>
 </div>
@@ -442,7 +442,7 @@
 
     async function fetchLogs() {
         try {
-            const response = await fetch('/miniapp/api/logs?lines=100');
+            const response = await fetch('/api/v1/miniapp/api/logs?lines=100');
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
                     document.getElementById('logs-terminal').innerHTML = `
