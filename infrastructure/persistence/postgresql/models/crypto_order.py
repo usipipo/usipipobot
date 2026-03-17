@@ -2,9 +2,9 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import Column, DateTime
+from sqlalchemy import BigInteger, DateTime
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import Float, ForeignKey, Integer, String
+from sqlalchemy import Float, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -17,7 +17,7 @@ class CryptoOrderModel(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.telegram_id"), nullable=False, index=True
+        BigInteger, ForeignKey("users.telegram_id"), nullable=False, index=True
     )
     package_type: Mapped[str] = mapped_column(String(50), nullable=False, default="basic")
     amount_usdt: Mapped[float] = mapped_column(Float, nullable=False)
