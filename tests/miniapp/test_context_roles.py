@@ -1,5 +1,5 @@
 """
-Tests for MiniAppContext role recognition.
+Tests for Mini App role recognition.
 
 Issue #252: Mini App Web no reconoce roles de usuario desde la base de datos
 """
@@ -10,7 +10,7 @@ import pytest
 
 from config import settings
 from domain.entities.user import User, UserRole
-from miniapp.routes_common import MiniAppContext
+from infrastructure.api.routes.miniapp_common import MiniAppContext
 from miniapp.services.miniapp_auth import TelegramUser
 
 

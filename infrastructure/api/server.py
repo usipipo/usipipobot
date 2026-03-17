@@ -99,13 +99,20 @@ def create_app() -> FastAPI:
     # Register webhooks
     app.include_router(tron_dealer_router, prefix="/api/v1/webhooks")
 
-    # Register Mini App routes with new /api/v1/miniapp prefix
+    # Register Mini App routes with /api/v1/miniapp prefix
+    # Note: These are API routes that require authentication via initData
     app.include_router(miniapp_user_router, prefix="/api/v1/miniapp")
     app.include_router(miniapp_keys_router, prefix="/api/v1/miniapp")
     app.include_router(miniapp_payments_router, prefix="/api/v1/miniapp")
     app.include_router(miniapp_subscriptions_router, prefix="/api/v1/miniapp")
     app.include_router(miniapp_admin_router, prefix="/api/v1/miniapp")
     app.include_router(miniapp_public_router, prefix="/api/v1/miniapp")
+
+    # CRITICAL: Register direct web route for Mini App entry point (without /api/v1/miniapp prefix)
+    # This is required for Telegram WebApp button which loads {MINIAPP_URL}/miniapp/entry
+    from infrastructure.api.routes.miniapp_public import render_entry_html
+
+    app.add_api_route("/miniapp/entry", render_entry_html, methods=["GET"], include_in_schema=False)
 
     # Mount static files for Mini App with new prefix
     miniapp_static_dir = Path(__file__).parent.parent.parent / "miniapp" / "static"
@@ -114,6 +121,12 @@ def create_app() -> FastAPI:
             "/api/v1/miniapp/static",
             StaticFiles(directory=str(miniapp_static_dir)),
             name="miniapp-static",
+        )
+        # Also mount static files at /miniapp/static for direct web access
+        app.mount(
+            "/miniapp/static",
+            StaticFiles(directory=str(miniapp_static_dir)),
+            name="miniapp-static-direct",
         )
 
     @app.exception_handler(Exception)

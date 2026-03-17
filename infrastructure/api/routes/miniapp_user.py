@@ -4,13 +4,13 @@ Rutas de usuario para la Mini App.
 Incluye dashboard, perfil, ajustes y API de usuario.
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 1.0.1 - Added root route for Mini App entry
 """
 
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from config import settings
@@ -24,6 +24,24 @@ router = APIRouter(tags=["Mini App Web - User"])
 
 TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "miniapp" / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+
+@router.get("/", response_class=HTMLResponse)
+async def miniapp_root(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+    """
+    Ruta raíz de la Mini App. Redirige al dashboard.
+
+    Esta ruta es el punto de entrada principal cuando la Mini App se carga
+    desde el botón WebAppInfo de Telegram.
+    """
+    logger.info(f"📊 MiniApp root accessed by user {ctx.user.id}, redirecting to dashboard")
+
+    # Get initData from request for redirect
+    init_data = request.query_params.get("tgWebAppData", "")
+
+    # Redirect to dashboard with initData
+    redirect_url = f"/api/v1/miniapp/dashboard?tgWebAppData={init_data}"
+    return RedirectResponse(url=redirect_url)
 
 
 @router.get("/dashboard", response_class=HTMLResponse)

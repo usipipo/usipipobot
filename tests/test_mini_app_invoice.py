@@ -5,7 +5,7 @@ These tests verify the invoice creation flow for both Telegram Stars
 and cryptocurrency payments, including error handling and validation.
 
 Author: uSipipo Team
-Version: 1.0.0
+Version: 1.0.1 - Updated imports after API route migration
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from infrastructure.api.routes.miniapp_common import get_current_user
 from infrastructure.api.server import create_app
-from miniapp.router import get_current_user
 
 # =============================================================================
 # Test Fixtures
@@ -51,7 +51,9 @@ async def client():
     mock_notification_service.send_crypto_payment_notification.return_value = True
     mock_notification_service.send_payment_confirmation.return_value = True
 
-    with patch("miniapp.routes_payments.PostgresUserRepository") as mock_repo_class:
+    with patch(
+        "infrastructure.api.routes.miniapp_payments.PostgresUserRepository"
+    ) as mock_repo_class:
         mock_repo = AsyncMock()
         mock_repo.get_by_id.return_value = mock_user
         mock_repo_class.return_value = mock_repo
@@ -93,7 +95,8 @@ async def test_invoice_missing_init_data(client_no_mock):
     return a clear error message instead of failing silently.
     """
     response = await client_no_mock.post(
-        "/miniapp/api/create-stars-invoice", json={"product_type": "package", "product_id": "basic"}
+        "/api/v1/miniapp/api/create-stars-invoice",
+        json={"product_type": "package", "product_id": "basic"},
     )
 
     # Auth middleware returns 401 or 403
@@ -113,7 +116,7 @@ async def test_invoice_invalid_init_data(client_no_mock):
     This ensures the HMAC validation is working correctly.
     """
     response = await client_no_mock.post(
-        "/miniapp/api/create-stars-invoice",
+        "/api/v1/miniapp/api/create-stars-invoice",
         headers={"X-Telegram-Init-Data": "invalid_garbage_data"},
         json={"product_type": "package", "product_id": "basic"},
     )
@@ -135,7 +138,8 @@ async def test_invoice_valid_package(client):
     This is the happy path - valid initData, valid product.
     """
     response = await client.post(
-        "/miniapp/api/create-stars-invoice", json={"product_type": "package", "product_id": "basic"}
+        "/api/v1/miniapp/api/create-stars-invoice",
+        json={"product_type": "package", "product_id": "basic"},
     )
 
     assert response.status_code == 200
@@ -156,7 +160,8 @@ async def test_invoice_valid_slots(client):
     Test successful invoice creation for VPN key slots.
     """
     response = await client.post(
-        "/miniapp/api/create-stars-invoice", json={"product_type": "slots", "product_id": "slots_3"}
+        "/api/v1/miniapp/api/create-stars-invoice",
+        json={"product_type": "slots", "product_id": "slots_3"},
     )
 
     assert response.status_code == 200
@@ -179,7 +184,7 @@ async def test_invoice_invalid_product_type(client):
     Only "package" and "slots" are valid product types.
     """
     response = await client.post(
-        "/miniapp/api/create-stars-invoice",
+        "/api/v1/miniapp/api/create-stars-invoice",
         json={"product_type": "invalid_type", "product_id": "basic"},
     )
 
@@ -203,7 +208,7 @@ async def test_invoice_invalid_product_id(client):
     Valid slots IDs: slots_1, slots_3, slots_5, slots_10
     """
     response = await client.post(
-        "/miniapp/api/create-stars-invoice",
+        "/api/v1/miniapp/api/create-stars-invoice",
         json={"product_type": "package", "product_id": "nonexistent"},
     )
 
@@ -224,7 +229,8 @@ async def test_crypto_order_valid(client):
     Test successful crypto order creation.
     """
     response = await client.post(
-        "/miniapp/api/create-crypto-order", json={"product_type": "package", "product_id": "basic"}
+        "/api/v1/miniapp/api/create-crypto-order",
+        json={"product_type": "package", "product_id": "basic"},
     )
 
     # Should succeed or fail due to missing crypto config in test env
@@ -244,7 +250,7 @@ async def test_crypto_order_invalid_product(client):
     Test that crypto order creation fails for invalid products.
     """
     response = await client.post(
-        "/miniapp/api/create-crypto-order",
+        "/api/v1/miniapp/api/create-crypto-order",
         json={"product_type": "package", "product_id": "invalid"},
     )
 
@@ -266,13 +272,15 @@ async def test_invoice_missing_required_fields(client):
     """
     # Missing product_id
     response = await client.post(
-        "/miniapp/api/create-stars-invoice", json={"product_type": "package"}
+        "/api/v1/miniapp/api/create-stars-invoice", json={"product_type": "package"}
     )
 
     assert response.status_code == 422  # Pydantic validation error
 
     # Missing product_type
-    response = await client.post("/miniapp/api/create-stars-invoice", json={"product_id": "basic"})
+    response = await client.post(
+        "/api/v1/miniapp/api/create-stars-invoice", json={"product_id": "basic"}
+    )
 
     assert response.status_code == 422
 
@@ -291,7 +299,8 @@ async def test_cors_headers_present(client):
     """
     # Make a regular request first to check CORS headers in response
     response = await client.post(
-        "/miniapp/api/create-stars-invoice", json={"product_type": "package", "product_id": "basic"}
+        "/api/v1/miniapp/api/create-stars-invoice",
+        json={"product_type": "package", "product_id": "basic"},
     )
 
     # Check CORS headers (may not be present in test env without middleware)
@@ -314,7 +323,7 @@ async def test_error_response_format(client):
     - error: descriptive message
     """
     response = await client.post(
-        "/miniapp/api/create-stars-invoice",
+        "/api/v1/miniapp/api/create-stars-invoice",
         json={"product_type": "invalid", "product_id": "invalid"},
     )
 
@@ -342,7 +351,8 @@ async def test_invoice_creation_complete_flow(client):
     """
     # Step 1: Create invoice (use "basic" which is a valid package)
     response = await client.post(
-        "/miniapp/api/create-stars-invoice", json={"product_type": "package", "product_id": "basic"}
+        "/api/v1/miniapp/api/create-stars-invoice",
+        json={"product_type": "package", "product_id": "basic"},
     )
 
     # Step 2: Verify response
