@@ -581,6 +581,10 @@
             <span class="nav-icon">💎</span>
             <span>Comprar</span>
         </a>
+        <a href="/api/v1/miniapp/transactions-page" class="nav-item {% if '/transactions' in request.url.path %}active{% endif %}">
+            <span class="nav-icon">💳</span>
+            <span>Historial</span>
+        </a>
         <a href="/api/v1/miniapp/profile" class="nav-item {% if '/profile' in request.url.path %}active{% endif %}">
             <span class="nav-icon">👤</span>
             <span>Perfil</span>

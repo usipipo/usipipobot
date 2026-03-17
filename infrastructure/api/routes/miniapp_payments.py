@@ -135,6 +135,140 @@ async def purchase_page(request: Request, ctx: MiniAppContext = Depends(get_curr
     )
 
 
+# ============================================================================
+# TRANSACTIONS
+# ============================================================================
+
+
+@router.get("/transactions", response_model=TransactionHistoryResponse)
+async def get_transactions(
+    ctx: MiniAppContext = Depends(get_current_user),
+    page: int = 1,
+    limit: int = 20,
+    type: str | None = None,
+    status: str | None = None,
+):
+    """
+    API: Get user's complete transaction history with pagination and filters.
+
+    Fetches DataPackage, CryptoOrder, and SubscriptionPlan records,
+    combines them into a unified transaction list, sorts by created_at descending,
+    applies pagination and optional filters.
+
+    Query Parameters:
+    - page: Page number (default: 1)
+    - limit: Items per page (default: 20, max: 100)
+    - type: Filter by type: "package", "crypto", "subscription"
+    - status: Filter by status: "completed", "pending", "failed", "expired"
+
+    Returns unified transaction history with pagination metadata.
+    """
+    try:
+        # Validate and cap limit
+        limit = min(max(limit, 1), 100)
+        page = max(page, 1)
+        offset = (page - 1) * limit
+
+        logger.info(
+            f"Fetching transaction history for user {ctx.user.id}: "
+            f"page={page}, limit={limit}, type={type}, status={status}"
+        )
+
+        async with get_session_context() as session:
+            # Initialize repositories
+            package_repo = PostgresDataPackageRepository(session)
+            crypto_order_repo = PostgresCryptoOrderRepository(session)
+            subscription_repo = PostgresSubscriptionRepository(session)
+
+            # Fetch all transactions from all sources
+            packages = await package_repo.get_by_user_paginated(
+                ctx.user.id, limit=1000, offset=0, current_user_id=ctx.user.id
+            )
+            crypto_orders = await crypto_order_repo.get_by_user_paginated(
+                ctx.user.id, limit=1000, offset=0, current_user_id=ctx.user.id
+            )
+            subscriptions = await subscription_repo.get_by_user_paginated(
+                ctx.user.id, limit=1000, offset=0, current_user_id=ctx.user.id
+            )
+
+            # Convert to transaction responses
+            transactions: list[TransactionResponse] = []
+
+            for pkg in packages:
+                tx = _entity_to_transaction_response(pkg)
+                transactions.append(tx)
+
+            for crypto in crypto_orders:
+                tx = _entity_to_transaction_response(crypto)
+                transactions.append(tx)
+
+            for sub in subscriptions:
+                tx = _entity_to_transaction_response(sub)
+                transactions.append(tx)
+
+            # Apply type filter if provided
+            if type:
+                transactions = [tx for tx in transactions if tx.type == type]
+
+            # Apply status filter if provided
+            if status:
+                transactions = [tx for tx in transactions if tx.status == status]
+
+            # Sort by created_at descending (newest first)
+            transactions.sort(key=lambda x: x.created_at, reverse=True)
+
+            # Get total count before pagination
+            total = len(transactions)
+
+            # Apply pagination
+            paginated_transactions = transactions[offset : offset + limit]
+
+            # Calculate total pages
+            pages = (total + limit - 1) // limit if total > 0 else 0
+
+            logger.info(
+                f"Transaction history fetched for user {ctx.user.id}: "
+                f"total={total}, page={page}, pages={pages}"
+            )
+
+            return TransactionHistoryResponse(
+                success=True,
+                transactions=paginated_transactions,
+                pagination=PaginationResponse(
+                    page=page,
+                    limit=limit,
+                    total=total,
+                    pages=pages,
+                ),
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Error fetching transaction history for user {ctx.user.id}: {e}", exc_info=True
+        )
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": "Error interno del servidor. Por favor intenta nuevamente.",
+            },
+        )
+
+
+@router.get("/transactions-page", response_class=HTMLResponse)
+async def transactions_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+    """Página de historial de transacciones del usuario."""
+    logger.info(f"💳 MiniApp transactions page accessed by user {ctx.user.id}")
+    return templates.TemplateResponse(
+        "transactions.html",
+        {
+            "request": request,
+            "user": ctx.user,
+            "bot_username": settings.BOT_USERNAME,
+        },
+    )
+
+
 @router.post("/api/create-stars-invoice")
 async def api_create_stars_invoice(
     payment_req: PaymentRequest,
@@ -818,118 +952,3 @@ def _entity_to_transaction_response(
         )
 
     raise ValueError(f"Unknown entity type: {type(entity)}")
-
-
-@router.get("/transactions", response_model=TransactionHistoryResponse)
-async def get_transactions(
-    ctx: MiniAppContext = Depends(get_current_user),
-    page: int = 1,
-    limit: int = 20,
-    type: str | None = None,
-    status: str | None = None,
-):
-    """
-    API: Get user's complete transaction history with pagination and filters.
-
-    Fetches DataPackage, CryptoOrder, and SubscriptionPlan records,
-    combines them into a unified transaction list, sorts by created_at descending,
-    applies pagination and optional filters.
-
-    Query Parameters:
-    - page: Page number (default: 1)
-    - limit: Items per page (default: 20, max: 100)
-    - type: Filter by type: "package", "crypto", "subscription"
-    - status: Filter by status: "completed", "pending", "failed", "expired"
-
-    Returns unified transaction history with pagination metadata.
-    """
-    try:
-        # Validate and cap limit
-        limit = min(max(limit, 1), 100)
-        page = max(page, 1)
-        offset = (page - 1) * limit
-
-        logger.info(
-            f"Fetching transaction history for user {ctx.user.id}: "
-            f"page={page}, limit={limit}, type={type}, status={status}"
-        )
-
-        async with get_session_context() as session:
-            # Initialize repositories
-            package_repo = PostgresDataPackageRepository(session)
-            crypto_order_repo = PostgresCryptoOrderRepository(session)
-            subscription_repo = PostgresSubscriptionRepository(session)
-
-            # Fetch all transactions from all sources
-            packages = await package_repo.get_by_user_paginated(
-                ctx.user.id, limit=1000, offset=0, current_user_id=ctx.user.id
-            )
-            crypto_orders = await crypto_order_repo.get_by_user_paginated(
-                ctx.user.id, limit=1000, offset=0, current_user_id=ctx.user.id
-            )
-            subscriptions = await subscription_repo.get_by_user_paginated(
-                ctx.user.id, limit=1000, offset=0, current_user_id=ctx.user.id
-            )
-
-            # Convert to transaction responses
-            transactions: list[TransactionResponse] = []
-
-            for pkg in packages:
-                tx = _entity_to_transaction_response(pkg)
-                transactions.append(tx)
-
-            for crypto in crypto_orders:
-                tx = _entity_to_transaction_response(crypto)
-                transactions.append(tx)
-
-            for sub in subscriptions:
-                tx = _entity_to_transaction_response(sub)
-                transactions.append(tx)
-
-            # Apply type filter if provided
-            if type:
-                transactions = [tx for tx in transactions if tx.type == type]
-
-            # Apply status filter if provided
-            if status:
-                transactions = [tx for tx in transactions if tx.status == status]
-
-            # Sort by created_at descending (newest first)
-            transactions.sort(key=lambda x: x.created_at, reverse=True)
-
-            # Get total count before pagination
-            total = len(transactions)
-
-            # Apply pagination
-            paginated_transactions = transactions[offset : offset + limit]
-
-            # Calculate total pages
-            pages = (total + limit - 1) // limit if total > 0 else 0
-
-            logger.info(
-                f"Transaction history fetched for user {ctx.user.id}: "
-                f"total={total}, page={page}, pages={pages}"
-            )
-
-            return TransactionHistoryResponse(
-                success=True,
-                transactions=paginated_transactions,
-                pagination=PaginationResponse(
-                    page=page,
-                    limit=limit,
-                    total=total,
-                    pages=pages,
-                ),
-            )
-
-    except Exception as e:
-        logger.error(
-            f"Error fetching transaction history for user {ctx.user.id}: {e}", exc_info=True
-        )
-        return JSONResponse(
-            status_code=500,
-            content={
-                "success": False,
-                "error": "Error interno del servidor. Por favor intenta nuevamente.",
-            },
-        )
