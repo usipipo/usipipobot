@@ -232,7 +232,7 @@
 
                     // First, verify user is registered by checking the API
                     try {
-                        const response = await fetch('/miniapp/api/user', {
+                        const response = await fetch('/api/v1/miniapp/api/user', {
                             headers: {
                                 'X-Telegram-Init-Data': initData
                             }
@@ -263,10 +263,10 @@
                         // User is registered, proceed to dashboard
                         messageDiv.textContent = 'Redirigiendo al dashboard...';
 
-                        const dashboardUrl = new URL('/miniapp/', window.location.origin);
+                        const dashboardUrl = new URL('/api/v1/miniapp/', window.location.origin);
                         dashboardUrl.searchParams.set('tgWebAppData', initData);
 
-                        showDebug('Redirecting to: /miniapp/?tgWebAppData=...');
+                        showDebug('Redirecting to: /api/v1/miniapp/?tgWebAppData=...');
 
                         setTimeout(function() {
                             window.location.replace(dashboardUrl.toString());
@@ -276,7 +276,7 @@
                         // If API check fails, try redirect anyway (backward compatibility)
                         messageDiv.textContent = 'Redirigiendo al dashboard...';
 
-                        const dashboardUrl = new URL('/miniapp/', window.location.origin);
+                        const dashboardUrl = new URL('/api/v1/miniapp/', window.location.origin);
                         dashboardUrl.searchParams.set('tgWebAppData', initData);
 
                         setTimeout(function() {

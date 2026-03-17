@@ -39,7 +39,11 @@ authorized_users.json
 # =============================================================================
 # No ignoramos la carpeta 'migrations/', pero sí los archivos autogenerados de versions
 # Los archivos .py en migrations/versions/ contienen información sensible del esquema
+# EXCEPCIÓN: Permitir migraciones consolidadas y manuales (001_*, fix_*)
 migrations/versions/*.py
+!migrations/versions/001_*.py
+!migrations/versions/fix_*.py
+!migrations/versions/000_*.py
 # Mantener solo las carpetas y archivos de plantilla
 !migrations/versions/.gitkeep
 *.db

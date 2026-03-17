@@ -23,7 +23,7 @@
         console.log('Color Scheme:', tg.colorScheme);
 
         document.addEventListener('backButtonClicked', function() {
-            if (window.location.pathname !== '/miniapp/') {
+            if (window.location.pathname !== '/api/v1/miniapp/dashboard') {
                 window.history.back();
             } else {
                 tg.close();
@@ -32,7 +32,7 @@
 
         tg.BackButton.show();
         tg.BackButton.onClick(function() {
-            if (window.location.pathname !== '/miniapp/') {
+            if (window.location.pathname !== '/api/v1/miniapp/dashboard') {
                 window.history.back();
             }
         });
@@ -51,7 +51,7 @@
         const initData = getInitData();
         if (!initData) return;
 
-        document.querySelectorAll('a[href^="/miniapp/"]').forEach(link => {
+        document.querySelectorAll('a[href^="/api/v1/miniapp/"]').forEach(link => {
             const url = new URL(link.href, window.location.origin);
             url.searchParams.set('tgWebAppData', initData);
             link.href = url.toString();

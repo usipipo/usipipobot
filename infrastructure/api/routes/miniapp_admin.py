@@ -14,16 +14,16 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from miniapp.routes_common import MiniAppContext, require_admin
+from infrastructure.api.routes.miniapp_common import MiniAppContext, require_admin
 from utils.logger import logger
 
-router = APIRouter(tags=["Mini App - Admin"])
+router = APIRouter(tags=["Mini App Web - Admin"])
 
-TEMPLATES_DIR = Path(__file__).parent / "templates"
+TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "miniapp" / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
-@router.get("/logs", response_class=HTMLResponse)
+@router.get("/admin/logs", response_class=HTMLResponse)
 async def logs_page(request: Request, ctx: MiniAppContext = Depends(require_admin)):
     """Página de logs del sistema (solo administrador)."""
     logger.info(f"🖥️ Admin {ctx.user.id} accessed logs page")
@@ -36,7 +36,7 @@ async def logs_page(request: Request, ctx: MiniAppContext = Depends(require_admi
     )
 
 
-@router.get("/api/logs")
+@router.get("/admin/api/logs")
 async def api_get_logs(lines: int = 100, ctx: MiniAppContext = Depends(require_admin)):
     """API: Obtiene los últimos logs del sistema (solo administrador)."""
     try:
@@ -50,7 +50,7 @@ async def api_get_logs(lines: int = 100, ctx: MiniAppContext = Depends(require_a
             if not line.strip():
                 continue
 
-            # Try to parse log format: "YYYY-MM-DD HH:mm:ss | LEVEL | message"
+            # Try to parse log format: "YYYY-MM-DD HH:mm:ss | LEVEL || message"
             parts = line.split(" | ", 2)
             if len(parts) >= 3:
                 timestamp = parts[0].strip()

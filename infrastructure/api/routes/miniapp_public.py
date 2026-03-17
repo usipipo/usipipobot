@@ -15,13 +15,13 @@ from fastapi.templating import Jinja2Templates
 
 from config import settings
 
-router = APIRouter(tags=["Mini App - Public"])
+router = APIRouter(tags=["Mini App Web - Public"])
 
-TEMPLATES_DIR = Path(__file__).parent / "templates"
+TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "miniapp" / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
-@router.get("/entry", response_class=HTMLResponse)
+@router.get("/public/entry", response_class=HTMLResponse)
 async def miniapp_entry(request: Request):
     """
     Página de entrada pública para la Mini App.
@@ -38,7 +38,7 @@ async def miniapp_entry(request: Request):
     )
 
 
-@router.get("/privacy", response_class=HTMLResponse)
+@router.get("/public/privacy", response_class=HTMLResponse)
 async def privacy_policy(request: Request):
     """
     Página pública de Política de Privacidad.

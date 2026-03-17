@@ -25,14 +25,14 @@ class TestProfileEndpoint:
     @pytest.mark.asyncio
     async def test_profile_requires_authentication(self, client):
         """Test que el endpoint de perfil requiere autenticación."""
-        response = await client.get("/miniapp/profile")
+        response = await client.get("/api/v1/miniapp/profile")
         assert response.status_code == 401
         assert "No autorizado" in response.text or "Unauthorized" in response.text
 
     @pytest.mark.asyncio
     async def test_profile_endpoint_returns_401_without_init_data(self, client):
         """Test que el perfil rechaza requests sin initData."""
-        response = await client.get("/miniapp/profile")
+        response = await client.get("/api/v1/miniapp/profile")
         assert response.status_code == 401
 
 
@@ -42,14 +42,14 @@ class TestSettingsEndpoint:
     @pytest.mark.asyncio
     async def test_settings_requires_authentication(self, client):
         """Test que el endpoint de ajustes requiere autenticación."""
-        response = await client.get("/miniapp/settings")
+        response = await client.get("/api/v1/miniapp/settings")
         assert response.status_code == 401
         assert "No autorizado" in response.text or "Unauthorized" in response.text
 
     @pytest.mark.asyncio
     async def test_settings_endpoint_returns_401_without_init_data(self, client):
         """Test que los ajustes rechazan requests sin initData."""
-        response = await client.get("/miniapp/settings")
+        response = await client.get("/api/v1/miniapp/settings")
         assert response.status_code == 401
 
 
@@ -60,7 +60,7 @@ class TestProfileAndSettingsIntegration:
     async def test_profile_page_template_exists(self, client):
         """Test que el template de perfil existe y es accesible."""
         # El template debe existir, aunque requiera auth
-        response = await client.get("/miniapp/profile")
+        response = await client.get("/api/v1/miniapp/profile")
         # Solo verificamos que el endpoint existe (no 404)
         assert response.status_code in [401, 500]
 
@@ -68,7 +68,7 @@ class TestProfileAndSettingsIntegration:
     async def test_settings_page_template_exists(self, client):
         """Test que el template de ajustes existe y es accesible."""
         # El template debe existir, aunque requiera auth
-        response = await client.get("/miniapp/settings")
+        response = await client.get("/api/v1/miniapp/settings")
         # Solo verificamos que el endpoint existe (no 404)
         assert response.status_code in [401, 500]
 
@@ -79,7 +79,7 @@ class TestDropdownNavigation:
     @pytest.mark.asyncio
     async def test_base_template_contains_header(self, client):
         """Test que el template base contiene el header."""
-        response = await client.get("/miniapp/privacy")
+        response = await client.get("/api/v1/miniapp/public/privacy")
         assert response.status_code == 200
         content = response.content.decode("utf-8")
         assert "header" in content.lower()

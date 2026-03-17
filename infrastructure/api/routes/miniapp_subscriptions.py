@@ -15,10 +15,10 @@ from pydantic import BaseModel
 
 from application.services.common.container import get_service
 from application.services.subscription_service import SubscriptionService
-from miniapp.routes_common import get_current_user
+from infrastructure.api.routes.miniapp_common import get_current_user
 from utils.logger import logger
 
-router = APIRouter(prefix="/api/v1/subscriptions", tags=["Mini App - Subscriptions"])
+router = APIRouter(tags=["Mini App Web - Subscriptions"])
 
 
 class SubscriptionPlanResponse(BaseModel):
@@ -60,7 +60,7 @@ class ActivateSubscriptionResponse(BaseModel):
     subscription: Optional[UserSubscriptionResponse] = None
 
 
-@router.get("/plans", response_model=List[SubscriptionPlanResponse])
+@router.get("/api/subscriptions/plans")
 async def get_subscription_plans(current_user: dict = Depends(get_current_user)):
     """
     Get available subscription plans.
@@ -88,7 +88,7 @@ async def get_subscription_plans(current_user: dict = Depends(get_current_user))
         raise HTTPException(status_code=500, detail="Error al obtener planes")
 
 
-@router.get("/status", response_model=UserSubscriptionResponse)
+@router.get("/api/subscriptions/status")
 async def get_subscription_status(current_user: dict = Depends(get_current_user)):
     """
     Get user's current subscription status.
@@ -124,7 +124,7 @@ async def get_subscription_status(current_user: dict = Depends(get_current_user)
         raise HTTPException(status_code=500, detail="Error al obtener estado de suscripción")
 
 
-@router.post("/activate", response_model=ActivateSubscriptionResponse)
+@router.post("/api/subscriptions/activate")
 async def activate_subscription(
     request: ActivateSubscriptionRequest,
     current_user: dict = Depends(get_current_user),
@@ -185,7 +185,7 @@ async def activate_subscription(
         raise HTTPException(status_code=500, detail="Error al activar suscripción")
 
 
-@router.get("/check/{user_id}", response_model=UserSubscriptionResponse)
+@router.get("/api/subscriptions/check/{user_id}")
 async def check_user_subscription(
     user_id: int,
     current_user: dict = Depends(get_current_user),

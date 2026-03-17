@@ -1,0 +1,657 @@
+{% extends "base.html" %}
+
+{% block title %}Historial de Transacciones - uSipipo VPN{% endblock %}
+
+{% block extra_css %}
+<style>
+    .transactions-header {
+        margin-bottom: 20px;
+    }
+
+    .filters-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .filters-title {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+    }
+
+    .filters-grid {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-sm {
+        padding: 8px 16px;
+        font-size: 12px;
+        border-radius: 6px;
+    }
+
+    .btn-secondary.active {
+        background: var(--neon-cyan);
+        color: var(--bg-void);
+        box-shadow: var(--glow-cyan);
+    }
+
+    .transaction-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .transaction-item {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+    }
+
+    .transaction-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 240, 255, 0.1);
+        border-color: var(--neon-cyan);
+    }
+
+    .transaction-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+    }
+
+    .transaction-icon.package {
+        background: rgba(0, 240, 255, 0.1);
+        border: 1px solid var(--neon-cyan);
+    }
+
+    .transaction-icon.crypto {
+        background: rgba(255, 149, 0, 0.1);
+        border: 1px solid var(--amber);
+    }
+
+    .transaction-icon.subscription {
+        background: rgba(255, 0, 170, 0.1);
+        border: 1px solid var(--neon-magenta);
+    }
+
+    .transaction-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .transaction-description {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .transaction-meta {
+        font-size: 11px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .transaction-payment-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .transaction-amount-section {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .transaction-amount {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--neon-magenta);
+        margin-bottom: 4px;
+    }
+
+    .transaction-amount.positive {
+        color: var(--terminal-green);
+    }
+
+    .transaction-status {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+
+    .transaction-status.completed {
+        background: rgba(0, 255, 65, 0.1);
+        color: var(--terminal-green);
+        border: 1px solid var(--terminal-green);
+    }
+
+    .transaction-status.pending {
+        background: rgba(255, 149, 0, 0.1);
+        color: var(--amber);
+        border: 1px solid var(--amber);
+    }
+
+    .transaction-status.failed {
+        background: rgba(255, 0, 170, 0.1);
+        color: var(--neon-magenta);
+        border: 1px solid var(--neon-magenta);
+    }
+
+    .transaction-status.expired {
+        background: rgba(90, 90, 106, 0.1);
+        color: var(--text-muted);
+        border: 1px solid var(--text-muted);
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 24px;
+        padding: 16px 0;
+    }
+
+    .pagination-btn {
+        padding: 8px 16px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+        border-color: var(--neon-cyan);
+        background: rgba(0, 240, 255, 0.05);
+    }
+
+    .pagination-btn:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    .pagination-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .pagination-btn.active {
+        background: var(--neon-cyan);
+        color: var(--bg-void);
+        border-color: var(--neon-cyan);
+        box-shadow: var(--glow-cyan);
+    }
+
+    .pagination-info {
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 0 8px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+    }
+
+    .empty-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .empty-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .empty-description {
+        font-size: 13px;
+        color: var(--text-muted);
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .loading-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+    }
+
+    .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid var(--border-subtle);
+        border-top-color: var(--neon-cyan);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .error-state {
+        background: rgba(255, 0, 170, 0.05);
+        border: 1px solid var(--neon-magenta);
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+    }
+
+    .error-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+
+    .error-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--neon-magenta);
+        margin-bottom: 8px;
+    }
+
+    .error-message {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+    }
+
+    .retry-btn {
+        padding: 8px 20px;
+        background: transparent;
+        border: 1px solid var(--neon-cyan);
+        border-radius: 8px;
+        color: var(--neon-cyan);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .retry-btn:hover {
+        background: rgba(0, 240, 255, 0.1);
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+    }
+
+    .usdt-amount {
+        font-size: 10px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="glitch-title transactions-header">Transacciones</div>
+
+<div class="terminal-output">
+    Historial completo de tus compras y pagos
+</div>
+
+<!-- Filters -->
+<div class="filters-card">
+    <div class="filters-title">Filtrar por tipo</div>
+    <div class="filters-grid">
+        <button class="btn btn-sm btn-secondary active" onclick="filterTransactions('all')" id="filter-all">Todos</button>
+        <button class="btn btn-sm btn-secondary" onclick="filterTransactions('package')" id="filter-package">Paquetes</button>
+        <button class="btn btn-sm btn-secondary" onclick="filterTransactions('crypto')" id="filter-crypto">Crypto</button>
+        <button class="btn btn-sm btn-secondary" onclick="filterTransactions('subscription')" id="filter-subscription">Suscripciones</button>
+    </div>
+</div>
+
+<!-- Transaction List -->
+<div id="transactionsList" class="transaction-list">
+    <!-- Dynamic content loaded via JavaScript -->
+</div>
+
+<!-- Pagination -->
+<div id="pagination" class="pagination" style="display: none;">
+    <!-- Dynamic content -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+let currentFilter = 'all';
+let totalPages = 1;
+let isLoading = false;
+
+// Payment method icons
+const PAYMENT_ICONS = {
+    stars: '⭐',
+    crypto: '₿'
+};
+
+// Transaction type icons
+const TYPE_ICONS = {
+    package: '📦',
+    crypto: '₿',
+    subscription: '💎'
+};
+
+// Status labels with checkmarks
+const STATUS_LABELS = {
+    completed: '✓ completed',
+    pending: '⏳ pending',
+    failed: '✗ failed',
+    expired: '⏰ expired'
+};
+
+/**
+ * Load transactions from API
+ */
+async function loadTransactions(page = 1, filter = 'all') {
+    if (isLoading) return;
+
+    isLoading = true;
+    const container = document.getElementById('transactionsList');
+
+    // Show loading state
+    container.innerHTML = `
+        <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Cargando transacciones...</div>
+        </div>
+    `;
+
+    try {
+        // Build URL with query parameters
+        let url = `/api/v1/miniapp/transactions?page=${page}&limit=20`;
+        if (filter !== 'all') {
+            url += `&type=${filter}`;
+        }
+
+        // Add Telegram WebApp init data for auth
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+            url += `&tgWebAppData=${encodeURIComponent(window.Telegram.WebApp.initData)}`;
+        }
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Error al cargar transacciones');
+        }
+
+        const transactions = data.transactions;
+        const pagination = data.pagination;
+
+        totalPages = pagination.pages || 0;
+        currentPage = pagination.page || 1;
+
+        // Render transactions
+        if (transactions.length === 0) {
+            renderEmptyState();
+        } else {
+            renderTransactions(transactions);
+        }
+
+        // Update pagination
+        if (totalPages > 1) {
+            renderPagination(pagination);
+            document.getElementById('pagination').style.display = 'flex';
+        } else {
+            document.getElementById('pagination').style.display = 'none';
+        }
+
+    } catch (error) {
+        console.error('Error loading transactions:', error);
+        renderErrorState(error.message);
+    } finally {
+        isLoading = false;
+    }
+}
+
+/**
+ * Render transaction list
+ */
+function renderTransactions(transactions) {
+    const container = document.getElementById('transactionsList');
+
+    const html = transactions.map(tx => {
+        const date = new Date(tx.created_at);
+        const formattedDate = date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit'
+        });
+
+        const paymentIcon = PAYMENT_ICONS[tx.payment_method] || '⭐';
+        const typeIcon = TYPE_ICONS[tx.type] || '💳';
+        const statusLabel = STATUS_LABELS[tx.status] || tx.status;
+
+        const isPositive = tx.amount > 0;
+        const amountClass = isPositive ? 'positive' : '';
+        const amountSign = isPositive ? '+' : '';
+
+        // Format amount - convert from stars to display format
+        const amountDisplay = Math.abs(tx.amount);
+
+        // Show USDT amount for crypto transactions
+        const usdtDisplay = tx.amount_usdt ? `<div class="usdt-amount">≈ $${tx.amount_usdt.toFixed(2)}</div>` : '';
+
+        return `
+            <div class="transaction-item">
+                <div class="transaction-icon ${tx.type}">
+                    ${typeIcon}
+                </div>
+                <div class="transaction-content">
+                    <div class="transaction-description">${escapeHtml(tx.description)}</div>
+                    <div class="transaction-meta">
+                        <span>${formattedDate}</span>
+                        <span>•</span>
+                        <span class="transaction-payment-icon">${paymentIcon} ${tx.payment_method === 'crypto' ? 'Crypto' : 'Stars'}</span>
+                    </div>
+                </div>
+                <div class="transaction-amount-section">
+                    <div class="transaction-amount ${amountClass}">
+                        ${amountSign}${amountDisplay} ${tx.payment_method === 'crypto' ? 'USDT' : '⭐'}
+                    </div>
+                    ${usdtDisplay}
+                    <div class="transaction-status ${tx.status}">${statusLabel}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = html;
+}
+
+/**
+ * Render empty state
+ */
+function renderEmptyState() {
+    const container = document.getElementById('transactionsList');
+    document.getElementById('pagination').style.display = 'none';
+
+    container.innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">No hay transacciones</div>
+            <div class="empty-description">
+                ${currentFilter === 'all'
+                    ? 'Aún no has realizado ninguna compra. ¡Explora nuestros paquetes y comienza a navegar!'
+                    : `No hay transacciones de tipo "${currentFilter}"`}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Render error state
+ */
+function renderErrorState(message) {
+    const container = document.getElementById('transactionsList');
+    document.getElementById('pagination').style.display = 'none';
+
+    container.innerHTML = `
+        <div class="error-state">
+            <div class="error-icon">⚠️</div>
+            <div class="error-title">Error al cargar</div>
+            <div class="error-message">${escapeHtml(message)}</div>
+            <button class="retry-btn" onclick="loadTransactions(${currentPage}, '${currentFilter}')">
+                🔄 Reintentar
+            </button>
+        </div>
+    `;
+}
+
+/**
+ * Render pagination controls
+ */
+function renderPagination(pagination) {
+    const container = document.getElementById('pagination');
+    const { page, pages, total } = pagination;
+
+    let html = '';
+
+    // Previous button
+    html += `
+        <button
+            class="pagination-btn"
+            onclick="goToPage(${page - 1})"
+            ${page === 1 ? 'disabled' : ''}
+        >
+            ← Anterior
+        </button>
+    `;
+
+    // Page numbers - show limited range for large page counts
+    const maxVisible = 5;
+    let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
+    let endPage = Math.min(pages, startPage + maxVisible - 1);
+
+    // Adjust start if we're near the end
+    if (endPage - startPage < maxVisible - 1) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    // First page
+    if (startPage > 1) {
+        html += `<button class="pagination-btn" onclick="goToPage(1)">1</button>`;
+        if (startPage > 2) {
+            html += `<span class="pagination-info">...</span>`;
+        }
+    }
+
+    // Page buttons
+    for (let i = startPage; i <= endPage; i++) {
+        const activeClass = i === page ? 'active' : '';
+        html += `
+            <button
+                class="pagination-btn ${activeClass}"
+                onclick="goToPage(${i})"
+            >
+                ${i}
+            </button>
+        `;
+    }
+
+    // Last page
+    if (endPage < pages) {
+        if (endPage < pages - 1) {
+            html += `<span class="pagination-info">...</span>`;
+        }
+        html += `<button class="pagination-btn" onclick="goToPage(${pages})">${pages}</button>`;
+    }
+
+    // Next button
+    html += `
+        <button
+            class="pagination-btn"
+            onclick="goToPage(${page + 1})"
+            ${page === pages ? 'disabled' : ''}
+        >
+            Siguiente →
+        </button>
+    `;
+
+    container.innerHTML = html;
+}
+
+/**
+ * Navigate to specific page
+ */
+function goToPage(page) {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    loadTransactions(page, currentFilter);
+}
+
+/**
+ * Filter transactions by type
+ */
+function filterTransactions(filter) {
+    // Update active button state
+    document.querySelectorAll('.filters-grid .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById(`filter-${filter}`).classList.add('active');
+
+    currentFilter = filter;
+    loadTransactions(1, filter);
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Load transactions on page load
+document.addEventListener('DOMContentLoaded', () => {
+    loadTransactions();
+});
+</script>
+{% endblock %}

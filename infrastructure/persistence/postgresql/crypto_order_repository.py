@@ -86,7 +86,7 @@ class PostgresCryptoOrderRepository(ICryptoOrderRepository):
         return True
 
     async def get_by_user_paginated(
-        self, user_id: int, limit: int = 10, offset: int = 0
+        self, user_id: int, limit: int = 10, offset: int = 0, current_user_id: int = 0
     ) -> List[CryptoOrder]:
         """Obtener órdenes de un usuario con paginación."""
         result = await self.session.execute(
@@ -99,7 +99,7 @@ class PostgresCryptoOrderRepository(ICryptoOrderRepository):
         models = result.scalars().all()
         return [m.to_entity() for m in models]
 
-    async def count_by_user(self, user_id: int) -> int:
+    async def count_by_user(self, user_id: int, current_user_id: int = 0) -> int:
         """Contar total de órdenes de un usuario."""
         result = await self.session.execute(
             select(func.count()).where(CryptoOrderModel.user_id == user_id)
@@ -158,3 +158,15 @@ class PostgresCryptoOrderRepository(ICryptoOrderRepository):
         )
         row = result.scalar_one_or_none()
         return row if row else None
+
+    async def get_by_tron_dealer_order_id(
+        self, tron_dealer_order_id: str, current_user_id: int
+    ) -> Optional[CryptoOrder]:
+        """Busca una orden por el ID de orden de TronDealer."""
+        result = await self.session.execute(
+            select(CryptoOrderModel).where(
+                CryptoOrderModel.tron_dealer_order_id == tron_dealer_order_id
+            )
+        )
+        model = result.scalar_one_or_none()
+        return model.to_entity() if model else None

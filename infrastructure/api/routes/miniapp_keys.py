@@ -16,15 +16,15 @@ from fastapi.templating import Jinja2Templates
 from application.services.common.container import get_service
 from application.services.vpn_service import VpnService
 from config import settings
+from infrastructure.api.routes.miniapp_common import MiniAppContext, get_current_user
 from infrastructure.persistence.database import get_session_context
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
-from miniapp.routes_common import MiniAppContext, get_current_user
 from utils.logger import logger
 
-router = APIRouter(tags=["Mini App - Keys"])
+router = APIRouter(tags=["Mini App Web - Keys"])
 
-TEMPLATES_DIR = Path(__file__).parent / "templates"
+TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "miniapp" / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 

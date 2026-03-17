@@ -9,7 +9,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities.data_package import DataPackage, PackageType
@@ -199,3 +199,51 @@ class PostgresDataPackageRepository(BasePostgresRepository, IDataPackageReposito
         except Exception as e:
             logger.error(f"Error al obtener paquetes expirados: {e}")
             return []
+
+    async def get_by_telegram_payment_id(
+        self, telegram_payment_id: str, current_user_id: int
+    ) -> Optional[DataPackage]:
+        """Busca un paquete por el ID de pago de Telegram."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = select(DataPackageModel).where(
+                DataPackageModel.telegram_payment_id == telegram_payment_id
+            )
+            result = await self.session.execute(query)
+            model = result.scalars().first()
+            return self._model_to_entity(model) if model else None
+        except Exception as e:
+            logger.error(
+                f"Error al obtener paquete por telegram_payment_id {telegram_payment_id}: {e}"
+            )
+            return None
+
+    async def get_by_user_paginated(
+        self, user_id: int, limit: int = 10, offset: int = 0, current_user_id: int = 0
+    ) -> List[DataPackage]:
+        """Get packages for a user with pagination."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = (
+                select(DataPackageModel)
+                .where(DataPackageModel.user_id == user_id)
+                .order_by(DataPackageModel.purchased_at.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+            result = await self.session.execute(query)
+            return [self._model_to_entity(m) for m in result.scalars().all()]
+        except Exception as e:
+            logger.error(f"Error al listar paquetes paginados del usuario {user_id}: {e}")
+            return []
+
+    async def count_by_user(self, user_id: int, current_user_id: int = 0) -> int:
+        """Count total packages for a user."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = select(func.count()).where(DataPackageModel.user_id == user_id)
+            result = await self.session.execute(query)
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Error al contar paquetes del usuario {user_id}: {e}")
+            return 0

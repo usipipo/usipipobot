@@ -326,7 +326,7 @@ async function payWithStars() {
             hasInitData: !!Telegram.WebApp.initData
         });
 
-        const response = await fetch('/miniapp/api/create-stars-invoice', {
+        const response = await fetch('/api/v1/miniapp/api/create-stars-invoice', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -361,8 +361,8 @@ async function payWithStars() {
             cancelButtonText: 'Cancelar'
         }, function(confirm) {
             if (confirm) {
-                // User acknowledged, they'll pay in Telegram
-                Telegram.WebApp.close();
+                // Start polling for payment status
+                startPaymentPolling(currentTransactionId);
             }
         });
 
@@ -400,7 +400,7 @@ async function payWithCrypto() {
             hasInitData: !!Telegram.WebApp.initData
         });
 
-        const response = await fetch('/miniapp/api/create-crypto-order', {
+        const response = await fetch('/api/v1/miniapp/api/create-crypto-order', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -524,6 +524,188 @@ window.onclick = function(event) {
         closeCryptoModal();
     }
 }
+
+// ============================================================================
+// PAYMENT AUTO-POLLING FUNCTIONS
+// ============================================================================
+
+// Polling state variables
+let paymentPollingInterval = null;
+let paymentCheckTimeout = null;
+let currentTransactionId = null;
+
+/**
+ * Start polling for payment status
+ * @param {string} transactionId - The transaction ID to poll
+ */
+function startPaymentPolling(transactionId) {
+    console.log('[Payment] Starting polling for transaction:', transactionId);
+
+    // Show waiting screen
+    showPaymentWaitingScreen(transactionId);
+
+    // Check immediately
+    checkPaymentStatus(transactionId);
+
+    // Then poll every 3 seconds
+    paymentPollingInterval = setInterval(() => {
+        checkPaymentStatus(transactionId);
+    }, 3000);
+
+    // Stop polling after 5 minutes (user can manually check later)
+    paymentCheckTimeout = setTimeout(() => {
+        stopPaymentPolling();
+        Telegram.WebApp.showAlert(
+            '⏰ Tiempo de espera agotado\n\n' +
+            'Si completaste el pago pero no se activó automáticamente, ' +
+            'puedes verificar el estado en tu perfil o contactar soporte.'
+        );
+    }, 5 * 60 * 1000); // 5 minutes
+}
+
+/**
+ * Stop polling for payment status
+ */
+function stopPaymentPolling() {
+    if (paymentPollingInterval) {
+        clearInterval(paymentPollingInterval);
+        paymentPollingInterval = null;
+    }
+    if (paymentCheckTimeout) {
+        clearTimeout(paymentCheckTimeout);
+        paymentCheckTimeout = null;
+    }
+}
+
+/**
+ * Check payment status from backend
+ * @param {string} transactionId - The transaction ID to check
+ */
+async function checkPaymentStatus(transactionId) {
+    try {
+        const response = await fetch(`/api/v1/miniapp/api/payment-status/${transactionId}`, {
+            headers: {
+                'X-Telegram-Init-Data': Telegram.WebApp.initData
+            }
+        });
+
+        const data = await response.json();
+        console.log('[Payment] Status check:', data);
+
+        if (data.success && data.status === 'completed') {
+            // Payment detected!
+            stopPaymentPolling();
+            handlePaymentSuccess(data);
+        } else if (data.status === 'failed' || data.status === 'expired') {
+            // Payment failed
+            stopPaymentPolling();
+            handlePaymentFailed(data);
+        }
+        // Otherwise, keep polling (status is 'pending')
+
+    } catch (error) {
+        console.error('[Payment] Error checking status:', error);
+        // Continue polling even if check fails
+    }
+}
+
+/**
+ * Handle successful payment
+ * @param {Object} data - Payment status data from backend
+ */
+function handlePaymentSuccess(data) {
+    hidePaymentWaitingScreen();
+
+    // Haptic feedback
+    Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+
+    // Show success message
+    Telegram.WebApp.showAlert(
+        '✅ ¡Pago Completado!\n\n' +
+        `Tu ${data.type === 'package' ? 'paquete de ' + data.data_gb + ' GB' : 'producto'} ` +
+        'ha sido activado exitosamente.\n\n' +
+        'Puedes verlo en tu perfil o en la sección de Claves.'
+    );
+
+    // Redirect to profile after user acknowledges
+    setTimeout(() => {
+        window.location.href = '/api/v1/miniapp/profile';
+    }, 1000);
+}
+
+/**
+ * Handle failed payment
+ * @param {Object} data - Payment status data from backend
+ */
+function handlePaymentFailed(data) {
+    hidePaymentWaitingScreen();
+
+    // Haptic feedback
+    Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+
+    Telegram.WebApp.showAlert(
+        '❌ Pago Fallido\n\n' +
+        'No pudimos detectar tu pago. Por favor:\n' +
+        '1. Verifica que completaste el pago en Telegram\n' +
+        '2. Revisa tu perfil para ver el estado\n' +
+        '3. Contacta soporte si necesitas ayuda'
+    );
+}
+
+/**
+ * Show payment waiting screen modal
+ * @param {string} transactionId - The transaction ID being polled
+ */
+function showPaymentWaitingScreen(transactionId) {
+    const modal = document.createElement('div');
+    modal.id = 'paymentWaitingModal';
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="text-align: center;">
+            <div class="modal-header">
+                <span class="modal-title">⏳ Esperando Pago</span>
+            </div>
+            <div class="modal-body">
+                <div style="font-size: 48px; margin-bottom: 16px;">🔔</div>
+                <div style="font-size: 16px; margin-bottom: 8px;">
+                    Revisa tu Telegram para pagar
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 24px;">
+                    La factura llegó a tu chat con el bot
+                </div>
+                <div class="loading"></div>
+                <div class="loading-text" id="waitingText">
+                    Verificando pago...
+                </div>
+                <div style="margin-top: 24px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                        Transaction ID: <code style="color: var(--accent-cyan);">${transactionId}</code>
+                    </div>
+                </div>
+                <button class="btn btn-ghost btn-full" onclick="stopPaymentPolling(); document.getElementById('paymentWaitingModal').style.display='none';" style="margin-top: 16px;">
+                    Cancelar Espera
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+/**
+ * Hide payment waiting screen modal
+ */
+function hidePaymentWaitingScreen() {
+    const modal = document.getElementById('paymentWaitingModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    stopPaymentPolling();
+});
 </script>
 
 <style>

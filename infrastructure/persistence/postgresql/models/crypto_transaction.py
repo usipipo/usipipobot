@@ -2,9 +2,9 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from sqlalchemy import JSON, Column, DateTime
+from sqlalchemy import JSON, BigInteger, DateTime
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import Float, ForeignKey, Integer, String
+from sqlalchemy import Float, ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -21,7 +21,7 @@ class CryptoTransactionModel(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.telegram_id"), nullable=False, index=True
+        BigInteger, ForeignKey("users.telegram_id"), nullable=False, index=True
     )
     wallet_address: Mapped[str] = mapped_column(String(42), nullable=False)
     amount: Mapped[float] = mapped_column(Float, nullable=False)

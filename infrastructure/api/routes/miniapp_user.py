@@ -14,19 +14,19 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from config import settings
+from infrastructure.api.routes.miniapp_common import MiniAppContext, get_current_user
 from infrastructure.persistence.database import get_session_context
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
-from miniapp.routes_common import MiniAppContext, get_current_user
 from utils.logger import logger
 
-router = APIRouter(tags=["Mini App - User"])
+router = APIRouter(tags=["Mini App Web - User"])
 
-TEMPLATES_DIR = Path(__file__).parent / "templates"
+TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "miniapp" / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
     """
     Dashboard principal de la Mini App.

@@ -10,7 +10,7 @@
     ⚠️ Has alcanzado el límite de {{ max_keys }} claves.
 </div>
 <div style="text-align: center; margin-top: 20px;">
-    <a href="/miniapp/purchase" class="btn btn-primary">Comprar Más Slots</a>
+    <a href="/api/v1/miniapp/purchase" class="btn btn-primary">Comprar Más Slots</a>
 </div>
 {% else %}
 
@@ -19,7 +19,7 @@
 </div>
 
 <div class="card">
-    <form id="createKeyForm" action="/miniapp/keys/create" method="post">
+    <form id="createKeyForm" action="/api/v1/miniapp/keys/create" method="post">
         <input type="hidden" name="tgWebAppData" id="tgWebAppData">
 
         <div class="form-group">
@@ -43,7 +43,7 @@
             <button type="submit" class="btn btn-primary btn-full">
                 🔐 Crear Clave
             </button>
-            <a href="/miniapp/keys" class="btn btn-secondary btn-full">
+            <a href="/api/v1/miniapp/keys" class="btn btn-secondary btn-full">
                 Cancelar
             </a>
         </div>
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (result.success) {
                 Telegram.WebApp.showAlert('✅ Clave "' + result.key_name + '" creada correctamente', function() {
-                    window.location.href = '/miniapp/keys';
+                    window.location.href = '/api/v1/miniapp/keys';
                 });
             } else {
                 Telegram.WebApp.showAlert('❌ Error: ' + (result.error || 'No se pudo crear la clave'));
