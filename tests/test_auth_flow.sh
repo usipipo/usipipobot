@@ -100,10 +100,10 @@ try:
     else:
         print("\n✅ Todos los campos requeridos presentes")
 
-    if payload.get('client') != 'android_apk':
+    if payload.get('client') != 'miniapp_web':
         print(f"\n❌ Client incorrecto: {payload.get('client')}")
     else:
-        print("✅ Client correcto: android_apk")
+        print("✅ Client correcto: miniapp_web")
 
 except jwt.InvalidTokenError as e:
     print(f"\n❌ JWT inválido: {e}")

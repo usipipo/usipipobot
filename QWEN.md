@@ -2,13 +2,12 @@
 
 ## Project Overview
 
-**uSipipo VPN Manager** is a comprehensive VPN management ecosystem with three integrated platforms:
+**uSipipo VPN Manager** is a comprehensive VPN management ecosystem with two integrated platforms:
 
 1. **Telegram Bot** - Primary interface for commands and notifications
 2. **Telegram Mini App** - Cyberpunk-styled web dashboard
-3. **Android APK** - Native mobile app with OTP authentication
 
-All three platforms share the same backend infrastructure for managing WireGuard and Outline VPN keys with integrated payment processing.
+Both platforms share the same backend infrastructure for managing WireGuard and Outline VPN keys with integrated payment processing.
 
 ### Core Features
 
@@ -16,7 +15,6 @@ All three platforms share the same backend infrastructure for managing WireGuard
 |----------|----------|
 | **Telegram Bot** | Commands, notifications, quick actions, support tickets |
 | **Mini App Web** | Dashboard, profile, settings, payment flows, statistics |
-| **Android APK** | OTP login, VPN management, data packages, offline access |
 
 ### Unified Features
 - **VPN Key Management**: Create, delete, renew WireGuard and Outline VPN keys
@@ -42,11 +40,10 @@ All three platforms share the same backend infrastructure for managing WireGuard
 | **Logging** | Loguru | latest |
 | **Testing** | pytest + pytest-asyncio | latest |
 | **Migrations** | Alembic | latest |
-| **Android UI** | Kivy + KivyMD | 2.3.1 / 1.2.0 |
 
 ## Architecture
 
-The project follows **Clean Architecture / Hexagonal Architecture** patterns across all three platforms:
+The project follows **Clean Architecture / Hexagonal Architecture** patterns:
 
 ```
 usipipobot/
@@ -57,7 +54,7 @@ usipipobot/
 │   └── services/              # VpnService, WalletService, BillingService, etc.
 ├── infrastructure/            # Infrastructure implementations
 │   ├── persistence/           # PostgreSQL + SQLAlchemy 2.0 async
-│   ├── api/                   # FastAPI server (webhooks, Mini App, Android API)
+│   ├── api/                   # FastAPI server (webhooks, Mini App API)
 │   ├── api_clients/           # Outline, WireGuard, TronDealer clients
 │   ├── jobs/                  # Background jobs (cleanup, sync)
 │   └── dns/                   # DuckDNS service
@@ -69,16 +66,6 @@ usipipobot/
 │   ├── routes_*.py            # FastAPI endpoints
 │   ├── templates/             # Jinja2 templates
 │   └── services/              # Mini App services
-├── android_app/               # Android APK (Kivy + KivyMD)
-│   ├── src/
-│   │   ├── screens/           # Splash, Login, OTP, Dashboard
-│   │   ├── services/          # API, Auth services
-│   │   ├── storage/           # JWT, Preferences
-│   │   ├── components/        # OTP input, NeonButton
-│   │   ├── kv/                # Kivy design files
-│   │   └── utils/             # Logger, helpers
-│   ├── tests/                 # Android app tests
-│   └── buildozer.spec         # APK build configuration
 ├── utils/                     # Shared utilities
 ├── tests/                     # Backend test suite (pytest)
 ├── migrations/                # Alembic database migrations
@@ -92,7 +79,7 @@ usipipobot/
 3. **Async/Await**: All database operations use SQLAlchemy async
 4. **Service Layer**: Business logic encapsulated in application services
 5. **Entity Pattern**: Domain entities use `@dataclass` with business logic
-6. **Multi-Platform API**: RESTful API serving Bot, Mini App, and Android APK
+6. **Multi-Platform API**: RESTful API serving Bot and Mini App
 
 ## Building and Running
 
@@ -126,7 +113,7 @@ cp example.env .env
 # Run database migrations
 uv run alembic upgrade head
 
-# Start the bot (includes API server for Mini App + Android)
+# Start the bot (includes API server for Mini App)
 uv run python main.py
 ```
 
@@ -144,38 +131,10 @@ docker run -d --name usipipo \
   usipipo-bot
 ```
 
-### Android APK Development
-
-```bash
-cd android_app
-
-# Create virtual environment and install dependencies
-uv sync
-
-# Run on desktop (UI testing)
-uv run python main.py
-
-# Run tests
-uv run pytest tests/ -v
-
-# With coverage
-uv run pytest tests/ --cov=src -v
-
-# Build APK (requires Android SDK + NDK)
-uv run buildozer -v android debug
-
-# Build release APK
-uv run buildozer -v android release
-```
-
 ### Testing
 
 ```bash
 # Backend tests (406+ passing)
-uv run pytest
-
-# Android app tests
-cd android_app
 uv run pytest
 
 # With coverage
@@ -191,35 +150,11 @@ uv run pytest -v --asyncio-mode=auto
 ### CI/CD Workflows
 
 ```bash
-# Trigger Android CI manually
-gh workflow run android-ci.yml
-
-# Trigger with build type
-gh workflow run android-ci.yml -f build_type=debug
-
 # View workflow runs
-gh run list --workflow android-ci.yml
+gh run list
 
 # Watch a specific run
 gh run watch <run-id>
-
-# Download APK artifact from latest run
-gh run download <run-id> --name usipipo-debug-apk
-```
-
-### GitHub Secrets (Android APK)
-
-Para releases en producción, configura los secrets con:
-
-```bash
-# Script interactivo
-./scripts/setup_android_secrets_manual.sh
-
-# Secrets requeridos:
-# - ANDROID_KEYSTORE_B64 (keystore en base64)
-# - ANDROID_KEYSTORE_PASSWORD
-# - ANDROID_KEY_ALIAS
-# - ANDROID_KEY_PASSWORD
 ```
 
 ### Code Quality
@@ -304,14 +239,7 @@ PUBLIC_URL=https://<domain>.duckdns.org
 # ========================
 MINIAPP_ENABLED=true
 MINIAPP_URL=https://your-domain.com
-
-# ========================
-# ANDROID API
-# ========================
-USIPIPO_API_URL=https://your-server.com/api/v1
 ```
-
-## Development Conventions
 
 ### Import Organization
 
@@ -467,13 +395,6 @@ class TestPurchasePackage:
 - `GET /miniapp/profile` - User profile
 - `GET /miniapp/settings` - Settings page
 
-### Android API
-- `POST /api/v1/auth/request-otp` - Request OTP code
-- `POST /api/v1/auth/verify-otp` - Verify OTP code
-- `POST /api/v1/auth/logout` - Logout user
-- `GET /api/v1/user/profile` - User profile
-- `GET /api/v1/vpn/keys` - List VPN keys
-
 ## Common Operations
 
 ### Dependency Injection
@@ -515,29 +436,15 @@ _SEP_HEADER = (
 
 Message structure follows a hierarchy with headers, dividers, tree structures, and footers. See `AGENTS.md` for detailed patterns.
 
-### Android App Design
-
-Cyberpunk theme with neon colors:
-
-| Color | RGB | Hex |
-|-------|-----|-----|
-| Neon Cyan | [0, 0.941, 1, 1] | #00f0ff |
-| Neon Magenta | [1, 0, 0.667, 1] | #ff00aa |
-| Terminal Green | [0, 1, 0.255, 1] | #00ff41 |
-| BG Void | [0.039, 0.039, 0.059, 1] | #0a0a0f |
-
 ## Security Considerations
 
 1. **Secrets Management**: All secrets in `.env` (never commit)
 2. **Input Validation**: Pydantic validators on all user inputs
-3. **Authentication**:
-   - Telegram: User IDs for bot/miniapp
-   - Android: OTP verification with JWT tokens
-4. **JWT Tokens**: Configurable expiration for Android API
+3. **Authentication**: Telegram: User IDs for bot/miniapp
+4. **JWT Tokens**: Configurable expiration
 5. **CORS**: Configurable origins for web endpoints
 6. **Rate Limiting**: Per-user and API rate limits
 7. **Webhook Security**: HMAC signature verification for TronDealer webhooks
-8. **Android Storage**: Encrypted JWT storage using keyring
 
 ## Troubleshooting
 
@@ -550,8 +457,6 @@ Cyberpunk theme with neon colors:
 | WireGuard keys fail | Verify `WG_SERVER_PUBKEY` and `WG_SERVER_PRIVKEY` |
 | Crypto payments fail | Check TronDealer webhook secret and API key |
 | Memory cleanup fails | Ensure sudo permissions for `/proc/sys/vm/drop_caches` |
-| Android OTP fails | Verify `USIPIPO_API_URL` points to correct backend |
-| APK build fails | Ensure Android SDK + NDK are installed |
 
 ### Logs
 
@@ -577,17 +482,6 @@ sudo journalctl -u usipipo -f
 | `/tickets` | View support tickets |
 | `/admin` | Admin panel (admins only) |
 
-## Platform Comparison
-
-| Feature | Telegram Bot | Mini App Web | Android APK |
-|---------|--------------|--------------|-------------|
-| Authentication | Telegram ID | Telegram ID | OTP + JWT |
-| UI Framework | Telegram UI | HTML/CSS/JS | KivyMD |
-| Offline Access | ❌ | ❌ | ✅ |
-| Push Notifications | ✅ (Telegram) | ❌ | ✅ (Native) |
-| Payment Methods | Stars, Crypto | Stars, Crypto | API-based |
-| Distribution | Telegram | Web URL | APK file |
-
 ## Additional Documentation
 
 | Document | Description |
@@ -598,7 +492,6 @@ sudo journalctl -u usipipo -f
 | `docs/APPFLOW.md` | Application flow diagrams |
 | `docs/TECHNOLOGY.md` | Technology stack details |
 | `docs/database_schema_v3.md` | Detailed database schema |
-| `android_app/README.md` | Android APK documentation |
 | `CHANGELOG.md` | Version history |
 
 ## Project Status
@@ -607,11 +500,10 @@ sudo journalctl -u usipipo -f
 |-----------|---------|--------|
 | **Backend** | 3.9.0 | Production-ready |
 | **Mini App** | 3.9.0 | Production-ready |
-| **Android APK** | 1.0.0 | Beta (CI/CD configurado) |
 
-- **Tests**: 406+ passing (backend) + 8 (android)
+- **Tests**: 406+ passing (backend)
 - **Architecture**: Clean Architecture / Hexagonal
-- **Ecosystem**: Bot + Mini App + Android APK integrated
+- **Ecosystem**: Bot + Mini App integrated
 - **CI/CD**: GitHub Actions con workflows separados por componente
 
 ### CI/CD Workflows Configurados
@@ -619,6 +511,5 @@ sudo journalctl -u usipipo -f
 | Workflow | Trigger | Paths Filter | Tiempo Est. |
 |----------|---------|--------------|-------------|
 | `ci.yml` | push/PR a main | `domain/**`, `application/**`, etc. | ~5 min |
-| `android-ci.yml` | push/PR a main | `android_app/**` | ~25 min |
 | `codeql.yml` | push/PR a main, weekly | `domain/**`, `application/**`, etc. | ~3 min |
 | `docker.yml` | push/PR a main, tags | `Dockerfile`, backend paths | ~3 min |

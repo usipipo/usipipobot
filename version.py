@@ -8,17 +8,26 @@ Usage:
     from version import __version__, VERSION_INFO
 """
 
-__version__ = "3.9.0"
+__version__ = "3.11.0"
 
 VERSION_INFO = {
     "major": 3,
-    "minor": 9,
+    "minor": 11,
     "patch": 0,
-    "release": "2026-03-11",
-    "codename": "Mini App Payment System",
+    "release": "2026-03-17",
+    "codename": "Android APK Removal",
 }
 
 VERSION_HISTORY = """
+v3.11.0 (2026-03-17) - Android APK Removal
+  - Complete removal of Android APK application from repository
+  - Removed android_app/ directory (Kivy + KivyMD)
+  - Removed infrastructure/api/android/ REST API endpoints
+  - Removed Android CI/CD workflow and documentation
+  - Repository now contains only Telegram Bot + Mini App Web
+  - Updated QWEN.md, README.md, pyproject.toml
+  - Mini App Web fully intact with 27 routes
+
 v3.9.0 (2026-03-11) - Mini App Payment System
   - Mini App payment confirmation system
   - CryptoPaymentService injection with request session

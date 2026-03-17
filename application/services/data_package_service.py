@@ -33,36 +33,41 @@ PACKAGE_OPTIONS: List[PackageOption] = [
         name="Básico",
         package_type=PackageType.BASIC,
         data_gb=10,
-        stars=600,
+        stars=250,
         bonus_percent=0,
+        # $2.50 USD → $0.25/GB (alineado con modo consumo)
     ),
     PackageOption(
         name="Estándar",
         package_type=PackageType.ESTANDAR,
         data_gb=30,
-        stars=960,
-        bonus_percent=10,  # +3 GB gratis
+        stars=600,
+        bonus_percent=10,  # +3 GB gratis → 33 GB total
+        # $6.00 USD → $0.18/GB (20% descuento vs consumo)
     ),
     PackageOption(
         name="Avanzado",
         package_type=PackageType.AVANZADO,
         data_gb=60,
-        stars=1320,
-        bonus_percent=15,  # +9 GB gratis
+        stars=960,
+        bonus_percent=15,  # +9 GB gratis → 69 GB total
+        # $9.60 USD → $0.14/GB (36% descuento vs consumo)
     ),
     PackageOption(
         name="Premium",
         package_type=PackageType.PREMIUM,
         data_gb=120,
-        stars=1800,
-        bonus_percent=20,  # +24 GB gratis
+        stars=1440,
+        bonus_percent=20,  # +24 GB gratis → 144 GB total
+        # $14.40 USD → $0.10/GB (52% descuento vs consumo)
     ),
     PackageOption(
         name="Ilimitado",
         package_type=PackageType.UNLIMITED,
         data_gb=200,
-        stars=2400,
-        bonus_percent=25,  # +50 GB gratis
+        stars=1800,
+        bonus_percent=25,  # +50 GB gratis → 250 GB total
+        # $18.00 USD → $0.07/GB (64% descuento vs consumo)
     ),
 ]
 

@@ -193,7 +193,7 @@ class TestMiniAppPaymentService:
         opt = payment_service.get_package_option("basic")
         assert opt is not None
         assert opt.package_type.value == "basic"
-        assert opt.stars == 600
+        assert opt.stars == 250  # Nuevo precio: $2.50 USD
 
     def test_get_package_option_not_found(self):
         """Test getting an invalid package option."""

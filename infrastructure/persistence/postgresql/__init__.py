@@ -12,6 +12,7 @@ from .base_repository import BasePostgresRepository
 from .data_package_repository import PostgresDataPackageRepository
 from .key_repository import PostgresKeyRepository
 from .models import Base, DataPackageModel, UserModel, VpnKeyModel
+from .subscription_repository import PostgresSubscriptionRepository
 from .user_repository import PostgresUserRepository
 
 __all__ = [
@@ -19,6 +20,7 @@ __all__ = [
     "PostgresUserRepository",
     "PostgresKeyRepository",
     "PostgresDataPackageRepository",
+    "PostgresSubscriptionRepository",
     "Base",
     "UserModel",
     "VpnKeyModel",

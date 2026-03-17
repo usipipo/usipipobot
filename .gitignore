@@ -98,8 +98,6 @@ dump.rdb
 # Virtual Environments (uv)
 .venv/
 venv/
-android_app/.venv/
-android_app/venv/
 
 # =============================================================================
 # DATABASE BACKUPS

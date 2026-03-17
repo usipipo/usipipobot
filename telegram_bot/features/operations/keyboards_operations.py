@@ -57,6 +57,9 @@ class OperationsKeyboards:
                 InlineKeyboardButton("🔑 Slots Adicionales", callback_data="buy_slots_menu"),
             ],
             [
+                InlineKeyboardButton("💎 Suscripciones", callback_data="subscriptions"),
+            ],
+            [
                 InlineKeyboardButton("✨ Extras con Creditos", callback_data="credits_menu"),
             ],
             [InlineKeyboardButton("🔙 Volver", callback_data="operations_menu")],
@@ -76,9 +79,7 @@ class OperationsKeyboards:
                 nav_buttons.append(InlineKeyboardButton("◀️ Anterior", callback_data=prev_callback))
             if has_more:
                 next_callback = f"transactions_page_{page + 1}"
-                nav_buttons.append(
-                    InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback)
-                )
+                nav_buttons.append(InlineKeyboardButton("Siguiente ▶️", callback_data=next_callback))
             keyboard.append(nav_buttons)
 
         keyboard.append(

@@ -8,7 +8,7 @@
 [project]
 name = "usipipobot"
 version = "3.4.0"
-description = "VPN Manager Telegram Bot with Mini App and Android APK"
+description = "VPN Manager Telegram Bot with Mini App"
 readme = "README.md"
 requires-python = ">=3.13"
 license = {text = "MIT"}
@@ -168,10 +168,10 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
-known_first_party = ["domain", "application", "infrastructure", "telegram_bot", "miniapp", "utils", "config", "android_app"]
+known_first_party = ["domain", "application", "infrastructure", "telegram_bot", "miniapp", "utils", "config"]
 known_third_party = ["pytest", "pydantic", "sqlalchemy", "fastapi", "telegram", "httpx", "aiohttp"]
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
-skip = [".venv", "venv", "android_app/.venv", "android_app/venv", ".git", "migrations/versions"]
+skip = [".venv", "venv", ".git", "migrations/versions"]
 
 # =============================================================================
 # Mypy Configuration

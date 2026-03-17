@@ -214,7 +214,7 @@ class TestGetUserStatus:
             package_type=PackageType.BASIC,
             data_limit_bytes=10 * 1024**3,  # 10GB package
             data_used_bytes=1 * 1024**3,  # 1GB used from package
-            stars_paid=600,
+            stars_paid=250,  # Nuevo precio: $2.50 USD
             expires_at=datetime.now(timezone.utc) + timedelta(days=35),
         )
         mock_package_repo.get_valid_by_user.return_value = [package]

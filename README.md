@@ -15,8 +15,6 @@
 
 > Telegram Bot + Mini App para gestión de claves VPN (WireGuard & Outline) con pagos integrados.
 
-[Español](#español) · [Características](#características) · [Arquitectura](#arquitectura) · [Instalación](#instalación) · [Configuración](#configuración)
-
 ---
 
 </div>
@@ -104,7 +102,6 @@ usipipobot/
 | **Logging** | Loguru | latest |
 | **Testing** | pytest + pytest-asyncio | latest |
 | **Migrations** | Alembic | latest |
-| **Android APK** | Kivy + KivyMD | 2.3.1 / 1.2.0 |
 
 ---
 
@@ -112,8 +109,7 @@ usipipobot/
 
 #### Requisitos Previos
 
-- Python 3.13+ (bot principal)
-- Python 3.13+ (android_app)
+- Python 3.13+
 - PostgreSQL 15+
 - Linux (Ubuntu 22.04+ recomendado)
 - uv package manager
@@ -149,36 +145,10 @@ uv run alembic upgrade head
 uv run python main.py
 ```
 
-#### Android APK (Desarrollo en Desktop Linux)
-
-```bash
-cd android_app
-
-# 1. Instalar dependencias del sistema (solo Linux)
-sudo apt-get install -y libgl1-mesa-dev libgl1-mesa-glx libgles2-mesa-dev \
-    libgstreamer1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good
-
-# 2. Crear entorno virtual e instalar dependencias
-uv sync
-
-# 3. Ejecutar en desktop (pruebas de UI)
-uv run python main.py
-
-# 4. Ejecutar tests
-uv run pytest
-
-# 5. Build APK (requiere Android SDK)
-uv run buildozer -v android debug
-```
-
 #### Testing
 
 ```bash
-# Bot principal (398 tests)
-uv run pytest
-
-# Android app (8 tests)
-cd android_app
+# Bot principal (406 tests)
 uv run pytest
 ```
 

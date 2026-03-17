@@ -6,7 +6,115 @@
 <div class="glitch-title" style="margin-bottom: 20px;">Tienda</div>
 
 <div class="terminal-output">
-    Selecciona un paquete de datos o slots adicionales...
+    Selecciona un paquete de datos, slots o suscripción premium...
+</div>
+
+<!-- Premium Subscriptions Section -->
+<div style="margin-top: 20px;">
+    <div style="font-size: 14px; color: var(--accent-magenta); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+        💎 Suscripciones Premium
+    </div>
+    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+        Datos ilimitados para tus claves VPN
+    </div>
+    <div class="packages-grid">
+        <div class="package-card featured" style="border-color: var(--accent-magenta);">
+            <div style="position: absolute; top: 12px; right: 12px;">
+                <span class="badge badge-active" style="background: var(--accent-magenta);">POPULAR</span>
+            </div>
+            <div style="font-size: 24px; margin-bottom: 8px;">👑</div>
+            <div class="package-name">1 Mes Premium</div>
+            <div class="package-data">Datos Ilimitados</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                Velocidad máxima sin límites de consumo
+            </div>
+            <div class="package-price">
+                ⭐ 360
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+                Telegram Stars
+            </div>
+            <div style="font-size: 10px; color: var(--accent-green); margin-bottom: 16px;">
+                💰 3.00 USDT
+            </div>
+            <button class="btn btn-primary btn-full"
+                    onclick="showPaymentMethods('subscription', 'one_month', 360, 3.00)">
+                Activar Premium
+            </button>
+        </div>
+
+        <div class="package-card featured" style="border-color: var(--accent-cyan);">
+            <div style="position: absolute; top: 12px; right: 12px;">
+                <span class="badge badge-active">+11% BONUS</span>
+            </div>
+            <div style="font-size: 24px; margin-bottom: 8px;">🥈</div>
+            <div class="package-name">3 Meses Premium</div>
+            <div class="package-data">Datos Ilimitados</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                Ahorra comprando trimestral
+            </div>
+            <div class="package-price">
+                ⭐ 960
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+                Telegram Stars
+            </div>
+            <div style="font-size: 10px; color: var(--accent-green); margin-bottom: 16px;">
+                💰 8.00 USDT
+            </div>
+            <button class="btn btn-primary btn-full"
+                    onclick="showPaymentMethods('subscription', 'three_months', 960, 8.00)">
+                Activar Premium
+            </button>
+        </div>
+
+        <div class="package-card featured" style="border-color: var(--accent-yellow);">
+            <div style="position: absolute; top: 12px; right: 12px;">
+                <span class="badge badge-active" style="background: var(--accent-yellow); color: #000;">+13% BONUS</span>
+            </div>
+            <div style="font-size: 24px; margin-bottom: 8px;">🥉</div>
+            <div class="package-name">6 Meses Premium</div>
+            <div class="package-data">Datos Ilimitados</div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                Máximo ahorro semestral
+            </div>
+            <div class="package-price">
+                ⭐ 1560
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 8px;">
+                Telegram Stars
+            </div>
+            <div style="font-size: 10px; color: var(--accent-green); margin-bottom: 16px;">
+                💰 13.00 USDT
+            </div>
+            <button class="btn btn-primary btn-full"
+                    onclick="showPaymentMethods('subscription', 'six_months', 1560, 13.00)">
+                Activar Premium
+            </button>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+        <div class="card-title">🌟 Beneficios Premium</div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 12px; color: var(--text-secondary);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-cyan);">✓</span>
+                <span>Datos ilimitados</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-cyan);">✓</span>
+                <span>Velocidad prioritaria</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-cyan);">✓</span>
+                <span>Sin límites de consumo</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--accent-cyan);">✓</span>
+                <span>Soporte prioritario</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Packages Section -->
@@ -85,6 +193,12 @@
         </div>
         {% endfor %}
     </div>
+</div>
+
+<!-- Loading Overlay (Cyberpunk Style) -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Procesando...</div>
 </div>
 
 <!-- Payment Method Modal -->
@@ -196,15 +310,22 @@ async function payWithStars() {
 
     closePaymentModal();
 
-    // Show loading indicator
+    // Haptic feedback
     Telegram.WebApp.HapticFeedback.notificationOccurred('light');
-    const loadingMsg = Telegram.WebApp.showPopup({
-        title: 'Procesando...',
-        message: 'Enviando factura a tu Telegram...',
-        buttons: []
-    });
+
+    // Show custom loading overlay (Fix 1: Replace non-existent showPopup)
+    showLoadingOverlay('Enviando factura a tu Telegram...');
 
     try {
+        // Fix 2: Add debug logging
+        console.log('[Payment] Initiating Stars payment:', {
+            productType: currentProductType,
+            productId: currentProduct,
+            priceStars: currentPriceStars,
+            priceUsdt: currentPriceUsdt,
+            hasInitData: !!Telegram.WebApp.initData
+        });
+
         const response = await fetch('/miniapp/api/create-stars-invoice', {
             method: 'POST',
             headers: {
@@ -217,11 +338,14 @@ async function payWithStars() {
             })
         });
 
+        console.log('[Payment] Response status:', response.status);
         const data = await response.json();
+        console.log('[Payment] Response data:', data);
 
-        if (loadingMsg) loadingMsg.close();
+        hideLoadingOverlay();
 
         if (!data.success) {
+            console.error('[Payment] Server returned error:', data.error);
             Telegram.WebApp.showAlert('Error: ' + (data.error || 'No se pudo crear la factura'));
             return;
         }
@@ -243,9 +367,9 @@ async function payWithStars() {
         });
 
     } catch (error) {
-        console.error('Error:', error);
-        if (loadingMsg) loadingMsg.close();
-        Telegram.WebApp.showAlert('❌ Error al procesar el pago');
+        console.error('[Payment] Error processing Stars payment:', error);
+        hideLoadingOverlay();
+        Telegram.WebApp.showAlert('❌ Error al procesar el pago: ' + error.message);
     }
 }
 
@@ -257,27 +381,25 @@ async function payWithCrypto() {
 
     closePaymentModal();
 
-    // Show loading indicator
+    // Haptic feedback
     Telegram.WebApp.HapticFeedback.notificationOccurred('light');
-    const loadingMsg = Telegram.WebApp.showPopup({
-        title: 'Procesando...',
-        message: 'Generando orden de pago crypto...',
-        buttons: []
-    });
+
+    // Show custom loading overlay (Fix 1: Replace non-existent showPopup)
+    showLoadingOverlay('Generando orden de pago crypto...');
 
     const modal = document.getElementById('cryptoModal');
     const content = document.getElementById('cryptoPaymentContent');
 
-    content.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-            <div class="loading"></div>
-            <p style="margin-top: 12px; color: var(--text-secondary);">Generando billetera...</p>
-        </div>
-    `;
-
-    modal.style.display = 'flex';
-
     try {
+        // Fix 2: Add debug logging
+        console.log('[Payment] Initiating Crypto payment:', {
+            productType: currentProductType,
+            productId: currentProduct,
+            priceStars: currentPriceStars,
+            priceUsdt: currentPriceUsdt,
+            hasInitData: !!Telegram.WebApp.initData
+        });
+
         const response = await fetch('/miniapp/api/create-crypto-order', {
             method: 'POST',
             headers: {
@@ -290,11 +412,14 @@ async function payWithCrypto() {
             })
         });
 
+        console.log('[Payment] Response status:', response.status);
         const data = await response.json();
+        console.log('[Payment] Response data:', data);
 
-        if (loadingMsg) loadingMsg.close();
+        hideLoadingOverlay();
 
         if (!data.success) {
+            console.error('[Payment] Server returned error:', data.error);
             content.innerHTML = `
                 <div style="text-align: center; padding: 20px; color: var(--accent-red);">
                     <p>❌ Error: ${data.error || 'No se pudo crear la orden'}</p>
@@ -350,8 +475,8 @@ async function payWithCrypto() {
         });
 
     } catch (error) {
-        console.error('Error:', error);
-        if (loadingMsg) loadingMsg.close();
+        console.error('[Payment] Error processing Crypto payment:', error);
+        hideLoadingOverlay();
         content.innerHTML = `
             <div style="text-align: center; padding: 20px; color: var(--accent-red);">
                 <p>❌ Error al crear la orden de pago</p>
@@ -367,6 +492,25 @@ function copyWalletAddress(address) {
     }).catch(() => {
         Telegram.WebApp.showAlert('❌ No se pudo copiar la dirección');
     });
+}
+
+// Fix 1: Loading overlay helper functions
+function showLoadingOverlay(message) {
+    const overlay = document.getElementById('loadingOverlay');
+    const text = document.getElementById('loadingText');
+    if (text && message) {
+        text.textContent = message;
+    }
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
 }
 
 // Close modals on outside click
@@ -466,6 +610,40 @@ window.onclick = function(event) {
 
 @keyframes spin {
     to { transform: rotate(360deg); }
+}
+
+/* Fix 1: Loading Overlay Styles (Cyberpunk) */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 10, 15, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--border-subtle);
+    border-top-color: var(--neon-cyan);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+}
+
+.loading-text {
+    margin-top: 20px;
+    color: var(--neon-cyan);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
 }
 </style>
 {% endblock %}

@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v3.11.0] - 2026-03-17
+
+### Removed
+- **Android APK Application** - Complete removal of Android mobile app from repository
+  - Removed `android_app/` directory (Kivy + KivyMD application)
+  - Removed `infrastructure/api/android/` REST API endpoints
+  - Removed `tests/infrastructure/api/android/` test suite
+  - Removed `.github/workflows/android-ci.yml` CI/CD pipeline
+  - Removed `scripts/setup_android_secrets*.sh` configuration scripts
+  - Removed `docs/plans/apk/` Android documentation (~21 files)
+
+### Changed
+- **Project Structure** - Repository now contains only Telegram Bot + Mini App Web platforms
+  - Updated `QWEN.md` to reflect two-platform ecosystem
+  - Updated `README.md` removing Android references
+  - Updated `docs/GITHUB_ACTIONS.md` removing Android workflow documentation
+  - Updated `pyproject.toml` removing android_app imports and description
+  - Updated `.gitignore` removing android_app paths
+
+### Technical
+- Removed `android_router` from `infrastructure/api/server.py`
+- Updated test scripts (`test_auth_flow.sh`, `test_otp_flow.sh`) to use `miniapp_web` client
+- Mini App Web fully intact with 27 registered routes
+- Backend infrastructure unchanged and fully functional
+
+### Migration Notes
+- Users of Android APK should migrate to Telegram Mini App Web
+- All backend APIs remain compatible with existing Bot and Mini App
+- No database schema changes required
+
+## [v3.9.1] - 2026-03-16
+
+### Changed
+- **Subscriptions Payment Flow** - Rediseñado flujo de pago para seguir mismo patrón que paquetes y slots
+  - Agregada selección de método de pago (Stars/Crypto) para suscripciones
+  - Mensajes de pago con formato consistente (precio en Stars y USDT)
+  - Teclados inline siguiendo patrón de `buy_gb` module
+- **Shop Menu** - Movido botón de Suscripciones al menú Shop desde Operaciones
+  - Menú Shop ahora incluye: Paquetes de GB, Slots Adicionales, Suscripciones, Extras con Créditos
+  - Menú de Operaciones simplificado sin sección de Suscripciones
+
+### Fixed
+- **UI Consistency** - Botones de compra de suscripciones ahora siguen patrón consistente con resto del shop
+- **Payment Selection** - Usuarios ahora pueden seleccionar método de pago (Stars/Crypto) antes de confirmar
+
+### Technical
+- Added `SubscriptionMessages.Payment` class for payment method selection messages
+- Added `SubscriptionKeyboards.sub_payment_method_selection()` for payment keyboards
+- Refactored `SubscriptionHandler` with new payment flow methods
+- Updated callback handlers to use new payment selection pattern
+
 ## [v3.10.0] - 2026-03-15
 
 ### Features

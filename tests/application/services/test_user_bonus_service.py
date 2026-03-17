@@ -62,7 +62,7 @@ class TestCalculateQuickRenewalBonus:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=600,
+                stars_paid=250,  # Nuevo precio: $2.50 USD
                 expires_at=expires_soon,
             )
         ]
@@ -81,7 +81,7 @@ class TestCalculateQuickRenewalBonus:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=600,
+                stars_paid=250,  # Nuevo precio: $2.50 USD
                 expires_at=expires_later,
             )
         ]
@@ -134,7 +134,7 @@ class TestCalculateTotalBonus:
                 user_id=123,
                 package_type=PackageType.BASIC,
                 data_limit_bytes=10 * 1024**3,
-                stars_paid=600,
+                stars_paid=250,  # Nuevo precio: $2.50 USD
                 expires_at=expires_soon,
             )
         ]

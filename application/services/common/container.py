@@ -23,6 +23,8 @@ from application.services.consumption_vpn_integration_service import (
 from application.services.crypto_payment_service import CryptoPaymentService
 from application.services.data_package_service import DataPackageService
 from application.services.referral_service import ReferralService
+from application.services.subscription_payment_service import SubscriptionPaymentService
+from application.services.subscription_service import SubscriptionService
 from application.services.ticket_notification_service import TicketNotificationService
 from application.services.ticket_service import TicketService
 from application.services.user_profile_service import UserProfileService
@@ -34,6 +36,7 @@ from domain.interfaces.iconsumption_invoice_repository import IConsumptionInvoic
 from domain.interfaces.icrypto_order_repository import ICryptoOrderRepository
 from domain.interfaces.idata_package_repository import IDataPackageRepository
 from domain.interfaces.ikey_repository import IKeyRepository
+from domain.interfaces.isubscription_repository import ISubscriptionRepository
 from domain.interfaces.iticket_repository import ITicketRepository
 from domain.interfaces.itransaction_repository import ITransactionRepository
 from domain.interfaces.iuser_repository import IUserRepository
@@ -54,6 +57,9 @@ from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
 )
 from infrastructure.persistence.postgresql.key_repository import PostgresKeyRepository
+from infrastructure.persistence.postgresql.subscription_repository import (
+    PostgresSubscriptionRepository,
+)
 from infrastructure.persistence.postgresql.ticket_repository import TicketRepository
 from infrastructure.persistence.postgresql.transaction_repository import (
     PostgresTransactionRepository,
@@ -222,6 +228,10 @@ def _configure_application_services(container: punq.Container) -> None:
         session = session_factory()
         return PostgresConsumptionBillingRepository(session)
 
+    def create_subscription_repo() -> PostgresSubscriptionRepository:
+        session = session_factory()
+        return PostgresSubscriptionRepository(session)
+
     def create_vpn_service() -> VpnService:
         return VpnService(
             user_repo=create_user_repo(),
@@ -232,6 +242,10 @@ def _configure_application_services(container: punq.Container) -> None:
             vpn_integration_service=cast(
                 ConsumptionVpnIntegrationService,
                 container.resolve(ConsumptionVpnIntegrationService),
+            ),
+            subscription_service=cast(
+                SubscriptionService,
+                container.resolve(SubscriptionService),
             ),
         )
 
@@ -316,6 +330,10 @@ def _configure_application_services(container: punq.Container) -> None:
         return ConsumptionBillingService(
             billing_repo=create_consumption_billing_repo(),
             user_repo=create_user_repo(),
+            subscription_service=cast(
+                SubscriptionService,
+                container.resolve(SubscriptionService),
+            ),
         )
 
     def create_consumption_invoice_service() -> ConsumptionInvoiceService:
@@ -361,6 +379,18 @@ def _configure_application_services(container: punq.Container) -> None:
             ),
         )
 
+    def create_subscription_service() -> SubscriptionService:
+        return SubscriptionService(
+            subscription_repo=create_subscription_repo(),
+            user_repo=create_user_repo(),
+        )
+
+    def create_subscription_payment_service() -> SubscriptionPaymentService:
+        return SubscriptionPaymentService(
+            subscription_service=create_subscription_service(),
+            crypto_payment_service=create_crypto_payment_service(),
+        )
+
     container.register(
         VpnInfrastructureService,
         factory=create_vpn_infrastructure_service,
@@ -400,6 +430,14 @@ def _configure_application_services(container: punq.Container) -> None:
     container.register(
         TicketNotificationService,
         factory=create_ticket_notification_service,
+    )
+    container.register(
+        SubscriptionService,
+        factory=create_subscription_service,
+    )
+    container.register(
+        SubscriptionPaymentService,
+        factory=create_subscription_payment_service,
     )
 
 
