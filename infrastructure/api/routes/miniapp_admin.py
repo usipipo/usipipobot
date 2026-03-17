@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from miniapp.routes_common import MiniAppContext, require_admin
+from infrastructure.api.routes.miniapp_common import MiniAppContext, require_admin
 from utils.logger import logger
 
 router = APIRouter(tags=["Mini App Web - Admin"])

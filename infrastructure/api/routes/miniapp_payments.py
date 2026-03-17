@@ -21,6 +21,11 @@ from application.services.data_package_service import (
     DataPackageService,
 )
 from config import settings
+from infrastructure.api.routes.miniapp_common import (
+    MiniAppContext,
+    PaymentRequest,
+    get_current_user,
+)
 from infrastructure.persistence.database import get_session_context
 from infrastructure.persistence.postgresql.crypto_order_repository import (
     PostgresCryptoOrderRepository,
@@ -32,7 +37,6 @@ from infrastructure.persistence.postgresql.data_package_repository import (
     PostgresDataPackageRepository,
 )
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
-from miniapp.routes_common import MiniAppContext, PaymentRequest, get_current_user
 from miniapp.services.miniapp_payment_service import MiniAppPaymentService
 from utils.logger import logger
 

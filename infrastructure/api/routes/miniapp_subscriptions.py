@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from application.services.common.container import get_service
 from application.services.subscription_service import SubscriptionService
-from miniapp.routes_common import get_current_user
+from infrastructure.api.routes.miniapp_common import get_current_user
 from utils.logger import logger
 
 router = APIRouter(tags=["Mini App Web - Subscriptions"])

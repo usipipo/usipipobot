@@ -11,8 +11,8 @@ import pytest
 from fastapi import Depends
 from httpx import ASGITransport, AsyncClient
 
+from infrastructure.api.routes.miniapp_user import get_current_user
 from infrastructure.api.server import create_app
-from miniapp.router import get_current_user
 
 
 def mock_get_current_user():
