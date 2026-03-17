@@ -7,7 +7,6 @@ This document provides an overview of all GitHub Actions workflows configured fo
 | Workflow | File | Trigger | Purpose |
 |----------|------|---------|---------|
 | **CI** | `ci.yml` | Push/PR to main | Backend testing, linting, security scanning |
-| **Android APK** | `android-ci.yml` | Push/PR to main | Android app build, test, and release |
 | **Docker** | `docker.yml` | Push/PR to main | Docker image build and push to GHCR |
 | **CodeQL** | `codeql.yml` | Push/PR/Schedule | Security vulnerability analysis |
 | **Release** | `release.yml` | Tag push | Automatic changelog and release creation |
@@ -40,43 +39,6 @@ This document provides an overview of all GitHub Actions workflows configured fo
 
 **Artifacts:**
 - Coverage report uploaded to Codecov
-
----
-
-### 2. Android APK CI/CD
-
-**File:** `.github/workflows/android-ci.yml`
-
-**Triggers:**
-- Push to `main`, `master`, `develop`
-- Tags (v*)
-- Manual workflow dispatch
-
-**Jobs:**
-| Job | Description |
-|-----|-------------|
-| `test-and-lint` | Python tests and linting for android_app |
-| `build-debug` | Build debug APK with Buildozer |
-| `build-release` | Build and sign release APK (on tags) |
-| `notify-failure` | Send failure notification |
-
-**Requirements:**
-- Java 17
-- Android SDK (API 31, NDK 25)
-- Buildozer dependencies
-
-**Secrets Required:**
-| Secret | Description |
-|--------|-------------|
-| `ANDROID_KEYSTORE_B64` | Base64-encoded keystore |
-| `ANDROID_KEYSTORE_PASSWORD` | Keystore password |
-| `ANDROID_KEY_ALIAS` | Key alias |
-| `ANDROID_KEY_PASSWORD` | Key password |
-
-**Artifacts:**
-- Debug APK
-- Release APK (on tags)
-- Build logs
 
 ---
 
@@ -246,10 +208,6 @@ Configure these secrets in **GitHub Repository Settings → Secrets and variable
 |--------|-------|-------------|
 | `GITHUB_TOKEN` | Auto | Automatic GitHub authentication |
 | `TELEGRAM_BOT_TOKEN` | Optional | Bot token for release notifications |
-| `ANDROID_KEYSTORE_B64` | Optional | Base64-encoded Android keystore |
-| `ANDROID_KEYSTORE_PASSWORD` | Optional | Keystore password |
-| `ANDROID_KEY_ALIAS` | Optional | Key alias |
-| `ANDROID_KEY_PASSWORD` | Optional | Key password |
 | `DEPLOY_HOST` | Optional | Deployment server hostname |
 | `DEPLOY_USER` | Optional | Deployment SSH username |
 | `DEPLOY_KEY` | Optional | Deployment SSH private key |
@@ -307,11 +265,6 @@ pyproject.toml
 uv.lock
 ```
 
-### Android Paths
-```
-android_app/**
-```
-
 ### Docker Paths
 ```
 Dockerfile
@@ -336,18 +289,6 @@ gh workflow run manual-deploy.yml \
   -f environment=production \
   -f version=v1.0.0 \
   -f run_tests=true
-```
-
-### Trigger Android Build
-
-```bash
-# Debug build
-gh workflow run android-ci.yml \
-  -f build_type=debug
-
-# Release build
-gh workflow run android-ci.yml \
-  -f build_type=release
 ```
 
 ### Trigger Performance Tests
@@ -388,7 +329,6 @@ Add these to your README.md:
 
 ```markdown
 [![CI](https://github.com/usipipo/usipipobot/actions/workflows/ci.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/ci.yml)
-[![Android APK](https://github.com/usipipo/usipipobot/actions/workflows/android-ci.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/android-ci.yml)
 [![Docker](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/docker.yml)
 [![CodeQL](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml/badge.svg)](https://github.com/usipipo/usipipobot/actions/workflows/codeql.yml)
 ```
@@ -403,7 +343,6 @@ Add these to your README.md:
 |-------|----------|
 | Workflow not triggering | Check path filters and branch filters |
 | Secrets not available | Verify secrets are set at correct level (repo/org/env) |
-| Android build fails | Ensure sufficient runner disk space (may need larger runner) |
 | PostgreSQL connection fails | Check service health check configuration |
 | Permission denied errors | Verify workflow permissions in workflow file |
 

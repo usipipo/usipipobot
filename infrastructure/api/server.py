@@ -10,7 +10,6 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from config import settings
-from infrastructure.api.android.router import android_router
 from infrastructure.api.middleware import RateLimitMiddleware, SecurityHeadersMiddleware
 from infrastructure.api.webhooks import tron_dealer_router
 from infrastructure.api.webhooks.tron_dealer import set_services
@@ -89,9 +88,6 @@ def create_app() -> FastAPI:
 
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RateLimitMiddleware, requests_per_minute=settings.API_RATE_LIMIT)
-
-    # Rutas para APK Android
-    app.include_router(android_router)
 
     app.include_router(tron_dealer_router, prefix="/api/v1/webhooks")
     app.include_router(miniapp_router)
