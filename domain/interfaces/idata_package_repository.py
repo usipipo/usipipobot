@@ -53,3 +53,13 @@ class IDataPackageRepository(Protocol):
     ) -> Optional[DataPackage]:
         """Busca un paquete por el ID de pago de Telegram."""
         ...
+
+    async def get_by_user_paginated(
+        self, user_id: int, limit: int = 10, offset: int = 0, current_user_id: int = 0
+    ) -> List[DataPackage]:
+        """Get packages for a user with pagination."""
+        ...
+
+    async def count_by_user(self, user_id: int, current_user_id: int = 0) -> int:
+        """Count total packages for a user."""
+        ...

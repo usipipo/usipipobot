@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.entities.subscription_plan import PlanType, SubscriptionPlan
@@ -202,3 +202,33 @@ class PostgresSubscriptionRepository(BasePostgresRepository, ISubscriptionReposi
             await self.session.rollback()
             logger.error(f"❌ Error deactivating subscription plan {plan_id}: {e}")
             raise
+
+    async def get_by_user_paginated(
+        self, user_id: int, limit: int = 10, offset: int = 0, current_user_id: int = 0
+    ) -> List[SubscriptionPlan]:
+        """Get subscriptions for a user with pagination."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = (
+                select(SubscriptionPlanModel)
+                .where(SubscriptionPlanModel.user_id == user_id)
+                .order_by(SubscriptionPlanModel.created_at.desc())
+                .limit(limit)
+                .offset(offset)
+            )
+            result = await self.session.execute(query)
+            return [self._model_to_entity(m) for m in result.scalars().all()]
+        except Exception as e:
+            logger.error(f"Error al listar suscripciones paginadas del usuario {user_id}: {e}")
+            return []
+
+    async def count_by_user(self, user_id: int, current_user_id: int = 0) -> int:
+        """Count total subscriptions for a user."""
+        await self._set_current_user(current_user_id)
+        try:
+            query = select(func.count()).where(SubscriptionPlanModel.user_id == user_id)
+            result = await self.session.execute(query)
+            return result.scalar() or 0
+        except Exception as e:
+            logger.error(f"Error al contar suscripciones del usuario {user_id}: {e}")
+            return 0

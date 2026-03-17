@@ -42,3 +42,13 @@ class ISubscriptionRepository(Protocol):
     async def deactivate(self, plan_id: uuid.UUID, current_user_id: int) -> bool:
         """Deactivate a subscription plan."""
         ...
+
+    async def get_by_user_paginated(
+        self, user_id: int, limit: int = 10, offset: int = 0, current_user_id: int = 0
+    ) -> List[SubscriptionPlan]:
+        """Get subscriptions for a user with pagination."""
+        ...
+
+    async def count_by_user(self, user_id: int, current_user_id: int = 0) -> int:
+        """Count total subscriptions for a user."""
+        ...

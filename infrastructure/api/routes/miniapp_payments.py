@@ -7,7 +7,9 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -21,7 +23,9 @@ from application.services.data_package_service import (
     DataPackageService,
 )
 from config import settings
-from domain.entities.crypto_order import CryptoOrderStatus
+from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
+from domain.entities.data_package import DataPackage
+from domain.entities.subscription_plan import SubscriptionPlan
 from infrastructure.api.routes.miniapp_common import (
     MiniAppContext,
     PaymentRequest,
@@ -51,6 +55,38 @@ class ConfirmPaymentRequest(BaseModel):
     product_type: str = Field(..., description="Type of product: 'package' or 'slots'")
     product_id: str = Field(..., description="Product identifier (e.g., 'basic', 'slots_3')")
     transaction_id: str = Field(..., description="Unique transaction ID from invoice creation")
+
+
+class TransactionResponse(BaseModel):
+    """Response model for a single transaction in history."""
+
+    id: str = Field(..., description="Transaction ID")
+    type: str = Field(..., description="Transaction type: 'package', 'crypto', 'subscription'")
+    description: str = Field(..., description="Human-readable description")
+    amount: int = Field(..., description="Amount in stars (negative for spending)")
+    status: str = Field(
+        ..., description="Transaction status: 'completed', 'pending', 'failed', 'expired'"
+    )
+    created_at: str = Field(..., description="Transaction creation timestamp")
+    payment_method: str = Field(..., description="Payment method: 'stars' or 'crypto'")
+    amount_usdt: float | None = Field(None, description="Amount in USDT for crypto transactions")
+
+
+class PaginationResponse(BaseModel):
+    """Pagination metadata response."""
+
+    page: int = Field(..., description="Current page number")
+    limit: int = Field(..., description="Items per page")
+    total: int = Field(..., description="Total number of items")
+    pages: int = Field(..., description="Total number of pages")
+
+
+class TransactionHistoryResponse(BaseModel):
+    """Response model for transaction history with pagination."""
+
+    success: bool = True
+    transactions: list[TransactionResponse] = Field(default_factory=list)
+    pagination: PaginationResponse
 
 
 router = APIRouter(tags=["Mini App Web - Payments"])
@@ -696,6 +732,200 @@ async def get_payment_status(
 
     except Exception as e:
         logger.error(f"Error checking payment status for {transaction_id}: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "error": "Error interno del servidor. Por favor intenta nuevamente.",
+            },
+        )
+
+
+def _entity_to_transaction_response(
+    entity: DataPackage | CryptoOrder | SubscriptionPlan,
+) -> TransactionResponse:
+    """Convert domain entity to transaction response."""
+    if isinstance(entity, DataPackage):
+        # Calculate data GB from bytes
+        data_gb = entity.data_limit_bytes // (1024**3)
+        description = f"Paquete {data_gb} GB"
+
+        # Determine status
+        if not entity.is_active:
+            status = "failed"
+        elif entity.is_expired:
+            status = "expired"
+        else:
+            status = "completed"
+
+        return TransactionResponse(
+            id=str(entity.id),
+            type="package",
+            description=description,
+            amount=-entity.stars_paid,  # Negative for money spent
+            status=status,
+            created_at=(
+                entity.purchased_at.isoformat()
+                if entity.purchased_at
+                else datetime.now(timezone.utc).isoformat()
+            ),
+            payment_method="stars",
+        )
+
+    elif isinstance(entity, CryptoOrder):
+        # Map crypto order status
+        status = entity.status.value
+
+        return TransactionResponse(
+            id=str(entity.id),
+            type="crypto",
+            description=f"Pago crypto - {entity.package_type}",
+            amount=0,  # Crypto payments don't use stars
+            status=status,
+            created_at=(
+                entity.created_at.isoformat()
+                if entity.created_at
+                else datetime.now(timezone.utc).isoformat()
+            ),
+            payment_method="crypto",
+            amount_usdt=entity.amount_usdt,
+        )
+
+    elif isinstance(entity, SubscriptionPlan):
+        # Calculate duration in months
+        duration_months = entity.duration_days // 30
+
+        # Determine status
+        if not entity.is_active:
+            status = "failed"
+        elif entity.is_expired:
+            status = "expired"
+        else:
+            status = "completed"
+
+        return TransactionResponse(
+            id=str(entity.id),
+            type="subscription",
+            description=f"Suscripción {duration_months} mes(es)",
+            amount=-entity.stars_paid,
+            status=status,
+            created_at=(
+                entity.created_at.isoformat()
+                if entity.created_at
+                else datetime.now(timezone.utc).isoformat()
+            ),
+            payment_method="stars",
+        )
+
+    raise ValueError(f"Unknown entity type: {type(entity)}")
+
+
+@router.get("/transactions", response_model=TransactionHistoryResponse)
+async def get_transactions(
+    ctx: MiniAppContext = Depends(get_current_user),
+    page: int = 1,
+    limit: int = 20,
+    type: str | None = None,
+    status: str | None = None,
+):
+    """
+    API: Get user's complete transaction history with pagination and filters.
+
+    Fetches DataPackage, CryptoOrder, and SubscriptionPlan records,
+    combines them into a unified transaction list, sorts by created_at descending,
+    applies pagination and optional filters.
+
+    Query Parameters:
+    - page: Page number (default: 1)
+    - limit: Items per page (default: 20, max: 100)
+    - type: Filter by type: "package", "crypto", "subscription"
+    - status: Filter by status: "completed", "pending", "failed", "expired"
+
+    Returns unified transaction history with pagination metadata.
+    """
+    try:
+        # Validate and cap limit
+        limit = min(max(limit, 1), 100)
+        page = max(page, 1)
+        offset = (page - 1) * limit
+
+        logger.info(
+            f"Fetching transaction history for user {ctx.user.id}: "
+            f"page={page}, limit={limit}, type={type}, status={status}"
+        )
+
+        async with get_session_context() as session:
+            # Initialize repositories
+            package_repo = PostgresDataPackageRepository(session)
+            crypto_order_repo = PostgresCryptoOrderRepository(session)
+            subscription_repo = PostgresSubscriptionRepository(session)
+
+            # Fetch all transactions from all sources
+            packages = await package_repo.get_by_user_paginated(
+                ctx.user.id, limit=1000, offset=0, current_user_id=ctx.user.id
+            )
+            crypto_orders = await crypto_order_repo.get_by_user_paginated(
+                ctx.user.id, limit=1000, offset=0, current_user_id=ctx.user.id
+            )
+            subscriptions = await subscription_repo.get_by_user_paginated(
+                ctx.user.id, limit=1000, offset=0, current_user_id=ctx.user.id
+            )
+
+            # Convert to transaction responses
+            transactions: list[TransactionResponse] = []
+
+            for pkg in packages:
+                tx = _entity_to_transaction_response(pkg)
+                transactions.append(tx)
+
+            for crypto in crypto_orders:
+                tx = _entity_to_transaction_response(crypto)
+                transactions.append(tx)
+
+            for sub in subscriptions:
+                tx = _entity_to_transaction_response(sub)
+                transactions.append(tx)
+
+            # Apply type filter if provided
+            if type:
+                transactions = [tx for tx in transactions if tx.type == type]
+
+            # Apply status filter if provided
+            if status:
+                transactions = [tx for tx in transactions if tx.status == status]
+
+            # Sort by created_at descending (newest first)
+            transactions.sort(key=lambda x: x.created_at, reverse=True)
+
+            # Get total count before pagination
+            total = len(transactions)
+
+            # Apply pagination
+            paginated_transactions = transactions[offset : offset + limit]
+
+            # Calculate total pages
+            pages = (total + limit - 1) // limit if total > 0 else 0
+
+            logger.info(
+                f"Transaction history fetched for user {ctx.user.id}: "
+                f"total={total}, page={page}, pages={pages}"
+            )
+
+            return TransactionHistoryResponse(
+                success=True,
+                transactions=paginated_transactions,
+                pagination=PaginationResponse(
+                    page=page,
+                    limit=limit,
+                    total=total,
+                    pages=pages,
+                ),
+            )
+
+    except Exception as e:
+        logger.error(
+            f"Error fetching transaction history for user {ctx.user.id}: {e}", exc_info=True
+        )
         return JSONResponse(
             status_code=500,
             content={
