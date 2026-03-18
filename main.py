@@ -18,6 +18,7 @@ from application.services.vpn_service import VpnService
 from config import settings
 from infrastructure.jobs.crypto_order_expiration_job import expire_crypto_orders_job
 from infrastructure.jobs.key_cleanup_job import key_cleanup_job
+from infrastructure.jobs.latency_collector_job import latency_collector_job
 from infrastructure.jobs.memory_cleanup_job import memory_cleanup_job
 from infrastructure.jobs.package_expiration_job import expire_packages_job
 from infrastructure.jobs.usage_sync import sync_vpn_usage_job
@@ -146,6 +147,17 @@ def main():
             f"⏰ Job de limpieza de RAM programado cada {interval_minutes} minutos "
             f"(umbral: {settings.MEMORY_CLEANUP_THRESHOLD_PERCENT}%)"
         )
+
+        # Latency collector job (every 60 seconds)
+        job_queue.run_repeating(
+            latency_collector_job,
+            interval=60,
+            first=10,
+            data={
+                "bot": app.bot,
+            },
+        )
+        logger.info("⏰ Job de colector de latencia programado (cada 60s)")
 
         handlers = initialize_handlers(vpn_service, referral_service)
         for handler in handlers:

@@ -75,6 +75,9 @@ class KeyManagementKeyboards:
             [
                 [
                     InlineKeyboardButton("📊 Estadísticas", callback_data="key_stats"),
+                    InlineKeyboardButton("📡 Latencia", callback_data="server_latency"),
+                ],
+                [
                     InlineKeyboardButton("➕ Crear Nueva", callback_data="create_key"),
                 ],
                 [InlineKeyboardButton("🔙 Volver al Menú Principal", callback_data="main_menu")],
@@ -231,5 +234,19 @@ class KeyManagementKeyboards:
                 InlineKeyboardButton("✅ Confirmar", callback_data=f"confirm_{action}_{key_id}"),
                 InlineKeyboardButton("❌ Cancelar", callback_data=f"cancel_{action}"),
             ]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+
+    @staticmethod
+    def latency_actions() -> InlineKeyboardMarkup:
+        """
+        Teclado para acciones de latencia del servidor.
+
+        Returns:
+            InlineKeyboardMarkup: Teclado de acciones de latencia
+        """
+        keyboard = [
+            [InlineKeyboardButton("🔄 Actualizar", callback_data="refresh_latency")],
+            [InlineKeyboardButton("🔙 Volver a las Llaves", callback_data="back_to_keys")],
         ]
         return InlineKeyboardMarkup(keyboard)

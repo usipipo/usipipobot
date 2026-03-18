@@ -14,6 +14,7 @@ from infrastructure.api.middleware import RateLimitMiddleware, SecurityHeadersMi
 from infrastructure.api.routes import (
     miniapp_admin_router,
     miniapp_keys_router,
+    miniapp_latency_router,
     miniapp_payments_router,
     miniapp_public_router,
     miniapp_subscriptions_router,
@@ -132,6 +133,7 @@ def create_app() -> FastAPI:
     app.include_router(miniapp_subscriptions_router, prefix="/api/v1/miniapp")
     app.include_router(miniapp_admin_router, prefix="/api/v1/miniapp")
     app.include_router(miniapp_public_router, prefix="/api/v1/miniapp")
+    app.include_router(miniapp_latency_router, prefix="/api/v1/miniapp")
 
     # ========================================================================
     # DIRECT WEB ROUTES (without /api/v1 prefix)

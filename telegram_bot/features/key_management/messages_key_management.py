@@ -148,3 +148,37 @@ class KeyManagementMessages:
         CHANGES_SAVED = "💾 *Guardado*\n\n" "✨ Cambios actualizados"
 
         BACKUP_CREATED = "📦 *Backup creado*\n\n" "💾 Copia segura guardada\n\n" "📁 {filename}"
+
+
+# ============================================
+# LATENCY / SERVER STATUS
+# ============================================
+
+
+class LatencyMessages:
+    """Mensajes para latencia del servidor."""
+
+    COLLECTING = (
+        "⏳ *Recopilando datos...*\n\n"
+        "📡 El servidor está midiendo la latencia\n\n"
+        "🔄 Intenta en ~30 segundos"
+    )
+
+    SERVER_STATUS = (
+        "📡 *Estado del Servidor uSipipo*\n\n"
+        "{status_icon} *{status_label}*\n\n"
+        "⚡ Latencia: `{ping_ms:.0f} ms`\n"
+        "🖥️ CPU: `{cpu_percent:.0f}%`\n"
+        "💾 RAM: `{ram_percent:.0f}%` (`{ram_used_mb}` / `{ram_total_mb}` MB)\n\n"
+        "*Protocolos:*\n"
+        "{protocols}\n\n"
+        "⏰ Uptime: `{uptime_hours:.0f} horas`\n"
+        "🕐 Medido hace: `{age_seconds} segundos`\n\n"
+        "💡 *Consejo:* Latencia < 50ms es excelente para gaming y streaming 🚀"
+    )
+
+    PROTOCOLS_SECTION = (
+        "{outline_icon} Outline · {wg_icon} WireGuard ({wg_active} activos){dns_line}"
+    )
+
+    REFRESH_BUTTON = "🔄 Actualizar"

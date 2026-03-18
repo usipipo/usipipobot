@@ -19,6 +19,7 @@ from utils.telegram_utils import escape_markdown
 
 from .handlers_key_actions import KeyActionsMixin
 from .handlers_key_info import KeyInfoMixin
+from .handlers_key_latency import LatencyMixin
 from .handlers_rename_key import RenameKeyMixin
 from .handlers_view_keys import ViewKeysMixin
 from .keyboards_key_management import KeyManagementKeyboards
@@ -37,6 +38,7 @@ class KeyManagementHandler(
     KeyActionsMixin,
     RenameKeyMixin,
     KeyInfoMixin,
+    LatencyMixin,
 ):
     """Handler para gestión avanzada de llaves VPN."""
 
@@ -208,6 +210,7 @@ def get_key_management_handlers(
     return [
         MessageHandler(filters.Regex("^🛡️ Mis Llaves$"), handler.show_key_submenu),
         CommandHandler("keys", handler.show_key_submenu),
+        CommandHandler("latency", handler.latency_command),
         MessageHandler(filters.TEXT & ~filters.COMMAND, handler.process_rename_key),
     ]
 
@@ -224,6 +227,8 @@ def get_key_management_callback_handlers(
         CallbackQueryHandler(handler.show_keys_by_type, pattern="^keys_"),
         CallbackQueryHandler(handler.show_key_details, pattern="^key_details_"),
         CallbackQueryHandler(handler.show_key_statistics, pattern="^key_stats$"),
+        CallbackQueryHandler(handler.show_server_latency, pattern="^server_latency$"),
+        CallbackQueryHandler(handler.refresh_server_latency, pattern="^refresh_latency$"),
         CallbackQueryHandler(handler.back_to_main_menu, pattern="^back_to_main$"),
         CallbackQueryHandler(handler.back_to_keys, pattern="^back_to_keys$"),
         CallbackQueryHandler(handler.handle_key_action, pattern="^key_reactivate_"),
