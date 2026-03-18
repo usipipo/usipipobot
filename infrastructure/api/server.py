@@ -165,6 +165,7 @@ def create_app() -> FastAPI:
         api_confirm_payment,
         api_create_crypto_order,
         api_create_stars_invoice,
+        get_transactions,
         invoice_page,
         payment_method_page,
         purchase_page,
@@ -246,6 +247,12 @@ def create_app() -> FastAPI:
         "/miniapp/api/check-crypto-payment",
         api_check_crypto_payment,
         methods=["POST"],
+        include_in_schema=False,
+    )
+    app.add_api_route(
+        "/miniapp/api/transactions",
+        get_transactions,
+        methods=["GET"],
         include_in_schema=False,
     )
     app.add_api_route(
