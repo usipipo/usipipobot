@@ -263,8 +263,13 @@ async function proceedToPayment() {
 async function payWithStars() {
     console.log('[Stars Payment] Initiating payment:', productData);
 
+    // NOTE: Using /miniapp/api/... for AJAX/fetch calls (NOT /api/v1/miniapp/...)
+    // This is because we're making a fetch call from the browser, not direct navigation.
+    // The /miniapp/api/... routes are for web frontend API calls.
+    // For external API integrations, use /api/v1/miniapp/api/... instead.
+
     try {
-        const response = await fetch('/api/v1/miniapp/api/create-stars-invoice', {
+        const response = await fetch('/miniapp/api/create-stars-invoice', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -311,8 +316,13 @@ async function payWithStars() {
 async function payWithCrypto() {
     console.log('[Crypto Payment] Initiating payment:', productData);
 
+    // NOTE: Using /miniapp/api/... for AJAX/fetch calls (NOT /api/v1/miniapp/...)
+    // This is because we're making a fetch call from the browser, not direct navigation.
+    // The /miniapp/api/... routes are for web frontend API calls.
+    // For external API integrations, use /api/v1/miniapp/api/... instead.
+
     try {
-        const response = await fetch('/api/v1/miniapp/api/create-crypto-order', {
+        const response = await fetch('/miniapp/api/create-crypto-order', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

@@ -274,10 +274,10 @@ async function checkPaymentStatus() {
         let url, body;
 
         if (paymentData.type === 'stars') {
-            url = '/api/v1/miniapp/api/check-stars-payment';
+            url = '/miniapp/api/check-stars-payment';
             body = { transaction_id: paymentData.transactionId };
         } else {
-            url = '/api/v1/miniapp/api/check-crypto-payment';
+            url = '/miniapp/api/check-crypto-payment';
             body = { order_id: paymentData.orderId };
         }
 

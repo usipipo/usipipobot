@@ -2,6 +2,29 @@
  * uSipipo Mini App - Main JavaScript
  *
  * Integración con Telegram WebApp SDK y lógica de la aplicación.
+ *
+ * ============================================================================
+ * ROUTING GUIDE - Which URL prefix to use?
+ * ============================================================================
+ *
+ * We have TWO parallel route systems:
+ *
+ * 1. /miniapp/... (Direct Web Navigation)
+ *    - Use for: window.location.href, <a> links, browser navigation
+ *    - Example: window.location.href = '/miniapp/dashboard'
+ *    - Example: <a href="/miniapp/purchase">Comprar</a>
+ *
+ * 2. /miniapp/api/... (AJAX/Fetch API Calls)
+ *    - Use for: fetch(), XMLHttpRequest, dynamic data loading
+ *    - Example: fetch('/miniapp/api/user')
+ *    - Example: fetch('/miniapp/api/create-stars-invoice', {method: 'POST'})
+ *
+ * 3. /api/v1/miniapp/... (Versioned API - External Use)
+ *    - Use for: External API integrations, SDKs, backward compatibility
+ *    - NOT used in frontend JavaScript (use #2 instead)
+ *    - Example: External services, API clients, programmatic access
+ *
+ * ============================================================================
  */
 
 (function() {
@@ -22,8 +45,10 @@
         console.log('Version:', tg.version);
         console.log('Color Scheme:', tg.colorScheme);
 
+        // NOTE: Using /miniapp/... for navigation (NOT /api/v1/miniapp/...)
+        // This is the direct web route for browser navigation
         document.addEventListener('backButtonClicked', function() {
-            if (window.location.pathname !== '/api/v1/miniapp/dashboard') {
+            if (window.location.pathname !== '/miniapp/dashboard') {
                 window.history.back();
             } else {
                 tg.close();
@@ -32,7 +57,8 @@
 
         tg.BackButton.show();
         tg.BackButton.onClick(function() {
-            if (window.location.pathname !== '/api/v1/miniapp/dashboard') {
+            // NOTE: Using /miniapp/... for navigation check (NOT /api/v1/miniapp/...)
+            if (window.location.pathname !== '/miniapp/dashboard') {
                 window.history.back();
             }
         });
@@ -51,7 +77,9 @@
         const initData = getInitData();
         if (!initData) return;
 
-        document.querySelectorAll('a[href^="/api/v1/miniapp/"]').forEach(link => {
+        // Append initData to links that use /miniapp/... or /api/v1/miniapp/...
+        // This ensures authentication is preserved during navigation
+        document.querySelectorAll('a[href^="/miniapp/"], a[href^="/api/v1/miniapp/"]').forEach(link => {
             const url = new URL(link.href, window.location.origin);
             url.searchParams.set('tgWebAppData', initData);
             link.href = url.toString();

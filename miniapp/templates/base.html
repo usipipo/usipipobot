@@ -6,7 +6,7 @@
     <title>{% block title %}uSipipo VPN{% endblock %}</title>
 
     <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
-    <link rel="stylesheet" href="/api/v1/miniapp/static/css/cyberpunk.css">
+    <link rel="stylesheet" href="/miniapp/static/css/cyberpunk.css">
 
     <style>
         :root {
@@ -623,35 +623,41 @@
     </div>
 
     {% block bottom_nav %}
+    <!--
+      NAVIGATION LINKS - Using /miniapp/... for direct browser navigation
+      Note: These are NOT API routes, they are web pages for direct navigation.
+      For API calls (fetch/XMLHttpRequest), use /miniapp/api/... instead.
+    -->
     <nav class="bottom-nav">
-        <a href="/api/v1/miniapp/dashboard" class="nav-item {% if request.url.path == '/api/v1/miniapp/dashboard' %}active{% endif %}">
+        <a href="/miniapp/dashboard" class="nav-item {% if request.url.path == '/miniapp/dashboard' %}active{% endif %}">
             <span class="nav-icon">📊</span>
             <span>Dashboard</span>
         </a>
-        <a href="/api/v1/miniapp/keys" class="nav-item {% if '/keys' in request.url.path %}active{% endif %}">
+        <a href="/miniapp/keys" class="nav-item {% if '/keys' in request.url.path %}active{% endif %}">
             <span class="nav-icon">🔑</span>
             <span>Claves</span>
         </a>
-        <a href="/api/v1/miniapp/purchase" class="nav-item {% if '/purchase' in request.url.path %}active{% endif %}">
+        <a href="/miniapp/purchase" class="nav-item {% if '/purchase' in request.url.path %}active{% endif %}">
             <span class="nav-icon">💎</span>
             <span>Comprar</span>
         </a>
-        <a href="/api/v1/miniapp/transactions-page" class="nav-item {% if '/transactions' in request.url.path %}active{% endif %}">
+        <a href="/miniapp/transactions-page" class="nav-item {% if '/transactions' in request.url.path %}active{% endif %}">
             <span class="nav-icon">💳</span>
             <span>Historial</span>
         </a>
-        <a href="/api/v1/miniapp/profile" class="nav-item {% if '/profile' in request.url.path %}active{% endif %}">
+        <a href="/miniapp/profile" class="nav-item {% if '/profile' in request.url.path %}active{% endif %}">
             <span class="nav-icon">👤</span>
             <span>Perfil</span>
         </a>
-        <a href="/api/v1/miniapp/settings" class="nav-item {% if '/settings' in request.url.path %}active{% endif %}">
+        <a href="/miniapp/settings" class="nav-item {% if '/settings' in request.url.path %}active{% endif %}">
             <span class="nav-icon">⚙️</span>
             <span>Ajustes</span>
         </a>
     </nav>
     {% endblock %}
 
-    <script src="/api/v1/miniapp/static/js/app.js"></script>
+    <!-- Static JS: Using /miniapp/static/... for direct web access -->
+    <script src="/miniapp/static/js/app.js"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

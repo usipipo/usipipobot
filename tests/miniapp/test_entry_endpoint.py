@@ -60,7 +60,7 @@ async def test_entry_endpoint_contains_redirect_logic(client):
     response = await client.get("/api/v1/miniapp/public/entry")
     assert response.status_code == 200
     assert b"tgWebAppData" in response.content
-    assert b"/api/v1/miniapp/" in response.content
+    assert b"/miniapp/" in response.content
 
 
 @pytest.mark.asyncio
@@ -113,6 +113,6 @@ async def test_entry_page_contains_registration_check(client):
     response = await client.get("/api/v1/miniapp/public/entry")
     assert response.status_code == 200
     # Should contain the API call to check user registration
-    assert b"/api/v1/miniapp/api/user" in response.content
+    assert b"/miniapp/api/user" in response.content
     # Should contain logic to handle USER_NOT_REGISTERED error
     assert b"USER_NOT_REGISTERED" in response.content

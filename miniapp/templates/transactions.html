@@ -400,7 +400,7 @@ async function loadTransactions(page = 1, filter = 'all') {
 
     try {
         // Build URL with query parameters
-        let url = `/api/v1/miniapp/transactions?page=${page}&limit=20`;
+        let url = `/miniapp/transactions?page=${page}&limit=20`;
         if (filter !== 'all') {
             url += `&type=${filter}`;
         }

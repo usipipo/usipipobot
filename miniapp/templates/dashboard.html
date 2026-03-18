@@ -66,7 +66,7 @@
     <div style="text-align: center; padding: 30px; color: var(--text-secondary);">
         <div style="font-size: 40px; margin-bottom: 12px;">🔑</div>
         <p>No tienes claves VPN activas</p>
-        <a href="/api/v1/miniapp/keys/create" class="btn btn-primary" style="margin-top: 16px;">Crear Primera Clave</a>
+        <a href="/miniapp/keys/create" class="btn btn-primary" style="margin-top: 16px;">Crear Primera Clave</a>
     </div>
     {% endif %}
 </div>
@@ -74,16 +74,16 @@
 <div class="card">
     <div class="card-title">Acciones Rápidas</div>
     <div style="display: flex; flex-direction: column; gap: 12px;">
-        <a href="/api/v1/miniapp/keys/create" class="btn btn-primary btn-full">
+        <a href="/miniapp/keys/create" class="btn btn-primary btn-full">
             ➕ Nueva Clave VPN
         </a>
-        <a href="/api/v1/miniapp/purchase" class="btn btn-secondary btn-full">
+        <a href="/miniapp/purchase" class="btn btn-secondary btn-full">
             💎 Comprar Datos
         </a>
     </div>
 </div>
 
 {% if can_create is defined and can_create %}
-<a href="/api/v1/miniapp/keys/create" class="fab" title="Nueva Clave">+</a>
+<a href="/miniapp/keys/create" class="fab" title="Nueva Clave">+</a>
 {% endif %}
 {% endblock %}
