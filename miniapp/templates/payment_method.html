@@ -269,6 +269,11 @@ async function payWithStars() {
     // For external API integrations, use /api/v1/miniapp/api/... instead.
 
     try {
+        // Check if Telegram WebApp initData is available
+        if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initData) {
+            throw new Error('Telegram WebApp no disponible. Por favor abre la aplicación desde Telegram.');
+        }
+
         const response = await fetch('/miniapp/api/create-stars-invoice', {
             method: 'POST',
             headers: {
@@ -329,6 +334,11 @@ async function payWithCrypto() {
     // For external API integrations, use /api/v1/miniapp/api/... instead.
 
     try {
+        // Check if Telegram WebApp initData is available
+        if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initData) {
+            throw new Error('Telegram WebApp no disponible. Por favor abre la aplicación desde Telegram.');
+        }
+
         const response = await fetch('/miniapp/api/create-crypto-order', {
             method: 'POST',
             headers: {

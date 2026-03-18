@@ -276,6 +276,11 @@ async function checkPaymentStatus() {
     checkButton.textContent = 'Verificando...';
 
     try {
+        // Check if Telegram WebApp initData is available
+        if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initData) {
+            throw new Error('Telegram WebApp no disponible. Por favor abre la aplicación desde Telegram.');
+        }
+
         let url, body;
 
         if (paymentData.type === 'stars') {
@@ -304,6 +309,10 @@ async function checkPaymentStatus() {
         }
     } catch (error) {
         console.error('Error checking payment status:', error);
+        // Check if error is due to missing Telegram WebApp
+        if (error.message && error.message.includes('Telegram WebApp')) {
+            showAlert('⚠️ Error de autenticación: ' + error.message);
+        }
     } finally {
         checkButton.disabled = false;
         checkButton.textContent = '🔄 Verificar Estado Ahora';
