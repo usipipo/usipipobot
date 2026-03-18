@@ -300,8 +300,15 @@ async function payWithStars() {
             'Revisa tu chat de Telegram para completar el pago. La factura aparecerá en tu conversación con el bot.',
             function(confirmed) {
                 if (confirmed) {
-                    // Redirect to invoice status page
-                    window.location.href = `/miniapp/invoice?transaction_id=${transactionId}&type=stars`;
+                    // Redirect to invoice status page with initData for auth
+                    const params = new URLSearchParams({
+                        transaction_id: transactionId,
+                        type: 'stars'
+                    });
+                    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) {
+                        params.set('tgWebAppData', Telegram.WebApp.initData);
+                    }
+                    window.location.href = `/miniapp/invoice?${params.toString()}`;
                 }
             }
         );
@@ -344,7 +351,7 @@ async function payWithCrypto() {
             throw new Error(data.error || 'No se pudo crear la orden de pago');
         }
 
-        // Redirect to crypto invoice page with order details
+        // Redirect to crypto invoice page with order details and initData
         const params = new URLSearchParams({
             order_id: data.order_id,
             wallet: data.wallet_address,
@@ -352,6 +359,9 @@ async function payWithCrypto() {
             qr_code: data.qr_code_url,
             expires: data.expires_at || ''
         });
+        if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) {
+            params.set('tgWebAppData', Telegram.WebApp.initData);
+        }
         window.location.href = `/miniapp/invoice?type=crypto&${params.toString()}`;
 
     } catch (error) {

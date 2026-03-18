@@ -187,7 +187,12 @@ function initFromURL() {
         initCryptoPayment();
     } else {
         showAlert('❌ Tipo de pago no válido');
-        setTimeout(() => window.location.href = '/miniapp/purchase', 2000);
+        // Redirect with initData for auth
+        const params = new URLSearchParams();
+        if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) {
+            params.set('tgWebAppData', Telegram.WebApp.initData);
+        }
+        setTimeout(() => window.location.href = `/miniapp/purchase?${params.toString()}`, 2000);
     }
 }
 
@@ -338,7 +343,12 @@ function updatePaymentStatus(status, data = {}) {
                     '🎉 ¡Pago Exitoso!',
                     'Tu producto ha sido activado. Puedes verlo en tu perfil.',
                     () => {
-                        window.location.href = '/miniapp/profile';
+                        // Redirect with initData for auth
+                        const params = new URLSearchParams();
+                        if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) {
+                            params.set('tgWebAppData', Telegram.WebApp.initData);
+                        }
+                        window.location.href = `/miniapp/profile?${params.toString()}`;
                     }
                 );
             }, 1000);
@@ -379,7 +389,12 @@ function copyWalletAddress() {
 }
 
 function goToPurchase() {
-    window.location.href = '/miniapp/purchase';
+    // Redirect with initData for auth
+    const params = new URLSearchParams();
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) {
+        params.set('tgWebAppData', Telegram.WebApp.initData);
+    }
+    window.location.href = `/miniapp/purchase?${params.toString()}`;
 }
 
 function showAlert(message) {

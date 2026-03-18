@@ -100,7 +100,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (result.success) {
                 Telegram.WebApp.showAlert('✅ Clave "' + result.key_name + '" creada correctamente', function() {
-                    window.location.href = '/api/v1/miniapp/keys';
+                    // Redirect with initData for auth
+                    const params = new URLSearchParams();
+                    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) {
+                        params.set('tgWebAppData', Telegram.WebApp.initData);
+                    }
+                    window.location.href = `/miniapp/keys?${params.toString()}`;
                 });
             } else {
                 Telegram.WebApp.showAlert('❌ Error: ' + (result.error || 'No se pudo crear la clave'));

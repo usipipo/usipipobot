@@ -244,6 +244,12 @@ function showPaymentMethods(type, id, starsPrice, usdtPrice) {
         usdt: usdtPrice.toString()
     });
 
+    // CRITICAL: Append Telegram initData for authentication on the next page
+    // Without this, the payment-method page cannot authenticate API requests
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.initData) {
+        params.set('tgWebAppData', Telegram.WebApp.initData);
+    }
+
     window.location.href = `/miniapp/payment-method?${params.toString()}`;
 }
 </script>
