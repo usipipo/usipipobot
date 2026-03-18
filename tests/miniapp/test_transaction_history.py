@@ -410,3 +410,42 @@ class TestTransactionHistory:
         assert len(data["transactions"]) == 3
         types = {tx["type"] for tx in data["transactions"]}
         assert types == {"package", "crypto", "subscription"}
+
+
+class TestTransactionsPage:
+    """Tests for /miniapp/transactions HTML page."""
+
+    @pytest.mark.asyncio
+    async def test_transactions_page_renders(self, client):
+        """Test that the transactions HTML page renders correctly."""
+        response = await client.get("/miniapp/transactions")
+
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        assert "Historial de Transacciones" in response.text
+        assert "uSipipo VPN" in response.text
+
+    @pytest.mark.asyncio
+    async def test_transactions_page_contains_filters(self, client):
+        """Test that the transactions page contains filter buttons."""
+        response = await client.get("/miniapp/transactions")
+
+        assert response.status_code == 200
+        # Check for filter buttons
+        assert 'onclick="filterTransactions' in response.text
+        assert "filter-all" in response.text
+        assert "filter-package" in response.text
+        assert "filter-crypto" in response.text
+        assert "filter-subscription" in response.text
+
+    @pytest.mark.asyncio
+    async def test_transactions_page_contains_javascript(self, client):
+        """Test that the transactions page contains required JavaScript."""
+        response = await client.get("/miniapp/transactions")
+
+        assert response.status_code == 200
+        # Check for JavaScript functions
+        assert "async function loadTransactions" in response.text
+        assert "function renderTransactions" in response.text
+        assert "function filterTransactions" in response.text
+        assert "/miniapp/transactions" in response.text  # API endpoint in JS

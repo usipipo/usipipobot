@@ -169,6 +169,7 @@ def create_app() -> FastAPI:
         invoice_page,
         payment_method_page,
         purchase_page,
+        transactions_page,
     )
     from infrastructure.api.routes.miniapp_public import render_entry_html
     from infrastructure.api.routes.miniapp_user import (
@@ -187,6 +188,9 @@ def create_app() -> FastAPI:
         "/miniapp/payment-method", payment_method_page, methods=["GET"], include_in_schema=False
     )
     app.add_api_route("/miniapp/invoice", invoice_page, methods=["GET"], include_in_schema=False)
+    app.add_api_route(
+        "/miniapp/transactions", transactions_page, methods=["GET"], include_in_schema=False
+    )
     app.add_api_route("/miniapp/profile", profile_page, methods=["GET"], include_in_schema=False)
     app.add_api_route("/miniapp/settings", settings_page, methods=["GET"], include_in_schema=False)
     app.add_api_route("/miniapp/keys", keys_list, methods=["GET"], include_in_schema=False)
