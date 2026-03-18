@@ -265,6 +265,27 @@ let currentPriceStars = 0;
 let currentPriceUsdt = 0;
 let currentTransactionId = null;
 
+// Helper function to safely show alerts
+function showAlert(message) {
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.showAlert) {
+        Telegram.WebApp.showAlert(message);
+    } else {
+        console.error('[showAlert] Telegram.WebApp not available:', message);
+        alert(message);
+    }
+}
+
+// Helper function to safely show confirm dialogs
+function showConfirm(title, message, callback) {
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.showConfirm) {
+        Telegram.WebApp.showConfirm(message, callback);
+    } else {
+        console.error('[showConfirm] Telegram.WebApp not available');
+        const result = confirm(title + '\n\n' + message);
+        if (callback) callback(result);
+    }
+}
+
 function showPaymentMethods(type, id, starsPrice, usdtPrice) {
     console.log('[showPaymentMethods] Called with:', { type, id, starsPrice, usdtPrice });
 
@@ -281,13 +302,13 @@ function showPaymentMethods(type, id, starsPrice, usdtPrice) {
 
     if (!modal) {
         console.error('[showPaymentMethods] Payment modal not found in DOM!');
-        Telegram.WebApp.showAlert('❌ Error: No se pudo abrir el modal de pago. Por favor recarga la página.');
+        showAlert('❌ Error: No se pudo abrir el modal de pago. Por favor recarga la página.');
         return;
     }
 
     if (!details) {
         console.error('[showPaymentMethods] Payment details element not found in DOM!');
-        Telegram.WebApp.showAlert('❌ Error: No se pudo abrir el modal de pago. Por favor recarga la página.');
+        showAlert('❌ Error: No se pudo abrir el modal de pago. Por favor recarga la página.');
         return;
     }
 
@@ -305,34 +326,37 @@ function showPaymentMethods(type, id, starsPrice, usdtPrice) {
         </div>
     `;
 
-    // Force modal visibility with explicit styles
-    modal.style.display = 'flex';
-    modal.style.visibility = 'visible';
-    modal.style.opacity = '1';
-    modal.style.pointerEvents = 'auto';
+    // Show modal using CSS class (fixes !important issue)
+    modal.classList.add('show');
 
-    console.log('[showPaymentMethods] Modal display set to:', modal.style.display);
+    console.log('[showPaymentMethods] Modal shown with classList.add("show")');
 
     // Haptic feedback
-    if (Telegram.WebApp.HapticFeedback) {
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.HapticFeedback) {
         Telegram.WebApp.HapticFeedback.impactOccurred('light');
     }
 }
 
 function closePaymentModal() {
-    document.getElementById('paymentModal').style.display = 'none';
+    const modal = document.getElementById('paymentModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
     currentProduct = null;
     currentProductType = null;
     currentTransactionId = null;
 }
 
 function closeCryptoModal() {
-    document.getElementById('cryptoModal').style.display = 'none';
+    const modal = document.getElementById('cryptoModal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
 }
 
 async function payWithStars() {
     if (!currentProduct || !currentProductType) {
-        Telegram.WebApp.showAlert('❌ Por favor selecciona un producto primero');
+        showAlert('❌ Por favor selecciona un producto primero');
         return;
     }
 
@@ -374,7 +398,7 @@ async function payWithStars() {
 
         if (!data.success) {
             console.error('[Payment] Server returned error:', data.error);
-            Telegram.WebApp.showAlert('Error: ' + (data.error || 'No se pudo crear la factura'));
+            showAlert('Error: ' + (data.error || 'No se pudo crear la factura'));
             return;
         }
 
@@ -382,28 +406,27 @@ async function payWithStars() {
         currentTransactionId = data.transaction_id;
 
         // Show success message with instructions
-        Telegram.WebApp.showConfirm({
-            title: '✅ Factura Enviada',
-            message: 'Revisa tu chat de Telegram para completar el pago. La factura aparecerá en tu conversación con el bot.',
-            confirmButtonText: 'Entendido',
-            cancelButtonText: 'Cancelar'
-        }, function(confirm) {
-            if (confirm) {
-                // Start polling for payment status
-                startPaymentPolling(currentTransactionId);
+        showConfirm(
+            '✅ Factura Enviada',
+            'Revisa tu chat de Telegram para completar el pago. La factura aparecerá en tu conversación con el bot.',
+            function(confirm) {
+                if (confirm) {
+                    // Start polling for payment status
+                    startPaymentPolling(currentTransactionId);
+                }
             }
-        });
+        );
 
     } catch (error) {
         console.error('[Payment] Error processing Stars payment:', error);
         hideLoadingOverlay();
-        Telegram.WebApp.showAlert('❌ Error al procesar el pago: ' + error.message);
+        showAlert('❌ Error al procesar el pago: ' + error.message);
     }
 }
 
 async function payWithCrypto() {
     if (!currentProduct || !currentProductType) {
-        Telegram.WebApp.showAlert('❌ Por favor selecciona un producto primero');
+        showAlert('❌ Por favor selecciona un producto primero');
         return;
     }
 
@@ -458,49 +481,50 @@ async function payWithCrypto() {
         }
 
         // Show message that payment info was sent to Telegram
-        Telegram.WebApp.showConfirm({
-            title: '💰 Orden Crypto Creada',
-            message: `La información de pago con la dirección wallet y QR code ha sido enviada a tu Telegram. Revisa tu chat para completar el pago.`,
-            confirmButtonText: 'Ver en Telegram',
-            cancelButtonText: 'Cerrar'
-        }, function(confirm) {
-            if (confirm) {
-                Telegram.WebApp.close();
-            } else {
-                // Show the QR code anyway in the modal
-                content.innerHTML = `
-                    <div style="text-align: center;">
-                        <div style="margin-bottom: 16px;">
-                            <img src="${data.qr_code_url}" alt="QR Code" style="max-width: 200px; border-radius: 8px;">
-                        </div>
+        showConfirm(
+            '💰 Orden Crypto Creada',
+            `La información de pago con la dirección wallet y QR code ha sido enviada a tu Telegram. Revisa tu chat para completar el pago.`,
+            function(confirm) {
+                if (confirm) {
+                    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.close) {
+                        Telegram.WebApp.close();
+                    }
+                } else {
+                    // Show the QR code anyway in the modal
+                    content.innerHTML = `
+                        <div style="text-align: center;">
+                            <div style="margin-bottom: 16px;">
+                                <img src="${data.qr_code_url}" alt="QR Code" style="max-width: 200px; border-radius: 8px;">
+                            </div>
 
-                        <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 16px; word-break: break-all; font-family: monospace; font-size: 12px;">
-                            ${data.wallet_address}
-                        </div>
+                            <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 16px; word-break: break-all; font-family: monospace; font-size: 12px;">
+                                ${data.wallet_address}
+                            </div>
 
-                        <div style="font-size: 14px; margin-bottom: 8px;">
-                            Monto a enviar: <span style="color: var(--accent-green); font-weight: 600;">${data.amount_usdt} USDT</span>
-                        </div>
+                            <div style="font-size: 14px; margin-bottom: 8px;">
+                                Monto a enviar: <span style="color: var(--accent-green); font-weight: 600;">${data.amount_usdt} USDT</span>
+                            </div>
 
-                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-                            Red: <span style="color: var(--accent-cyan);">BSC (BEP20)</span><br>
-                            Expira en: <span style="color: var(--accent-yellow);">30 minutos</span>
-                        </div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                                Red: <span style="color: var(--accent-cyan);">BSC (BEP20)</span><br>
+                                Expira en: <span style="color: var(--accent-yellow);">30 minutos</span>
+                            </div>
 
-                        <div style="font-size: 11px; color: var(--text-muted); text-align: left; margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
-                            <p style="margin-bottom: 4px;">⚠️ Importante:</p>
-                            <p style="margin-bottom: 4px;">• Envía exactamente el monto indicado</p>
-                            <p style="margin-bottom: 4px;">• Usa solo la red BSC/BEP20</p>
-                            <p>• El sistema detectará el pago automáticamente</p>
-                        </div>
+                            <div style="font-size: 11px; color: var(--text-muted); text-align: left; margin-bottom: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+                                <p style="margin-bottom: 4px;">⚠️ Importante:</p>
+                                <p style="margin-bottom: 4px;">• Envía exactamente el monto indicado</p>
+                                <p style="margin-bottom: 4px;">• Usa solo la red BSC/BEP20</p>
+                                <p>• El sistema detectará el pago automáticamente</p>
+                            </div>
 
-                        <button class="btn btn-secondary" onclick="copyWalletAddress('${data.wallet_address}')">
-                            📋 Copiar Dirección
-                        </button>
-                    </div>
-                `;
+                            <button class="btn btn-secondary" onclick="copyWalletAddress('${data.wallet_address}')">
+                                📋 Copiar Dirección
+                            </button>
+                        </div>
+                    `;
+                }
             }
-        });
+        );
 
     } catch (error) {
         console.error('[Payment] Error processing Crypto payment:', error);
@@ -516,9 +540,9 @@ async function payWithCrypto() {
 
 function copyWalletAddress(address) {
     navigator.clipboard.writeText(address).then(() => {
-        Telegram.WebApp.showAlert('✅ Dirección copiada al portapapeles');
+        showAlert('✅ Dirección copiada al portapapeles');
     }).catch(() => {
-        Telegram.WebApp.showAlert('❌ No se pudo copiar la dirección');
+        showAlert('❌ No se pudo copiar la dirección');
     });
 }
 
@@ -583,7 +607,7 @@ function startPaymentPolling(transactionId) {
     // Stop polling after 5 minutes (user can manually check later)
     paymentCheckTimeout = setTimeout(() => {
         stopPaymentPolling();
-        Telegram.WebApp.showAlert(
+        showAlert(
             '⏰ Tiempo de espera agotado\n\n' +
             'Si completaste el pago pero no se activó automáticamente, ' +
             'puedes verificar el estado en tu perfil o contactar soporte.'
@@ -645,10 +669,12 @@ function handlePaymentSuccess(data) {
     hidePaymentWaitingScreen();
 
     // Haptic feedback
-    Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.HapticFeedback) {
+        Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    }
 
     // Show success message
-    Telegram.WebApp.showAlert(
+    showAlert(
         '✅ ¡Pago Completado!\n\n' +
         `Tu ${data.type === 'package' ? 'paquete de ' + data.data_gb + ' GB' : 'producto'} ` +
         'ha sido activado exitosamente.\n\n' +
@@ -669,9 +695,11 @@ function handlePaymentFailed(data) {
     hidePaymentWaitingScreen();
 
     // Haptic feedback
-    Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.HapticFeedback) {
+        Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+    }
 
-    Telegram.WebApp.showAlert(
+    showAlert(
         '❌ Pago Fallido\n\n' +
         'No pudimos detectar tu pago. Por favor:\n' +
         '1. Verifica que completaste el pago en Telegram\n' +
@@ -688,7 +716,6 @@ function showPaymentWaitingScreen(transactionId) {
     const modal = document.createElement('div');
     modal.id = 'paymentWaitingModal';
     modal.className = 'modal';
-    modal.style.display = 'flex';
     modal.innerHTML = `
         <div class="modal-content" style="text-align: center;">
             <div class="modal-header">
@@ -711,13 +738,15 @@ function showPaymentWaitingScreen(transactionId) {
                         Transaction ID: <code style="color: var(--accent-cyan);">${transactionId}</code>
                     </div>
                 </div>
-                <button class="btn btn-ghost btn-full" onclick="stopPaymentPolling(); document.getElementById('paymentWaitingModal').style.display='none';" style="margin-top: 16px;">
+                <button class="btn btn-ghost btn-full" onclick="stopPaymentPolling(); hidePaymentWaitingScreen();" style="margin-top: 16px;">
                     Cancelar Espera
                 </button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+    // Show modal using CSS class
+    modal.classList.add('show');
 }
 
 /**
@@ -739,9 +768,9 @@ window.addEventListener('beforeunload', function() {
 <style>
 /* Payment Modal Styles - Enhanced for visibility */
 .modal {
-    display: none !important;
+    display: none;
     position: fixed;
-    z-index: 9999 !important;
+    z-index: 9999;
     left: 0;
     top: 0;
     width: 100%;
@@ -753,6 +782,12 @@ window.addEventListener('beforeunload', function() {
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.2s ease;
+}
+
+.modal.show {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 .modal[style*="display: flex"] {
