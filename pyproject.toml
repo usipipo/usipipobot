@@ -27,7 +27,7 @@ classifiers = [
 # Runtime dependencies
 dependencies = [
     # Telegram Bot
-    "python-telegram-bot[job-queue]==21.10",
+    "python-telegram-bot[job-queue]==22.7",
 
     # Database (PostgreSQL + SQLAlchemy Async)
     "sqlalchemy[asyncio]==2.0.48",
