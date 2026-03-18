@@ -54,7 +54,7 @@ dependencies = [
     "itsdangerous==2.2.0",
 
     # Security & Authentication
-    "PyJWT==2.12.0",
+    "PyJWT==2.12.1",
     "cryptography==46.0.5",
 
     # Utilities
