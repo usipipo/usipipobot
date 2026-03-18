@@ -24,6 +24,54 @@
     </div>
 </div>
 
+<!-- Widget de Latencia del Servidor -->
+<div class="card latency-widget" id="latency-widget">
+    <!-- Loading State (inicial) -->
+    <div class="latency-loading" id="latency-loading">
+        <div style="font-size: 24px;">⏳</div>
+        <div class="latency-loading-text">Recopilando datos...</div>
+    </div>
+
+    <!-- Error State (oculto por defecto) -->
+    <div class="latency-error" id="latency-error" style="display: none;">
+        <div class="latency-error-icon">❌</div>
+        <div class="latency-error-text">Sin conexión</div>
+        <div class="latency-retry-text" id="latency-retry-text">🔄 Reintentando...</div>
+    </div>
+
+    <!-- Contenido del Widget (se llena con JS) -->
+    <div id="latency-content" style="display: none;">
+        <div class="latency-header">
+            <div class="latency-title">
+                📡 Latencia del Servidor
+            </div>
+            <div class="latency-badge" id="latency-badge">
+                <span id="latency-status-icon">🟢</span>
+                <span id="latency-status-label">Excelente</span>
+            </div>
+        </div>
+
+        <div class="latency-value-container">
+            <div class="latency-value" id="latency-value">--</div>
+            <div class="latency-unit">milisegundos</div>
+        </div>
+
+        <div class="latency-sparkline-container">
+            <svg class="latency-sparkline" id="latency-sparkline" viewBox="0 0 280 60" preserveAspectRatio="none">
+                <!-- El path se genera dinámicamente con JS -->
+            </svg>
+        </div>
+
+        <div class="latency-footer">
+            <div class="latency-updated">
+                <span class="latency-refresh-icon">🔄</span>
+                <span>Actualizado: hace <span id="latency-age">0</span>s</span>
+            </div>
+            <div style="font-size: 9px; opacity: 0.7;">Auto-refresh: 60s</div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-title">Consumo de Datos</div>
     <div class="progress-bar">

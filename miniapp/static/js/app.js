@@ -185,6 +185,151 @@
         }
     }
 
+    // ========================================================================
+    // LATENCY WIDGET - Server Latency Monitoring
+    // ========================================================================
+
+    let latencyData = {
+        history: [],
+        lastUpdate: null,
+        pollInterval: null
+    };
+
+    async function fetchLatency() {
+        try {
+            const response = await apiRequest('/api/v1/miniapp/latency');
+
+            if (response.status === 'ok') {
+                updateLatencyWidget(response);
+                hideLatencyError();
+            } else {
+                showLatencyError();
+            }
+        } catch (error) {
+            console.error('Latency fetch error:', error);
+            showLatencyError();
+        }
+    }
+
+    function updateLatencyWidget(data) {
+        const { current, history, quality_score, status_icon, status_label } = data;
+        const pingMs = current.ping_ms;
+
+        // Hide loading, show content
+        document.getElementById('latency-loading').style.display = 'none';
+        document.getElementById('latency-error').style.display = 'none';
+        document.getElementById('latency-content').style.display = 'block';
+
+        // Update value with color
+        const valueEl = document.getElementById('latency-value');
+        valueEl.textContent = pingMs.toFixed(0);
+        valueEl.className = 'latency-value ' + getLatencyClass(quality_score);
+
+        // Update badge
+        const badge = document.getElementById('latency-badge');
+        const badgeIcon = document.getElementById('latency-status-icon');
+        const badgeLabel = document.getElementById('latency-status-label');
+
+        badge.className = 'latency-badge ' + getLatencyClass(quality_score);
+        badgeIcon.textContent = status_icon;
+        badgeLabel.textContent = status_label;
+
+        // Update sparkline
+        renderSparkline(history);
+
+        // Update timestamp
+        latencyData.lastUpdate = new Date();
+        latencyData.history = history;
+        updateLatencyAge();
+
+        // Haptic feedback on successful update
+        hapticFeedback('selection');
+    }
+
+    function getLatencyClass(qualityScore) {
+        if (qualityScore >= 75) return 'excellent';
+        if (qualityScore >= 50) return 'normal';
+        return 'poor';
+    }
+
+    function renderSparkline(history) {
+        const svg = document.getElementById('latency-sparkline');
+        const width = 280;
+        const height = 60;
+        const padding = 4;
+
+        if (!history || history.length === 0) {
+            svg.innerHTML = '';
+            return;
+        }
+
+        const pingValues = history.map(h => h.ping_ms);
+        const minPing = Math.min(...pingValues);
+        const maxPing = Math.max(...pingValues);
+        const range = maxPing - minPing || 1;
+
+        // Generate path points
+        const points = pingValues.map((ping, i) => {
+            const x = (i / (pingValues.length - 1)) * (width - padding * 2) + padding;
+            const y = height - padding - ((ping - minPing) / range) * (height - padding * 2);
+            return `${x},${y}`;
+        });
+
+        const pathD = `M ${points.join(' L ')}`;
+        const qualityClass = getLatencyClass(
+            history[history.length - 1]?.quality_score || 50
+        );
+
+        // Create or update path
+        let path = svg.querySelector('path');
+        if (!path) {
+            path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            svg.appendChild(path);
+        }
+
+        path.setAttribute('d', pathD);
+        path.setAttribute('class', qualityClass);
+
+        // Update SVG class
+        svg.className = 'latency-sparkline ' + qualityClass;
+    }
+
+    function updateLatencyAge() {
+        if (!latencyData.lastUpdate) return;
+
+        const now = new Date();
+        const diff = Math.floor((now - latencyData.lastUpdate) / 1000);
+        document.getElementById('latency-age').textContent = diff;
+    }
+
+    function showLatencyError() {
+        document.getElementById('latency-loading').style.display = 'none';
+        document.getElementById('latency-error').style.display = 'flex';
+        document.getElementById('latency-content').style.display = 'none';
+    }
+
+    function hideLatencyError() {
+        document.getElementById('latency-error').style.display = 'none';
+    }
+
+    function startLatencyPolling() {
+        // Fetch immediately
+        fetchLatency();
+
+        // Poll every 60 seconds
+        latencyData.pollInterval = setInterval(fetchLatency, 60000);
+
+        // Update age counter every second
+        setInterval(updateLatencyAge, 1000);
+
+        // Cleanup on pagehide
+        window.addEventListener('pagehide', () => {
+            if (latencyData.pollInterval) {
+                clearInterval(latencyData.pollInterval);
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         appendInitDataToLinks();
         appendInitDataToForms();
@@ -201,6 +346,11 @@
                 fill.style.width = width;
             }, 100);
         });
+
+        // Iniciar widget de latencia si estamos en el dashboard
+        if (document.getElementById('latency-widget')) {
+            startLatencyPolling();
+        }
     });
 
     window.MiniApp = {
@@ -213,7 +363,11 @@
         apiRequest,
         showAlert,
         showConfirm,
-        hapticFeedback
+        hapticFeedback,
+        // Latency widget functions
+        fetchLatency,
+        startLatencyPolling,
+        renderSparkline
     };
 
 })();
