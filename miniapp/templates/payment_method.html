@@ -239,6 +239,12 @@ async function proceedToPayment() {
         return;
     }
 
+    // Validate Telegram WebApp availability BEFORE showing loading overlay
+    if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initData) {
+        showAlert('❌ Telegram WebApp no disponible. Por favor abre la aplicación desde Telegram.');
+        return;
+    }
+
     // Show loading
     showLoadingOverlay('Preparando pago...');
 
@@ -263,22 +269,20 @@ async function proceedToPayment() {
 async function payWithStars() {
     console.log('[Stars Payment] Initiating payment:', productData);
 
-    // NOTE: Using /miniapp/api/... for AJAX/fetch calls (NOT /api/v1/miniapp/...)
-    // This is because we're making a fetch call from the browser, not direct navigation.
-    // The /miniapp/api/... routes are for web frontend API calls.
-    // For external API integrations, use /api/v1/miniapp/api/... instead.
-
     try {
-        // Check if Telegram WebApp initData is available
-        if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initData) {
-            throw new Error('Telegram WebApp no disponible. Por favor abre la aplicación desde Telegram.');
-        }
+        // NOTE: Using /miniapp/api/... for AJAX/fetch calls (NOT /api/v1/miniapp/...)
+        // This is because we're making a fetch call from the browser, not direct navigation.
+        // The /miniapp/api/... routes are for web frontend API calls.
+        // For external API integrations, use /api/v1/miniapp/api/... instead.
+
+        const initData = Telegram.WebApp.initData;
+        console.log('[Stars Payment] Using initData:', initData ? 'Present' : 'Missing');
 
         const response = await fetch('/miniapp/api/create-stars-invoice', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Telegram-Init-Data': Telegram.WebApp.initData
+                'X-Telegram-Init-Data': initData
             },
             body: JSON.stringify({
                 product_type: productData.type,
@@ -287,9 +291,18 @@ async function payWithStars() {
         });
 
         console.log('[Stars Payment] Response status:', response.status);
+
+        // Check if response is OK before parsing JSON
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[Stars Payment] Error response:', errorText);
+            throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
+        }
+
         const data = await response.json();
         console.log('[Stars Payment] Response data:', data);
 
+        // Hide loading overlay before showing success/error
         hideLoadingOverlay();
 
         if (!data.success) {
@@ -320,7 +333,9 @@ async function payWithStars() {
 
     } catch (error) {
         console.error('[Stars Payment] Error:', error);
+        // Hide loading overlay in case of error
         hideLoadingOverlay();
+        // Re-throw error to be handled by proceedToPayment
         throw error;
     }
 }
@@ -328,22 +343,20 @@ async function payWithStars() {
 async function payWithCrypto() {
     console.log('[Crypto Payment] Initiating payment:', productData);
 
-    // NOTE: Using /miniapp/api/... for AJAX/fetch calls (NOT /api/v1/miniapp/...)
-    // This is because we're making a fetch call from the browser, not direct navigation.
-    // The /miniapp/api/... routes are for web frontend API calls.
-    // For external API integrations, use /api/v1/miniapp/api/... instead.
-
     try {
-        // Check if Telegram WebApp initData is available
-        if (!window.Telegram || !Telegram.WebApp || !Telegram.WebApp.initData) {
-            throw new Error('Telegram WebApp no disponible. Por favor abre la aplicación desde Telegram.');
-        }
+        // NOTE: Using /miniapp/api/... for AJAX/fetch calls (NOT /api/v1/miniapp/...)
+        // This is because we're making a fetch call from the browser, not direct navigation.
+        // The /miniapp/api/... routes are for web frontend API calls.
+        // For external API integrations, use /api/v1/miniapp/api/... instead.
+
+        const initData = Telegram.WebApp.initData;
+        console.log('[Crypto Payment] Using initData:', initData ? 'Present' : 'Missing');
 
         const response = await fetch('/miniapp/api/create-crypto-order', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Telegram-Init-Data': Telegram.WebApp.initData
+                'X-Telegram-Init-Data': initData
             },
             body: JSON.stringify({
                 product_type: productData.type,
@@ -352,9 +365,18 @@ async function payWithCrypto() {
         });
 
         console.log('[Crypto Payment] Response status:', response.status);
+
+        // Check if response is OK before parsing JSON
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[Crypto Payment] Error response:', errorText);
+            throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
+        }
+
         const data = await response.json();
         console.log('[Crypto Payment] Response data:', data);
 
+        // Hide loading overlay before showing success/error
         hideLoadingOverlay();
 
         if (!data.success) {
@@ -376,7 +398,9 @@ async function payWithCrypto() {
 
     } catch (error) {
         console.error('[Crypto Payment] Error:', error);
+        // Hide loading overlay in case of error
         hideLoadingOverlay();
+        // Re-throw error to be handled by proceedToPayment
         throw error;
     }
 }
@@ -417,7 +441,30 @@ function hideLoadingOverlay() {
     }
 }
 
+// Debug helper - check Telegram WebApp availability
+function checkTelegramWebApp() {
+    console.log('[Debug] Telegram object:', window.Telegram ? 'Present' : 'Missing');
+    console.log('[Debug] Telegram.WebApp:', Telegram?.WebApp ? 'Present' : 'Missing');
+    console.log('[Debug] initData:', Telegram?.WebApp?.initData ? 'Present (' + Telegram.WebApp.initData.length + ' chars)' : 'Missing');
+    console.log('[Debug] MainButton:', Telegram?.WebApp?.MainButton ? 'Present' : 'Missing');
+
+    if (!window.Telegram || !Telegram.WebApp) {
+        console.error('[Debug] ❌ Telegram WebApp NOT available - this page must be opened from Telegram');
+        return false;
+    }
+    if (!Telegram.WebApp.initData) {
+        console.error('[Debug] ❌ initData missing - Telegram WebApp not properly initialized');
+        return false;
+    }
+    console.log('[Debug] ✅ Telegram WebApp is properly initialized');
+    return true;
+}
+
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', initFromURL);
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('[Payment Method] Page loaded');
+    checkTelegramWebApp();
+    initFromURL();
+});
 </script>
 {% endblock %}
