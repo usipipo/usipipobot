@@ -182,3 +182,240 @@
         animation: none;
     }
 }
+
+/* ==========================================================================
+   LATENCY WIDGET - Server Latency Monitoring
+   ========================================================================== */
+
+.latency-widget {
+    /* Widget container styles */
+}
+
+.latency-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.latency-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.latency-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    border: 1px solid;
+    transition: all 0.3s ease;
+}
+
+.latency-badge.excellent {
+    background: rgba(0, 240, 255, 0.1);
+    color: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+}
+
+.latency-badge.normal {
+    background: rgba(255, 0, 170, 0.1);
+    color: var(--neon-magenta);
+    border-color: var(--neon-magenta);
+    box-shadow: 0 0 10px rgba(255, 0, 170, 0.2);
+}
+
+.latency-badge.poor {
+    background: rgba(255, 149, 0, 0.1);
+    color: var(--amber);
+    border-color: var(--amber);
+    box-shadow: 0 0 10px rgba(255, 149, 0, 0.2);
+}
+
+.latency-value-container {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.latency-value {
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+    text-shadow: 0 0 20px currentColor;
+    transition: color 0.3s ease;
+}
+
+.latency-value.excellent {
+    color: var(--neon-cyan);
+}
+
+.latency-value.normal {
+    color: var(--neon-magenta);
+}
+
+.latency-value.poor {
+    color: var(--amber);
+}
+
+.latency-unit {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.latency-sparkline-container {
+    margin: 16px 0;
+    width: 100%;
+    min-height: 60px;
+}
+
+.latency-sparkline {
+    width: 100%;
+    height: 60px;
+}
+
+.latency-sparkline path {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.3s ease;
+}
+
+.latency-sparkline.excellent path {
+    stroke: var(--neon-cyan);
+    filter: drop-shadow(0 0 8px var(--neon-cyan));
+}
+
+.latency-sparkline.normal path {
+    stroke: var(--neon-magenta);
+    filter: drop-shadow(0 0 8px var(--neon-magenta));
+}
+
+.latency-sparkline.poor path {
+    stroke: var(--amber);
+    filter: drop-shadow(0 0 8px var(--amber));
+}
+
+.latency-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.latency-updated {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.latency-refresh-icon {
+    display: inline-block;
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Loading State */
+.latency-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    gap: 12px;
+}
+
+.latency-loading-text {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Error State */
+.latency-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--neon-magenta);
+    gap: 12px;
+    text-align: center;
+}
+
+.latency-error-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.latency-error-text {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.latency-retry-text {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 360px) {
+    .latency-value {
+        font-size: 36px;
+    }
+
+    .latency-sparkline {
+        height: 50px;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .latency-refresh-icon {
+        animation: none;
+    }
+
+    .latency-value {
+        text-shadow: none;
+    }
+
+    .latency-sparkline path {
+        filter: none;
+    }
+}
