@@ -108,11 +108,21 @@ def create_app() -> FastAPI:
     app.include_router(miniapp_admin_router, prefix="/api/v1/miniapp")
     app.include_router(miniapp_public_router, prefix="/api/v1/miniapp")
 
-    # CRITICAL: Register direct web route for Mini App entry point (without /api/v1/miniapp prefix)
-    # This is required for Telegram WebApp button which loads {MINIAPP_URL}/miniapp/entry
+    # CRITICAL: Register direct web routes for Mini App navigation (without /api/v1/miniapp prefix)
+    # These are required for Telegram WebApp in-browser navigation
+    from infrastructure.api.routes.miniapp_payments import (
+        invoice_page,
+        payment_method_page,
+        purchase_page,
+    )
     from infrastructure.api.routes.miniapp_public import render_entry_html
 
     app.add_api_route("/miniapp/entry", render_entry_html, methods=["GET"], include_in_schema=False)
+    app.add_api_route("/miniapp/purchase", purchase_page, methods=["GET"], include_in_schema=False)
+    app.add_api_route(
+        "/miniapp/payment-method", payment_method_page, methods=["GET"], include_in_schema=False
+    )
+    app.add_api_route("/miniapp/invoice", invoice_page, methods=["GET"], include_in_schema=False)
 
     # Mount static files for Mini App with new prefix
     miniapp_static_dir = Path(__file__).parent.parent.parent / "miniapp" / "static"
