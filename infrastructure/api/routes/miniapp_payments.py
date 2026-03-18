@@ -7,7 +7,7 @@ Author: uSipipo Team
 Version: 1.0.0
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -26,6 +26,10 @@ from config import settings
 from domain.entities.crypto_order import CryptoOrder, CryptoOrderStatus
 from domain.entities.data_package import DataPackage
 from domain.entities.subscription_plan import SubscriptionPlan
+from domain.entities.subscription_transaction import (
+    SubscriptionTransaction,
+    SubscriptionTransactionStatus,
+)
 from infrastructure.api.routes.miniapp_common import (
     MiniAppContext,
     PaymentRequest,
@@ -43,6 +47,9 @@ from infrastructure.persistence.postgresql.data_package_repository import (
 )
 from infrastructure.persistence.postgresql.subscription_repository import (
     PostgresSubscriptionRepository,
+)
+from infrastructure.persistence.postgresql.subscription_transaction_repository import (
+    PostgresSubscriptionTransactionRepository,
 )
 from infrastructure.persistence.postgresql.user_repository import PostgresUserRepository
 from miniapp.services.miniapp_payment_service import MiniAppPaymentService
@@ -407,6 +414,26 @@ async def api_create_stars_invoice(
                 description = f"{plan_opt.duration_months} meses de datos ilimitados"
                 payload = f"subscription_{payment_req.product_id}_{ctx.user.id}_{transaction_id}"
                 amount = plan_opt.stars
+
+                # Store subscription transaction for tracking
+                try:
+                    subscription_txn_repo = PostgresSubscriptionTransactionRepository(session)
+                    subscription_transaction = SubscriptionTransaction(
+                        transaction_id=transaction_id,
+                        user_id=ctx.user.id,
+                        plan_type=payment_req.product_id,
+                        amount_stars=amount,
+                        payload=payload,
+                        status=SubscriptionTransactionStatus.PENDING,
+                        expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+                    )
+                    await subscription_txn_repo.save(subscription_transaction)
+                    logger.info(
+                        f"Stored subscription transaction: {transaction_id} for user {ctx.user.id}"
+                    )
+                except Exception as txn_error:
+                    logger.error(f"Failed to store subscription transaction: {txn_error}")
+                    # Continue anyway - transaction tracking is optional for now
 
             else:
                 logger.error(f"Invalid product type: {payment_req.product_type}")
