@@ -60,6 +60,7 @@ from telegram_bot.features.subscriptions.handlers import (
     get_subscription_callback_handlers,
     get_subscription_handlers,
 )
+from telegram_bot.features.subscriptions.handlers_payment import get_subscription_payment_handlers
 from telegram_bot.features.tickets.handlers_registration import (
     get_ticket_callback_handlers,
     get_ticket_conversation_handler,
@@ -147,6 +148,10 @@ def _get_core_handlers(
     handlers.extend(get_buy_gb_callback_handlers(data_package_service))
     handlers.extend(get_buy_gb_payment_handlers(data_package_service))
     logger.info("Buy GB handlers configured")
+
+    # Subscription payment handlers (MUST be registered early for SUCCESSFUL_PAYMENT)
+    handlers.extend(get_subscription_payment_handlers())
+    logger.info("✅ Subscription payment handlers configured")
 
     handlers.extend(get_basic_handlers())
     handlers.extend(get_basic_callback_handlers())
