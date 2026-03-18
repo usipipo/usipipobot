@@ -3,7 +3,7 @@
 {% block title %}Mis Claves - uSipipo VPN{% endblock %}
 
 {% block content %}
-<div class="glitch-title" style="margin-bottom: 20px;">Mis Claves VPN</div>
+<div class="glitch-title">Mis Claves VPN</div>
 
 <div class="terminal-output">
     Total de claves: {{ keys|length }} | Límite: {{ max_keys }}
@@ -16,14 +16,14 @@
 {% endif %}
 
 {% if keys %}
-<div class="key-list" style="margin-top: 20px;">
+<div class="key-list">
     {% for key in keys %}
-    <div class="card" style="margin-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+    <div class="card key-card">
+        <div class="key-card-header">
             <div class="key-icon {{ key.key_type.value }}">
                 {% if key.key_type.value == 'outline' %}⚡{% else %}🛡️{% endif %}
             </div>
-            <div style="flex: 1;">
+            <div class="key-info">
                 <div class="key-name">{{ key.name }}</div>
                 <div class="key-meta">
                     {{ key.key_type.value|upper }} •
@@ -36,8 +36,8 @@
             </div>
         </div>
 
-        <div style="margin: 12px 0;">
-            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">
+        <div class="key-usage-section">
+            <div class="key-usage-header">
                 <span>Consumo</span>
                 <span>{{ "%.2f"|format(key.used_gb) }} / {{ "%.0f"|format(key.data_limit_gb) }} GB</span>
             </div>
@@ -47,28 +47,29 @@
             </div>
         </div>
 
-        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
+        <div class="key-dates">
             Creada: {{ key.created_at.strftime('%d/%m/%Y') if key.created_at else 'N/A' }}
             {% if key.last_seen_at %}
             | Última actividad: {{ key.last_seen_at.strftime('%d/%m/%Y %H:%M') }}
             {% endif %}
         </div>
 
-        <div style="display: flex; gap: 8px;">
-            <button class="btn btn-secondary" style="flex: 1; padding: 8px 12px; font-size: 12px;" onclick="copyKey('{{ key.key_data[:50] }}...')">
-                📋 Copiar
+        <div class="key-actions">
+            <button class="btn btn-secondary btn-full" onclick="copyKey('{{ key.key_data[:50] }}...')">
+                📋 Copiar Clave
             </button>
-            <!-- Delete button removed - prevents abuse of free 5GB -->
         </div>
     </div>
     {% endfor %}
 </div>
 {% else %}
-<div class="card" style="text-align: center; padding: 40px;">
-    <div style="font-size: 60px; margin-bottom: 16px;">🔐</div>
-    <h3 style="color: var(--text-primary); margin-bottom: 8px;">Sin claves VPN</h3>
-    <p style="color: var(--text-secondary); margin-bottom: 20px;">Crea tu primera clave para comenzar a navegar de forma segura</p>
-    <a href="/api/v1/miniapp/keys/create" class="btn btn-primary">Crear Primera Clave</a>
+<div class="card card-empty">
+    <div class="empty-state">
+        <div class="empty-icon">🔐</div>
+        <h3>Sin claves VPN</h3>
+        <p>Crea tu primera clave para comenzar a navegar de forma segura</p>
+        <a href="/api/v1/miniapp/keys/create" class="btn btn-primary">Crear Primera Clave</a>
+    </div>
 </div>
 {% endif %}
 
@@ -77,18 +78,193 @@
 {% endif %}
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Key Cards Specific Styles */
+    .key-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .key-card {
+        transition: all 0.2s ease;
+    }
+
+    .key-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .key-info {
+        flex: 1;
+    }
+
+    .key-usage-section {
+        margin: 16px 0;
+    }
+
+    .key-usage-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .key-dates {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 16px;
+        line-height: 1.6;
+    }
+
+    .key-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    /* Empty State */
+    .card-empty {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .empty-icon {
+        font-size: 60px;
+        margin-bottom: 8px;
+    }
+
+    .empty-state h3 {
+        color: var(--text-primary);
+        margin: 0;
+        font-size: 18px;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        margin: 0 0 20px 0;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* Enhanced Key Icon */
+    .key-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+
+    .key-icon.outline {
+        background: rgba(0, 240, 255, 0.1);
+        border: 1px solid var(--neon-cyan);
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    .key-icon.wireguard {
+        background: rgba(255, 0, 170, 0.1);
+        border: 1px solid var(--neon-magenta);
+        box-shadow: 0 0 10px rgba(255, 0, 170, 0.2);
+    }
+
+    /* Badge Styles */
+    .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 6px;
+    }
+
+    .badge-active {
+        background: rgba(0, 255, 65, 0.15);
+        color: var(--terminal-green);
+        border: 1px solid rgba(0, 255, 65, 0.3);
+    }
+
+    .badge-inactive {
+        background: rgba(90, 90, 106, 0.3);
+        color: var(--text-muted);
+        border: 1px solid rgba(90, 90, 106, 0.5);
+    }
+
+    /* Progress Bar Enhancement */
+    .progress-bar {
+        height: 6px;
+        background: var(--bg-surface);
+        border-radius: 3px;
+        overflow: hidden;
+        border: 1px solid var(--border-subtle);
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--neon-cyan), var(--neon-magenta));
+        border-radius: 3px;
+        transition: width 0.5s ease;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+
+    /* Button Animation */
+    .key-actions .btn {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .key-actions .btn::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translate(-50%, -50%);
+        transition: width 0.3s, height 0.3s;
+    }
+
+    .key-actions .btn:active::after {
+        width: 200px;
+        height: 200px;
+    }
+</style>
+{% endblock %}
+
 {% block extra_js %}
 <script>
 function copyKey(keyData) {
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(keyData);
-        Telegram.WebApp.showAlert('Clave copiada al portapapeles');
+        navigator.clipboard.writeText(keyData).then(() => {
+            // Haptic feedback
+            if (window.Telegram && Telegram.WebApp && Telegram.WebApp.HapticFeedback) {
+                Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }
+            Telegram.WebApp.showAlert('✅ Clave copiada al portapapeles');
+        }).catch(() => {
+            Telegram.WebApp.showAlert('❌ No se pudo copiar la clave');
+        });
     } else {
-        Telegram.WebApp.showAlert('No se pudo copiar la clave');
+        Telegram.WebApp.showAlert('❌ Tu navegador no soporta copiar al portapapeles');
     }
 }
-
-// deleteKey function removed - users cannot delete keys to prevent 5GB abuse
-// Only administrators can delete keys via admin panel
 </script>
 {% endblock %}

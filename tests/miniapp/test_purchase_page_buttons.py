@@ -4,7 +4,7 @@ Test to verify purchase page buttons are functional.
 This test verifies that:
 1. The purchase page renders correctly
 2. Package and slot data is passed to the template
-3. Buttons have correct onclick handlers
+3. Buttons navigate to payment method page (not modals)
 """
 
 from unittest.mock import MagicMock
@@ -61,8 +61,8 @@ async def test_purchase_page_renders(client):
     # Verify buttons have onclick handlers
     assert "showPaymentMethods" in html
 
-    # Verify payment modal exists
-    assert "paymentModal" in html
+    # Verify navigation to payment method page (not modals)
+    assert "/miniapp/payment-method" in html
 
     print("✅ Purchase page renders correctly with all required elements")
 
@@ -102,14 +102,20 @@ async def test_purchase_page_javascript_functions(client):
 
     # Verify key JavaScript functions exist
     assert "function showPaymentMethods" in html
-    assert "function closePaymentModal" in html
-    assert "function payWithStars" in html
-    assert "function payWithCrypto" in html
+
+    # Verify navigation logic (not modal functions)
+    assert "window.location.href" in html
+    assert "payment-method" in html
 
     # Verify console logging is present for debugging
     assert "console.log" in html
 
-    print("✅ All required JavaScript functions are defined")
+    # Verify modal functions are NOT present (migrated to pages)
+    assert "closePaymentModal" not in html
+    assert "payWithStars" not in html
+    assert "payWithCrypto" not in html
+
+    print("✅ JavaScript functions use page navigation (not modals)")
 
 
 if __name__ == "__main__":

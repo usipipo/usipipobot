@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+
+{% block title %}Factura - uSipipo VPN{% endblock %}
+
+{% block content %}
+<!-- Navigation Header -->
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+    <button class="btn btn-ghost" onclick="history.back()" style="padding: 8px;">
+        ←
+    </button>
+    <div class="glitch-title" style="margin: 0;">Factura</div>
+</div>
+
+<div class="terminal-output" style="margin-bottom: 20px;">
+    <span id="statusText">Procesando pago...</span>
+</div>
+
+<!-- Invoice Status Card -->
+<div class="card" style="margin-bottom: 24px; text-align: center;">
+    <div id="statusIcon" style="font-size: 64px; margin-bottom: 16px;">⏳</div>
+    <div id="statusTitle" style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">
+        Esperando pago...
+    </div>
+    <div id="statusDescription" style="font-size: 12px; color: var(--text-secondary);">
+        <!-- Dynamic status description -->
+    </div>
+</div>
+
+<!-- Payment Details -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">📋 Detalles del Pago</div>
+
+    <div style="display: grid; gap: 12px; margin-top: 16px;">
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--bg-tertiary);">
+            <span style="color: var(--text-secondary); font-size: 12px;">Producto:</span>
+            <span id="productName" style="font-weight: 600;">Cargando...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--bg-tertiary);">
+            <span style="color: var(--text-secondary); font-size: 12px;">Método:</span>
+            <span id="paymentMethod" style="font-weight: 600;">Cargando...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--bg-tertiary);">
+            <span style="color: var(--text-secondary); font-size: 12px;">Monto:</span>
+            <span id="paymentAmount" style="font-weight: 600; color: var(--accent-green);">Cargando...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+            <span style="color: var(--text-secondary); font-size: 12px;">ID Transacción:</span>
+            <span id="transactionId" style="font-family: monospace; font-size: 11px;">Cargando...</span>
+        </div>
+    </div>
+</div>
+
+<!-- Crypto Payment Section -->
+<div id="cryptoSection" class="card" style="margin-bottom: 24px; display: none;">
+    <div class="card-title">💰 Pago con USDT (BSC)</div>
+
+    <!-- QR Code -->
+    <div style="text-align: center; margin: 20px 0;">
+        <img id="qrCode" src="" alt="QR Code" style="max-width: 200px; border-radius: 8px; border: 2px solid var(--accent-cyan);">
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+            Escanea para pagar
+        </div>
+    </div>
+
+    <!-- Wallet Address -->
+    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">Dirección Wallet:</div>
+        <div id="walletAddress" style="font-family: monospace; font-size: 10px; word-break: break-all;">
+            <!-- Wallet address -->
+        </div>
+        <button class="btn btn-ghost" onclick="copyWalletAddress()" style="margin-top: 8px; padding: 4px 12px; font-size: 11px;">
+            📋 Copiar Dirección
+        </button>
+    </div>
+
+    <!-- Amount -->
+    <div style="text-align: center; margin-bottom: 16px;">
+        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">Monto a enviar:</div>
+        <div id="cryptoAmount" style="font-size: 20px; font-weight: 600; color: var(--accent-green);">
+            <!-- Amount -->
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+            Red: BSC (BEP20)
+        </div>
+    </div>
+
+    <!-- Countdown Timer -->
+    <div style="text-align: center; padding: 12px; background: rgba(255, 165, 0, 0.1); border-radius: 8px; margin-bottom: 16px;">
+        <div style="font-size: 11px; color: var(--accent-yellow); margin-bottom: 4px;">La orden expira en:</div>
+        <div id="countdownTimer" style="font-size: 18px; font-weight: 600; color: var(--accent-yellow); font-family: monospace;">
+            30:00
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
+        <div style="margin-bottom: 8px;"><strong>⚠️ Importante:</strong></div>
+        <div style="margin-bottom: 4px;">• Envía exactamente el monto indicado</div>
+        <div style="margin-bottom: 4px;">• Usa solo la red BSC/BEP20</div>
+        <div style="margin-bottom: 4px;">• El pago se detecta automáticamente</div>
+        <div>• No envíes desde exchanges (puede retrasarse)</div>
+    </div>
+</div>
+
+<!-- Stars Payment Section -->
+<div id="starsSection" class="card" style="margin-bottom: 24px; display: none;">
+    <div class="card-title">⭐ Pago con Telegram Stars</div>
+
+    <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 48px; margin-bottom: 16px;">📨</div>
+        <div style="font-size: 14px; margin-bottom: 8px;">
+            Factura enviada a tu Telegram
+        </div>
+        <div style="font-size: 12px; color: var(--text-secondary);">
+            Revisa tu chat con el bot para completar el pago
+        </div>
+    </div>
+
+    <div style="text-align: center; padding: 12px; background: rgba(0, 255, 255, 0.1); border-radius: 8px;">
+        <div style="font-size: 11px; color: var(--text-secondary);">
+            ⏱️ La factura expira en 30 minutos
+        </div>
+    </div>
+</div>
+
+<!-- Auto-check Status -->
+<div class="card" style="margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="loading-spinner" style="width: 16px; height: 16px; border-width: 2px;"></div>
+        <div style="font-size: 12px; color: var(--text-secondary);">
+            Verificando pago automáticamente...
+        </div>
+    </div>
+    <div style="font-size: 10px; color: var(--text-muted); margin-top: 8px;">
+        Se actualiza cada 3 segundos
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div style="display: flex; flex-direction: column; gap: 12px;">
+    <button class="btn btn-primary btn-full" id="checkButton" onclick="checkPaymentStatus()">
+        🔄 Verificar Estado Ahora
+    </button>
+    <button class="btn btn-ghost btn-full" onclick="goToPurchase()">
+        🛒 Volver a la Tienda
+    </button>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Verificando...</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let paymentData = {
+    type: null,
+    transactionId: null,
+    orderId: null,
+    wallet: null,
+    amount: null,
+    qrCode: null,
+    expiresAt: null
+};
+
+let pollingInterval = null;
+let countdownInterval = null;
+
+// Initialize from URL
+function initFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type');
+
+    if (type === 'stars') {
+        paymentData.type = 'stars';
+        paymentData.transactionId = urlParams.get('transaction_id');
+        initStarsPayment();
+    } else if (type === 'crypto') {
+        paymentData.type = 'crypto';
+        paymentData.orderId = urlParams.get('order_id');
+        paymentData.wallet = urlParams.get('wallet');
+        paymentData.amount = urlParams.get('amount');
+        paymentData.qrCode = urlParams.get('qr_code');
+        paymentData.expiresAt = urlParams.get('expires');
+        initCryptoPayment();
+    } else {
+        showAlert('❌ Tipo de pago no válido');
+        setTimeout(() => window.location.href = '/miniapp/purchase', 2000);
+    }
+}
+
+function initStarsPayment() {
+    document.getElementById('starsSection').style.display = 'block';
+    document.getElementById('paymentMethod').textContent = 'Telegram Stars';
+
+    // Start polling
+    startPaymentPolling();
+}
+
+function initCryptoPayment() {
+    const cryptoSection = document.getElementById('cryptoSection');
+    cryptoSection.style.display = 'block';
+    document.getElementById('paymentMethod').textContent = 'USDT (BSC)';
+
+    // Set wallet and amount
+    document.getElementById('walletAddress').textContent = paymentData.wallet;
+    document.getElementById('cryptoAmount').textContent = `${paymentData.amount} USDT`;
+    document.getElementById('qrCode').src = paymentData.qrCode;
+
+    // Start countdown
+    startCountdown();
+
+    // Start polling
+    startPaymentPolling();
+}
+
+function startCountdown() {
+    const expiresAt = paymentData.expiresAt ? new Date(paymentData.expiresAt) : new Date(Date.now() + 30 * 60 * 1000);
+    const timerElement = document.getElementById('countdownTimer');
+
+    countdownInterval = setInterval(() => {
+        const now = new Date();
+        const diff = expiresAt - now;
+
+        if (diff <= 0) {
+            clearInterval(countdownInterval);
+            timerElement.textContent = 'EXPIRADA';
+            timerElement.style.color = 'var(--accent-red)';
+            updatePaymentStatus('expired');
+            return;
+        }
+
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+function startPaymentPolling() {
+    // Check immediately
+    checkPaymentStatus();
+
+    // Then poll every 3 seconds
+    pollingInterval = setInterval(checkPaymentStatus, 3000);
+
+    // Stop after 10 minutes
+    setTimeout(() => {
+        stopPaymentPolling();
+        if (document.getElementById('statusIcon').textContent !== '✅') {
+            showAlert(
+                '⏰ Tiempo de espera agotado\n\n' +
+                'Si completaste el pago pero no se activó automáticamente, ' +
+                'puedes verificar el estado en tu perfil o contactar soporte.'
+            );
+        }
+    }, 10 * 60 * 1000);
+}
+
+function stopPaymentPolling() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
+}
+
+async function checkPaymentStatus() {
+    const checkButton = document.getElementById('checkButton');
+    checkButton.disabled = true;
+    checkButton.textContent = 'Verificando...';
+
+    try {
+        let url, body;
+
+        if (paymentData.type === 'stars') {
+            url = '/api/v1/miniapp/api/check-stars-payment';
+            body = { transaction_id: paymentData.transactionId };
+        } else {
+            url = '/api/v1/miniapp/api/check-crypto-payment';
+            body = { order_id: paymentData.orderId };
+        }
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': Telegram.WebApp.initData
+            },
+            body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            updatePaymentStatus(data.status, data);
+        } else {
+            console.error('Payment check failed:', data.error);
+        }
+    } catch (error) {
+        console.error('Error checking payment status:', error);
+    } finally {
+        checkButton.disabled = false;
+        checkButton.textContent = '🔄 Verificar Estado Ahora';
+    }
+}
+
+function updatePaymentStatus(status, data = {}) {
+    const statusIcon = document.getElementById('statusIcon');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusDescription = document.getElementById('statusDescription');
+    const statusText = document.getElementById('statusText');
+
+    switch (status) {
+        case 'pending':
+            statusIcon.textContent = '⏳';
+            statusTitle.textContent = 'Esperando pago...';
+            statusDescription.textContent = 'Tu orden está esperando ser pagada';
+            statusText.textContent = 'Esperando pago...';
+            break;
+
+        case 'completed':
+        case 'paid':
+            statusIcon.textContent = '✅';
+            statusTitle.textContent = '¡Pago Exitoso!';
+            statusDescription.textContent = 'Tu producto ha sido activado';
+            statusText.textContent = 'Pago completado';
+
+            // Stop polling
+            stopPaymentPolling();
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+
+            // Show success message
+            setTimeout(() => {
+                showConfirm(
+                    '🎉 ¡Pago Exitoso!',
+                    'Tu producto ha sido activado. Puedes verlo en tu perfil.',
+                    () => {
+                        window.location.href = '/miniapp/profile';
+                    }
+                );
+            }, 1000);
+            break;
+
+        case 'expired':
+            statusIcon.textContent = '⏰';
+            statusTitle.textContent = 'Orden Expirada';
+            statusDescription.textContent = 'La orden ha expirado sin ser pagada';
+            statusText.textContent = 'Expirada';
+
+            stopPaymentPolling();
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            break;
+
+        case 'failed':
+            statusIcon.textContent = '❌';
+            statusTitle.textContent = 'Pago Fallido';
+            statusDescription.textContent = 'Hubo un error procesando tu pago';
+            statusText.textContent = 'Fallido';
+
+            stopPaymentPolling();
+            break;
+    }
+}
+
+function copyWalletAddress() {
+    navigator.clipboard.writeText(paymentData.wallet).then(() => {
+        showAlert('✅ Dirección copiada al portapapeles');
+        if (window.Telegram && Telegram.WebApp && Telegram.WebApp.HapticFeedback) {
+            Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        }
+    }).catch(() => {
+        showAlert('❌ No se pudo copiar la dirección');
+    });
+}
+
+function goToPurchase() {
+    window.location.href = '/miniapp/purchase';
+}
+
+function showAlert(message) {
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.showAlert) {
+        Telegram.WebApp.showAlert(message);
+    } else {
+        alert(message);
+    }
+}
+
+function showConfirm(title, message, callback) {
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.showConfirm) {
+        Telegram.WebApp.showConfirm(message, callback);
+    } else {
+        const result = confirm(title + '\n\n' + message);
+        if (callback) callback(result);
+    }
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    stopPaymentPolling();
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initFromURL);
+</script>
+{% endblock %}

@@ -135,6 +135,34 @@ async def purchase_page(request: Request, ctx: MiniAppContext = Depends(get_curr
     )
 
 
+@router.get("/payment-method", response_class=HTMLResponse)
+async def payment_method_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+    """Página para seleccionar método de pago."""
+    logger.info(f"💳 MiniApp payment method page accessed by user {ctx.user.id}")
+    return templates.TemplateResponse(
+        "payment_method.html",
+        {
+            "request": request,
+            "user": ctx.user,
+            "bot_username": settings.BOT_USERNAME,
+        },
+    )
+
+
+@router.get("/invoice", response_class=HTMLResponse)
+async def invoice_page(request: Request, ctx: MiniAppContext = Depends(get_current_user)):
+    """Página para mostrar estado de factura/invoice."""
+    logger.info(f"📄 MiniApp invoice page accessed by user {ctx.user.id}")
+    return templates.TemplateResponse(
+        "invoice.html",
+        {
+            "request": request,
+            "user": ctx.user,
+            "bot_username": settings.BOT_USERNAME,
+        },
+    )
+
+
 # ============================================================================
 # TRANSACTIONS
 # ============================================================================
@@ -952,3 +980,166 @@ def _entity_to_transaction_response(
         )
 
     raise ValueError(f"Unknown entity type: {type(entity)}")
+
+
+# ============================================================================
+# PAYMENT STATUS CHECKING (for new invoice page)
+# ============================================================================
+
+
+@router.post("/api/check-stars-payment")
+async def api_check_stars_payment(
+    request_data: dict,
+    ctx: MiniAppContext = Depends(get_current_user),
+):
+    """API: Check status of a Stars payment by transaction ID."""
+    try:
+        transaction_id = request_data.get("transaction_id")
+        if not transaction_id:
+            return JSONResponse(
+                status_code=400, content={"success": False, "error": "Transaction ID required"}
+            )
+
+        logger.info(f"Checking Stars payment status for user {ctx.user.id}: {transaction_id}")
+
+        async with get_session_context() as session:
+            package_repo = PostgresDataPackageRepository(session)
+            user_repo = PostgresUserRepository(session)
+            crypto_order_repo = PostgresCryptoOrderRepository(session)
+            subscription_repo = PostgresSubscriptionRepository(session)
+
+            # 1. Check DataPackage table for matching telegram_payment_id
+            packages = await package_repo.get_by_user_paginated(
+                ctx.user.id, limit=100, offset=0, current_user_id=ctx.user.id
+            )
+
+            for pkg in packages:
+                if (
+                    pkg.telegram_payment_id
+                    and f"miniapp_{transaction_id}" in pkg.telegram_payment_id
+                ):
+                    logger.info(f"Found DataPackage for transaction {transaction_id}")
+                    return {
+                        "success": True,
+                        "status": "completed" if pkg.is_active else "pending",
+                        "type": "package",
+                        "package_id": str(pkg.id),
+                        "data_gb": pkg.data_limit_bytes // (1024**3),
+                    }
+
+            # 2. Check CryptoOrder (fallback for stars that were recorded differently)
+            crypto_orders = await crypto_order_repo.get_by_user_paginated(
+                ctx.user.id, limit=100, offset=0, current_user_id=ctx.user.id
+            )
+
+            for order in crypto_orders:
+                if order.tron_dealer_order_id and transaction_id in order.tron_dealer_order_id:
+                    is_completed = order.status == CryptoOrderStatus.COMPLETED
+                    return {
+                        "success": True,
+                        "status": "completed" if is_completed else "pending",
+                        "type": "crypto",
+                        "amount_usdt": order.amount_usdt,
+                    }
+
+            # 3. Check Subscription table
+            subscriptions = await subscription_repo.get_by_user_paginated(
+                ctx.user.id, limit=100, offset=0, current_user_id=ctx.user.id
+            )
+
+            for sub in subscriptions:
+                if sub.payment_id and f"miniapp_{transaction_id}" in sub.payment_id:
+                    logger.info(f"Found Subscription for transaction {transaction_id}")
+                    return {
+                        "success": True,
+                        "status": "completed" if sub.is_active else "pending",
+                        "type": "subscription",
+                        "plan_type": sub.plan_type.value,
+                    }
+
+            # Payment not found yet - still pending
+            logger.info(f"Stars payment not yet detected for transaction: {transaction_id}")
+            return {
+                "success": True,
+                "status": "pending",
+                "message": "Payment not yet detected. Please complete payment in Telegram.",
+            }
+
+    except Exception as e:
+        logger.error(f"Error checking Stars payment status: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500, content={"success": False, "error": "Error interno del servidor"}
+        )
+
+
+@router.post("/api/check-crypto-payment")
+async def api_check_crypto_payment(
+    request_data: dict,
+    ctx: MiniAppContext = Depends(get_current_user),
+):
+    """API: Check status of a Crypto payment by order ID."""
+    try:
+        order_id = request_data.get("order_id")
+        if not order_id:
+            return JSONResponse(
+                status_code=400, content={"success": False, "error": "Order ID required"}
+            )
+
+        logger.info(f"Checking Crypto payment status for user {ctx.user.id}: {order_id}")
+
+        async with get_session_context() as session:
+            crypto_order_repo = PostgresCryptoOrderRepository(session)
+
+            # Get crypto order by ID
+            from uuid import UUID
+
+            try:
+                order_uuid = UUID(order_id)
+            except ValueError:
+                return JSONResponse(
+                    status_code=400, content={"success": False, "error": "Invalid order ID format"}
+                )
+
+            # Fetch order (need to implement get_by_id or fetch all and filter)
+            orders = await crypto_order_repo.get_by_user_paginated(
+                ctx.user.id, limit=100, offset=0, current_user_id=ctx.user.id
+            )
+
+            order = None
+            for o in orders:
+                if str(o.id) == order_id:
+                    order = o
+                    break
+
+            if not order:
+                logger.warning(f"Crypto order not found: {order_id}")
+                return {
+                    "success": True,
+                    "status": "pending",
+                    "message": "Order not found",
+                }
+
+            # Map order status to payment status
+            status_map = {
+                CryptoOrderStatus.PENDING: "pending",
+                CryptoOrderStatus.COMPLETED: "completed",
+                CryptoOrderStatus.EXPIRED: "expired",
+                CryptoOrderStatus.FAILED: "failed",
+            }
+
+            status = status_map.get(order.status, "pending")
+
+            logger.info(f"Crypto order {order_id} status: {status}")
+            return {
+                "success": True,
+                "status": status,
+                "type": "crypto",
+                "amount_usdt": order.amount_usdt,
+                "wallet_address": order.wallet_address,
+            }
+
+    except Exception as e:
+        logger.error(f"Error checking Crypto payment status: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500, content={"success": False, "error": "Error interno del servidor"}
+        )

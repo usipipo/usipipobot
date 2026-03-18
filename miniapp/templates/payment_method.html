@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+
+{% block title %}Método de Pago - uSipipo VPN{% endblock %}
+
+{% block content %}
+<!-- Navigation Header -->
+<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+    <button class="btn btn-ghost" onclick="history.back()" style="padding: 8px;">
+        ←
+    </button>
+    <div class="glitch-title" style="margin: 0;">Pago</div>
+</div>
+
+<div class="terminal-output" style="margin-bottom: 20px;">
+    Selecciona tu método de pago preferido...
+</div>
+
+<!-- Product Summary Card -->
+<div class="card" style="margin-bottom: 24px; border: 1px solid var(--accent-cyan);">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+        <div>
+            <div style="font-size: 24px; margin-bottom: 8px;" id="productIcon">📦</div>
+            <div class="card-title" style="margin: 0;" id="productName">Cargando...</div>
+        </div>
+        <div style="text-align: right;">
+            <div style="font-size: 18px; font-weight: 600; color: var(--accent-yellow);" id="productPriceStars">
+                ⭐ 0
+            </div>
+            <div style="font-size: 14px; color: var(--accent-green);" id="productPriceUsdt">
+                💰 0.00 USDT
+            </div>
+        </div>
+    </div>
+    <div style="font-size: 12px; color: var(--text-secondary);" id="productDescription">
+        <!-- Dynamic description -->
+    </div>
+</div>
+
+<!-- Payment Method Selection -->
+<div style="margin-bottom: 24px;">
+    <div style="font-size: 14px; color: var(--accent-magenta); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+        💳 Método de Pago
+    </div>
+
+    <!-- Telegram Stars Option -->
+    <div class="card" style="margin-bottom: 12px; cursor: pointer; transition: all 0.2s;"
+         onclick="selectPaymentMethod('stars')"
+         id="starsOption">
+        <div style="display: flex; align-items: center; gap: 16px; padding: 8px;">
+            <div style="font-size: 32px;">⭐</div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 4px;">Telegram Stars</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">
+                    Pago instantáneo con Telegram
+                </div>
+            </div>
+            <div style="font-size: 24px; color: var(--accent-cyan);">○</div>
+        </div>
+    </div>
+
+    <!-- Crypto USDT Option -->
+    <div class="card" style="margin-bottom: 12px; cursor: pointer; transition: all 0.2s;"
+         onclick="selectPaymentMethod('crypto')"
+         id="cryptoOption">
+        <div style="display: flex; align-items: center; gap: 16px; padding: 8px;">
+            <div style="font-size: 32px;">💰</div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; margin-bottom: 4px;">USDT (BSC)</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">
+                    Criptomoneda - Red BSC (BEP20)
+                </div>
+            </div>
+            <div style="font-size: 24px; color: var(--accent-cyan);">○</div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Method Info -->
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">ℹ️ Información de Pago</div>
+    <div style="font-size: 12px; color: var(--text-secondary);">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="color: var(--accent-cyan);">✓</span>
+            <span><strong>Telegram Stars:</strong> Procesamiento instantáneo</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="color: var(--accent-cyan);">✓</span>
+            <span><strong>Crypto:</strong> Requiere ~5 minutos (15 confirmaciones)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="color: var(--accent-cyan);">✓</span>
+            <span><strong>Ambos:</strong> Activación automática del producto</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: var(--accent-cyan);">✓</span>
+            <span><strong>Seguro:</strong> Pagos procesados por Telegram/TronDealer</span>
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div style="display: flex; flex-direction: column; gap: 12px;">
+    <button class="btn btn-primary btn-full" id="payButton" onclick="proceedToPayment()" disabled>
+        Continuar al Pago
+    </button>
+    <button class="btn btn-ghost btn-full" onclick="history.back()">
+        Cancelar
+    </button>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loadingText">Procesando...</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedPaymentMethod = null;
+let productData = null;
+
+// Initialize from URL parameters
+function initFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type');
+    const id = urlParams.get('id');
+    const stars = urlParams.get('stars');
+    const usdt = urlParams.get('usdt');
+
+    if (!type || !id || !stars || !usdt) {
+        showAlert('❌ Error: Datos de producto inválidos. Por favor regresa y selecciona un producto.');
+        setTimeout(() => history.back(), 3000);
+        return;
+    }
+
+    productData = {
+        type: type,
+        id: id,
+        stars: parseInt(stars),
+        usdt: parseFloat(usdt)
+    };
+
+    // Update product summary
+    updateProductSummary();
+}
+
+function updateProductSummary() {
+    const icon = document.getElementById('productIcon');
+    const name = document.getElementById('productName');
+    const description = document.getElementById('productDescription');
+    const priceStars = document.getElementById('productPriceStars');
+    const priceUsdt = document.getElementById('productPriceUsdt');
+
+    if (!productData) return;
+
+    // Set prices
+    priceStars.textContent = `⭐ ${productData.stars}`;
+    priceUsdt.textContent = `💰 ${productData.usdt.toFixed(2)} USDT`;
+
+    // Set product details based on type
+    if (productData.type === 'package') {
+        icon.textContent = '📦';
+        name.textContent = `Paquete ${productData.id.toUpperCase()}`;
+        description.textContent = `${productData.id.toUpperCase()} GB de datos VPN`;
+    } else if (productData.type === 'slots') {
+        const slots = productData.id.replace('slots_', '');
+        icon.textContent = '🔑';
+        name.textContent = `+${slots} Claves VPN`;
+        description.textContent = `Aumenta tu límite de claves VPN en ${slots}`;
+    } else if (productData.type === 'subscription') {
+        icon.textContent = '👑';
+        const planName = getSubscriptionPlanName(productData.id);
+        name.textContent = `Suscripción ${planName}`;
+        description.textContent = 'Datos ilimitados por ' + getSubscriptionDuration(productData.id);
+    }
+}
+
+function getSubscriptionPlanName(planId) {
+    const plans = {
+        'one_month': '1 Mes',
+        'three_months': '3 Meses',
+        'six_months': '6 Meses'
+    };
+    return plans[planId] || planId;
+}
+
+function getSubscriptionDuration(planId) {
+    const durations = {
+        'one_month': '1 mes',
+        'three_months': '3 meses',
+        'six_months': '6 meses'
+    };
+    return durations[planId] || planId;
+}
+
+function selectPaymentMethod(method) {
+    selectedPaymentMethod = method;
+
+    // Update UI
+    const starsOption = document.getElementById('starsOption');
+    const cryptoOption = document.getElementById('cryptoOption');
+
+    // Reset both options
+    starsOption.style.borderColor = 'transparent';
+    starsOption.style.background = 'var(--bg-secondary)';
+    cryptoOption.style.borderColor = 'transparent';
+    cryptoOption.style.background = 'var(--bg-secondary)';
+
+    // Update selected
+    if (method === 'stars') {
+        starsOption.style.borderColor = 'var(--accent-yellow)';
+        starsOption.style.background = 'rgba(255, 215, 0, 0.1)';
+        starsOption.querySelector('div:last-child').textContent = '●';
+        starsOption.querySelector('div:last-child').style.color = 'var(--accent-yellow)';
+        cryptoOption.querySelector('div:last-child').textContent = '○';
+        cryptoOption.querySelector('div:last-child').style.color = 'var(--accent-cyan)';
+    } else {
+        cryptoOption.style.borderColor = 'var(--accent-cyan)';
+        cryptoOption.style.background = 'rgba(0, 255, 255, 0.1)';
+        cryptoOption.querySelector('div:last-child').textContent = '●';
+        cryptoOption.querySelector('div:last-child').style.color = 'var(--accent-cyan)';
+        starsOption.querySelector('div:last-child').textContent = '○';
+        starsOption.querySelector('div:last-child').style.color = 'var(--accent-cyan)';
+    }
+
+    // Enable pay button
+    document.getElementById('payButton').disabled = false;
+
+    // Haptic feedback
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.HapticFeedback) {
+        Telegram.WebApp.HapticFeedback.selectionChanged();
+    }
+}
+
+async function proceedToPayment() {
+    if (!selectedPaymentMethod || !productData) {
+        showAlert('❌ Por favor selecciona un método de pago');
+        return;
+    }
+
+    // Show loading
+    showLoadingOverlay('Preparando pago...');
+
+    // Haptic feedback
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.HapticFeedback) {
+        Telegram.WebApp.HapticFeedback.notificationOccurred('light');
+    }
+
+    try {
+        if (selectedPaymentMethod === 'stars') {
+            await payWithStars();
+        } else {
+            await payWithCrypto();
+        }
+    } catch (error) {
+        console.error('[Payment] Error:', error);
+        hideLoadingOverlay();
+        showAlert('❌ Error al procesar el pago: ' + error.message);
+    }
+}
+
+async function payWithStars() {
+    console.log('[Stars Payment] Initiating payment:', productData);
+
+    try {
+        const response = await fetch('/api/v1/miniapp/api/create-stars-invoice', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': Telegram.WebApp.initData
+            },
+            body: JSON.stringify({
+                product_type: productData.type,
+                product_id: productData.id
+            })
+        });
+
+        console.log('[Stars Payment] Response status:', response.status);
+        const data = await response.json();
+        console.log('[Stars Payment] Response data:', data);
+
+        hideLoadingOverlay();
+
+        if (!data.success) {
+            throw new Error(data.error || 'No se pudo crear la factura');
+        }
+
+        // Store transaction ID
+        const transactionId = data.transaction_id;
+
+        // Show success and redirect to invoice page
+        showConfirm(
+            '✅ Factura Enviada',
+            'Revisa tu chat de Telegram para completar el pago. La factura aparecerá en tu conversación con el bot.',
+            function(confirmed) {
+                if (confirmed) {
+                    // Redirect to invoice status page
+                    window.location.href = `/miniapp/invoice?transaction_id=${transactionId}&type=stars`;
+                }
+            }
+        );
+
+    } catch (error) {
+        console.error('[Stars Payment] Error:', error);
+        hideLoadingOverlay();
+        throw error;
+    }
+}
+
+async function payWithCrypto() {
+    console.log('[Crypto Payment] Initiating payment:', productData);
+
+    try {
+        const response = await fetch('/api/v1/miniapp/api/create-crypto-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Telegram-Init-Data': Telegram.WebApp.initData
+            },
+            body: JSON.stringify({
+                product_type: productData.type,
+                product_id: productData.id
+            })
+        });
+
+        console.log('[Crypto Payment] Response status:', response.status);
+        const data = await response.json();
+        console.log('[Crypto Payment] Response data:', data);
+
+        hideLoadingOverlay();
+
+        if (!data.success) {
+            throw new Error(data.error || 'No se pudo crear la orden de pago');
+        }
+
+        // Redirect to crypto invoice page with order details
+        const params = new URLSearchParams({
+            order_id: data.order_id,
+            wallet: data.wallet_address,
+            amount: data.amount_usdt,
+            qr_code: data.qr_code_url,
+            expires: data.expires_at || ''
+        });
+        window.location.href = `/miniapp/invoice?type=crypto&${params.toString()}`;
+
+    } catch (error) {
+        console.error('[Crypto Payment] Error:', error);
+        hideLoadingOverlay();
+        throw error;
+    }
+}
+
+// Helper functions
+function showAlert(message) {
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.showAlert) {
+        Telegram.WebApp.showAlert(message);
+    } else {
+        alert(message);
+    }
+}
+
+function showConfirm(title, message, callback) {
+    if (window.Telegram && Telegram.WebApp && Telegram.WebApp.showConfirm) {
+        Telegram.WebApp.showConfirm(message, callback);
+    } else {
+        const result = confirm(title + '\n\n' + message);
+        if (callback) callback(result);
+    }
+}
+
+function showLoadingOverlay(message) {
+    const overlay = document.getElementById('loadingOverlay');
+    const text = document.getElementById('loadingText');
+    if (text && message) {
+        text.textContent = message;
+    }
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initFromURL);
+</script>
+{% endblock %}
