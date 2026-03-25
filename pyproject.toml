@@ -44,7 +44,7 @@ dependencies = [
     # HTTP Client
     "httpx==0.28.1",
     "aiohttp==3.13.3",
-    "redis==7.3.0",
+    "redis==7.4.0",
 
     # FastAPI for Webhook API
     "fastapi==0.135.1",
